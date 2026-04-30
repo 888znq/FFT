@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="theme-color" content="#000432">
+        <link rel="manifest" href="./manifest.json">
+        <link rel="apple-touch-icon" href="./icon-192.png">
+        <title>TRINITY OS & WALLSPECTRUM [OMNI-SYNC EDITION]</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #000432;
+            --bg-panel: #000432;
+            --accent-green: #2ED573;
+            --accent-red: #E63946;
+            --text-primary: #E2E8F0;
+            --border: #E2E8F0;
+            --neon-glow: 0 0 10px rgba(46, 213, 115, 0.4);
+            --filter-bg: #000432;
+            --filter-active: rgba(46, 213, 115, 0.2);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg-base); color: var(--text-primary); font-family: 'Inter', 'JetBrains Mono', monospace; height: calc(100vh - 2px); margin: 1px 0; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 1px solid #FFFFFF; }
+
+        #main-container { flex: 1; display: grid; grid-template-columns: 1fr 80px 35px 400px; grid-template-rows: 1fr; overflow: hidden; position: relative; }
+
+        #canvas-viewport { grid-column: 1; grid-row: 1; overflow: hidden; background: var(--bg-base); position: relative; }
+        #matrixCanvas { display: block; position: absolute; top: 0; left: 0; }
+
+        #h-scroll-track, #v-scroll-track { position: absolute; width: 1px; height: 1px; top: -10px; left: -10px; opacity: 0; pointer-events: none; overflow: auto; }
+        #h-spacer, #v-spacer { width: 1px; height: 1px; }
+
+        #streakPanel { grid-column: 2; grid-row: 1; background: var(--bg-panel); border-left: 1px solid var(--border); border-right: 1px solid var(--border); overflow: hidden; height: 100%; position: relative; display: flex; flex-direction: column; }
+        #app3-mainContainer { flex: 1; position: relative; overflow: hidden; }
+
+        #row-index-panel { grid-column: 3; grid-row: 1; background: var(--bg-panel); border-left: 1px solid var(--border); overflow: hidden; height: 100%; }
+
+        .idx-cell { display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #FFFFFF; color: #FFFFFF; font-weight: 700; }
+                .app3-list-row { display: flex; width: 100%; border-bottom: 1px solid #FFFFFF; cursor: pointer; transition: background 0.1s ease; }
+                .app3-list-row:hover { background: var(--bg-base); }
+                .app3-list-col { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 700; border-right: none; }
+                .app3-red-side { color: var(--accent-red); background: var(--bg-base); border-right: 1px solid #FFFFFF; }
+                .app3-green-side { color: var(--accent-green); background: var(--bg-base); border-right: none; }
+
+        #wall-finder-pane { grid-column: 4; grid-row: 1; border-left: 1px solid var(--border); background: var(--bg-base); display: flex; flex-direction: column; position: relative; z-index: 10; overflow: hidden; }
+        .peaks-container { display: flex; flex-direction: column; width: 100%; height: 100%; background-color: var(--bg-base); }
+        .scan-col-header { background: var(--bg-panel); border-bottom: 1px solid var(--border); font-size: 10px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; padding: 12px 14px; color: var(--text-primary); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+        .table-wrapper { flex: 1; overflow-y: auto; width: 100%; position: relative; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; font-family: 'Inter', 'JetBrains Mono', monospace; }
+        thead { display: table-header-group; }
+        th, td { padding: 5px 7px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+                .highlight-gem { border-left: 1px solid transparent; cursor: pointer; transition: background 0.2s; }
+                .row-red { background-color: var(--bg-base); color: var(--accent-red); }
+                .row-red:hover { background-color: var(--bg-base); border-left: 1px solid #FFFFFF; }
+                .row-green { background-color: var(--bg-base); color: var(--accent-green); }
+                .row-green:hover { background-color: var(--bg-base); border-left: 1px solid #FFFFFF; }
+
+        /* UNIFIED BOTTOM COMMAND CENTER */
+        .toolbar { display: flex; align-items: center; padding: 10px 20px; background: var(--bg-panel); border-top: 1px solid #FFFFFF; gap: 15px; z-index: 100; position: relative; flex-shrink: 0; flex-wrap: nowrap; overflow-x: auto; }
+        .title-area h2 { color: var(--accent-green); font-size: 0.9rem; letter-spacing: 3px; font-weight: 800; text-transform: uppercase; text-shadow: var(--neon-glow); margin: 0; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+        .input-group label { font-size: 0.65rem; color: #FFFFFF; text-transform: uppercase; font-weight: 700; }
+                .trinity-input { background: var(--bg-base); border: 1px solid #FFFFFF; color: #FFFFFF; padding: 6px 12px; border-radius: 2px; font-family: inherit; font-weight: 700; }
+                .cycle-box { color: #FFD700; font-size: 1rem; }
+        
+                /* FILTER CONTROLS */
+                .filter-panel { display: flex; align-items: center; gap: 6px; padding-left: 15px; margin-left: 5px; border-left: 1px solid #FFFFFF; }
+                .btn-toggle { background: var(--bg-base); color: #FFFFFF; border: 1px solid #FFFFFF; padding: 6px 12px; font-family: 'Inter', 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; cursor: pointer; transition: all 0.2s; border-radius: 2px; letter-spacing: 1px; min-width: 130px; text-align: center; }
+                .btn-toggle.mode-rev { color: #FFFFFF; border-color: #FFFFFF; box-shadow: none; }
+                .btn-toggle.mode-mom { color: #FFFFFF; border-color: #FFFFFF; box-shadow: none; }
+        
+                .btn-num { background: var(--bg-base); color: #FFFFFF; border: 1px solid #FFFFFF; padding: 4px 8px; font-family: 'Inter', 'JetBrains Mono', monospace; font-weight: 800; font-size: 12px; cursor: pointer; transition: all 0.1s; border-radius: 2px; }
+                .btn-num:hover { background: var(--bg-base); color: #FFFFFF; }
+                .btn-num.active { background: var(--bg-base); color: #FFFFFF; border-color: #FFD700; }
+
+        #stats { margin-left: auto; font-size: 0.8rem; color: #FFFFFF; font-family: monospace; text-align: right; flex-shrink: 0;}
+
+        ::-webkit-scrollbar { width: 16px; height: 16px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-green) !important; border: 3px solid var(--bg-base); border-radius: 2px; box-shadow: var(--neon-glow); }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+
+        /* --- App3 Modal Styles --- */
+                #app3-modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); backdrop-filter: blur(6px); z-index: 2001; }
+                #app3-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 90vw; max-width: 380px; height: 480px; background: var(--bg-base); border: 1px solid var(--border); z-index: 2002; flex-direction: column; border-radius: 2px; overflow: hidden; }
+        .app3-modal-stat-row { padding: 9px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; }
+        #app3-modal ::-webkit-scrollbar { width: 2px; }
+        #app3-modal ::-webkit-scrollbar-track { background: transparent; }
+        #app3-modal ::-webkit-scrollbar-thumb { background: var(--border); }
+    </style>
+</head>
+<body>
+
+    <div id="main-container">
+        <div id="canvas-viewport"><canvas id="matrixCanvas"></canvas></div>
+        <div id="streakPanel"><div id="app3-mainContainer"></div></div>
+        <div id="row-index-panel"></div>
+        <div id="v-scroll-track"><div id="v-spacer"></div></div>
+
+        <div id="wall-finder-pane">
+    <div class="peaks-container">
+        <div class="table-wrapper">
+                    <table>
+    <tbody id="peaksTableBody">
+                            <tr><td colspan="7" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">AWAITING DATA...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="trade-console" style="flex-shrink: 0; border-top: 1px solid var(--border); background: var(--bg-panel); padding: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; z-index: 20;">
+                                    <!-- Row 1: Trade Amount | Balance | Theme -->
+                                    <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
+                                        <span style="font-size: 11px; font-weight: 800; color: #888; margin-right: 4px;">$</span>
+                                        <input type="number" id="tradeAmount" value="1.00" step="0.10" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; font-size: 12px; font-weight: 800; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; text-shadow: var(--neon-glow);">
+                                        <span id="accountBalance">$1,000.00</span>
+                                    </div>
+                                    <button id="personalizeBtn" onclick="openPersonalizeModal()" style="background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px; font-size: 11px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border-radius: 2px; font-family: 'Inter', monospace; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;" title="Theme">THEME</button>
+                
+                                    <!-- Row 2: SYS:Auto/Manual | Trade Expiry Time | HISTORY/OPEN -->
+                                    <button id="masterSysBtn" onclick="toggleMasterEngines()" style="background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; border-radius: 2px; font-family: 'Inter', monospace; width: 100%; height: 100%;">SYS: AUTO</button>
+                                    <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888; margin-right: 4px;">EXP</span>
+                                        <input type="number" id="tradeExpiry" value="60" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888; margin-left: 4px;">s</span>
+                                    </div>
+                                    <button onclick="openTradeHistory()" style="background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary); padding: 4px; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; letter-spacing: 0.5px; width: 100%; height: 100%;">HISTORY / OPEN</button>
+                
+                                    <!-- Row 3: BUY | SELL | Category Toggles -->
+                                                                            <button onclick="executeTrade('CALL', this)" style="background: var(--bg-base); color: var(--accent-green); border: 1px solid var(--border); padding: 4px; font-size: 12px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border-radius: 2px; width: 100%; height: 100%;">BUY</button>
+                                                                            <button onclick="executeTrade('PUT', this)" style="background: var(--bg-base); color: var(--accent-red); border: 1px solid var(--border); padding: 4px; font-size: 12px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border-radius: 2px; width: 100%; height: 100%;">SELL</button>
+                                                                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%; height: 100%;">
+                                                                                <button onclick="toggleCat(this, 'FX')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: #FFD700; border: 1px solid #FFD700; padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">FX</button>
+                                                                                <button onclick="toggleCat(this, 'METAL')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">METAL</button>
+                                                                                <button onclick="toggleCat(this, 'DERIV')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">DERIV</button>
+                                                                            </div>
+                
+                                    <!-- Row 4: Min Cycle | Max Cycle | Scan Time -->
+                                    <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888; margin-right: 4px;">MIN</span>
+                                        <input type="number" id="scanMin" value="60" onchange="dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888; margin-right: 4px;">MAX</span>
+                                        <input type="number" id="scanMax" value="60" onchange="dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888; margin-right: 4px;">SCN</span>
+                                        <input type="number" id="autoScanIntervalInput" value="60" min="1" onchange="updateAutoScanInterval()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888; margin-left: 4px;">s</span>
+                                    </div>
+                                </div>
+                
+                                <!-- Hidden elements to preserve JS bindings -->
+                                <div id="wallPanelFooter" style="display: none;">
+                                    <button id="settingsBtn" onclick="toggleSettings()"></button>
+                                    <div id="settingsPopup">
+                                        <div id="apiPairDisplay">frxEURUSD</div>
+                                        <div id="cycleInputDisplay">60</div>
+                                        <div id="liveTickDisplayVisible">0</div>
+                                    </div>
+                                    <input type="number" id="cycleInput" value="60" min="10" readonly class="trinity-input cycle-box" />
+                                    <button id="modeToggleBtn" onclick="toggleSignalMode()" class="btn-toggle mode-rev"></button>
+                                </div>
+            </div>
+        </div>
+        <div id="h-scroll-track"><div id="h-spacer"></div></div>
+    </div>
+
+    <div class="toolbar" style="display:none!important;">
+        <div class="title-area">
+                    <h2>WALLSPECTRUM</h2>
+                    <div style="font-size: 8px; color: #FFFFFF; letter-spacing: 1px;">AUTONOMOUS OMNI-SYNC</div>
+                </div>
+        
+                <input type="text" id="apiPair" value="frxAUDCAD" style="display:none;" readonly />
+        
+                <span id="liveTickDisplay" style="display:none;">0</span>
+
+        <div id="instance-controls" style="display:none; align-items:center; gap: 15px; margin-left: 15px; padding-left: 15px; border-left: 1px solid #FFFFFF;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size: 10px; color: #D500F9; font-weight: 800; letter-spacing: 1px;" id="instance-info">VIEWING: LIVE EDGE</span>
+                <span style="font-size: 11px; color: #FFFFFF; font-family: monospace; font-weight: bold;" id="instance-time">--:--:--</span>
+            </div>
+            <div style="font-size: 8px; color: #FFFFFF; font-weight: 800; letter-spacing: 1px; max-width: 100px; text-transform: uppercase;">
+                Click row again to cycle history
+            </div>
+        </div>
+
+        <div id="stats">INITIALIZING SYSTEM BOOT SEQUENCE...</div>
+
+    </div>
+
+    <div id="bootOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-base);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
+            <div style="width:580px;max-width:94vw;">
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;color:#00E676;text-shadow:0 0 10px rgba(0,230,118,0.5);margin-bottom:18px;text-align:center;">⬡ WALLSPECTRUM AOFS BOOT SEQUENCE</div>
+                <div style="background:var(--bg-base);border:1px solid #fff;border-radius:2px;height:6px;margin-bottom:18px;overflow:hidden;">
+                    <div id="bootProgressBar" style="height:100%;width:0%;background:#00E676;box-shadow:0 0 8px rgba(0,230,118,0.7);transition:width 0.3s ease;"></div>
+                </div>
+                <div id="bootPairGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:16px;font-size:9px;font-weight:800;letter-spacing:0.05em;"></div>
+                <div style="background:var(--bg-base);border:1px solid #FFFFFF;border-radius:2px;padding:10px 14px;height:130px;overflow-y:auto;display:flex;flex-direction:column-reverse;" id="bootLogBox">
+                    <div id="bootLogLines"></div>
+                </div>
+                <div id="bootStatusLine" style="margin-top:10px;font-size:9px;color:#FFFFFF;font-weight:800;letter-spacing:0.15em;text-align:center;">INITIALIZING...</div>
+            </div>
+        </div>
+
+    <div id="app3-modalOverlay" onclick="closeModalApp3()"></div>
+    <div id="app3-modal">
+        <div style="padding:13px 15px;background:var(--bg-base);color:var(--text-primary);border-bottom:1px solid var(--border);font-weight:800;font-size:11px;letter-spacing:0.16em;display:flex;justify-content:space-between;align-items:center;">
+            <span id="app3-modalTitle">OFFSET</span>
+            <button onclick="closeModalApp3()" style="background:transparent;border:none;color:#FFFFFF;cursor:pointer;font-size:14px;padding:0 4px;">✕</button>
+        </div>
+        <div style="display:flex;flex:1;overflow:hidden;">
+            <div style="flex:1;overflow-y:auto;background:var(--bg-base);border-right:1px solid var(--border);">
+                <div style="padding:6px 14px;font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--accent-red);border-bottom:1px solid var(--border);text-transform:uppercase;">▼ Bear Streaks</div>
+                <div id="app3-rD"></div>
+            </div>
+            <div style="flex:1;overflow-y:auto;background:var(--bg-base);">
+                <div style="padding:6px 14px;font-size:9px;font-weight:800;letter-spacing:0.18em;color:var(--accent-green);border-bottom:1px solid var(--border);text-transform:uppercase;">▲ Bull Streaks</div>
+                <div id="app3-gD"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="personalize-modalOverlay" onclick="closePersonalizeModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); backdrop-filter: blur(6px); z-index: 3000;"></div>
+        <div id="personalize-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 90vw; max-width: 320px; background: var(--bg-base); border: 1px solid #FFFFFF; z-index: 3001; flex-direction: column; border-radius: 2px; box-shadow: 0 0 20px rgba(0, 176, 255, 0.2);">
+            <div style="padding:13px 15px; background:var(--bg-base); color:#FFD700; border-bottom:1px solid #FFFFFF; font-weight:800; font-size:11px; letter-spacing:0.16em; display:flex; justify-content:space-between; align-items:center;">
+                <span>PERSONALIZATION</span>
+                <button onclick="closePersonalizeModal()" style="background:transparent; border:none; color:#FFFFFF; cursor:pointer; font-size:14px; padding:0 4px;">✕</button>
+            </div>
+            <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                        <div class="input-group">
+                            <label style="color:#FFFFFF; font-size:10px; font-weight:800; letter-spacing:1px;">SYSTEM THEME</label>
+                            <input type="color" id="themeHexInput" value="#000432" oninput="applySystemTheme(this.value)" style="width:100%; height:40px; cursor:pointer; border:1px solid #FFFFFF; background:transparent; padding:2px;">
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <div class="input-group" style="flex:1;">
+                                <label style="color:var(--accent-green); font-size:10px; font-weight:800; letter-spacing:1px;">BULL ACCENT</label>
+                                <input type="color" id="greenHexInput" value="#2ED573" oninput="applyAccentColor('green', this.value)" style="width:100%; height:40px; cursor:pointer; border:1px solid var(--accent-green); background:transparent; padding:2px;">
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <label style="color:var(--accent-red); font-size:10px; font-weight:800; letter-spacing:1px;">BEAR ACCENT</label>
+                                <input type="color" id="redHexInput" value="#E63946" oninput="applyAccentColor('red', this.value)" style="width:100%; height:40px; cursor:pointer; border:1px solid var(--accent-red); background:transparent; padding:2px;">
+                            </div>
+                        </div>
+                        <!-- Blank popup area for personalized icon injection later -->
+                        <div id="personalize-icon-container" style="min-height: 50px; border: 1px dashed #555; display:flex; align-items:center; justify-content:center; color:#888; font-size:9px; font-weight:800; letter-spacing:1px; margin-top:10px;">
+                            ADDITIONAL ICONS PENDING
+                        </div>
+                    </div>
+        </div>
+    
+        <div id="history-modalOverlay" onclick="closeTradeHistory()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); backdrop-filter: blur(6px); z-index: 2005;"></div>
+        <div id="history-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 90vw; max-width: 450px; height: 550px; background: var(--bg-base); border: 1px solid #FFFFFF; z-index: 2006; flex-direction: column; border-radius: 2px; overflow: hidden; box-shadow: 0 0 20px rgba(0, 176, 255, 0.2);">
+        <div style="padding:13px 15px; background:var(--bg-base); color:#00B0FF; border-bottom:1px solid #FFFFFF; font-weight:800; font-size:11px; letter-spacing:0.16em; display:flex; justify-content:space-between; align-items:center;">
+            <span>TRADE PORTFOLIO</span>
+            <button onclick="closeTradeHistory()" style="background:transparent; border:none; color:#FFFFFF; cursor:pointer; font-size:14px; padding:0 4px;">✕</button>
+        </div>
+        <div style="display:flex; flex:1; overflow:hidden; flex-direction:column;">
+            <div style="padding:8px 12px; background:#000432; border-bottom:1px solid #FFFFFF; font-size:9px; font-weight:800; color:#FFD700; letter-spacing:1px;">ACTIVE OPEN POSITIONS</div>
+            <div id="open-trades-list" style="max-height: 35%; overflow-y:auto; border-bottom: 1px solid #FFFFFF; padding: 8px; font-family: 'JetBrains Mono', monospace;">
+                <div style="color:#888; text-align:center; padding:10px; font-size:10px; font-weight: 700;">Loading...</div>
+            </div>
+            <div style="padding:8px 12px; background:#000432; border-bottom:1px solid #FFFFFF; font-size:9px; font-weight:800; color:#E2E8F0; letter-spacing:1px;">RECENT COMPLETED TRADES</div>
+            <div id="closed-trades-list" style="flex:1; overflow-y:auto; padding: 8px; font-family: 'JetBrains Mono', monospace;">
+                                        <div style="color:#888; text-align:center; padding:10px; font-size:10px; font-weight: 700;">Loading...</div>
+                                    </div>
+                                </div>
+                            </div>
+            
+                            <script id="fftWorkerLogic" type="javascript/worker">
+
+    // applyCumulative: maxS passed in directly — eliminates Object.keys() scan.
+    function applyCumulative(hist, maxS) {
+        let cum = 0;
+        const res = {};
+        for (let i = maxS; i >= 1; i--) {
+            const v = hist[i];
+            if (v) cum += v;
+            if (cum > 0) res[i] = cum;
+        }
+        return res;
+    }
+
+    self.onmessage = function(e) {
+                const { pair, times, prices, minC, maxC, startIdx, endIdx } = e.data;
+                const len = prices.length;
+                if (len === 0) { postMessage({ pair, bestRevs: [], bestMoms: [], deadSigs: [] }); return; }
+        
+                const sStart = startIdx !== undefined ? startIdx : 0;
+                const sEnd = endIdx !== undefined ? Math.min(endIdx, len) : len;
+        
+                const rowColor  = new Int8Array(maxC);   
+                const rowStreak = new Int16Array(maxC);  
+                const rowCol    = new Int32Array(maxC);  
+                const shGMax    = new Int16Array(maxC);  
+                const shRMax    = new Int16Array(maxC);  
+        
+                const revs = [];
+                const moms = [];
+                const allDeadSigs = [];
+        
+                for (let c = minC; c <= maxC; c++) {
+        
+                    rowColor.fill(0, 0, c);
+                    rowStreak.fill(0, 0, c);
+                    rowCol.fill(-2, 0, c);
+                    shGMax.fill(0, 0, c);
+                    shRMax.fill(0, 0, c);
+        
+                    const shG = new Array(c).fill(null);
+                    const shR = new Array(c).fill(null);
+                    
+                    const survivalG = {};
+                    const survivalR = {};
+                    const deathLogG = {};
+                    const deathLogR = {};
+                    const dethronedCycle = [];
+        
+                    for (let i = sStart; i < sEnd; i++) {
+                        const p     = prices[i];
+                        const prevP = i >= sStart + c ? prices[i - c] : -1.0;
+                        const col   = (i / c) | 0;   
+                        const row   = i % c;
+    
+                    let newColor, newStreak;
+    
+                    if (prevP === -1.0) {
+                        if (p === -1.0) { newColor = 0; newStreak = 0; }
+                        else            { newColor = 1; newStreak = 1; }
+                    } else if (p === -1.0) {
+                        newColor = 0; newStreak = 0;
+                    } else if (p > prevP) {
+                        newColor  = 1; 
+                        newStreak = (rowCol[row] === col - 1 && rowColor[row] === 1 && rowStreak[row] > 0) ? rowStreak[row] + 1 : 1;
+                    } else if (p < prevP) {
+                        newColor  = 2; 
+                        newStreak = (rowCol[row] === col - 1 && rowColor[row] === 2 && rowStreak[row] > 0) ? rowStreak[row] + 1 : 1;
+                    } else {
+                        newColor  = rowColor[row];
+                        newStreak = 0;
+                    }
+    
+                    // ── OMNI-CYCLE GRAVEYARD ENGINE ──
+                    if (rowStreak[row] > 0 && (newStreak <= 1 || newColor !== rowColor[row])) {
+                        const s = rowStreak[row];
+                        const isG = rowColor[row] === 1;
+                        if (isG) {
+                            if (!survivalG[row]) survivalG[row] = {};
+                            if (!deathLogG[row]) deathLogG[row] = {};
+                            for (let x = 1; x <= s; x++) {
+                                if (!deathLogG[row][x]) survivalG[row][x] = (survivalG[row][x] || 0) + 1;
+                            }
+                            if (!deathLogG[row][s]) {
+                                dethronedCycle.push({ pair, c, r: row, s1: s, s2: s + 1, c1: survivalG[row][s], c2: 1, col: 'G', type: 'REV', dethroned: true, deathIdx: (rowCol[row] * c) + row });
+                                deathLogG[row][s] = true;
+                            }
+                        } else {
+                            if (!survivalR[row]) survivalR[row] = {};
+                            if (!deathLogR[row]) deathLogR[row] = {};
+                            for (let x = 1; x <= s; x++) {
+                                if (!deathLogR[row][x]) survivalR[row][x] = (survivalR[row][x] || 0) + 1;
+                            }
+                            if (!deathLogR[row][s]) {
+                                dethronedCycle.push({ pair, c, r: row, s1: s, s2: s + 1, c1: survivalR[row][s], c2: 1, col: 'R', type: 'REV', dethroned: true, deathIdx: (rowCol[row] * c) + row });
+                                deathLogR[row][s] = true;
+                            }
+                        }
+                    }
+    
+                    if (newStreak === 1 && rowStreak[row] > 0 && rowColor[row] !== 0 && rowCol[row] === col - 1)
+                    {
+                        const s = rowStreak[row];
+                        if (rowColor[row] === 1) {          
+                            if (!shG[row]) shG[row] = {};
+                            shG[row][s] = (shG[row][s] || 0) + 1;
+                            if (s > shGMax[row]) shGMax[row] = s;
+                        } else {                             
+                            if (!shR[row]) shR[row] = {};
+                            shR[row][s] = (shR[row][s] || 0) + 1;
+                            if (s > shRMax[row]) shRMax[row] = s;
+                        }
+                    }
+    
+                    rowColor[row]  = newColor;
+                    rowStreak[row] = newStreak;
+                    rowCol[row]    = col;
+                }
+    
+                for (let r = 0; r < c; r++) {
+                    for (let ci = 0; ci < 2; ci++) {   
+                        const raw      = ci === 0 ? shG[r]    : shR[r];
+                        const maxS     = ci === 0 ? shGMax[r] : shRMax[r];
+                        if (!raw || maxS === 0) continue;
+    
+                        const colColor = ci === 0 ? 'G' : 'R';
+                        const cum = applyCumulative(raw, maxS);
+    
+                        for (const sStr in cum) {
+                            const s = sStr | 0;
+                            if (s < 1) continue;
+                            const c1  = cum[s];
+                            const c2  = cum[s + 1] || 0;
+                            const pct = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
+                            const entry = { pair, c, r, s1: s, s2: s + 1, c1, c2, pct, col: colColor };
+                            if (c2 <= 9)                    revs.push({ ...entry, type: 'REV' });
+                            if ((c1 - c2) <= 9 && c1 > 1)  moms.push({ ...entry, type: 'MOM' });
+                        }
+                    }
+                }
+                
+                // Push top 100 most recent dead signals per cycle to the master list
+                dethronedCycle.sort((a, b) => b.deathIdx - a.deathIdx);
+                allDeadSigs.push(...dethronedCycle.slice(0, 100));
+            }
+    
+            const bestRevs = [], bestMoms = [];
+                        for (let d = 0; d <= 3; d++) {
+                            const cRevs = revs.filter(x => x.c2 === d);
+                            bestRevs.push(...cRevs);
+                
+                            const cMoms = moms.filter(x => (x.c1 - x.c2) === d);
+                            bestMoms.push(...cMoms);
+                        }
+    
+            postMessage({ pair, bestRevs, bestMoms, deadSigs: allDeadSigs });
+        };
+
+</script>
+
+    <script>
+    const ALL_PAIRS = [
+                "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
+                "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY",
+                "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF",
+                "frxGBPJPY", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY", "frxNZDUSD",
+                "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN", "frxUSDNOK",
+                "frxXAGUSD", "frxXAUUSD", "frxXPTUSD", "cryBTCUSD", "cryETHUSD",
+                "1HZ100V", "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V"
+            ];
+        
+            let allPairData = {};
+            let activePair = "frxEURUSD";
+
+        let globalRevs = [];
+                                let globalMoms = [];
+                                let globalDethroned = [];
+                                let currentMode = 'REV';
+                        let currentFilter = 0;
+                        let currentCategory = 'FX';
+        
+                function getPairCategory(p) {
+                    if (p.includes('XAU') || p.includes('XAG') || p.includes('XPT')) return 'METAL';
+                    if (p.startsWith('frx')) return 'FX';
+                    if (p.startsWith('1HZ') || p.startsWith('cry')) return 'DERIV';
+                    return 'ALL';
+                }
+        
+                let scanPending = 0;
+                        let globalTickCount = 0;
+                        let isAutoScanOn = true;
+                        let autoScanIntervalMs = 60000;
+
+        let timesArray = new Int32Array(0);
+        let pricesArray = new Float64Array(0);
+        let matrixData = {};
+        let streakInstances = {};
+        let streakHistoryApp3 = {};
+
+        let lastClickedSigId = "";
+        let clickCycleIndex = -1;
+        let highlightRow = -1;
+        let currentInstances = [];
+        let currentInstanceIndex = -1;
+        let liveEdgeCol = -1;
+        
+                let CYCLE = parseInt(document.getElementById('cycleInput').value) || 60;
+        const CELL_W = 40, HEADER_H = 20; // Shrunk width by 50% to pack more time bars
+
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d', {alpha: false});
+        const viewport = document.getElementById('canvas-viewport');
+        const rowPanel = document.getElementById('row-index-panel');
+        const hScroll = document.getElementById('h-scroll-track');
+        const hSpacer = document.getElementById('h-spacer');
+
+        function requestDraw() { requestAnimationFrame(draw); }
+        hScroll.addEventListener('scroll', () => requestDraw());
+        window.addEventListener('resize', () => { if (timesArray.length > 0) processVisualMatrix(); });
+
+        let isDragging = false;
+        let startX, startScrollX;
+
+        viewport.addEventListener('mousedown', (e) => { isDragging = true; startX = e.pageX; startScrollX = hScroll.scrollLeft; });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mouseleave', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            hScroll.scrollLeft = startScrollX - (e.pageX - startX);
+        });
+
+        viewport.addEventListener('wheel', (e) => {
+            hScroll.scrollLeft += e.deltaY;
+            e.preventDefault();
+        }, { passive: false });
+
+        let currentStartTsUtc = 0;
+        let derivWs = null;
+        let autoScanInterval = null;
+
+        function getTradingContext() {
+                                    var now = new Date();
+                                    var currentUtcEpoch = Math.floor(now.getTime() / 1000);
+                                    var todayMidnightUtc = currentUtcEpoch - (currentUtcEpoch % 86400);
+                                    var startTsUtc = todayMidnightUtc;
+                                    
+                                    if (currentUtcEpoch >= todayMidnightUtc + 75600) {
+                                        startTsUtc = todayMidnightUtc + 86400;
+                                    }
+                                    
+                                    var targetDate = new Date(startTsUtc * 1000);
+                                    var dayOfWeek = targetDate.getUTCDay();
+                                    var isLiveSync = true;
+                                    
+                                    if (dayOfWeek === 6) {
+                                        startTsUtc += 2 * 86400;
+                                        isLiveSync = false;
+                                    } else if (dayOfWeek === 0) {
+                                        startTsUtc += 1 * 86400;
+                                        isLiveSync = false;
+                                    }
+                        
+                                    // Use startTsUtc directly for the cache key to ensure 1:1 mapping with the anchor
+                                    var dateStr = "A" + startTsUtc.toString();
+                        
+                                    return { dateStr: dateStr, isLive: isLiveSync, startTsUtc: startTsUtc };
+                                }
+
+        const DERIV_APP_ID = 1089;
+        const DERIV_API_TOKEN = "HwiuDcqYmdmmEyN";
+        const DERIV_WS_URL = `wss://ws.derivws.com/websockets/v3?app_id=${DERIV_APP_ID}`;
+        const DB_NAME = 'TrinityAOFS';
+        const STORE_NAME = 'matrix_cache';
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    e.target.result.createObjectStore(STORE_NAME);
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function aofs_key(pair, dateStr) { return `aofs_${pair}_${dateStr}`; }
+
+        async function aofs_read(pair, dateStr) {
+            try {
+                const db = await initDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const req = tx.objectStore(STORE_NAME).get(aofs_key(pair, dateStr));
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => resolve(null);
+                });
+            } catch(e) {
+                return null;
+            }
+        }
+
+        async function aofs_write(pair, dateStr, times, prices) {
+            try {
+                const db = await initDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.objectStore(STORE_NAME).put({ times, prices }, aofs_key(pair, dateStr));
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject();
+                });
+            } catch(e) {
+                console.error("IndexedDB Write Error", e);
+            }
+        }
+
+        function buildGrid(tickMap, startTs, endTs) {
+            const windowLen = endTs - startTs + 1;
+            const times  = new Int32Array(windowLen);
+            const prices = new Float64Array(windowLen);
+            prices.fill(-1.0);
+            for (let i = 0; i < windowLen; i++) {
+                times[i] = i;
+                const utcTs = startTs + i;
+                if (tickMap[utcTs] !== undefined) prices[i] = tickMap[utcTs];
+            }
+            return { times, prices };
+        }
+
+        function gridsToTickMap(times, prices, startTs) {
+            const map = {};
+            for (let i = 0; i < prices.length; i++) {
+                if (prices[i] !== -1.0) map[startTs + i] = prices[i];
+            }
+            return map;
+        }
+
+        function fetchChunk(pair, segStart, segEnd) {
+            return new Promise((res) => {
+                const cws = new WebSocket(DERIV_WS_URL);
+                let auth = false, done = false;
+                const t = setTimeout(() => { done = true; try { cws.close(); } catch(e) {} res({}); }, 25000);
+                cws.onopen = () => cws.send(JSON.stringify({ authorize: DERIV_API_TOKEN }));
+                cws.onmessage = (ev) => {
+                    const d = JSON.parse(ev.data);
+                    if (d.authorize && !auth) {
+                        auth = true;
+                        cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 5000, style: "ticks" }));
+                    } else if (d.history) {
+                        const ts = d.history.times || [], ps = d.history.prices || [];
+                        const map = {};
+                        for (let i = 0; i < ts.length; i++) map[ts[i]] = ps[i];
+                        done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res(map);
+                    } else if (d.error) {
+                        console.error(`❌ DERIV API ERROR: [${pair}]`, d.error.message);
+                        done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res({});
+                    }
+                };
+                cws.onerror = () => { if (!done) { done = true; clearTimeout(t); res({}); } };
+                cws.onclose = () => { if (!done) { done = true; clearTimeout(t); res({}); } };
+            });
+        }
+
+        async function fetchDerivGrid(pair, dateStr, startTs, endTs) {
+            const name = pair.replace('frx','').replace('cry','');
+            const cached = await aofs_read(pair, dateStr);
+            let tickMap  = {};
+
+            if (cached && cached.times.length > 0) {
+                tickMap = gridsToTickMap(cached.times, cached.prices, startTs);
+            }
+
+            const nowTs = Math.floor(Date.now() / 1000);
+            const fetchEnd = Math.min(endTs, nowTs);
+
+            // 1. OMNI-GAP DETECTOR: Find missing internal segments + tail edge
+            let chunksToFetch = [];
+            let gapStart = -1;
+            const GAP_THRESHOLD = 15; // Only re-fetch internal gaps if 15+ seconds of pure silence exist (filters out normal micro-pauses)
+
+            for (let s = startTs; s <= fetchEnd; s++) {
+                if (tickMap[s] === undefined) {
+                    if (gapStart === -1) gapStart = s;
+                } else {
+                    if (gapStart !== -1) {
+                        if ((s - 1) - gapStart >= GAP_THRESHOLD) {
+                            chunksToFetch.push({ s: gapStart, e: s - 1 });
+                        }
+                        gapStart = -1;
+                    }
+                }
+            }
+            if (gapStart !== -1 && (fetchEnd - gapStart >= GAP_THRESHOLD)) {
+                chunksToFetch.push({ s: gapStart, e: fetchEnd });
+            }
+
+            // Always ensure the absolute edge (last known to fetchEnd) is topped up, even if < 15s
+            if (cached && cached.prices.length > 0) {
+                const reversedPrices = [...cached.prices].reverse();
+                const lastTickIndex = reversedPrices.findIndex(p => p !== -1.0);
+                if (lastTickIndex !== -1) {
+                    const cachedMax = startTs + cached.prices.length - 1 - lastTickIndex;
+                    if (cachedMax < fetchEnd - 2) {
+                        let tailCovered = chunksToFetch.some(c => c.e === fetchEnd && c.s <= cachedMax + 1);
+                        if (!tailCovered) {
+                            chunksToFetch.push({ s: cachedMax + 1, e: fetchEnd });
+                        }
+                    }
+                }
+            } else if (chunksToFetch.length === 0) {
+                // Failsafe for entirely empty arrays initially
+                chunksToFetch.push({ s: startTs, e: fetchEnd });
+            }
+
+            // 2. SPLIT & FETCH
+            let finalChunks = [];
+            const CHUNK = 3600;
+            chunksToFetch.forEach(gap => {
+                for (let s = gap.s; s <= gap.e; s += CHUNK + 1) {
+                    finalChunks.push({ s: s, e: Math.min(s + CHUNK, gap.e) });
+                }
+            });
+
+            if (finalChunks.length > 0) {
+                const totalGapSecs = finalChunks.reduce((acc, c) => acc + (c.e - c.s), 0);
+                bootLog(`${name} — found ${finalChunks.length} gap(s) totalling ~${totalGapSecs}s. Backfilling...`, '#FFD700');
+                
+                // Reduced workers to 3 to bypass Deriv API rate limits
+                const WORKERS = 3;
+                for (let i = 0; i < finalChunks.length; i += WORKERS) {
+                    const batch = finalChunks.slice(i, i + WORKERS);
+                    bootLog(`${name} — dispatching ${batch.length} workers for chunks ${i+1}-${i+batch.length}`, '#00B0FF');
+
+                    const batchResults = await Promise.all(batch.map(async (c, idx) => {
+                        let map = {};
+                        let retries = 0;
+                        const MAX_RETRIES = 3;
+                        // Increased delay to securely stagger WebSocket creation
+                        let delay = idx * 600;
+
+                        while (retries <= MAX_RETRIES) {
+                            await new Promise(r => setTimeout(r, delay));
+                            map = await fetchChunk(pair, c.s, c.e);
+                            if (Object.keys(map).length > 0) break;
+                            retries++;
+                            if (retries <= MAX_RETRIES) {
+                                bootLog(`${name} — chunk ${i + idx + 1} failed, retrying (${retries}/${MAX_RETRIES})...`, '#FF2D3A');
+                                delay = 1500 * retries;
+                            }
+                        }
+                        return { map, num: i + idx + 1 };
+                    }));
+
+                    batchResults.forEach(res => {
+                        const got = Object.keys(res.map).length;
+                        if (got > 0) Object.assign(tickMap, res.map);
+                        bootLog(`${name} — chunk ${res.num} synced ${got} ticks`, got > 0 ? '#888' : '#FF2D3A');
+                    });
+
+                    await new Promise(r => setTimeout(r, 300));
+                }
+           } else {
+                bootLog(`${name} — fully cached, no gaps found`, '#555');
+            }
+
+            // Merge any early live ticks that arrived while we were backfilling
+            if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
+                Object.assign(tickMap, window.liveTickBuffer[pair]);
+            }
+
+            const { times, prices } = buildGrid(tickMap, startTs, endTs);
+            await aofs_write(pair, dateStr, times, prices);
+            return { times, prices };
+        }
+
+        const _bootPairState = {};
+        ALL_PAIRS.forEach(p => { _bootPairState[p] = 'wait'; });
+
+        function bootLog(msg, color) {
+            const box = document.getElementById('bootLogLines');
+            if (!box) return;
+            const line = document.createElement('div');
+            line.style.cssText = `font-size:9px;font-weight:700;letter-spacing:0.06em;padding:1px 0;color:${color||'#FFFFFF'};font-family:'JetBrains Mono',monospace;`;
+            const ts = new Date().toLocaleTimeString('en-GB',{hour12:false});
+            line.textContent = `[${ts}] ${msg}`;
+            box.appendChild(line);
+            box.parentElement.scrollTop = box.parentElement.scrollHeight;
+        }
+
+        function bootStatus(msg) {
+            const el = document.getElementById('bootStatusLine');
+            if (el) el.textContent = msg;
+        }
+
+        function bootProgress(done, total) {
+            const bar = document.getElementById('bootProgressBar');
+            if (bar) bar.style.width = `${Math.round((done/total)*100)}%`;
+        }
+
+        function bootPairUpdate() {
+            const grid = document.getElementById('bootPairGrid');
+            if (!grid) return;
+            const colorMap = { wait:'#333', cache:'#FFD700', fetching:'#00B0FF', done:'#00E676', err:'#FF2D3A' };
+            grid.innerHTML = ALL_PAIRS.map(p => {
+                const name = p.replace('frx','').replace('cry','');
+                const st   = _bootPairState[p];
+                const icon = st==='wait'?'○' : st==='cache'?'◐' : st==='fetching'?'◑' : st==='done'?'●' : '✕';
+                return `<div style="padding:3px 4px;border:1px solid #FFFFFF;border-radius:2px;color:${colorMap[st]};text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
+            }).join('');
+        }
+
+        function bootDone() {
+            const overlay = document.getElementById('bootOverlay');
+            if (!overlay) return;
+            overlay.style.transition = 'opacity 0.6s ease';
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 650);
+        }
+
+        window.onload = autoFetch;
+
+        window.liveTickBuffer = {};
+
+        async function autoFetch() {
+                    var ctxState = getTradingContext();
+                    currentStartTsUtc = ctxState.startTsUtc;
+        
+                    bootPairUpdate();
+                    bootLog(`AOFS ENGINE BOOT — date: ${ctxState.dateStr}  live: ${ctxState.isLive}`, '#00E676');
+                    
+                    // UPDATE 1: Change visual log to reflect the 21-hour window (75600 seconds)
+                    bootLog(`UTC window: ${new Date(ctxState.startTsUtc*1000).toISOString().slice(11,19)} → ${new Date((ctxState.startTsUtc + 75600)*1000).toISOString().slice(11,19)}`, '#888');
+                    document.getElementById('stats').innerText = 'BOOTING AOFS CACHE ENGINE...';
+        
+                    if (derivWs) { derivWs.close(); derivWs = null; }
+                    if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
+        
+                    for (var p of ALL_PAIRS) {
+                        allPairData[p] = { times: new Int32Array(0), prices: new Float64Array(0) };
+                        window.liveTickBuffer[p] = {};
+                    }
+        
+                    var startTs = ctxState.startTsUtc;
+                    
+                    // UPDATE 2: Stop fetching exactly at 2:30 AM next day (startTs + 21 hours)
+                    var endTs   = startTs + 75600; 
+        
+                    // INSTANT LIVE: Start capturing live ticks to memory BEFORE heavy backfills begin
+                    if (ctxState.isLive) {
+                        bootLog(`[INSTANT LIVE] Connecting to Deriv stream early to bridge gap...`, '#D500F9');
+                        startLiveSync();
+                    }
+        
+                    var aofsCacheHits = 0;
+                    bootLog(`[SYNC LOCAL] Reading available cache for ${ALL_PAIRS.length} targets...`, '#00E676');
+        
+                    var cachePromises = ALL_PAIRS.map(p => aofs_read(p, ctxState.dateStr));
+                    var cacheResults = await Promise.all(cachePromises);
+        
+                    for (var i = 0; i < ALL_PAIRS.length; i++) {
+                        var pKey = ALL_PAIRS[i];
+                        var cached = cacheResults[i];
+        
+                        if (cached && cached.times && cached.times.length > 0) {
+                            allPairData[pKey].times  = cached.times;
+                            allPairData[pKey].prices = cached.prices;
+                            _bootPairState[pKey] = 'cache';
+                            aofsCacheHits++;
+                            if (pKey === activePair) {
+                                timesArray = cached.times;
+                                pricesArray = cached.prices;
+                                processVisualMatrix();
+                            }
+                        }
+                    }
+        
+                    bootLog(`[SYNC LOCAL] DONE — ${aofsCacheHits}/${ALL_PAIRS.length} cache hits`, aofsCacheHits > 0 ? '#FFD700' : '#888');
+                    bootPairUpdate();
+        
+                    // 🔥 1. SCAN LOCAL DATA
+                    dispatchMultiCycleScan();
+        
+                    // STRICT UI BLOCK: Do NOT unlock UI here. Wait until all fetching is done.
+                    document.getElementById('stats').innerHTML = `[PHASE 2] FETCH, SAVE & GAP BACKFILL INITIATED...`;
+                    bootLog(`[FETCH & SAVE / PHASE 2 GAP BACKFILL] Initializing...`, '#00B0FF');
+        
+                    var doneCount = 0;
+        
+                    async function processPair(pair) {
+                        var name = pair.replace('frx','').replace('cry','');
+        
+                        if (_bootPairState[pair] !== 'cache') {
+                            _bootPairState[pair] = 'fetching';
+                        }
+        
+                        try {
+                            var { times, prices } = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                            allPairData[pair].times  = times;
+                            allPairData[pair].prices = prices;
+                            _bootPairState[pair] = 'done';
+        
+                            // If the user is staring at this pair, seamlessly update the canvas
+                            if (pair === activePair) {
+                                timesArray = times;
+                                pricesArray = prices;
+                                processVisualMatrix();
+                            }
+                        } catch(e) {
+                            _bootPairState[pair] = 'err';
+                        }
+        
+                        doneCount++;
+                        document.getElementById('stats').innerHTML = `DERIV BACKGROUND TOP-UP: <span style="color:#00B0FF;">${doneCount}/${ALL_PAIRS.length}</span> TARGETS...`;
+                        bootPairUpdate(); // Keep UI grid updated live
+                    }
+        
+                    // 🔥 2. RUN PHASE 2 IN A BLOCKING THREAD (Awaited)
+                    // Reduced batch size to safely sequence the load
+                    var BATCH_SIZE = 2;
+                    for (var b = 0; b < ALL_PAIRS.length; b += BATCH_SIZE) {
+                        var batch = ALL_PAIRS.slice(b, b + BATCH_SIZE);
+                        await Promise.all(batch.map(p => processPair(p)));
+                    }
+
+            bootLog(`[PHASE 2 GAP BACKFILL] DONE — All targets synchronized.`, '#00E676');
+            document.getElementById('stats').innerHTML = `DNA MATRIX OMNI-SYNC: <span style="color:#00E676;">${ALL_PAIRS.length}</span> TARGETS ${ctxState.isLive ? '| <span style="color:#00E676;">🟢 LIVE</span>' : '| <span style="color:#FF2D3A;">🔴 MARKET CLOSED</span>'}`;
+
+            // Final silent scan to integrate all the new background data into the scanner table
+                                    processVisualMatrix();
+                                    dispatchMultiCycleScan();
+                        
+                                    if (ctxState.isLive) {
+                bootLog(`[LIVE SYNC FOR ALL DONE] Moving to grid...`, '#00E676');
+            } else {
+                bootLog(`[MARKET CLOSED] Moving to grid...`, '#FF2D3A');
+            }
+
+            // 🔥 3. UNLOCK UI ONLY WHEN EVERYTHING IS DONE
+            setTimeout(bootDone, 600);
+        }
+
+        function startLiveSync() {
+            derivWs = new WebSocket(DERIV_WS_URL);
+            let liveAuthorized = false;
+
+            derivWs.onopen = () => {
+                derivWs.send(JSON.stringify({ authorize: DERIV_API_TOKEN }));
+            };
+
+            derivWs.onmessage = (msg) => {
+                const data = JSON.parse(msg.data);
+                
+                // 1. Handle Authorization & Subscriptions
+                if (data.authorize && !liveAuthorized) {
+                    liveAuthorized = true;
+                    
+                    // Subscribe to Live Balance
+                    if (derivWs && derivWs.readyState === WebSocket.OPEN) {
+                        derivWs.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+                    }
+
+                    // Subscribe to Ticks
+                    ALL_PAIRS.forEach((pair, idx) => {
+                        setTimeout(() => {
+                            if (derivWs && derivWs.readyState === WebSocket.OPEN)
+                                derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
+                        }, idx * 100);
+                    });
+                    return;
+                }
+                
+                // 2. Handle Live Balance Updates
+                                if (data.balance) {
+                                    // Hide real money, maintain simulated balance display
+                                    const balElement = document.getElementById('accountBalance');
+                                    if (balElement && !window.simBalInit) {
+                                        window.simBalInit = true;
+                                        balElement.innerText = `$1,000.00 SIM`;
+                                        balElement.style.textShadow = "0 0 10px #FFFFFF";
+                                        setTimeout(() => balElement.style.textShadow = "none", 300);
+                                    }
+                                }
+
+                // 3. Handle Trade Execution Responses
+                                if (data.error) {
+                                    console.warn("⚠️ API MESSAGE:", data.error.message);
+                                }
+                if (data.buy) {
+                    console.log("✅ Trade Placed Successfully! ID:", data.buy.contract_id);
+                    // Force refresh portfolio if modal is currently open
+                    if (document.getElementById('history-modal').style.display === 'flex') {
+                         derivWs.send(JSON.stringify({ portfolio: 1 }));
+                    }
+                }
+
+                // --- NEW: HISTORY / PORTFOLIO HANDLERS ---
+                const formatTime = (epoch) => {
+                    const d = new Date(epoch * 1000);
+                    return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+                };
+
+                if (data.portfolio) {
+                    const openList = document.getElementById('open-trades-list');
+                    if (openList) {
+                        const contracts = data.portfolio.contracts;
+                        if (!contracts || contracts.length === 0) {
+                            openList.innerHTML = '<div style="color:#555; text-align:center; padding:15px; font-size:10px; font-weight:800; letter-spacing: 1px;">NO OPEN POSITIONS</div>';
+                        } else {
+                            openList.innerHTML = contracts.map(c => {
+                                const type = c.contract_type || (c.shortcode ? c.shortcode.split('_')[0] : 'TRADE');
+                                const symbol = c.symbol.replace(/^(frx|cry)/i, '');
+                                const openTime = formatTime(c.purchase_time);
+                                return `
+                                <div style="padding:8px; border:1px solid #333; margin-bottom:6px; border-radius:2px; font-size:11px; font-weight:700; display:flex; flex-direction:column; gap:6px; background: rgba(0, 176, 255, 0.05);">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="color:#E2E8F0; font-size:12px;">${type} <span style="color:#00B0FF;">${symbol}</span></div>
+                                        <div style="color:#FFD700; font-size:9px;">ID: ${c.contract_id}</div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;">
+                                        <div>OPEN: <span style="color:#FFF;">${openTime}</span></div>
+                                        <div>STAKE: <span style="color:#FFF;">$${c.buy_price.toFixed(2)}</span></div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('');
+                        }
+                    }
+                }
+
+                if (data.profit_table) {
+                    const closedList = document.getElementById('closed-trades-list');
+                    if (closedList) {
+                        const txs = data.profit_table.transactions;
+                        if (!txs || txs.length === 0) {
+                            closedList.innerHTML = '<div style="color:#555; text-align:center; padding:15px; font-size:10px; font-weight:800; letter-spacing: 1px;">NO RECENT HISTORY</div>';
+                        } else {
+                            closedList.innerHTML = txs.map(t => {
+                                const isWin = t.sell_price > t.buy_price;
+                                const pnl = t.sell_price - t.buy_price;
+                                const color = isWin ? '#2ED573' : '#E63946';
+                                
+                                // Extract clean type and symbol from the ugly shortcode
+                                const parts = t.shortcode ? t.shortcode.split('_') : [];
+                                const type = parts[0] || 'TRADE';
+                                const symbol = (parts[1] || 'ASSET').replace(/^(FRX|CRY)/i, '');
+                                
+                                const openTime = formatTime(t.purchase_time);
+                                const closeTime = formatTime(t.sell_time);
+
+                                return `
+                                <div style="padding:8px; border:1px solid #333; margin-bottom:6px; border-radius:2px; font-size:11px; font-weight:700; display:flex; flex-direction:column; gap:6px; background: rgba(255, 255, 255, 0.02);">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="color:#E2E8F0; font-size:12px;">${type} <span style="color:#FFD700;">${symbol}</span></div>
+                                        <div style="color:${color}; font-weight:800; font-size: 13px;">${isWin ? '+' : ''}$${pnl.toFixed(2)}</div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;">
+                                        <div>OPEN: <span style="color:#FFF;">${openTime}</span></div>
+                                        <div>STAKE: <span style="color:#FFF;">$${t.buy_price.toFixed(2)}</span></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;">
+                                        <div>CLOSE: <span style="color:#FFF;">${closeTime}</span></div>
+                                        <div>PAYOUT: <span style="color:${color};">$${t.sell_price.toFixed(2)}</span></div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('');
+                        }
+                    }
+                }
+                // ------------------------------------------
+
+                // 4. Handle Live Ticks
+                if (data.tick) {
+                    const t = data.tick;
+                    globalTickCount++;
+                    document.getElementById('liveTickDisplay').innerText = globalTickCount.toLocaleString();
+                    injectLiveTick(t.symbol, t.epoch, t.quote);
+                }
+            };
+
+            derivWs.onclose = () => {
+                            console.log("Deriv live stream closed. Retrying in 3s...");
+                            setTimeout(startLiveSync, 3000);
+                        };
+            
+                        setupAutoScan();
+                    }
+            
+                    function setupAutoScan() {
+                        if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
+                        if (isAutoScanOn) {
+                            autoScanInterval = setInterval(() => {
+                                dispatchMultiCycleScan();
+                            }, autoScanIntervalMs);
+                        }
+                    }
+            
+                    // toggleAutoScanMode logic consolidated into toggleMasterEngines
+            
+                    function updateAutoScanInterval() {
+                        let val = parseInt(document.getElementById('autoScanIntervalInput').value);
+                        if (isNaN(val) || val < 1) { val = 1; document.getElementById('autoScanIntervalInput').value = 1; }
+                        autoScanIntervalMs = val * 1000;
+                        setupAutoScan();
+                    }
+            
+                    function injectLiveTick(pair, ts, p) {
+                            // Buffer the tick in case the core matrix arrays are currently busy re-fetching
+                            if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
+                                window.liveTickBuffer[pair][ts] = p;
+                            }
+                
+                            if (!allPairData[pair] || allPairData[pair].times.length === 0) return;
+                
+                            var index = ts - currentStartTsUtc;
+                                                        window._liveMaxIndex = Math.max(window._liveMaxIndex || 0, index);
+                                                var tArr = allPairData[pair].times;
+                                                var pArr = allPairData[pair].prices;
+        
+                    if (index < 0 || index >= tArr.length) return;
+                    pArr[index] = p;
+        
+                    if (pair === activePair) {
+                                    let totalSec = tArr[index];
+                                    let col = Math.floor(totalSec / CYCLE);
+                            let row = totalSec % CYCLE;
+
+                if (!matrixData[col]) matrixData[col] = {};
+                let streakCol = 'G', streakLen = 1; let prevCol = col - 1;
+
+                if (matrixData[prevCol] && matrixData[prevCol][row]) {
+                    let prev = matrixData[prevCol][row];
+                    if (p > prev.p) { streakCol = 'G'; streakLen = (prev.c === 'G' ? prev.s + 1 : 1); }
+                    else if (p < prev.p) { streakCol = 'R'; streakLen = (prev.c === 'R' ? prev.s + 1 : 1); }
+                    else { streakCol = prev.c; streakLen = 0; }
+                }
+
+                matrixData[col][row] = { c: streakCol, s: streakLen, p: p };
+
+                // 🔴 NEW: TRIGGER AUTONOMOUS ROBOT VERIFICATION 🔴
+                if (autoHunterEnabled) {
+                    triggerAutoTradeIfValid(pair, col, row, streakCol, streakLen);
+                }
+
+                if (clickCycleIndex === -1 && liveEdgeCol >= 0) {
+                    const scrollPos = hScroll.scrollLeft;
+                    const targetPos = Math.max(0, (col * CELL_W) - (viewport.clientWidth / 2) + (CELL_W / 2));
+                    if (Math.abs(scrollPos - targetPos) < viewport.clientWidth) {
+                        hScroll.scrollLeft = targetPos;
+                    }
+                }
+
+                requestDraw();
+            }
+        }
+window.autoTradedInstances = {};
+        window.gridTrades = [];
+
+        function triggerAutoTradeIfValid(pair, col, row, currentStreakColor, currentStreakLen) {
+                            if (!autoHunterEnabled) return;
+                            
+                            // SAFETY LOCK: Prevent trades from firing based on incomplete data while multi-core scanners are running
+                            if (scanPending > 0) return;
+                
+                            // EXTREME NOISE CUT: Top 3 Signals Total
+                                        var allValid = [
+                                            ...globalRevs.filter(x => (x.c2 === 0 || x.c2 === 1 || x.c2 === 2) && x.c1 >= 10),
+                                            ...globalMoms.filter(x => { var d = x.c1 - x.c2; return (d === 0 || d === 1 || d === 2) && x.c1 >= 10; })
+                                        ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
+                    
+                                        var uniqueList = [];
+                                        var seenRows = new Set();
+                                        for (var x of allValid) {
+                                            if (!seenRows.has(x.r)) {
+                                                seenRows.add(x.r);
+                                                uniqueList.push(x);
+                                                if (uniqueList.length === 3) break;
+                                            }
+                                        }
+        
+                    // Loop through EVERY target currently visible on the Wall Panel
+                    for (let sig of uniqueList) {
+                // If the live tick exactly matches a target signal threshold
+                if (sig.pair === pair && sig.r === row && sig.col === currentStreakColor && currentStreakLen === sig.s1) {
+                    
+                    // Prevent duplicate trades on the exact same signal hit
+                    let tradeKey = `${pair}-${col}-${row}-${sig.type}-${sig.s1}`;
+                    if (window.autoTradedInstances[tradeKey]) continue; 
+                    window.autoTradedInstances[tradeKey] = true;
+
+                    // Logic Engine: Determine Call or Put based on Reversal vs Momentum
+                    let tradeDir = 'CALL';
+                    if (sig.type === 'REV') {
+                        tradeDir = (sig.col === 'R') ? 'CALL' : 'PUT'; // Reverse it
+                    } else if (sig.type === 'MOM') {
+                        tradeDir = (sig.col === 'G') ? 'CALL' : 'PUT'; // Follow it
+                    }
+
+                    // Save coordinates for the Canvas visual marker
+                    window.gridTrades.push({ pair: pair, col: col, row: row, dir: tradeDir, time: Date.now() });
+
+                    console.log(`🤖 AUTO-HUNTER FIRING: ${tradeDir} on ${pair} [Row ${row}, Col ${col}]`);
+                    
+                    // Find the physical UI buttons to animate them
+                    let btnElements = document.querySelectorAll('button[onclick*="executeTrade"]');
+                    let targetBtn = Array.from(btnElements).find(b => b.innerText.includes(tradeDir));
+                    
+                    if (targetBtn) {
+                        let prevPair = activePair;
+                        if (activePair !== pair) {
+                            activePair = pair;
+                            document.getElementById('apiPair').value = pair;
+                        }
+                        
+                        executeTrade(tradeDir, targetBtn); // FIRE TRADE!
+                        
+                        // Revert active pair if we had to swap it temporarily
+                        if (prevPair !== pair) {
+                            setTimeout(() => {
+                                activePair = prevPair;
+                                document.getElementById('apiPair').value = prevPair;
+                            }, 100);
+                        }
+                    }
+                    break; // Execute only once per tick
+                }
+            }
+        }
+        function processVisualMatrix() {
+            if (timesArray.length === 0) return;
+            const availableHeight = Math.max(100, viewport.clientHeight - HEADER_H);
+            CELL_H = availableHeight / CYCLE;
+            let dynamicFontSize = Math.max(8, Math.floor(CELL_H * 0.72));
+
+            matrixData = {}; highlightRow = -1; currentInstances = [];
+            document.getElementById('instance-controls').style.display = 'none';
+
+            let rowHtml = '';
+                                    for (let r = 0; r < CYCLE; r++) { rowHtml += `<div class="idx-cell" style="height:${CELL_H}px; font-size:${dynamicFontSize}px;">${r}</div>`; }
+                                    rowPanel.innerHTML = rowHtml;
+                        
+                                    var sStart = 0, sEnd = 75600;
+                                                                        var localMaxIndex = 0;
+                                                            
+                                                                        for (var i = 0; i < timesArray.length; i++) {
+                                                                            var totalSec = timesArray[i];
+                                                                            if (totalSec < sStart || totalSec >= sEnd) continue;
+                                                            
+                                                                            var p = pricesArray[i];
+                                                                            if (p !== -1.0) localMaxIndex = Math.max(localMaxIndex, totalSec);
+                            let col = Math.floor(totalSec / CYCLE);
+                            let row = totalSec % CYCLE;
+            
+                            if (!matrixData[col]) matrixData[col] = {};
+                            let streakCol = 'G', streakLen = 1; let prevCol = col - 1;
+            
+                            if (matrixData[prevCol] && matrixData[prevCol][row]) {
+                                let prev = matrixData[prevCol][row];
+                                if (p === -1.0) { streakLen = 0; streakCol = 'N'; }
+                                else if (p > prev.p) { streakCol = 'G'; streakLen = (prev.c === 'G' ? prev.s + 1 : 1); }
+                                else if (p < prev.p) { streakCol = 'R'; streakLen = (prev.c === 'R' ? prev.s + 1 : 1); }
+                                else { streakCol = prev.c; streakLen = 0; }
+                            } else if (p === -1.0) { streakLen = 0; streakCol = 'N'; }
+                                                        matrixData[col][row] = { c: streakCol, s: streakLen, p: p };
+                                                    }
+                                        
+                                        window._liveMaxIndex = Math.max(window._liveMaxIndex || 0, localMaxIndex);
+                            
+                                        // --- RESTORED STREAK PANEL LOGIC ---
+            streakInstances = {}; streakHistoryApp3 = {};
+            for (let r = 0; r < CYCLE; r++) {
+                streakInstances[r] = { R: {}, G: {} };
+                streakHistoryApp3[r] = { R: {}, G: {} };
+            }
+            const maxCol = Math.max(...Object.keys(matrixData).map(Number));
+
+            for (let r = 0; r < CYCLE; r++) {
+                let currentStreak = 0; let currentColor = 'N'; let lastActiveCol = 0;
+
+                for (let c = 0; c <= maxCol; c++) {
+                if (matrixData[c] && matrixData[c][r]) {
+                    let cell = matrixData[c][r];
+                    if (cell.s === 0 || cell.s === 1 || cell.c !== currentColor) {
+                        if (currentStreak > 0 && currentColor !== 'N' && cell.s === 1) {
+                            if (!streakInstances[r][currentColor][currentStreak]) streakInstances[r][currentColor][currentStreak] = [];
+                            streakInstances[r][currentColor][currentStreak].push(lastActiveCol);
+                            streakHistoryApp3[r][currentColor][currentStreak] = (streakHistoryApp3[r][currentColor][currentStreak] || 0) + 1;
+                        }
+                    }
+                    currentColor = cell.s > 0 ? cell.c : 'N'; currentStreak = cell.s;
+                    if (cell.s > 0) lastActiveCol = c;
+                } else {
+                    currentStreak = 0; currentColor = 'N';
+                }
+            }
+            }
+
+            let app3Html = '';
+            for (let r = 0; r < CYCLE; r++) {
+                let rM = 0, gM = 0;
+                if (streakHistoryApp3[r]) {
+                    const rKeys = Object.keys(streakHistoryApp3[r].R).map(Number); if (rKeys.length) rM = Math.max(...rKeys);
+                    const gKeys = Object.keys(streakHistoryApp3[r].G).map(Number); if (gKeys.length) gM = Math.max(...gKeys);
+                }
+                app3Html += `<div class="app3-list-row" style="height:${CELL_H}px;" onclick="openModalApp3(${r})">
+                  <div class="app3-list-col app3-red-side" style="font-size:${dynamicFontSize}px;">${rM ? 'x' + rM : '·'}</div>
+                  <div class="app3-list-col app3-green-side" style="font-size:${dynamicFontSize}px;">${gM ? 'x' + gM : '·'}</div>
+                </div>`;
+            }
+            document.getElementById('app3-mainContainer').innerHTML = app3Html;
+
+            hSpacer.style.width = Math.round((maxCol + 1) * CELL_W) + 'px';
+            requestDraw();
+        }
+
+        function toggleCat(btn, cat) {
+                            document.querySelectorAll('.cat-toggle-btn').forEach(b => {
+                                b.style.color = 'var(--text-primary)';
+                                b.style.borderColor = 'var(--border)';
+                            });
+                            btn.style.color = '#FFD700';
+                            btn.style.borderColor = '#FFD700';
+                            
+                            if (currentCategory !== cat) {
+                                currentCategory = cat;
+                                
+                                // Switch visual grid & streak panel to the first asset in the new category
+                                let firstMatch = ALL_PAIRS.find(p => getPairCategory(p) === cat);
+                                if (firstMatch && getPairCategory(activePair) !== cat) {
+                                    activePair = firstMatch;
+                                    document.getElementById('apiPair').value = firstMatch;
+                                    if (allPairData[firstMatch]) {
+                                        timesArray = allPairData[firstMatch].times;
+                                        pricesArray = allPairData[firstMatch].prices;
+                                        processVisualMatrix();
+                                    }
+                                }
+                                
+                                // Re-scan Wall Panel targets for the new category
+                                dispatchMultiCycleScan();
+                            }
+                        }
+        
+                function toggleSignalMode() {
+                    const btn = document.getElementById('modeToggleBtn');
+            if (currentMode === 'REV') {
+                currentMode = 'MOM';
+                btn.innerText = 'MOMENTUM';
+                btn.className = 'btn-toggle mode-mom';
+                document.getElementById('scanHeaderTitle').innerText = 'LIVE SCANNER [MOMENTUM TARGETS]';
+            } else {
+                currentMode = 'REV';
+                btn.innerText = 'REVERSAL';
+                btn.className = 'btn-toggle mode-rev';
+                document.getElementById('scanHeaderTitle').innerText = 'LIVE SCANNER [REVERSAL TARGETS]';
+            }
+            renderFilteredTable();
+        }
+
+        function setDropoffFilter(val) {
+            currentFilter = val;
+            document.querySelectorAll('.btn-num').forEach(b => b.classList.remove('active'));
+            document.getElementById(`flt-${val}`).classList.add('active');
+            renderFilteredTable();
+        }
+
+        function openModalApp3(sec) {
+            const pad = (n, s=2) => String(n).padStart(s, '0');
+            document.getElementById('app3-modalTitle').innerText = `OFFSET · ${pad(sec)}`;
+            let rHistCum = applyCumulative({...streakHistoryApp3[sec]?.R || {}});
+            let gHistCum = applyCumulative({...streakHistoryApp3[sec]?.G || {}});
+
+            function applyCumulative(hist) {
+                let keys = Object.keys(hist).map(Number); let maxS = keys.length ? Math.max(...keys) : 0;
+                let cum = 0; let res = {};
+                for (let i = maxS; i >= 1; i--) { cum += (hist[i] || 0); if (cum > 0) res[i] = cum; }
+                return res;
+            }
+
+            const mapToArrWithPct = (hist) => {
+                return Object.keys(hist).map(k => {
+                    let s = parseInt(k); let c = hist[k]; let prevC = hist[s - 1]; let pct = 'BASE';
+                    if (s > 1 && prevC) { pct = (100 - Math.round((c / prevC) * 100)) + '%'; }
+                    return { s, c, pct };
+                }).sort((a,b) => b.s - a.s);
+            };
+
+            document.getElementById('app3-rD').innerHTML = mapToArrWithPct(rHistCum).map(i =>
+                `<div class="app3-modal-stat-row" style="color:var(--accent-red); align-items:center;">
+                   <span style="flex:1; text-align:left;">X${i.s}</span>
+                   <span style="flex:1; text-align:center; font-size:11px; opacity:0.75; font-weight:600;">${i.pct}</span>
+                   <span style="flex:1; text-align:right;">${i.c}×</span>
+                 </div>`
+            ).join('') || '<div style="padding:16px;text-align:center;color:#FFFFFF;font-size:10px;">No data</div>';
+
+            document.getElementById('app3-gD').innerHTML = mapToArrWithPct(gHistCum).map(i =>
+                `<div class="app3-modal-stat-row" style="color:var(--accent-green); align-items:center;">
+                   <span style="flex:1; text-align:left;">X${i.s}</span>
+                   <span style="flex:1; text-align:center; font-size:11px; opacity:0.75; font-weight:600;">${i.pct}</span>
+                   <span style="flex:1; text-align:right;">${i.c}×</span>
+                 </div>`
+            ).join('') || '<div style="padding:16px;text-align:center;color:#FFFFFF;font-size:10px;">No data</div>';
+
+            document.getElementById('app3-modal').style.display = 'flex';
+            document.getElementById('app3-modalOverlay').style.display = 'block';
+        }
+
+        function closeModalApp3() { document.getElementById('app3-modal').style.display = 'none'; document.getElementById('app3-modalOverlay').style.display = 'none'; }
+
+        function selectSignal(pair, c, r, s1, s2, colColor, type, deathCol = -1) {
+                    let sigId = `${pair}-${c}-${r}-${s1}-${s2}-${colColor}-${type}`;
+        
+                    if (activePair !== pair) {
+                                            activePair = pair;
+                                            document.getElementById('apiPair').value = pair;
+                                            timesArray = allPairData[pair].times;
+                                            pricesArray = allPairData[pair].prices;
+                                        }
+        
+                    if (CYCLE !== c) {
+                        document.getElementById('cycleInput').value = c;
+                        CYCLE = c;
+                    }
+        
+                    processVisualMatrix();
+        
+                    let isFirstClick = (sigId !== lastClickedSigId);
+                    if (isFirstClick) {
+                        lastClickedSigId = sigId;
+                        clickCycleIndex = -1;
+                    } else {
+                        clickCycleIndex++;
+                    }
+        
+                    highlightRow = r;
+                    currentInstances = [];
+                    currentInstanceIndex = -1;
+        
+                    let targetHist = streakInstances[r][colColor];
+                    if (targetHist) {
+                        if (type === 'REV') {
+                            Object.keys(targetHist).forEach(lenStr => {
+                                let L = parseInt(lenStr);
+                                if (L >= s1) {
+                                    targetHist[L].forEach(endCol => currentInstances.push({ col: endCol - (L - s1), row: r }));
+                                }
+                            });
+                        } else if (type === 'MOM') {
+                            Object.keys(targetHist).forEach(lenStr => {
+                                let L = parseInt(lenStr);
+                                if (L >= s2) {
+                                    targetHist[L].forEach(endCol => currentInstances.push({ col: endCol - (L - s2), row: r }));
+                                }
+                            });
+                        }
+                        currentInstances.sort((a, b) => a.col - b.col);
+                    }
+        
+                    if (isFirstClick && deathCol !== -1) {
+                        let foundIdx = currentInstances.findIndex(inst => inst.col === deathCol);
+                        if (foundIdx !== -1) clickCycleIndex = foundIdx;
+                    }
+        
+                    if (clickCycleIndex >= currentInstances.length) {
+                        clickCycleIndex = -1;
+                    }
+        
+                    document.getElementById('instance-controls').style.display = 'flex';
+        
+                    renderFilteredTable();
+        
+                    if (clickCycleIndex === -1) {
+                        setTimeout(() => { jumpToLive(); }, 30);
+                    } else {
+                        setTimeout(() => { showInstance(clickCycleIndex); }, 30);
+                    }
+                }
+
+        function jumpToLive() {
+            if (timesArray.length === 0) return;
+            const nowUtc = Math.floor(Date.now() / 1000);
+            let index = nowUtc - currentStartTsUtc;
+
+            if (index < 0) index = 0;
+            if (index >= timesArray.length) index = timesArray.length - 1;
+
+            let totalSec = timesArray[index];
+            let liveCol = Math.floor(totalSec / CYCLE);
+
+            currentInstanceIndex = -1;
+            liveEdgeCol = liveCol;
+
+            document.getElementById('instance-info').innerText = `VIEWING: LIVE EDGE`;
+            document.getElementById('instance-info').style.color = '#00E676';
+
+            let displaySec = totalSec + 19800; // Adds exactly 5H30M to anchor to IST 05:30 AM
+            let h = Math.floor(displaySec / 3600) % 24;
+            let m = Math.floor((displaySec % 3600) / 60);
+            let s = displaySec % 60;
+            let timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            document.getElementById('instance-time').innerText = `TIME: ${timeStr} | COL: ${liveCol}`;
+
+            hScroll.scrollLeft = Math.max(0, (liveCol * CELL_W) - (viewport.clientWidth / 2) + (CELL_W / 2));
+            requestDraw();
+        }
+
+        function showInstance(idx) {
+            if (currentInstances.length === 0) return;
+            currentInstanceIndex = idx;
+            liveEdgeCol = -1;
+
+            let inst = currentInstances[currentInstanceIndex];
+
+            let totalSec = (inst.col * CYCLE) + inst.row;
+            let displaySec = totalSec + 19800; // Adds exactly 5H30M to anchor to IST 05:30 AM
+            let h = Math.floor(displaySec / 3600) % 24; let m = Math.floor((displaySec % 3600) / 60); let s = displaySec % 60;
+            let timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+            document.getElementById('instance-info').innerText = `HISTORICAL TARGET ${currentInstanceIndex + 1} OF ${currentInstances.length}`;
+            document.getElementById('instance-info').style.color = '#D500F9';
+            document.getElementById('instance-time').innerText = `TIME: ${timeStr} | COL: ${inst.col}`;
+
+            hScroll.scrollLeft = Math.max(0, (inst.col * CELL_W) - (viewport.clientWidth / 2) + (CELL_W / 2));
+            requestDraw();
+        }
+
+        const blob = new Blob([document.getElementById('fftWorkerLogic').textContent], { type: "text/javascript" });
+        const workerBlobUrl = window.URL.createObjectURL(blob);
+
+        // Detect available CPU cores (fallback to 4 if the browser restricts access)
+        const NUM_CORES = navigator.hardwareConcurrency || 4;
+        let workerPool = [];
+        let scanQueue = [];
+
+        // Spawn a worker for each CPU core
+        for (let i = 0; i < NUM_CORES; i++) {
+            let w = new Worker(workerBlobUrl);
+            w.onmessage = function(e) {
+                handleWorkerMessage(e, w);
+            };
+            workerPool.push(w);
+        }
+
+        // Handle results and feed the next task to the idle worker
+                function handleWorkerMessage(e, worker) {
+                    let { pair, bestRevs, bestMoms, deadSigs } = e.data;
+                    globalRevs.push(...bestRevs);
+                    globalMoms.push(...bestMoms);
+                    if (deadSigs) globalDethroned.push(...deadSigs);
+                    
+                    scanPending--;
+        
+                    if (scanPending === 0) {
+                        renderFilteredTable();
+                    } else {
+                        assignNextTask(worker); // Keep the core busy until the queue is empty
+                    }
+                }
+
+        // Pulls the next pair from the queue and assigns it
+        function assignNextTask(worker) {
+            if (scanQueue.length > 0) {
+                let task = scanQueue.shift();
+                worker.postMessage(task);
+            }
+        }
+
+        function dispatchMultiCycleScan() {
+                                    let minC = parseInt(document.getElementById('scanMin').value) || 60;
+                                    let maxC = parseInt(document.getElementById('scanMax').value) || 60;
+                                    if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
+                                    
+                            var sStart = 0, sEnd = 75600;
+                            
+                                        // Updated UI to show active core count
+            document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="7" style="padding: 0;">
+                <div style="display: grid; grid-template-columns: 1.6fr 1.2fr 1.2fr 1.4fr 1fr 1fr 1.4fr; font-size: 9px; font-weight: 800; align-items: stretch; text-align: center; color: var(--accent-green);">
+                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                    <div style="padding: 15px 0; letter-spacing: 0.1em;">SCANNING ALL PAIRS... [${NUM_CORES} CORES ACTIVE]</div>
+                </div>
+            </td></tr>`;
+
+            globalRevs = [];
+                        globalMoms = [];
+                        globalDethroned = [];
+                        scanPending = 0;
+                        scanQueue = []; // Reset the task queue
+
+            // 1. Build the queue of all targets
+                                                    for (let p of ALL_PAIRS) {
+                                                        if (getPairCategory(p) !== currentCategory) continue; // CATEGORY FILTER
+                                                        let pData = allPairData[p];
+                                        if (pData && pData.times.length > 0) {
+                                            scanPending++;
+                                            // CRITICAL SYNC: We must pass a fresh slice of the live array to the Web Worker
+                                            // rather than a reference, ensuring it gets the most up-to-date live ticks.
+                                            let livePricesSlice = pData.prices.slice(); 
+                                            scanQueue.push({ pair: p, times: pData.times, prices: livePricesSlice, minC: minC, maxC: maxC, startIdx: sStart, endIdx: sEnd });
+                                        }
+                                    }
+
+            if (scanPending === 0) {
+                renderFilteredTable();
+                return;
+            }
+
+            // 2. Fire the starting gun: Give the first tasks to all available cores
+            for (let i = 0; i < workerPool.length; i++) {
+                assignNextTask(workerPool[i]);
+            }
+        }
+
+       if (!window.trackedSignals) window.trackedSignals = {};
+                  if (!window.dethronedLog) window.dethronedLog = [];
+              
+                  function renderFilteredTable() {
+                          window.trackedSignals = {};
+                          
+                          // Map cross-cycle worker output to actual local timestamps
+                          if (typeof globalDethroned !== 'undefined' && globalDethroned.length > 0) {
+                              window.dethronedLog = globalDethroned.map(d => ({
+                                  ...d,
+                                  dethroneTime: (currentStartTsUtc + d.deathIdx) * 1000,
+                                  newC2: 'BROKE'
+                              }));
+                              window.dethronedLog.sort((a, b) => b.dethroneTime - a.dethroneTime);
+                          } else {
+                              window.dethronedLog = [];
+                          }
+                          
+                          // UI Performance Lock: Cap to 150 items so massive scans don't freeze the DOM
+                                                    var displayDead = window.dethronedLog.slice(0, 150);
+                                                    
+                                                    // GOD LEVEL CUT: Top 1 Signal Total (c2-0 only)
+                                                    var allValid = [
+                                                        ...globalRevs.filter(x => x.c2 === 0 && x.c1 >= 10),
+                                                        ...globalMoms.filter(x => (x.c1 - x.c2) === 0 && x.c1 >= 10)
+                                                    ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
+                          
+                                                    var uniqueList = [];
+                                                    var seenRows = new Set();
+                                                    for (var x of allValid) {
+                                                        if (!seenRows.has(x.r)) {
+                                                            seenRows.add(x.r);
+                                                            uniqueList.push(x);
+                                                            if (uniqueList.length === 1) break;
+                                                        }
+                                                    }
+                                                    
+                                                    renderScannerTable(uniqueList, displayDead);
+                      }
+                              
+                                  function renderScannerTable(aliveList, deadList) {
+                                                             var tbody = document.getElementById('peaksTableBody');
+                                                             var html = '';
+                                                         
+                                                                     if(!aliveList || aliveList.length === 0) {
+                                                                         html = `<tr><td colspan="7" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
+                                                                     } else {
+                                                                         if (aliveList && aliveList.length > 0) {
+                                                                             aliveList.forEach(data => {
+                                                                                 var isRed = data.col === 'R';
+                                                                                 var rowClass = isRed ? 'row-red' : 'row-green';
+                                                                                 var symbolClean = data.pair.replace('frx', '').replace('cry', '');
+                                                                                 var thisSigId = `${data.pair}-${data.c}-${data.r}-${data.s1}-${data.s2}-${data.col}-${data.type}`;
+                                                                                 var isSelected = thisSigId === lastClickedSigId;
+                                                                                 var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
+                                                                                 
+                                                                                 html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="selectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}')">
+                                                                                                                                                                      <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF; color:#FFFFFF;">${symbolClean} <span style="font-size:9px; opacity:0.7;">[${data.type}]</span></td>
+                                                                                                                                                                      <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">C${data.c}</td>
+                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">R${data.r}</td>
+                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">X${data.s1}-X${data.s2}</td>
+                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">${data.c1}</td>
+                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">${data.c2}</td>
+                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px;">${data.type === 'MOM' ? Math.round((data.c2 / data.c1) * 100) : data.pct}%</td>
+                                                                                 </tr>`;
+                                                                             });
+                                                                         }
+                                                                     }
+                                                                     tbody.innerHTML = html;
+                                                                 }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+            ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); return ctx;
+        }
+
+        function draw() {
+            if (timesArray.length === 0) return;
+            const viewW = viewport.clientWidth; const viewH = viewport.clientHeight;
+            const scrollL = hScroll.scrollLeft; const scrollT = 0;
+
+            canvas.width = viewW; canvas.height = viewH;
+                        ctx.fillStyle = window.systemThemeHex || "#000432"; ctx.fillRect(0, 0, viewW, viewH);
+            
+                        var dynamicFontSize = Math.max(8, Math.floor(CELL_H * 0.72));
+                        ctx.font = `800 ${dynamicFontSize}px 'Inter', 'JetBrains Mono'`;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            
+                        var startCol = Math.floor(scrollL / CELL_W);
+                        var endCol = Math.ceil((scrollL + viewW) / CELL_W);
+                        var centerOff = Math.round(CELL_W / 2);
+                        
+                        var nowUtc = Math.floor(Date.now() / 1000);
+                                                var pcIndex = nowUtc - currentStartTsUtc;
+                                                var currentIndex = Math.max(pcIndex, window._liveMaxIndex || 0);
+                                    
+                                                for (var c = startCol; c <= endCol; c++) {
+                var x = Math.round((c * CELL_W) - scrollL);
+                if (matrixData[c]) {
+                    for (var r = 0; r < CYCLE; r++) {
+                        var totalSec = (c * CYCLE) + r;
+                        // Render if it has a real price OR if it's a historical missing tick (past the current time)
+                        if (matrixData[c][r] && (matrixData[c][r].p !== -1.0 || totalSec <= currentIndex)) {
+                            var y = Math.round((r * CELL_H) - scrollT);
+                            var d = matrixData[c][r];
+                            
+                            var label = 'X' + d.s;
+                            ctx.globalAlpha = 1.0; // Solid visibility for everything
+            
+                            if (d.s > 0) { 
+                                                            // Color active streaks
+                                                            ctx.fillStyle = d.c === 'G' ? (window.accentGreenHex || "#2ED573") : (window.accentRedHex || "#E63946"); 
+                                                        } else { 
+                                // New Off-White for historical X0
+                                ctx.fillStyle = "#E2E8F0"; 
+                            }
+            
+                            ctx.fillText(label, x + centerOff, y + (CELL_H/2) + 1);
+                        }
+                    }
+                }
+            }
+
+            if (highlightRow >= 0) {
+                const yPos = Math.round((highlightRow * CELL_H) - scrollT);
+                if (yPos > -CELL_H && yPos < viewH) {
+                    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(0, yPos, viewW, CELL_H);
+                }
+            }
+
+            currentInstances.forEach((inst, idx) => {
+                const xPos = Math.round((inst.col * CELL_W) - scrollL);
+                const yPos = Math.round((inst.row * CELL_H) - scrollT);
+
+                if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                    if (idx === currentInstanceIndex) {
+                        // Active/selected instance: purple border, no fill
+                        ctx.strokeStyle = "#D500F9"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                    } else {
+                        // Other instances: yellow border only, no fill
+                        ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                    }
+                }
+            });
+
+            // ── 3-STATE NEON BOXES (pre-draw + pulse on fulfil) ─
+            if (_armed && highlightRow >= 0) {
+                const _pulse = 0.4 + 0.6 * Math.abs(Math.sin(Date.now() / 250));
+
+                const _boxDefs = [
+                                    { futurCol: _futureBox1Col, hitCol: _neonBox1Col, dimFill: 'rgba(120,120,120,0.06)', hitFill: _armed.col==='R'? (window.accentRedHex || '#E63946')+'38' : (window.accentGreenHex || '#2ED573')+'38'  },
+                                    { futurCol: _futureBox2Col, hitCol: _neonBox2Col, dimFill: 'rgba(120,120,120,0.06)', hitFill: _armed.col==='R'? (window.accentRedHex || '#E63946')+'66' : (window.accentGreenHex || '#2ED573')+'66'  },
+                                    { futurCol: _futureBox3Col, hitCol: _neonBox3Col, dimFill: 'rgba(120,120,120,0.06)', hitFill: _armed.col==='R'? (window.accentGreenHex || '#2ED573')+'4D' : (window.accentRedHex || '#E63946')+'4D' }
+                                ];
+
+                _boxDefs.forEach(b => {
+                    // draw future placeholder (dim, no fill, dashed)
+                    if (b.futurCol >= 0 && b.hitCol < 0) {
+                        const xPos = Math.round((b.futurCol * CELL_W) - scrollL);
+                        const yPos = Math.round((highlightRow * CELL_H) - scrollT);
+                        if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                            ctx.save();
+                            ctx.setLineDash([3, 3]);
+                            ctx.strokeStyle = "#FFFFFF"; ctx.globalAlpha = 1; ctx.lineWidth = 1;
+                            ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                            ctx.fillStyle = b.dimFill; ctx.globalAlpha = 1;
+                            ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
+                            ctx.restore();
+                        }
+                    }
+                    // draw fulfilled box (solid, pulsing glow)
+                    if (b.hitCol >= 0) {
+                        const xPos = Math.round((b.hitCol * CELL_W) - scrollL);
+                        const yPos = Math.round((highlightRow * CELL_H) - scrollT);
+                        if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                            ctx.save();
+                            ctx.shadowColor = "#FFD700"; ctx.shadowBlur = 10 + 14 * _pulse;
+                            ctx.globalAlpha = 0.6 + 0.4 * _pulse;
+                            ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2;
+                            ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                            ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+                            ctx.fillStyle = b.hitFill; ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
+                            ctx.restore();
+                        }
+                    }
+                });
+            }
+            // fallback: original green live-edge when no signal armed
+            if (liveEdgeCol >= 0 && highlightRow >= 0 && !_armed) {
+                const xPos = Math.round((liveEdgeCol * CELL_W) - scrollL);
+                const yPos = Math.round((highlightRow * CELL_H) - scrollT);
+                if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                }
+            }
+
+            // ── 🔴 NEW: VISUAL TRADE CONFIRMATION MARKERS ON GRID ──
+            if (window.gridTrades) {
+                window.gridTrades.forEach(t => {
+                    if (t.pair === activePair) { // Only draw trades for the pair currently on screen
+                        const xPos = Math.round((t.col * CELL_W) - scrollL);
+                        const yPos = Math.round((t.row * CELL_H) - scrollT);
+                        
+                        if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                            ctx.save();
+                            const isCall = t.dir === 'CALL';
+                                                        const glowCol = isCall ? (window.accentGreenHex || "#2ED573") : (window.accentRedHex || "#E63946");
+                                                        
+                                                        // Glowing inner border
+                            ctx.shadowColor = glowCol;
+                            ctx.shadowBlur = 12;
+                            ctx.strokeStyle = glowCol;
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(xPos + 2, yPos + 2, CELL_W - 4, CELL_H - 4);
+                            
+                            // Directional Neon Arrow
+                            ctx.fillStyle = glowCol;
+                            ctx.shadowBlur = 0;
+                            ctx.font = "bold 14px 'JetBrains Mono'";
+                            ctx.fillText(isCall ? "▲" : "▼", xPos + centerOff, yPos + (CELL_H/2));
+                            ctx.restore();
+                        }
+                    }
+                });
+            }
+
+           const footerY = viewH - HEADER_H;
+                       ctx.fillStyle = window.systemThemeHex || "#000432"; ctx.fillRect(0, footerY, viewW, HEADER_H);
+                       ctx.strokeStyle = "#E2E8F0"; // Changed from #FFFFFF
+            ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, footerY); ctx.lineTo(viewW, footerY); ctx.stroke();
+
+            ctx.font = "bold 10px 'Inter', 'JetBrains Mono'"; ctx.fillStyle = "#E2E8F0"; // Decreased from 12px
+            for (let c = startCol; c <= endCol; c++) {
+                const visualCenterX = Math.round((c * CELL_W) - scrollL) + centerOff;
+                const totalSec = c * CYCLE;
+                const displaySec = totalSec + 19800;
+                const hTime = Math.floor(displaySec / 3600) % 24;
+                const mTime = Math.floor((displaySec % 3600) / 60);
+
+                ctx.fillText(`${String(hTime).padStart(2,'0')}:${String(mTime).padStart(2,'0')}`, visualCenterX, footerY + (HEADER_H / 2));
+            }
+        }
+
+        // ════════════════════════════════════════════════════
+        // BEEP ENGINE + NEON BOX TRACKER
+        // ════════════════════════════════════════════════════
+
+        let _neonBox1Col = -1;
+        let _neonBox2Col = -1;
+        let _neonBox3Col = -1;
+
+        let _futureBox1Col = -1;
+        let _futureBox2Col = -1;
+        let _futureBox3Col = -1;
+
+        let _pulseTimer = null;
+        function _startPulse() {
+            if (_pulseTimer) return;
+            _pulseTimer = setInterval(() => { if (_armed) requestDraw(); }, 50);
+        }
+        function _stopPulse() {
+            if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
+        }
+
+        let _beepAC = null;
+        function _getAC() {
+            if (!_beepAC) _beepAC = new (window.AudioContext || window.webkitAudioContext)();
+            return _beepAC;
+        }
+        document.addEventListener('pointerdown', function _unlockAudio() {
+            try { let ac = _getAC(); if (ac.state === 'suspended') ac.resume(); } catch(e) {}
+            document.removeEventListener('pointerdown', _unlockAudio);
+        });
+        function _beep(freq, dur, vol, type, offset) {
+            try {
+                const ac = _getAC(); const t = ac.currentTime + (offset || 0);
+                const osc = ac.createOscillator(); const gain = ac.createGain();
+                osc.connect(gain); gain.connect(ac.destination);
+                osc.type = type || 'sine';
+                osc.frequency.setValueAtTime(freq, t);
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(vol, t + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                osc.start(t); osc.stop(t + dur + 0.02);
+            } catch(e) {}
+        }
+        let _warnInterval = null;
+        function _startWarnBeep() {
+            if (_warnInterval) return;
+            _beep(880, 0.12, 0.35, 'sine');
+            _warnInterval = setInterval(() => _beep(880, 0.12, 0.35, 'sine'), 900);
+        }
+        function _stopWarnBeep() { if (_warnInterval) { clearInterval(_warnInterval); _warnInterval = null; } }
+        let _hitInterval = null;
+        function _startHitBeep() {
+            _stopWarnBeep();
+            if (_hitInterval) return;
+            _beep(880, 0.10, 0.75, 'sine');
+            _hitInterval = setInterval(() => _beep(880, 0.10, 0.75, 'sine'), 400);
+        }
+        function _stopHitBeep() { if (_hitInterval) { clearInterval(_hitInterval); _hitInterval = null; } }
+        function _stopAllBeeps() { _stopWarnBeep(); _stopHitBeep(); }
+        function _playWinBeep()  { _beep(660, 0.12, 0.8, 'sine', 0.00); _beep(880, 0.22, 0.8, 'sine', 0.14); }
+        function _playLossBeep() { _beep(440, 0.12, 0.8, 'square', 0.00); _beep(260, 0.24, 0.9, 'square', 0.14); }
+        function _playMissBeep() { _beep(600, 0.08, 0.6, 'triangle', 0.00); _beep(400, 0.18, 0.5, 'triangle', 0.10); }
+
+        let _armed = null;
+        let _beepState = 'IDLE';
+        function _oppCol(col) { return col === 'G' ? 'R' : 'G'; }
+
+        function _resetAllBoxes() {
+            _neonBox1Col = -1; _neonBox2Col = -1; _neonBox3Col = -1;
+            _futureBox1Col = -1; _futureBox2Col = -1; _futureBox3Col = -1;
+        }
+
+        function _getLiveCol() {
+            if (liveEdgeCol >= 0) return liveEdgeCol;
+            const cols = Object.keys(matrixData).map(Number);
+            return cols.length ? Math.max(...cols) : 0;
+        }
+
+        function _placeFutureBoxes() {
+            if (!_armed) return;
+            const base = _getLiveCol();
+            _futureBox1Col = base + 1;
+            _futureBox2Col = base + 2;
+            _futureBox3Col = base + 3;
+        }
+
+        function _scanBoxesNow() {
+            if (!_armed) return;
+            _neonBox1Col = -1; _neonBox2Col = -1; _neonBox3Col = -1;
+            const warnAt = _armed.s1 - 1, targetAt = _armed.s1, exitAt = _armed.s2;
+            const r = _armed.r;
+            const cols = Object.keys(matrixData).map(Number).sort((a, b) => a - b);
+            for (let i = 0; i < cols.length; i++) {
+                const c = cols[i];
+                if (!matrixData[c] || !matrixData[c][r]) continue;
+                const { s: streak, c: color } = matrixData[c][r];
+                if (color === _armed.col) {
+                    if (streak === warnAt)  _neonBox1Col = c;
+                    if (streak >= targetAt) _neonBox2Col = c;
+                }
+                if (color === _oppCol(_armed.col) && streak >= exitAt) _neonBox3Col = c;
+            }
+
+            const liveCol = _getLiveCol();
+            if (liveCol >= 0 && matrixData[liveCol] && matrixData[liveCol][r]) {
+                const { s: streak, c: color } = matrixData[liveCol][r];
+                if (color === _armed.col) {
+                    if (streak >= targetAt && _beepState !== 'HIT') {
+                        _beepState = 'HIT'; _startHitBeep();
+                    } else if (streak === warnAt && _beepState === 'IDLE') {
+                        _beepState = 'WARN'; _startWarnBeep();
+                    }
+                }
+            }
+
+            requestDraw();
+        }
+
+        const _origSelectSignal = selectSignal;
+        selectSignal = function(pair, c, r, s1, s2, colColor, type) {
+            _stopAllBeeps();
+            _beepState = 'IDLE';
+            _resetAllBoxes();
+            _armed = { pair, c, r, s1, s2, col: colColor };
+            _origSelectSignal.apply(this, arguments);
+            setTimeout(() => {
+                _scanBoxesNow();
+                _placeFutureBoxes();
+                _startPulse();
+            }, 50);
+        };
+
+        const _origInjectLiveTick = injectLiveTick;
+        injectLiveTick = function(pair, ts, p) {
+            _origInjectLiveTick.apply(this, arguments);
+
+            if (!_armed || pair !== _armed.pair) return;
+
+            const idx = ts - currentStartTsUtc;
+            if (!allPairData[pair] || idx < 0 || idx >= allPairData[pair].times.length) return;
+
+            const totalSec = allPairData[pair].times[idx];
+            const tickRow  = totalSec % CYCLE;
+
+            _placeFutureBoxes();
+
+            if (tickRow !== _armed.r) return;
+
+            const col  = Math.floor(totalSec / CYCLE);
+            if (!matrixData[col] || !matrixData[col][tickRow]) return;
+
+            const { s: streak, c: color } = matrixData[col][tickRow];
+            const warnAt = _armed.s1 - 1, targetAt = _armed.s1, exitAt = _armed.s2;
+
+            if (color === _armed.col) {
+                if (streak === warnAt)  _neonBox1Col = col;
+                if (streak >= targetAt) _neonBox2Col = col;
+            }
+            if (color === _oppCol(_armed.col) && streak >= exitAt) _neonBox3Col = col;
+
+            if (color === _armed.col) {
+                if (streak === warnAt && _beepState === 'IDLE') {
+                    _beepState = 'WARN'; _startWarnBeep();
+                } else if (streak >= targetAt && _beepState === 'WARN') {
+                    _beepState = 'HIT'; _startHitBeep();
+                } else if (streak >= exitAt && _beepState === 'HIT') {
+                    _stopAllBeeps(); _playLossBeep();
+                    _armed = null; _beepState = 'IDLE'; _stopPulse(); return;
+                } else if (streak < warnAt && _beepState !== 'IDLE') {
+                    _stopAllBeeps(); _beepState = 'IDLE';
+                }
+            } else if (color === _oppCol(_armed.col) && streak > 0) {
+                if (_beepState === 'WARN' && streak >= targetAt) {
+                    _stopAllBeeps(); _playMissBeep();
+                    _armed = null; _beepState = 'IDLE'; _stopPulse(); return;
+                } else if (_beepState === 'HIT' && streak >= exitAt) {
+                    _stopAllBeeps(); _playWinBeep();
+                    _armed = null; _beepState = 'IDLE'; _stopPulse(); return;
+                } else if (_beepState === 'HIT') {
+                    return;
+                } else {
+                    _stopAllBeeps(); _beepState = 'IDLE';
+                }
+            }
+        };
+
+        // ════════════════════════════════════════════════════
+          // AUTO HUNTER SYSTEM (VISUAL ROBOT MODE)
+          // ════════════════════════════════════════════════════
+          let autoHunterEnabled = true; // Auto ON by default
+          let hunterScanIndex = 0;
+
+          function autoHunterTick() {
+                        if (!autoHunterEnabled) return;
+          
+                        // INTERCEPTOR: Wait for all Web Workers to finish. 
+                        // This prevents locking onto partial data (e.g. C1-18) while C1-23 is still calculating in the background.
+                        if (scanPending > 0) return;
+          
+                        // GOD LEVEL CUT: Top 1 Signal Total (c2-0 only)
+                            var allValid = [
+                                ...globalRevs.filter(x => x.c2 === 0 && x.c1 >= 10),
+                                ...globalMoms.filter(x => (x.c1 - x.c2) === 0 && x.c1 >= 10)
+                            ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
+              
+                            var dataList = [];
+                            var seenRows = new Set();
+                            for (var x of allValid) {
+                                if (!seenRows.has(x.r)) {
+                                    seenRows.add(x.r);
+                                    dataList.push(x);
+                                    if (dataList.length === 1) break;
+                                }
+                            }
+                            
+                            if (dataList.length === 0) return;
+              
+                            // Cycle through signals
+                                          if (hunterScanIndex >= dataList.length) hunterScanIndex = 0;
+                                          var sig = dataList[hunterScanIndex];
+                            hunterScanIndex++;
+              
+                            // Fire selectSignal ONLY if it changed, to lock the yellow line to the active signal automatically
+                            var targetSigId = `${sig.pair}-${sig.c}-${sig.r}-${sig.s1}-${sig.s2}-${sig.col}-${sig.type}`;
+                            if (lastClickedSigId !== targetSigId) {
+                                selectSignal(sig.pair, sig.c, sig.r, sig.s1, sig.s2, sig.col, sig.type);
+                            }
+          }
+
+          let autoHunterIntervalId = setInterval(autoHunterTick, 1500); // 1.5s per scan step
+
+          function toggleMasterEngines() {
+                        autoHunterEnabled = !autoHunterEnabled;
+                        isAutoScanOn = autoHunterEnabled;
+                        
+                        const btn = document.getElementById('masterSysBtn');
+                                                if (autoHunterEnabled) {
+                                                    btn.innerText = 'SYS: AUTO';
+                                                    btn.style.color = '#FFFFFF';
+                                                    btn.style.borderColor = '#FFFFFF';
+                                                    btn.style.boxShadow = 'none';
+                            
+                            setupAutoScan();
+                            if (!autoHunterIntervalId) autoHunterIntervalId = setInterval(autoHunterTick, 1500);
+                        } else {
+                            btn.innerText = 'SYS: MANUAL';
+                            btn.style.color = 'var(--accent-red)';
+                            btn.style.borderColor = 'var(--border)';
+                            btn.style.boxShadow = 'none';
+                            
+                            if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
+                            if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
+                        }
+                    }
+// ════════════════════════════════════════════════════
+        // TRADE EXECUTION ENGINE
+        // ════════════════════════════════════════════════════
+        function executeTrade(type, btnElement) {
+                    const amt = parseFloat(document.getElementById('tradeAmount').value);
+                    const exp = parseInt(document.getElementById('tradeExpiry').value);
+        
+                    if (isNaN(amt) || amt <= 0) { console.warn("⚠️ Invalid trade amount"); return; }
+                    if (isNaN(exp) || exp < 1) { console.warn("⚠️ Invalid expiry time"); return; }
+        
+                    // SIMULATOR ENGINE: Bypass Deriv API and simulate trade locally
+                    if (!window.simBal) {
+                        const balText = document.getElementById('accountBalance').innerText.replace(/[^0-9.-]+/g,"");
+                        window.simBal = parseFloat(balText) || 1000.00;
+                    }
+                    if (amt > window.simBal) { alert("⚠️ INSUFFICIENT SIM BALANCE"); return; }
+        
+                    window.simBal -= amt;
+                    document.getElementById('accountBalance').innerText = `$${window.simBal.toFixed(2)}`;
+        
+                    const contractId = Math.floor(Math.random() * 10000000000);
+                    const now = Math.floor(Date.now() / 1000);
+                    
+                    const mockTrade = {
+                        contract_id: contractId,
+                        type: type,
+                        symbol: activePair,
+                        stake: amt,
+                        open_time: now,
+                        exp_time: now + exp,
+                        payout: 0,
+                        status: 'OPEN'
+                    };
+        
+                    if (!window.simOpenTrades) window.simOpenTrades = [];
+                    if (!window.simClosedTrades) window.simClosedTrades = [];
+                    
+                    window.simOpenTrades.push(mockTrade);
+        
+                    // Simulate the outcome after expiry
+                    setTimeout(() => {
+                        window.simOpenTrades = window.simOpenTrades.filter(t => t.contract_id !== contractId);
+                        
+                        // Simulated win logic (50/50 for demonstration)
+                        const isWin = Math.random() > 0.5;
+                        mockTrade.status = 'CLOSED';
+                        mockTrade.payout = isWin ? amt * 1.85 : 0; // 85% payout
+                        
+                        window.simClosedTrades.unshift(mockTrade);
+                        if (window.simClosedTrades.length > 30) window.simClosedTrades.pop();
+        
+                        window.simBal += mockTrade.payout;
+                        document.getElementById('accountBalance').innerText = `$${window.simBal.toFixed(2)}`;
+        
+                        if (document.getElementById('history-modal').style.display === 'flex') {
+                            refreshSimPortfolio();
+                        }
+                    }, exp * 1000);
+        
+                    // Button Visual Feedback
+                    const originalText = btnElement.innerText;
+                    const originalBg = btnElement.style.background;
+                    
+                    btnElement.innerText = "PLACED [SIM]";
+                                        btnElement.style.background = "#FFFFFF";
+                                        btnElement.style.color = window.systemThemeHex || "#000432";
+                                        
+                                        setTimeout(() => {
+                                            btnElement.innerText = originalText;
+                                            btnElement.style.background = "transparent";
+                                            btnElement.style.color = type === 'CALL' ? (window.accentGreenHex || "#2ED573") : (window.accentRedHex || "#E63946");
+                                        }, 800);
+                    
+                    if (document.getElementById('history-modal').style.display === 'flex') {
+                        refreshSimPortfolio();
+                    }
+                }
+        
+                function openTradeHistory() {
+                    document.getElementById('history-modalOverlay').style.display = 'block';
+                    document.getElementById('history-modal').style.display = 'flex';
+                    refreshSimPortfolio();
+                }
+                
+                function refreshSimPortfolio() {
+                    const formatTime = (epoch) => {
+                        const d = new Date(epoch * 1000);
+                        return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+                    };
+        
+                    const openList = document.getElementById('open-trades-list');
+                    if (openList) {
+                        if (!window.simOpenTrades || window.simOpenTrades.length === 0) {
+                            openList.innerHTML = '<div style="color:#555; text-align:center; padding:15px; font-size:10px; font-weight:800; letter-spacing: 1px;">NO OPEN POSITIONS</div>';
+                        } else {
+                            openList.innerHTML = window.simOpenTrades.map(c => `
+                                <div style="padding:8px; border:1px solid #333; margin-bottom:6px; border-radius:2px; font-size:11px; font-weight:700; display:flex; flex-direction:column; gap:6px; background: rgba(0, 176, 255, 0.05);">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="color:#E2E8F0; font-size:12px;">${c.type} <span style="color:#00B0FF;">${c.symbol.replace(/^(frx|cry)/i, '')}</span></div>
+                                        <div style="color:#FFD700; font-size:9px;">ID: ${c.contract_id}</div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;">
+                                        <div>OPEN: <span style="color:#FFF;">${formatTime(c.open_time)}</span></div>
+                                        <div>STAKE: <span style="color:#FFF;">$${c.stake.toFixed(2)}</span></div>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }
+        
+                    const closedList = document.getElementById('closed-trades-list');
+                    if (closedList) {
+                        if (!window.simClosedTrades || window.simClosedTrades.length === 0) {
+                            closedList.innerHTML = '<div style="color:#555; text-align:center; padding:15px; font-size:10px; font-weight:800; letter-spacing: 1px;">NO RECENT HISTORY</div>';
+                        } else {
+                            closedList.innerHTML = window.simClosedTrades.map(t => {
+                                const isWin = t.payout > 0;
+                                const pnl = t.payout - t.stake;
+                                const color = isWin ? '#2ED573' : '#E63946';
+                                return `
+                                <div style="padding:8px; border:1px solid #333; margin-bottom:6px; border-radius:2px; font-size:11px; font-weight:700; display:flex; flex-direction:column; gap:6px; background: rgba(255, 255, 255, 0.02);">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="color:#E2E8F0; font-size:12px;">${t.type} <span style="color:#FFD700;">${t.symbol.replace(/^(frx|cry)/i, '')}</span></div>
+                                        <div style="color:${color}; font-weight:800; font-size: 13px;">${isWin ? '+' : ''}$${pnl.toFixed(2)}</div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;">
+                                        <div>OPEN: <span style="color:#FFF;">${formatTime(t.open_time)}</span></div>
+                                        <div>STAKE: <span style="color:#FFF;">$${t.stake.toFixed(2)}</span></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#888;">
+                                        <div>CLOSE: <span style="color:#FFF;">${formatTime(t.exp_time)}</span></div>
+                                        <div>PAYOUT: <span style="color:${color};">$${t.payout.toFixed(2)}</span></div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('');
+                        }
+                    }
+                }
+
+        function closeTradeHistory() {
+                    document.getElementById('history-modalOverlay').style.display = 'none';
+                    document.getElementById('history-modal').style.display = 'none';
+                }
+        
+                /* ---- PERSONALIZATION PANEL ---- */
+                window.systemThemeHex = "#000432";
+                function openPersonalizeModal() {
+                    document.getElementById('personalize-modalOverlay').style.display = 'block';
+                    document.getElementById('personalize-modal').style.display = 'flex';
+                }
+                function closePersonalizeModal() {
+                    document.getElementById('personalize-modalOverlay').style.display = 'none';
+                    document.getElementById('personalize-modal').style.display = 'none';
+                }
+                function applySystemTheme(hex) {
+                    window.systemThemeHex = hex;
+                    document.documentElement.style.setProperty('--bg-base', hex);
+                    document.documentElement.style.setProperty('--bg-panel', hex);
+                    document.documentElement.style.setProperty('--filter-bg', hex);
+                    
+                    var metaTheme = document.querySelector('meta[name="theme-color"]');
+                    if (metaTheme) metaTheme.setAttribute('content', hex);
+                    
+                    var dynamicStyleId = 'dynamic-theme-override';
+                    var styleEl = document.getElementById(dynamicStyleId);
+                    if (!styleEl) {
+                        styleEl = document.createElement('style');
+                        styleEl.id = dynamicStyleId;
+                        document.head.appendChild(styleEl);
+                    }
+                    styleEl.innerHTML = `
+                        [style*="background: #000432"], 
+                        [style*="background:#000432"], 
+                        [style*="background-color: #000432"] { 
+                            background-color: ${hex} !important; 
+                        }
+                        [style*="color: #000432"], 
+                        [style*="color:#000432"] { 
+                            color: ${hex} !important; 
+                        }
+                    `;
+                    if (typeof requestDraw === 'function') requestDraw();
+                            }
+                    
+                            window.accentGreenHex = "#2ED573";
+                            window.accentRedHex = "#E63946";
+                            function applyAccentColor(type, hex) {
+                                var isGreen = type === 'green';
+                                if (isGreen) {
+                                    window.accentGreenHex = hex;
+                                    document.documentElement.style.setProperty('--accent-green', hex);
+                                    document.documentElement.style.setProperty('--neon-glow', '0 0 10px ' + hex + '80');
+                                    document.documentElement.style.setProperty('--filter-active', hex + '33');
+                                    document.getElementById('greenHexInput').style.borderColor = hex;
+                                    document.getElementById('greenHexInput').previousElementSibling.style.color = hex;
+                                } else {
+                                    window.accentRedHex = hex;
+                                    document.documentElement.style.setProperty('--accent-red', hex);
+                                    document.getElementById('redHexInput').style.borderColor = hex;
+                                    document.getElementById('redHexInput').previousElementSibling.style.color = hex;
+                                }
+                                
+                                var dynamicStyleId = 'dynamic-accent-override-' + type;
+                                var styleEl = document.getElementById(dynamicStyleId);
+                                if (!styleEl) {
+                                    styleEl = document.createElement('style');
+                                    styleEl.id = dynamicStyleId;
+                                    document.head.appendChild(styleEl);
+                                }
+                                
+                                var oldColor = isGreen ? '#2ED573' : '#E63946';
+                                styleEl.innerHTML = `
+                                    [style*="color: ${oldColor}"],
+                                    [style*="color:${oldColor}"] {
+                                        color: ${hex} !important;
+                                    }
+                                    [style*="background: ${oldColor}"],
+                                    [style*="background:${oldColor}"],
+                                    [style*="background-color: ${oldColor}"] {
+                                        background-color: ${hex} !important;
+                                    }
+                                `;
+                                if (typeof requestDraw === 'function') requestDraw();
+                            }
+                    
+                            /* ---- SETTINGS PANEL ---- */
+
+        /* ---- SETTINGS PANEL ---- */
+        /* ---- SETTINGS PANEL ---- */
+       function toggleSettings() {
+            const popup = document.getElementById('settingsPopup');
+            const btn   = document.getElementById('settingsBtn');
+            const open  = popup.style.display === 'none';
+            popup.style.display = open ? 'block' : 'none';
+            btn.style.borderColor = '#FFFFFF';
+            btn.style.color       = open ? '#00E676' : '#FFFFFF';
+            if (open) syncSettingsDisplay();
+        }
+
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('settingsPopup');
+            const btn   = document.getElementById('settingsBtn');
+            if (popup.style.display !== 'none' && !popup.contains(e.target) && !btn.contains(e.target)) {
+                popup.style.display = 'none';
+                btn.style.borderColor = '#FFFFFF';
+                btn.style.color = '#FFFFFF';
+            }
+        });
+
+        function syncSettingsDisplay() {
+                    const pairSrc  = document.getElementById('apiPair');
+                    const cycleSrc = document.getElementById('cycleInput');
+                    const tickSrc  = document.getElementById('liveTickDisplay');
+                    if (pairSrc)  { document.getElementById('apiPairDisplay').textContent  = pairSrc.value; }
+                    if (cycleSrc) document.getElementById('cycleInputDisplay').textContent = cycleSrc.value;
+                    if (tickSrc)  document.getElementById('liveTickDisplayVisible').textContent = tickSrc.textContent;
+                }
+
+        const _tickSrc = document.getElementById('liveTickDisplay');
+        if (_tickSrc) {
+            new MutationObserver(() => {
+                document.getElementById('liveTickDisplayVisible').textContent = _tickSrc.textContent;
+            }).observe(_tickSrc, { childList: true, characterData: true, subtree: true });
+        }
+
+        const _cycleSrc = document.getElementById('cycleInput');
+                const _pairSrc  = document.getElementById('apiPair');
+                if (_cycleSrc) _cycleSrc.addEventListener('change', () => { document.getElementById('cycleInputDisplay').textContent = _cycleSrc.value; });
+                if (_pairSrc)  _pairSrc.addEventListener('change',  () => { document.getElementById('apiPairDisplay').textContent  = _pairSrc.value; });
+
+        window.addEventListener('load', () => syncSettingsDisplay());
+
+        function scheduleMatrixReboot() {
+                    const now = new Date();
+                    const rebootTime = new Date();
+                    rebootTime.setHours(5, 30, 0, 0);
+        
+                    if (now > rebootTime) {
+                        rebootTime.setDate(rebootTime.getDate() + 1);
+                    }
+        
+                    const msUntilReboot = rebootTime - now;
+                    console.log(`System will auto-reboot in ${Math.round(msUntilReboot / 60000)} minutes.`);
+        
+                    setTimeout(() => {
+                        location.reload();
+                    }, msUntilReboot);
+                }
+        
+                window.addEventListener('load', scheduleMatrixReboot);
+        
+                // --- PWA SERVICE WORKER REGISTRATION ---
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', () => {
+                        navigator.serviceWorker.register('./sw.js')
+                            .then((registration) => {
+                                console.log('TRINITY OS Service Worker Registered with scope:', registration.scope);
+                            })
+                            .catch((err) => {
+                                console.error('Service Worker registration failed:', err);
+                            });
+                    });
+                }
+            </script>
+        </body>
+        </html>
