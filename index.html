@@ -125,7 +125,10 @@
                                         <input type="number" id="tradeExpiry" value="60" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; width: 100%; outline: none; text-align: center;">
                                         <span style="font-size: 9px; font-weight: 800; color: #888; margin-left: 4px;">s</span>
                                     </div>
-                                    <button onclick="openTradeHistory()" style="background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary); padding: 4px; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; letter-spacing: 0.5px; width: 100%; height: 100%;">HISTORY / OPEN</button>
+                                    <div style="display: flex; gap: 4px; width: 100%; height: 100%;">
+    <button onclick="openTradeHistory()" style="flex: 1; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary); padding: 4px; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; letter-spacing: 0.5px;">HIST</button>
+    <button id="uiModeToggleBtn" onclick="toggleSignalMode()" style="flex: 1; background: var(--bg-base); color: #D500F9; border: 1px solid var(--border); padding: 4px; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; border-radius: 2px; font-family: 'Inter', monospace;">MODE: REV</button>
+</div>
                 
                                     <!-- Row 3: BUY | SELL | Category Toggles -->
                                                                             <button onclick="executeTrade('CALL', this)" style="background: var(--bg-base); color: var(--accent-green); border: 1px solid var(--border); padding: 4px; font-size: 12px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border-radius: 2px; width: 100%; height: 100%;">BUY</button>
@@ -405,25 +408,22 @@
                             const c2  = cum[s + 1] || 0;
                             const pct = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
                             const entry = { pair, c, r, s1: s, s2: s + 1, c1, c2, pct, col: colColor };
-                            if (c2 <= 9)                    revs.push({ ...entry, type: 'REV' });
-                            if ((c1 - c2) <= 9 && c1 > 1)  moms.push({ ...entry, type: 'MOM' });
+                            revs.push({ ...entry, type: 'REV' });
+                            if (c1 > 1) moms.push({ ...entry, type: 'MOM' });
                         }
                     }
                 }
                 
                 // Push top 100 most recent dead signals per cycle to the master list
                 dethronedCycle.sort((a, b) => b.deathIdx - a.deathIdx);
-                allDeadSigs.push(...dethronedCycle.slice(0, 100));
+                const topDead = dethronedCycle.slice(0, 100);
+                for (let i = 0; i < topDead.length; i++) allDeadSigs.push(topDead[i]);
             }
     
             const bestRevs = [], bestMoms = [];
-                        for (let d = 0; d <= 3; d++) {
-                            const cRevs = revs.filter(x => x.c2 === d);
-                            bestRevs.push(...cRevs);
-                
-                            const cMoms = moms.filter(x => (x.c1 - x.c2) === d);
-                            bestMoms.push(...cMoms);
-                        }
+                    // Send all REV and MOM signals — no cap
+                    for (let i = 0; i < revs.length; i++) bestRevs.push(revs[i]);
+                    for (let i = 0; i < moms.length; i++) bestMoms.push(moms[i]);
     
             postMessage({ pair, bestRevs, bestMoms, deadSigs: allDeadSigs });
         };
@@ -445,18 +445,11 @@
             let activePair = "frxEURUSD";
 
         let globalRevs = [];
-                                let globalMoms = [];
-                                let globalDethroned = [];
-                                let currentMode = 'REV';
-                        let currentFilter = 0;
-                        let currentCategory = 'FX';
-        
-                function getPairCategory(p) {
-                    if (p.includes('XAU') || p.includes('XAG') || p.includes('XPT')) return 'METAL';
-                    if (p.startsWith('frx')) return 'FX';
-                    if (p.startsWith('1HZ') || p.startsWith('cry')) return 'DERIV';
-                    return 'ALL';
-                }
+                let globalMoms = [];
+                let globalDethroned = [];
+                let currentMode = 'REV';
+        let currentFilter = 0;
+        // MOM signals permanently disabled — REV only
         
                 let scanPending = 0;
                         let globalTickCount = 0;
@@ -517,9 +510,11 @@
                                     var todayMidnightUtc = currentUtcEpoch - (currentUtcEpoch % 86400);
                                     var startTsUtc = todayMidnightUtc;
                                     
-                                    if (currentUtcEpoch >= todayMidnightUtc + 75600) {
-                                        startTsUtc = todayMidnightUtc + 86400;
-                                    }
+                                    // 2:30 AM TO 5:30 AM IST (UTC 21:00 - 00:00) LOCK
+                            // Ensures the system fetches the most recent completed day data chunk
+                            if (currentUtcEpoch >= todayMidnightUtc + 75600 && currentUtcEpoch < todayMidnightUtc + 86400) {
+                                startTsUtc = todayMidnightUtc; 
+                            }
                                     
                                     var targetDate = new Date(startTsUtc * 1000);
                                     var dayOfWeek = targetDate.getUTCDay();
@@ -1129,26 +1124,17 @@ window.autoTradedInstances = {};
         window.gridTrades = [];
 
         function triggerAutoTradeIfValid(pair, col, row, currentStreakColor, currentStreakLen) {
-                            if (!autoHunterEnabled) return;
-                            
-                            // SAFETY LOCK: Prevent trades from firing based on incomplete data while multi-core scanners are running
-                            if (scanPending > 0) return;
-                
-                            // EXTREME NOISE CUT: Top 3 Signals Total
-                                        var allValid = [
-                                            ...globalRevs.filter(x => (x.c2 === 0 || x.c2 === 1 || x.c2 === 2) && x.c1 >= 10),
-                                            ...globalMoms.filter(x => { var d = x.c1 - x.c2; return (d === 0 || d === 1 || d === 2) && x.c1 >= 10; })
-                                        ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
-                    
-                                        var uniqueList = [];
-                                        var seenRows = new Set();
-                                        for (var x of allValid) {
-                                            if (!seenRows.has(x.r)) {
-                                                seenRows.add(x.r);
-                                                uniqueList.push(x);
-                                                if (uniqueList.length === 3) break;
-                                            }
-                                        }
+                    if (!autoHunterEnabled) return;
+        
+                    // WIDE FOCUS: Replicate the Wall Panel's exact logic to hunt ALL surviving targets
+                                        const filterTop5Unique = (arr, isMom) => {
+                                            let sorted = arr.filter(x => (isMom ? x.c1 - x.c2 : x.c2) === 0).sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
+                                            let res = [], seen = new Set();
+                                            for (let x of sorted) { if (!seen.has(x.r)) { seen.add(x.r); res.push(x); if (res.length === 5) break; } }
+                                            return res;
+                                        };
+                                        // MOM removed — REV only
+let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
         
                     // Loop through EVERY target currently visible on the Wall Panel
                     for (let sig of uniqueList) {
@@ -1285,49 +1271,33 @@ window.autoTradedInstances = {};
             requestDraw();
         }
 
+        let activeCat = 'FX';
         function toggleCat(btn, cat) {
-                            document.querySelectorAll('.cat-toggle-btn').forEach(b => {
-                                b.style.color = 'var(--text-primary)';
-                                b.style.borderColor = 'var(--border)';
-                            });
-                            btn.style.color = '#FFD700';
-                            btn.style.borderColor = '#FFD700';
-                            
-                            if (currentCategory !== cat) {
-                                currentCategory = cat;
-                                
-                                // Switch visual grid & streak panel to the first asset in the new category
-                                let firstMatch = ALL_PAIRS.find(p => getPairCategory(p) === cat);
-                                if (firstMatch && getPairCategory(activePair) !== cat) {
-                                    activePair = firstMatch;
-                                    document.getElementById('apiPair').value = firstMatch;
-                                    if (allPairData[firstMatch]) {
-                                        timesArray = allPairData[firstMatch].times;
-                                        pricesArray = allPairData[firstMatch].prices;
-                                        processVisualMatrix();
-                                    }
-                                }
-                                
-                                // Re-scan Wall Panel targets for the new category
-                                dispatchMultiCycleScan();
-                            }
-                        }
+            activeCat = cat;
+            document.querySelectorAll('.cat-toggle-btn').forEach(b => {
+                b.style.color = 'var(--text-primary)';
+                b.style.borderColor = 'var(--border)';
+            });
+            btn.style.color = '#FFD700';
+            btn.style.borderColor = '#FFD700';
+            dispatchMultiCycleScan();
+        }
         
                 function toggleSignalMode() {
-                    const btn = document.getElementById('modeToggleBtn');
-            if (currentMode === 'REV') {
-                currentMode = 'MOM';
-                btn.innerText = 'MOMENTUM';
-                btn.className = 'btn-toggle mode-mom';
-                document.getElementById('scanHeaderTitle').innerText = 'LIVE SCANNER [MOMENTUM TARGETS]';
-            } else {
-                currentMode = 'REV';
-                btn.innerText = 'REVERSAL';
-                btn.className = 'btn-toggle mode-rev';
-                document.getElementById('scanHeaderTitle').innerText = 'LIVE SCANNER [REVERSAL TARGETS]';
-            }
-            renderFilteredTable();
-        }
+    // 1. Flip the state
+    currentMode = (currentMode === 'REV') ? 'MOM' : 'REV';
+    
+    // 2. Update the button visuals
+    const btn = document.getElementById('uiModeToggleBtn');
+    if (btn) {
+        btn.innerText = currentMode === 'REV' ? 'MODE: REV' : 'MODE: MOM';
+        // Give MOM a distinct blue color to differentiate from REV's purple/default
+        btn.style.color = currentMode === 'REV' ? '#D500F9' : '#00B0FF'; 
+    }
+    
+    // 3. Force the table to redraw with the new data
+    renderFilteredTable();
+}
 
         function setDropoffFilter(val) {
             currentFilter = val;
@@ -1500,7 +1470,7 @@ window.autoTradedInstances = {};
         const workerBlobUrl = window.URL.createObjectURL(blob);
 
         // Detect available CPU cores (fallback to 4 if the browser restricts access)
-        const NUM_CORES = navigator.hardwareConcurrency || 4;
+        const NUM_CORES = Math.max(2, (navigator.hardwareConcurrency || 4) - 1);
         let workerPool = [];
         let scanQueue = [];
 
@@ -1516,9 +1486,9 @@ window.autoTradedInstances = {};
         // Handle results and feed the next task to the idle worker
                 function handleWorkerMessage(e, worker) {
                     let { pair, bestRevs, bestMoms, deadSigs } = e.data;
-                    globalRevs.push(...bestRevs);
-                    globalMoms.push(...bestMoms);
-                    if (deadSigs) globalDethroned.push(...deadSigs);
+                    for (let i = 0; i < bestRevs.length; i++) globalRevs.push(bestRevs[i]);
+                    for (let i = 0; i < bestMoms.length; i++) globalMoms.push(bestMoms[i]);
+                    if (deadSigs) { for (let i = 0; i < deadSigs.length; i++) globalDethroned.push(deadSigs[i]); }
                     
                     scanPending--;
         
@@ -1564,17 +1534,27 @@ window.autoTradedInstances = {};
                         scanQueue = []; // Reset the task queue
 
             // 1. Build the queue of all targets
-                                                    for (let p of ALL_PAIRS) {
-                                                        if (getPairCategory(p) !== currentCategory) continue; // CATEGORY FILTER
-                                                        let pData = allPairData[p];
-                                        if (pData && pData.times.length > 0) {
+                                const catFilter = {
+                                    'FX':    p => p.startsWith('frx') && !p.includes('XAU') && !p.includes('XAG') && !p.includes('XPT'),
+                                    'METAL': p => p.startsWith('frx') && (p.includes('XAU') || p.includes('XAG') || p.includes('XPT')),
+                                    'DERIV': p => p.startsWith('1HZ') || p.startsWith('cry')
+                                };
+                                const pairsToScan = ALL_PAIRS.filter(catFilter[activeCat] || (() => true));
+                                const cycleRange = maxC - minC;
+                                const chunkSize = cycleRange <= 0 ? 1 : Math.max(1, Math.ceil((cycleRange + 1) / NUM_CORES));
+                                for (let p of pairsToScan) {
+                                    let pData = allPairData[p];
+                                    if (pData && pData.times.length > 0) {
+                                        // CRITICAL SYNC: We must pass a fresh slice of the live array to the Web Worker
+                                        // rather than a reference, ensuring it gets the most up-to-date live ticks.
+                                        let livePricesSlice = pData.prices.slice();
+                                        for (let cs = minC; cs <= maxC; cs += chunkSize) {
+                                            const ce = Math.min(cs + chunkSize - 1, maxC);
                                             scanPending++;
-                                            // CRITICAL SYNC: We must pass a fresh slice of the live array to the Web Worker
-                                            // rather than a reference, ensuring it gets the most up-to-date live ticks.
-                                            let livePricesSlice = pData.prices.slice(); 
-                                            scanQueue.push({ pair: p, times: pData.times, prices: livePricesSlice, minC: minC, maxC: maxC, startIdx: sStart, endIdx: sEnd });
+                                            scanQueue.push({ pair: p, times: pData.times, prices: livePricesSlice, minC: cs, maxC: ce, startIdx: sStart, endIdx: sEnd });
                                         }
                                     }
+                                }
 
             if (scanPending === 0) {
                 renderFilteredTable();
@@ -1607,24 +1587,29 @@ window.autoTradedInstances = {};
                           
                           // UI Performance Lock: Cap to 150 items so massive scans don't freeze the DOM
                                                     var displayDead = window.dethronedLog.slice(0, 150);
-                                                    
-                                                    // GOD LEVEL CUT: Top 1 Signal Total (c2-0 only)
-                                                    var allValid = [
-                                                        ...globalRevs.filter(x => x.c2 === 0 && x.c1 >= 10),
-                                                        ...globalMoms.filter(x => (x.c1 - x.c2) === 0 && x.c1 >= 10)
-                                                    ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
-                          
-                                                    var uniqueList = [];
-                                                    var seenRows = new Set();
-                                                    for (var x of allValid) {
-                                                        if (!seenRows.has(x.r)) {
-                                                            seenRows.add(x.r);
-                                                            uniqueList.push(x);
-                                                            if (uniqueList.length === 1) break;
-                                                        }
-                                                    }
-                                                    
-                                                    renderScannerTable(uniqueList, displayDead);
+                                                               
+                                                    // 720° — Filtered by Active Mode
+var _allSigs = currentMode === 'REV' ? [...globalRevs] : [...globalMoms];
+
+var uniqueList = [];
+// Calculate the maximum dropoff (failures) based on the active mode
+var _maxDropoff = _allSigs.reduce((m, x) => {
+    let drop = currentMode === 'REV' ? x.c2 : (x.c1 - x.c2);
+    return drop > m ? drop : m;
+}, 0);
+
+// Loop through dropoff levels (0 = perfect 100%, 1 = one failure, etc.)
+for (var _dropLevel = 0; _dropLevel <= _maxDropoff; _dropLevel++) {
+    var _best = _allSigs
+        .filter(x => {
+            let drop = currentMode === 'REV' ? x.c2 : (x.c1 - x.c2);
+            return drop === _dropLevel;
+        })
+        .sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1)[0];
+    if (_best) uniqueList.push(_best);
+}
+
+renderScannerTable(uniqueList, displayDead);
                       }
                               
                                   function renderScannerTable(aliveList, deadList) {
@@ -1650,7 +1635,7 @@ window.autoTradedInstances = {};
                                                                                      <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">X${data.s1}-X${data.s2}</td>
                                                                                      <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">${data.c1}</td>
                                                                                      <td style="font-size: 12px; font-weight: 700; padding: 6px 7px; border-right: 1px solid #FFFFFF;">${data.c2}</td>
-                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px;">${data.type === 'MOM' ? Math.round((data.c2 / data.c1) * 100) : data.pct}%</td>
+                                                                                     <td style="font-size: 12px; font-weight: 700; padding: 6px 7px;">${data.pct}%</td>
                                                                                  </tr>`;
                                                                              });
                                                                          }
@@ -2024,40 +2009,28 @@ window.autoTradedInstances = {};
           let hunterScanIndex = 0;
 
           function autoHunterTick() {
-                        if (!autoHunterEnabled) return;
-          
-                        // INTERCEPTOR: Wait for all Web Workers to finish. 
-                        // This prevents locking onto partial data (e.g. C1-18) while C1-23 is still calculating in the background.
-                        if (scanPending > 0) return;
-          
-                        // GOD LEVEL CUT: Top 1 Signal Total (c2-0 only)
-                            var allValid = [
-                                ...globalRevs.filter(x => x.c2 === 0 && x.c1 >= 10),
-                                ...globalMoms.filter(x => (x.c1 - x.c2) === 0 && x.c1 >= 10)
-                            ].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1);
-              
-                            var dataList = [];
-                            var seenRows = new Set();
-                            for (var x of allValid) {
-                                if (!seenRows.has(x.r)) {
-                                    seenRows.add(x.r);
-                                    dataList.push(x);
-                                    if (dataList.length === 1) break;
-                                }
-                            }
-                            
-                            if (dataList.length === 0) return;
-              
-                            // Cycle through signals
-                                          if (hunterScanIndex >= dataList.length) hunterScanIndex = 0;
-                                          var sig = dataList[hunterScanIndex];
-                            hunterScanIndex++;
-              
-                            // Fire selectSignal ONLY if it changed, to lock the yellow line to the active signal automatically
-                            var targetSigId = `${sig.pair}-${sig.c}-${sig.r}-${sig.s1}-${sig.s2}-${sig.col}-${sig.type}`;
-                            if (lastClickedSigId !== targetSigId) {
-                                selectSignal(sig.pair, sig.c, sig.r, sig.s1, sig.s2, sig.col, sig.type);
-                            }
+              if (!autoHunterEnabled) return;
+
+              // DYNAMIC FOCUS: Switch target list based on active UI mode
+let dataList = currentMode === 'REV' 
+    ? [...globalRevs.filter(x => x.c2 === 0)].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1).slice(0, 5)
+    : [...globalMoms.filter(x => (x.c1 - x.c2) === 0)].sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1).slice(0, 5);
+                                          
+                                                        if (dataList.length === 0) return;
+
+              // Cycle through signals
+              if (hunterScanIndex >= dataList.length) hunterScanIndex = 0;
+              const sig = dataList[hunterScanIndex];
+              hunterScanIndex++;
+
+              // Highlight the row in the table
+              document.querySelectorAll('#peaksTableBody tr').forEach((tr, i) => {
+                  tr.style.borderLeft = i === (hunterScanIndex - 1) ? '2px solid #FFD700' : '';
+                  tr.style.background = i === (hunterScanIndex - 1) ? 'rgba(255,215,0,0.08)' : '';
+              });
+
+              // Fire selectSignal for the chosen signal
+              selectSignal(sig.pair, sig.c, sig.r, sig.s1, sig.s2, sig.col, sig.type);
           }
 
           let autoHunterIntervalId = setInterval(autoHunterTick, 1500); // 1.5s per scan step
