@@ -153,7 +153,13 @@
                                         <input type="number" id="autoScanIntervalInput" value="60" min="1" onchange="updateAutoScanInterval()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
                                         <span style="font-size: 9px; font-weight: 800; color: #888; margin-left: 4px;">s</span>
                                     </div>
-                                </div>
+                                    <!-- Row 5: Pair Picker -->
+                                    <div id="pairPickerStatus" onclick="openPairPicker()" style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; cursor: pointer; gap: 6px;">
+                                        <span style="font-size: 9px; font-weight: 800; color: #888;">PAIRS:</span>
+                                        <span id="pairPickerLabel" style="font-size: 10px; font-weight: 800; color: #FFD700; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px;">ALL</span>
+                                   </div>
+                
+                               </div>
                 
                                 <!-- Hidden elements to preserve JS bindings -->
                                 <div id="wallPanelFooter" style="display: none;">
@@ -208,6 +214,33 @@
                 <div id="bootStatusLine" style="margin-top:10px;font-size:9px;color:#FFFFFF;font-weight:800;letter-spacing:0.15em;text-align:center;">INITIALIZING...</div>
             </div>
         </div>
+
+    <!-- ══ PAIR PICKER MODAL ══ -->
+    <div id="pairPickerOverlay" onclick="closePairPicker()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
+    <div id="pairPickerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:2px; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+            <span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-green);">PAIR SELECTOR</span>
+            <button onclick="closePairPicker()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
+        </div>
+        <!-- Quick-select row -->
+        <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+            <button onclick="pairPickerSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+            <button onclick="pairPickerSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
+            <button onclick="pairPickerApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
+        </div>
+        <!-- Search box -->
+        <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
+            <input id="pairPickerSearch" type="text" placeholder="Search pair... e.g. EUR" oninput="pairPickerFilter(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none;">
+        </div>
+        <!-- Pair grid (scrollable) -->
+        <div id="pairPickerGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
+        <!-- Footer count -->
+        <div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">
+            <span id="pairPickerCount">0 selected</span>
+            <span style="color:#555;">tap to toggle · hold APPLY to confirm</span>
+        </div>
+    </div>
 
     <div id="app3-modalOverlay" onclick="closeModalApp3()"></div>
     <div id="app3-modal">
@@ -440,8 +473,10 @@
                 "frxXAGUSD", "frxXAUUSD", "frxXPTUSD"
             ];
         
-            let allPairData = {};
-            let activePair = "frxEURUSD";
+           let allPairData = {};
+let activePair = "frxEURUSD";
+// Pair picker: null means "all pairs in active category", otherwise a subset array
+let activePairs = null; // null = use category filter as before
 
         let globalRevs = [];
                 let globalMoms = [];
@@ -533,7 +568,7 @@
         // 00:00-21:00 → MON session live
         // 21:00-24:00 → transition (lock on MON data)
         startTsUtc  = todayMidnightUtc;
-        isLiveSync  = false; // TUE session is complete; Wed ticks fall outside the 75600s grid
+        isLiveSync  = secondsIntoDay < T_END; // ← fix: was hardcoded false, Mon is live during session
 
     } else if (dayOfWeek === 2) {
         // Tuesday UTC (entire day is inside the TUE session)
@@ -647,26 +682,36 @@
 
         function fetchChunk(pair, segStart, segEnd) {
             return new Promise((res) => {
-                const cws = new WebSocket(DERIV_WS_URL);
+                let cws;
                 let auth = false, done = false;
-                const t = setTimeout(() => { done = true; try { cws.close(); } catch(e) {} res({}); }, 25000);
-                cws.onopen = () => cws.send(JSON.stringify({ authorize: DERIV_API_TOKEN }));
+                try { cws = new WebSocket(DERIV_WS_URL); } catch(e) { res({}); return; }
+                const t = setTimeout(() => {
+                    if (!done) { done = true; try { cws.close(); } catch(e) {} res({}); }
+                }, 30000);
+                cws.onopen = () => {
+                    if (!done) cws.send(JSON.stringify({ authorize: DERIV_API_TOKEN }));
+                };
                 cws.onmessage = (ev) => {
-                    const d = JSON.parse(ev.data);
-                    if (d.authorize && !auth) {
-                        auth = true;
-                        cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 5000, style: "ticks" }));
-                    } else if (d.history) {
-                        const ts = d.history.times || [], ps = d.history.prices || [];
-                        const map = {};
-                        for (let i = 0; i < ts.length; i++) map[ts[i]] = ps[i];
-                        done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res(map);
-                    } else if (d.error) {
-                        console.error(`❌ DERIV API ERROR: [${pair}]`, d.error.message);
-                        done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res({});
+                    if (done) return;
+                    try {
+                        const d = JSON.parse(ev.data);
+                        if (d.authorize && !auth) {
+                            auth = true;
+                            cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 5000, style: "ticks" }));
+                        } else if (d.history) {
+                            const ts = d.history.times || [], ps = d.history.prices || [];
+                            const map = {};
+                            for (let i = 0; i < ts.length; i++) map[ts[i]] = ps[i];
+                            done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res(map);
+                        } else if (d.error) {
+                            console.warn(`⚠️ DERIV CHUNK ERROR [${pair}]: ${d.error.message}`);
+                            done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res({});
+                        }
+                    } catch(e) {
+                        done = true; clearTimeout(t); try { cws.close(); } catch(e2) {} res({});
                     }
                 };
-                cws.onerror = () => { if (!done) { done = true; clearTimeout(t); res({}); } };
+                cws.onerror = () => { if (!done) { done = true; clearTimeout(t); try { cws.close(); } catch(e) {} res({}); } };
                 cws.onclose = () => { if (!done) { done = true; clearTimeout(t); res({}); } };
             });
         }
@@ -700,24 +745,30 @@
                     }
                 }
             }
-            if (gapStart !== -1 && (fetchEnd - gapStart >= GAP_THRESHOLD)) {
+            // Only push trailing silence as a fetchable gap when the session is live.
+            // On a closed session, silence at the tail is normal market close — not missing data.
+            const sessionIsLive = (fetchEnd >= Math.floor(Date.now() / 1000) - 120);
+            if (gapStart !== -1 && (fetchEnd - gapStart >= GAP_THRESHOLD) && sessionIsLive) {
                 chunksToFetch.push({ s: gapStart, e: fetchEnd });
             }
 
-            // Always ensure the absolute edge (last known to fetchEnd) is topped up, even if < 15s
-            if (cached && cached.prices.length > 0) {
-                const reversedPrices = [...cached.prices].reverse();
-                const lastTickIndex = reversedPrices.findIndex(p => p !== -1.0);
-                if (lastTickIndex !== -1) {
-                    const cachedMax = startTs + cached.prices.length - 1 - lastTickIndex;
-                    if (cachedMax < fetchEnd - 2) {
-                        let tailCovered = chunksToFetch.some(c => c.e === fetchEnd && c.s <= cachedMax + 1);
-                        if (!tailCovered) {
-                            chunksToFetch.push({ s: cachedMax + 1, e: fetchEnd });
-                        }
+            // Only top up the tail edge when the session is still live.
+        // On a closed/offline session the cache is final — the gap between
+        // the last real tick and the session boundary is normal market silence,
+        // not missing data, and Deriv will return nothing for it anyway.
+       if (sessionIsLive && cached && cached.prices.length > 0) {
+            const reversedPrices = [...cached.prices].reverse();
+            const lastTickIndex = reversedPrices.findIndex(p => p !== -1.0);
+            if (lastTickIndex !== -1) {
+                const cachedMax = startTs + cached.prices.length - 1 - lastTickIndex;
+                if (cachedMax < fetchEnd - 2) {
+                    let tailCovered = chunksToFetch.some(c => c.e === fetchEnd && c.s <= cachedMax + 1);
+                    if (!tailCovered) {
+                        chunksToFetch.push({ s: cachedMax + 1, e: fetchEnd });
                     }
                 }
-            } else if (chunksToFetch.length === 0) {
+            }
+        } else if (chunksToFetch.length === 0) {
                 // Failsafe for entirely empty arrays initially
                 chunksToFetch.push({ s: startTs, e: fetchEnd });
             }
@@ -735,18 +786,18 @@
                 const totalGapSecs = finalChunks.reduce((acc, c) => acc + (c.e - c.s), 0);
                 bootLog(`${name} — found ${finalChunks.length} gap(s) totalling ~${totalGapSecs}s. Backfilling...`, '#FFD700');
                 
-                // Reduced workers to 3 to bypass Deriv API rate limits
-                const WORKERS = 3;
+                // Sequential chunk fetching to avoid Deriv WebSocket rate limiting
+                const WORKERS = 2;
                 for (let i = 0; i < finalChunks.length; i += WORKERS) {
                     const batch = finalChunks.slice(i, i + WORKERS);
-                    bootLog(`${name} — dispatching ${batch.length} workers for chunks ${i+1}-${i+batch.length}`, '#00B0FF');
+                    bootLog(`${name} — fetching chunks ${i+1}-${i+batch.length}`, '#00B0FF');
 
                     const batchResults = await Promise.all(batch.map(async (c, idx) => {
                         let map = {};
                         let retries = 0;
                         const MAX_RETRIES = 3;
-                        // Increased delay to securely stagger WebSocket creation
-                        let delay = idx * 600;
+                        // Stagger WS connections: 1.2s apart to avoid simultaneous open
+                        let delay = idx * 1200;
 
                         while (retries <= MAX_RETRIES) {
                             await new Promise(r => setTimeout(r, delay));
@@ -754,8 +805,8 @@
                             if (Object.keys(map).length > 0) break;
                             retries++;
                             if (retries <= MAX_RETRIES) {
-                                bootLog(`${name} — chunk ${i + idx + 1} failed, retrying (${retries}/${MAX_RETRIES})...`, '#FF2D3A');
-                                delay = 1500 * retries;
+                        bootLog(`${name} — chunk ${i + idx + 1} retry (${retries}/${MAX_RETRIES})...`, '#FFD700');
+                                delay = 2000 * retries;
                             }
                         }
                         return { map, num: i + idx + 1 };
@@ -764,10 +815,11 @@
                     batchResults.forEach(res => {
                         const got = Object.keys(res.map).length;
                         if (got > 0) Object.assign(tickMap, res.map);
-                        bootLog(`${name} — chunk ${res.num} synced ${got} ticks`, got > 0 ? '#888' : '#FF2D3A');
+                        bootLog(`${name} — chunk ${res.num}: ${got > 0 ? got + ' ticks OK' : 'empty (skipped)'}`, got > 0 ? '#555' : '#888');
                     });
 
-                    await new Promise(r => setTimeout(r, 300));
+                    // Longer inter-batch pause to let Deriv WS slots free up
+                    await new Promise(r => setTimeout(r, 800));
                 }
            } else {
                 bootLog(`${name} — fully cached, no gaps found`, '#555');
@@ -925,11 +977,13 @@
                     }
         
                     // 🔥 2. RUN PHASE 2 IN A BLOCKING THREAD (Awaited)
-                    // Reduced batch size to safely sequence the load
-                    var BATCH_SIZE = 2;
+                    // Process pairs one at a time to prevent simultaneous WS storms
+                    var BATCH_SIZE = 1;
                     for (var b = 0; b < ALL_PAIRS.length; b += BATCH_SIZE) {
                         var batch = ALL_PAIRS.slice(b, b + BATCH_SIZE);
                         await Promise.all(batch.map(p => processPair(p)));
+                        // Brief pause between pairs to let server-side rate limits recover
+                        if (b + BATCH_SIZE < ALL_PAIRS.length) await new Promise(r => setTimeout(r, 500));
                     }
 
             bootLog(`[PHASE 2 GAP BACKFILL] DONE — All targets synchronized.`, '#00E676');
@@ -1088,9 +1142,12 @@
                 }
             };
 
-            derivWs.onclose = () => {
-                            console.log("Deriv live stream closed. Retrying in 3s...");
-                            setTimeout(startLiveSync, 3000);
+            derivWs.onclose = (evt) => {
+                            // Only auto-reconnect if not a deliberate close (code 1000) and market is live
+                            if (evt.code !== 1000) {
+                                console.log(`Deriv WS closed (code ${evt.code}). Retrying in 5s...`);
+                                setTimeout(startLiveSync, 5000);
+                            }
                         };
             
                         setupAutoScan();
@@ -1130,10 +1187,13 @@
                     if (index < 0 || index >= tArr.length) return;
                     pArr[index] = p;
         
-                    if (pair === activePair) {
+                    // Skip live canvas injection for pairs outside the picker selection
+                if (activePairs !== null && !activePairs.includes(pair)) return;
+
+                if (pair === activePair) {
                                     let totalSec = tArr[index];
                                     let col = Math.floor(totalSec / CYCLE);
-                            let row = totalSec % CYCLE;
+                                    let row = totalSec % CYCLE; // ← fix: row was undefined
 
                 if (!matrixData[col]) matrixData[col] = {};
                 let streakCol = 'G', streakLen = 1; let prevCol = col - 1;
@@ -1168,6 +1228,8 @@ window.autoTradedInstances = {};
 
         function triggerAutoTradeIfValid(pair, col, row, currentStreakColor, currentStreakLen) {
                     if (!autoHunterEnabled) return;
+                    // Respect pair picker — skip pairs not in the active selection
+                    if (activePairs !== null && !activePairs.includes(pair)) return;
         
                     // WIDE FOCUS: Replicate the Wall Panel's exact logic to hunt ALL surviving targets
                                         const filterTop5Unique = (arr, isMom) => {
@@ -1273,7 +1335,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 streakInstances[r] = { R: {}, G: {} };
                 streakHistoryApp3[r] = { R: {}, G: {} };
             }
-            const maxCol = Math.max(...Object.keys(matrixData).map(Number));
+            const allCols = Object.keys(matrixData).map(Number);
+            if (allCols.length === 0) { requestDraw(); return; }
+            const maxCol = Math.max(...allCols);
 
             for (let r = 0; r < CYCLE; r++) {
                 let currentStreak = 0; let currentColor = 'N'; let lastActiveCol = 0;
@@ -1582,7 +1646,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                     'METAL': p => p.startsWith('frx') && (p.includes('XAU') || p.includes('XAG') || p.includes('XPT')),
                                     'DERIV': p => false // crypto & synthetic pairs removed
                                 };
-                                const pairsToScan = ALL_PAIRS.filter(catFilter[activeCat] || (() => true));
+                                // If activePairs is set (pair picker), use that set; otherwise fall back to category filter
+                                const _baseList = activePairs !== null ? activePairs : ALL_PAIRS;
+                                const pairsToScan = _baseList.filter(catFilter[activeCat] || (() => true));
                                 const cycleRange = maxC - minC;
                                 const chunkSize = cycleRange <= 0 ? 1 : Math.max(1, Math.ceil((cycleRange + 1) / NUM_CORES));
                                 for (let p of pairsToScan) {
@@ -2373,6 +2439,144 @@ let dataList = currentMode === 'REV'
                 if (_pairSrc)  _pairSrc.addEventListener('change',  () => { document.getElementById('apiPairDisplay').textContent  = _pairSrc.value; });
 
         window.addEventListener('load', () => syncSettingsDisplay());
+
+        /* ════════════════════════════════════════════════════
+           PAIR PICKER — state + UI functions
+           activePairs = null  →  use category filter (default)
+           activePairs = []    →  explicit subset
+        ════════════════════════════════════════════════════ */
+        let _ppTempSelected = new Set(); // temp state while modal is open
+
+        function openPairPicker() {
+            // Seed temp state from current activePairs (or all pairs if null)
+            const base = activePairs !== null ? activePairs : ALL_PAIRS;
+            _ppTempSelected = new Set(base);
+            _renderPairGrid('');
+            document.getElementById('pairPickerSearch').value = '';
+            document.getElementById('pairPickerModal').style.display = 'flex';
+            document.getElementById('pairPickerOverlay').style.display = 'block';
+            _updatePairPickerCount();
+        }
+
+        function closePairPicker() {
+            document.getElementById('pairPickerModal').style.display = 'none';
+            document.getElementById('pairPickerOverlay').style.display = 'none';
+        }
+
+        function _renderPairGrid(filter) {
+            const grid = document.getElementById('pairPickerGrid');
+            const q = filter.toUpperCase().replace('FRX','');
+            const pairs = ALL_PAIRS.filter(p => {
+                const name = p.replace('frx','').replace('cry','');
+                return !q || name.includes(q);
+            });
+
+            grid.innerHTML = pairs.map(p => {
+                const name = p.replace('frx','').replace('cry','');
+                const sel  = _ppTempSelected.has(p);
+                return `<button
+                    onclick="pairPickerToggle('${p}', this)"
+                    style="
+                        background: ${sel ? 'rgba(46,213,115,0.15)' : 'var(--bg-base)'};
+                        color: ${sel ? 'var(--accent-green)' : '#FFFFFF'};
+                        border: 1px solid ${sel ? 'var(--accent-green)' : '#444'};
+                        padding: 6px 4px;
+                        font-size: 10px;
+                        font-weight: 800;
+                        cursor: pointer;
+                        border-radius: 2px;
+                        letter-spacing: 0.3px;
+                        font-family: 'JetBrains Mono', monospace;
+                        transition: all 0.1s;
+                    "
+                    data-pair="${p}">
+                    ${name}
+                </button>`;
+            }).join('');
+        }
+
+        function pairPickerToggle(pair, btn) {
+            if (_ppTempSelected.has(pair)) {
+                _ppTempSelected.delete(pair);
+                btn.style.background  = 'var(--bg-base)';
+                btn.style.color       = '#FFFFFF';
+                btn.style.borderColor = '#444';
+            } else {
+                _ppTempSelected.add(pair);
+                btn.style.background  = 'rgba(46,213,115,0.15)';
+                btn.style.color       = 'var(--accent-green)';
+                btn.style.borderColor = 'var(--accent-green)';
+            }
+            _updatePairPickerCount();
+        }
+
+        function pairPickerSelectAll() {
+            ALL_PAIRS.forEach(p => _ppTempSelected.add(p));
+            const q = document.getElementById('pairPickerSearch').value;
+            _renderPairGrid(q);
+            _updatePairPickerCount();
+        }
+
+        function pairPickerSelectNone() {
+            _ppTempSelected.clear();
+            const q = document.getElementById('pairPickerSearch').value;
+            _renderPairGrid(q);
+            _updatePairPickerCount();
+        }
+
+        function pairPickerFilter(val) {
+            _renderPairGrid(val);
+        }
+
+        function _updatePairPickerCount() {
+            const n = _ppTempSelected.size;
+            document.getElementById('pairPickerCount').textContent =
+                n === 0 ? '0 selected' :
+                n === ALL_PAIRS.length ? 'ALL selected' :
+                `${n} / ${ALL_PAIRS.length} selected`;
+        }
+
+        function pairPickerApply() {
+            if (_ppTempSelected.size === 0) {
+                // Nothing selected → reset to full ALL
+                activePairs = null;
+            } else if (_ppTempSelected.size === ALL_PAIRS.length) {
+                activePairs = null; // same as ALL
+            } else {
+                activePairs = [..._ppTempSelected];
+            }
+            _updatePairPickerLabel();
+            closePairPicker();
+            // ── Propagate everywhere ──
+            dispatchMultiCycleScan();           // re-scan with new pair set
+            // If activePair is no longer in the selection, switch to first available
+            if (activePairs !== null && !activePairs.includes(activePair)) {
+                const first = activePairs.find(p => allPairData[p] && allPairData[p].times.length > 0);
+                if (first) {
+                    activePair = first;
+                    document.getElementById('apiPair').value = first;
+                    timesArray  = allPairData[first].times;
+                    pricesArray = allPairData[first].prices;
+                    processVisualMatrix();
+                }
+            }
+        }
+
+        function _updatePairPickerLabel() {
+            const lbl = document.getElementById('pairPickerLabel');
+            if (!lbl) return;
+            if (activePairs === null || activePairs.length === ALL_PAIRS.length) {
+                lbl.textContent = 'ALL';
+                lbl.style.color = '#FFD700';
+            } else if (activePairs.length === 1) {
+                lbl.textContent = activePairs[0].replace('frx','').replace('cry','');
+                lbl.style.color = 'var(--accent-green)';
+            } else {
+                const names = activePairs.map(p => p.replace('frx','').replace('cry','')).join(', ');
+                lbl.textContent = `${activePairs.length}: ${names}`;
+                lbl.style.color = 'var(--accent-green)';
+            }
+        }
 
         function scheduleMatrixReboot() {
                     const now = new Date();
