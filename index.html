@@ -99,7 +99,12 @@
 
         <div id="wall-finder-pane">
     <div class="peaks-container">
-        <div class="table-wrapper">
+        <div style="display:flex; align-items:center; gap:6px; padding:6px 8px; background:var(--bg-panel); border-bottom:1px solid var(--border); flex-shrink:0;">
+    <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em;">MIN %</span>
+    <input type="number" id="minPctInput" value="70" min="0" max="100" onchange="renderFilteredTable()" style="background:var(--bg-base); border:1px solid var(--border); color:#FFD700; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:800; width:60px; padding:4px 6px; border-radius:2px; outline:none; text-align:center;">
+    <span style="font-size:9px; font-weight:800; color:#888;">%</span>
+</div>
+<div class="table-wrapper">
                     <table>
     <tbody id="peaksTableBody">
                             <tr><td colspan="7" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">AWAITING DATA...</td></tr>
@@ -787,7 +792,7 @@ let activePairs = null; // null = use category filter as before
                 bootLog(`${name} — found ${finalChunks.length} gap(s) totalling ~${totalGapSecs}s. Backfilling...`, '#FFD700');
                 
                 // Sequential chunk fetching to avoid Deriv WebSocket rate limiting
-                const WORKERS = 2;
+                const WORKERS = 8;
                 for (let i = 0; i < finalChunks.length; i += WORKERS) {
                     const batch = finalChunks.slice(i, i + WORKERS);
                     bootLog(`${name} — fetching chunks ${i+1}-${i+batch.length}`, '#00B0FF');
@@ -1700,26 +1705,18 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     // 720° — Filtered by Active Mode
 var _allSigs = currentMode === 'REV' ? [...globalRevs] : [...globalMoms];
 
-var uniqueList = [];
-// Calculate the maximum dropoff (failures) based on the active mode
-var _maxDropoff = _allSigs.reduce((m, x) => {
-    let drop = currentMode === 'REV' ? x.c2 : (x.c1 - x.c2);
-    return drop > m ? drop : m;
-}, 0);
+var _minPctEl = document.getElementById('minPctInput');
+var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 70) : 70;
+var uniqueList = _allSigs
+    .filter(x => x.pct >= _minPct)
+    .sort((a, b) => {
+        var scoreA = (a.pct * a.c1);
+        var scoreB = (b.pct * b.c1);
+        return scoreB - scoreA;
+    })
+    .slice(0, 100);
 
-// Loop through dropoff levels (0 = perfect 100%, 1 = one failure, etc.)
-for (var _dropLevel = 0; _dropLevel <= _maxDropoff; _dropLevel++) {
-    var _best = _allSigs
-        .filter(x => {
-            let drop = currentMode === 'REV' ? x.c2 : (x.c1 - x.c2);
-            return drop === _dropLevel;
-        })
-        .sort((a, b) => b.c1 !== a.c1 ? b.c1 - a.c1 : b.s1 - a.s1)[0];
-    if (_best) uniqueList.push(_best);
-}
-
-renderScannerTable(uniqueList, displayDead);
-                      }
+renderScannerTable(uniqueList, displayDead);                     }
                               
                                   function renderScannerTable(aliveList, deadList) {
                                                              var tbody = document.getElementById('peaksTableBody');
