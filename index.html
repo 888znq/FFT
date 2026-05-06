@@ -429,7 +429,30 @@
                     rowStreak[row] = newStreak;
                     rowCol[row]    = col;
                 }
-    
+
+                // ── LIVE EDGE INJECTION ──
+                // The histogram (shG/shR) only records a streak when it ENDS (reversal fires).
+                // A streak that is currently in-progress never gets counted until the next
+                // reversal — so c2 stays stale and the wall panel shows 100% even when
+                // price has already blown past the threshold.
+                // Fix: after processing all candles, inject the current live streak length
+                // as a provisional entry. This makes cum[s] non-zero immediately,
+                // so c2 updates on the very next scan — no reversal required.
+                for (let row = 0; row < c; row++) {
+                    const liveLen = rowStreak[row];
+                    if (liveLen < 1 || rowColor[row] === 0) continue;
+                    const isG = rowColor[row] === 1;
+                    if (isG) {
+                        if (!shG[row]) shG[row] = {};
+                        shG[row][liveLen] = (shG[row][liveLen] || 0) + 1;
+                        if (liveLen > shGMax[row]) shGMax[row] = liveLen;
+                    } else {
+                        if (!shR[row]) shR[row] = {};
+                        shR[row][liveLen] = (shR[row][liveLen] || 0) + 1;
+                        if (liveLen > shRMax[row]) shRMax[row] = liveLen;
+                    }
+                }
+
                 for (let r = 0; r < c; r++) {
                     for (let ci = 0; ci < 2; ci++) {   
                         const raw      = ci === 0 ? shG[r]    : shR[r];
@@ -581,11 +604,9 @@ let activePairs = null; // null = use category filter as before
         isLiveSync  = true;
 
     } else if (dayOfWeek === 3) {
-        // Wednesday UTC — viewing completed TUE session (TUE 5:30 IST → THU 2:30 IST)
-        // Wed live ticks exceed the 75600s TUE grid → all dropped in injectLiveTick()
-        // so isLive must be false for the entire day
-        startTsUtc  = todayMidnightUtc - 86400;   // rewind to Tuesday midnight UTC
-        isLiveSync  = false;
+        // Wednesday UTC — live session day (05:30 IST today → 02:30 IST tomorrow)
+        startTsUtc  = todayMidnightUtc;
+        isLiveSync  = secondsIntoDay < T_END;
 
     } else if (dayOfWeek === 4) {
         // Thursday UTC
