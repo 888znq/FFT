@@ -140,8 +140,9 @@
                                                                             <button onclick="executeTrade('PUT', this)" style="background: var(--bg-base); color: var(--accent-red); border: 1px solid var(--border); padding: 4px; font-size: 12px; font-weight: 800; letter-spacing: 1px; cursor: pointer; border-radius: 2px; width: 100%; height: 100%;">SELL</button>
                                                                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%; height: 100%;">
                                                                                 <button onclick="toggleCat(this, 'FX')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: #FFD700; border: 1px solid #FFD700; padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">FX</button>
-                                                                                <button onclick="toggleCat(this, 'METAL')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">METAL</button>
-                                                                                <button onclick="toggleCat(this, 'DERIV')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">DERIV</button>
+<button onclick="toggleCat(this, 'METAL')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">METAL</button>
+<button onclick="toggleCat(this, 'DERIV')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">DERIV</button>
+<button onclick="toggleCat(this, 'CRYPTO')" class="cat-toggle-btn" style="flex: 1; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 4px 0; font-size: 9px; font-weight: 800; cursor: pointer; border-radius: 2px; height: 100%; transition: 0.2s;">CRYPTO</button>
                                                                             </div>
                 
                                     <!-- Row 4: Min Cycle | Max Cycle | Scan Time -->
@@ -493,13 +494,20 @@
 
     <script>
     const ALL_PAIRS = [
-                "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
-                "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY",
-                "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF",
-                "frxGBPJPY", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY", "frxNZDUSD",
-                "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN", "frxUSDNOK",
-                "frxXAGUSD", "frxXAUUSD", "frxXPTUSD"
-            ];
+            // FX
+            "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
+            "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY",
+            "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF",
+            "frxGBPJPY", "frxGBPNOK", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY",
+            "frxNZDUSD", "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN",
+            "frxUSDNOK", "frxUSDPLN", "frxUSDSEK",
+            // METALS
+            "frxXAGUSD", "frxXAUUSD", "frxXPDUSD", "frxXPTUSD",
+            // DERIV
+            "1HZ100V", "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V",
+            // CRYPTO
+            "cryBTCUSD", "cryETHUSD"
+        ];
         
            let allPairData = {};
 let activePair = "frxEURUSD";
@@ -743,7 +751,8 @@ let activePairs = null; // null = use category filter as before
         }
 
         async function fetchDerivGrid(pair, dateStr, startTs, endTs) {
-            const name = pair.replace('frx','').replace('cry','');
+            const name = pair.replace('frx','').replace('cry','').replace('1HZ','')
+
             const cached = await aofs_read(pair, dateStr);
             let tickMap  = {};
 
@@ -1482,9 +1491,17 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
         function closeModalApp3() { document.getElementById('app3-modal').style.display = 'none'; document.getElementById('app3-modalOverlay').style.display = 'none'; }
 
-        function selectSignal(pair, c, r, s1, s2, colColor, type, deathCol = -1) {
+       function selectSignal(pair, c, r, s1, s2, colColor, type, deathCol = -1) {
                     let sigId = `${pair}-${c}-${r}-${s1}-${s2}-${colColor}-${type}`;
-        
+
+                    // FIX 1: Guard against pair data not yet loaded
+                    if (!allPairData[pair] || allPairData[pair].times.length === 0) {
+                        const state = _bootPairState[pair] || 'wait';
+                        const msg = state === 'fetching' ? 'LOADING DATA...' : state === 'err' ? 'DATA ERROR — RETRY LATER' : 'AWAITING DATA...';
+                       document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="7" style="padding:15px 0; font-size:12px; font-weight:800; text-align:center; color:#FFD700; letter-spacing:0.1em;">${pair.replace('frx','').replace('cry','').replace('1HZ','')} — ${msg}</td></tr>`;
+                        return;
+                    }
+
                     if (activePair !== pair) {
                                             activePair = pair;
                                             document.getElementById('apiPair').value = pair;
@@ -1667,11 +1684,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                         scanQueue = []; // Reset the task queue
 
             // 1. Build the queue of all targets
-                                const catFilter = {
-                                    'FX':    p => p.startsWith('frx') && !p.includes('XAU') && !p.includes('XAG') && !p.includes('XPT'),
-                                    'METAL': p => p.startsWith('frx') && (p.includes('XAU') || p.includes('XAG') || p.includes('XPT')),
-                                    'DERIV': p => false // crypto & synthetic pairs removed
-                                };
+                               const catFilter = {
+                    'FX':     p => p.startsWith('frx') && !p.includes('XAU') && !p.includes('XAG') && !p.includes('XPD') && !p.includes('XPT'),
+                    'METAL':  p => p.startsWith('frx') && (p.includes('XAU') || p.includes('XAG') || p.includes('XPD') || p.includes('XPT')),
+                    'DERIV':  p => p.startsWith('1HZ'),
+                    'CRYPTO': p => p.startsWith('cry')
+                };
                                 // If activePairs is set (pair picker), use that set; otherwise fall back to category filter
                                 const _baseList = activePairs !== null ? activePairs : ALL_PAIRS;
                                 const pairsToScan = _baseList.filter(catFilter[activeCat] || (() => true));
@@ -1750,7 +1768,7 @@ renderScannerTable(uniqueList, displayDead);                     }
                                                                              aliveList.forEach(data => {
                                                                                  var isRed = data.col === 'R';
                                                                                  var rowClass = isRed ? 'row-red' : 'row-green';
-                                                                                 var symbolClean = data.pair.replace('frx', '').replace('cry', '');
+                                                                                 var symbolClean = data.pair.replace('frx', '').replace('cry', '').replace('1HZ', '');
                                                                                  var thisSigId = `${data.pair}-${data.c}-${data.r}-${data.s1}-${data.s2}-${data.col}-${data.type}`;
                                                                                  var isSelected = thisSigId === lastClickedSigId;
                                                                                  var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
