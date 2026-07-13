@@ -244,17 +244,34 @@
     <div class="peaks-container">
 
         <div class="ctrl-row">
-                                                                            <span style="position:relative; display:inline-block; flex-shrink:0;">
-                                                                                <input type="number" id="minPctInput" value="85" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:70px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
-                                                                                <span style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:#FFFFFF; pointer-events:none;">%</span>
-                                                                            </span>
-                                                                            <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
-                                                                                                                                                        <button id="r0OnlyBtn" onclick="toggleR0Only()" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">R0</button>
-                                                                            <div style="flex:1; height:4px; background:#222; border-radius:2px; overflow:hidden;">
-                                                                                <div id="scanTimerProgressBar" style="height:100%; width:100%; background:#FFD700; border-radius:2px; transition:width 1s linear;"></div>
-                                                                            </div>
-                                                                            <span id="scanTimerDisplay" style="font-size:12px; font-weight:800; color:#FFD700; font-family:'JetBrains Mono',monospace; flex-shrink:0; min-width:32px; text-align:right;">--</span>
-                                                                        </div>
+                                                                                    <span style="position:relative; display:inline-block; flex-shrink:0;">
+                                                                                        <input type="number" id="minPctInput" value="85" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:70px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
+                                                                                        <span style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:#FFFFFF; pointer-events:none;">%</span>
+                                                                                    </span>
+                                                                                    <span style="position:relative; display:inline-block; flex-shrink:0;">
+                                                                                                                                                                    <select id="levelFilterSelect" onchange="renderFilteredTable()" class="ctrl-input ctrl-select" style="width:78px; font-size:11px; color:#FFFFFF;">
+                                                                                                                                                                        <option value="0">ALL LVL</option>
+                                                                                                                                                                        <option value="1">X1-X2</option>
+                                                                                                                                                                        <option value="2" selected>X2-X3</option>
+                                                                                                                                                                        <option value="3">X3-X4</option>
+                                                                                                                                                                        <option value="4">X4-X5</option>
+                                                                                                                                                                        <option value="5">X5-X6</option>
+                                                                                                                                                                        <option value="6">X6-X7</option>
+                                                                                                                                                                        <option value="7">X7-X8</option>
+                                                                                                                                                                        <option value="8">X8-X9</option>
+                                                                                                                                                                        <option value="9">X9-X10</option>
+                                                                                                                                                                        <option value="10">X10-X11</option>
+                                                                                                                                                                        <option value="11">X11-X12</option>
+                                                                                                                                                                        <option value="12">X12-X13</option>
+                                                                                                                                                                    </select>
+                                                                                                                                                                </span>
+                                                                                    <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
+                                                                                                                                                                <button id="r0OnlyBtn" onclick="toggleR0Only()" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">R0</button>
+                                                                                    <div style="flex:1; height:4px; background:#222; border-radius:2px; overflow:hidden;">
+                                                                                        <div id="scanTimerProgressBar" style="height:100%; width:100%; background:#FFD700; border-radius:2px; transition:width 1s linear;"></div>
+                                                                                    </div>
+                                                                                    <span id="scanTimerDisplay" style="font-size:12px; font-weight:800; color:#FFD700; font-family:'JetBrains Mono',monospace; flex-shrink:0; min-width:32px; text-align:right;">--</span>
+                                                                                </div>
 
 <div class="table-wrapper">
 
@@ -401,7 +418,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MIN</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="180" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -409,7 +426,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MAX</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="240" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -3973,13 +3990,16 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
         function _autoSelectTopSignal() {
-            var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
-            var _minPctEl = document.getElementById('minPctInput');
-            var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
-            var topList = _allSigs
-                .filter(function(x) { return !_hiddenPairs.has(x.pair); })
-                .filter(function(x) { return x.pct >= _minPct; })
-                .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
+                    var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
+                    var _minPctEl = document.getElementById('minPctInput');
+                    var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
+                    var _levelEl = document.getElementById('levelFilterSelect');
+                    var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
+                    var topList = _allSigs
+                        .filter(function(x) { return !_hiddenPairs.has(x.pair); })
+                        .filter(function(x) { return x.pct >= _minPct; })
+                        .filter(function(x) { return _levelVal === 0 || x.s1 === _levelVal; })
+                        .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
             if (topList.length === 0) return;
             var top = topList[0];
             if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
@@ -4245,11 +4265,17 @@ var _minPctEl = document.getElementById('minPctInput');
 
 var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
 
+var _levelEl = document.getElementById('levelFilterSelect');
+
+var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
+
 var uniqueList = _allSigs
 
     .filter(x => !_hiddenPairs.has(x.pair))
 
     .filter(x => x.pct >= _minPct)
+
+    .filter(x => _levelVal === 0 || x.s1 === _levelVal)
 
     .filter(x => !r0OnlyMode || x.r === 0)
 
