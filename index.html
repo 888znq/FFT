@@ -364,7 +364,8 @@
 
                 
 
-                                                    <!-- ROW 0: BROKER FIRE TOGGLE (full width) -->
+                                                    <div id="gapAlertBadge" style="display:none; grid-column: span 2; background:var(--bg-base); border:1px solid #FFD700; border-radius:2px; padding:8px 0; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:14px; letter-spacing:1px; color:#FFD700;">GAP&nbsp;RUN:&nbsp;<span id="gapAlertCur">0</span>&nbsp;/&nbsp;<span id="gapAlertMax">0</span></div>
+                                                                                                        <!-- ROW 0: BROKER FIRE TOGGLE (full width) -->
                                                                                                                                                                                                                 <div style="grid-column: span 2; display:flex; gap:3px;">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     <button id="fireToggleBtn" onclick="toggleBrokerFire()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">🔥 FIRE: ON</button>
                                                                                                                                                                                                                 </div>
@@ -834,7 +835,7 @@
     
             }
     
-            return maxRun;
+            return { maxRun: maxRun, curRun: curRun };
     
         }
 
@@ -1101,9 +1102,9 @@
 
                 for (let r = 0; r < c; r++) {
                 
-                                    const gapMapG = computeGapMapFromEvents(termLenG[r] || []);
-                
-                                    const gapMapR = computeGapMapFromEvents(termLenR[r] || []);
+                                    const gapDataG = computeGapMapFromEvents(termLenG[r] || []);
+                                                    
+                                                                        const gapDataR = computeGapMapFromEvents(termLenR[r] || []);
                 
                                     for (let ci = 0; ci < 2; ci++) {   
                 
@@ -1117,7 +1118,9 @@
                 
                                         const colColor = ci === 0 ? 'G' : 'R';
                 
-                                        const gapMap   = ci === 0 ? gapMapG : gapMapR;
+                                        const gapMap    = ci === 0 ? gapDataG.maxRun : gapDataR.maxRun;
+                                                        
+                                                                                const curGapMap = ci === 0 ? gapDataG.curRun : gapDataR.curRun;
                 
                                         const cum = applyCumulative(raw, maxS);
                 
@@ -1142,10 +1145,12 @@
                                             const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
                 
                                             const gap = gapMap[s] || 0;
-                
-                                            
-                
-                                            revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap });
+                                                            
+                                                                                        const curGap = curGapMap[s] || 0;
+                                                            
+                                                                                        
+                                                            
+                                                                                        revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap });
                 
                                             if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
                 
@@ -3653,7 +3658,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
 
-       function manualSelectSignal(pair, c, r, s1, s2, colColor, type) {
+       function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
        
                   if (brokerFireEnabled) {
        
@@ -3698,9 +3703,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        
                   }
        
-                  selectSignal(pair, c, r, s1, s2, colColor, type);
-       
-              }
+                  selectSignal(pair, c, r, s1, s2, colColor, type, -1, gapVal, curGapVal);
+                         
+                                }
 
 
 
@@ -3736,7 +3741,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
-       function selectSignal(pair, c, r, s1, s2, colColor, type, deathCol = -1) {
+       function selectSignal(pair, c, r, s1, s2, colColor, type, deathCol = -1, gapVal, curGapVal) {
            // LIVE SESSION BOUNDARY GUARD: wipe instance memory whenever the session context has changed
            var _currentSessionKey = (pair + '-' + c + '-' + r + '-' + (typeof sessionWindowStartMin !== 'undefined' ? sessionWindowStartMin : 0) + '-' + (typeof sessionWindowEndMin !== 'undefined' ? sessionWindowEndMin : 1440));
            if (typeof window._lastSessionKey === 'undefined') window._lastSessionKey = '';
@@ -3844,19 +3849,19 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                         Object.keys(targetHist).forEach(lenStr => {
                                                                                             let L = parseInt(lenStr);
                                                                                             if (L === s1) {
-                                                                                                targetHist[L].forEach(endCol => {
-                                                                                                    if (endCol >= 0 && endCol <= _sessionMaxCol) {
-                                                                                                        currentInstances.push({ col: endCol, row: r });
-                                                                                                    }
-                                                                                                });
-                                                                                            } else if (L > s1 && s1 >= 2) {
-                                                                                                targetHist[L].forEach(endCol => {
-                                                                                                    var instCol = endCol - (L - s1);
-                                                                                                    if (instCol >= 0 && instCol <= _sessionMaxCol) {
-                                                                                                        currentInstances.push({ col: instCol, row: r });
-                                                                                                    }
-                                                                                                });
-                                                                                            }
+                                                                                                                                                                            targetHist[L].forEach(endCol => {
+                                                                                                                                                                                if (endCol >= 0 && endCol <= _sessionMaxCol) {
+                                                                                                                                                                                    currentInstances.push({ col: endCol, row: r, isFalse: false });
+                                                                                                                                                                                }
+                                                                                                                                                                            });
+                                                                                                                                                                        } else if (L > s1 && s1 >= 2) {
+                                                                                                                                                                            targetHist[L].forEach(endCol => {
+                                                                                                                                                                                var instCol = endCol - (L - s1);
+                                                                                                                                                                                if (instCol >= 0 && instCol <= _sessionMaxCol) {
+                                                                                                                                                                                    currentInstances.push({ col: instCol, row: r, isFalse: true });
+                                                                                                                                                                                }
+                                                                                                                                                                            });
+                                                                                                                                                                        }
                                                                                         });
                                                                                     } else if (type === 'MOM') {
                                                 Object.keys(targetHist).forEach(lenStr => {
@@ -3872,7 +3877,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                 });
                                             }
                                             currentInstances.sort((a, b) => a.col - b.col);
-                                        }
+                                                                                        var _falseRun = 0;
+                                                                                        currentInstances.forEach(function(inst) {
+                                                                                            if (inst.isFalse) { _falseRun++; inst.falseSeq = _falseRun; }
+                                                                                            else { _falseRun = 0; }
+                                                                                        });
+                                                                                    }
 
         
 
@@ -4125,7 +4135,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                         
                                                                 processVisualMatrix();
                                                                 renderFilteredTable();
-                                                                if (window._autoSelectAfterScan) {
+                                                                                                                                _refreshArmedGapFromScan();
+                                                                                                                                if (window._autoSelectAfterScan) {
                                                                     window._autoSelectAfterScan = false;
                                                                     setTimeout(_autoSelectTopSignal, 200);
                                                                 }
@@ -4381,10 +4392,12 @@ renderScannerTable(uniqueList, displayDead);                     }
                                                                     var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
                                   
                                                                     var gapVal = data.gap || 0;
-                                  
-                                                                    var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
-                                  
-                                                                    html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}')">
+                                                                                                      
+                                                                                                                                    var curGapVal = data.curGap || 0;
+                                                                                                      
+                                                                                                                                    var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
+                                                                                                      
+                                                                                                                                    html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
                                   <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
                                   <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                   <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
@@ -4528,36 +4541,63 @@ renderScannerTable(uniqueList, displayDead);                     }
 
 
             currentInstances.forEach((inst, idx) => {
+            
+                            const xPos = Math.round((inst.col * CELL_W) - scrollL);
+            
+                            const yPos = Math.round((inst.row * CELL_H) - scrollT);
+            
+            
+            
+                            if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                            
+                                                if (idx === currentInstanceIndex) {
+                            
+                                                    // Active/selected instance: purple border, no fill
+                            
+                                                    ctx.strokeStyle = "#D500F9"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                            
+                                                } else {
+                            
+                                                    // Non-active instance: neutral yellow border
+                                                    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                            
+                                                }
+                            
+                                                // Permanent T/F label: purple for both, letter (T/F) is the differentiator; false runs show F1, F2, F3...
+                                                                                                                    ctx.save();
+                                                                                                                    ctx.font = "800 11px 'Inter', 'JetBrains Mono'";
+                                                                                                                    ctx.textAlign = "center";
+                                                                                                                    ctx.textBaseline = "middle";
+                                                                                                                    ctx.fillStyle = "#D500F9";
+                                                                                                                    ctx.fillText(inst.isFalse ? ("F" + (inst.falseSeq || 1)) : "T", xPos + CELL_W - 8, yPos + 9);
+                                                                                                                    ctx.restore();
+                                                                            
+                                                                                            }
+                                                                            
+                                                                                        });
 
-                const xPos = Math.round((inst.col * CELL_W) - scrollL);
-
-                const yPos = Math.round((inst.row * CELL_H) - scrollT);
 
 
-
-                if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
-
-                    if (idx === currentInstanceIndex) {
-
-                        // Active/selected instance: purple border, no fill
-
-                        ctx.strokeStyle = "#D500F9"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
-
-                    } else {
-
-                        // Other instances: yellow border only, no fill
-
-                        ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
-
-                    }
-
-                }
-
-            });
-
-
-
-            // ── 3-STATE NEON BOXES (pre-draw + pulse on fulfil) ─
+            // ── LIVE GAP COUNTER: current/worst blow-through run, shown right after the running streak on the armed row ──
+                        if (_armed && highlightRow >= 0) {
+                            const gapLiveCol = _getLiveCol() + 1;
+                            const gxPos = Math.round((gapLiveCol * CELL_W) - scrollL);
+                            const gyPos = Math.round((highlightRow * CELL_H) - scrollT);
+                            if (gxPos >= -CELL_W && gxPos <= viewW && gyPos >= -CELL_H && gyPos <= viewH) {
+                                const atCeiling = _armed.gap > 0 && _armed.curGap >= _armed.gap;
+                                ctx.save();
+                                ctx.font = `800 ${dynamicFontSize}px 'Inter', 'JetBrains Mono'`;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillStyle = atCeiling ? (window.accentGreenHex || '#2ED573') : '#FFD700';
+                                ctx.fillText((_armed.curGap || 0) + '/' + (_armed.gap || 0), gxPos + centerOff, gyPos + (CELL_H/2) + 1);
+                                ctx.restore();
+                            }
+                        }
+            
+            
+            
+                        // ── 3-STATE NEON BOXES (pre-draw + pulse on fulfil) ─
 
             if (_armed && highlightRow >= 0) {
 
@@ -4897,7 +4937,43 @@ renderScannerTable(uniqueList, displayDead);                     }
 
 
 
-        function _getLiveCol() {
+        function _updateArmedGapBadge() {
+        
+                    // Badge moved to canvas — see draw(), drawn right after the live running streak.
+        
+                    if (typeof requestDraw === 'function') requestDraw();
+        
+                }
+        
+        
+        
+                function _refreshArmedGapFromScan() {
+        
+                    if (!_armed) return;
+        
+                    var list = currentMode === 'REV' ? globalRevs : globalMoms;
+        
+                    var match = list.find(function(x) {
+        
+                        return x.pair === _armed.pair && x.c === _armed.c && x.r === _armed.r && x.s1 === _armed.s1 && x.s2 === _armed.s2 && x.col === _armed.col;
+        
+                    });
+        
+                    if (match) {
+        
+                        _armed.gap = match.gap || 0;
+        
+                        _armed.curGap = match.curGap || 0;
+        
+                    }
+        
+                    _updateArmedGapBadge();
+        
+                }
+        
+        
+        
+                function _getLiveCol() {
 
             if (liveEdgeCol >= 0) return liveEdgeCol;
 
@@ -4991,7 +5067,7 @@ renderScannerTable(uniqueList, displayDead);                     }
 
         const _origSelectSignal = selectSignal;
 
-        selectSignal = function(pair, c, r, s1, s2, colColor, type) {
+        selectSignal = function(pair, c, r, s1, s2, colColor, type, deathCol, gapVal, curGapVal) {
 
             _stopAllBeeps();
 
@@ -4999,11 +5075,13 @@ renderScannerTable(uniqueList, displayDead);                     }
 
             _resetAllBoxes();
 
-            _armed = { pair, c, r, s1, s2, col: colColor };
-
-            _origSelectSignal.apply(this, arguments);
-
-            setTimeout(() => {
+            _armed = { pair, c, r, s1, s2, col: colColor, gap: gapVal || 0, curGap: curGapVal || 0 };
+            
+                        _origSelectSignal.apply(this, arguments);
+            
+                        _updateArmedGapBadge();
+            
+                        setTimeout(() => {
 
                 _scanBoxesNow();
 
@@ -5086,8 +5164,8 @@ renderScannerTable(uniqueList, displayDead);                     }
                 } else if (streak >= exitAt && _beepState === 'HIT') {
 
                     _stopAllBeeps(); _playLossBeep();
-
-                    _armed = null; _beepState = 'IDLE'; _stopPulse(); return;
+                    
+                                        _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
                 } else if (streak < warnAt && _beepState !== 'IDLE') {
 
@@ -5100,14 +5178,14 @@ renderScannerTable(uniqueList, displayDead);                     }
                 if (_beepState === 'WARN' && streak >= targetAt) {
 
                     _stopAllBeeps(); _playMissBeep();
-
-                    _armed = null; _beepState = 'IDLE'; _stopPulse(); return;
+                    
+                                        _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
                 } else if (_beepState === 'HIT' && streak >= exitAt) {
 
                     _stopAllBeeps(); _playWinBeep();
-
-                    _armed = null; _beepState = 'IDLE'; _stopPulse(); return;
+                    
+                                        _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
                 } else if (_beepState === 'HIT') {
 
