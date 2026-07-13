@@ -50,7 +50,7 @@
 
 
 
-        #main-container { flex: 1; display: grid; grid-template-columns: 1fr 80px 35px 380px; grid-template-rows: 1fr; overflow: hidden; position: relative; }
+        #main-container { flex: 1; display: grid; grid-template-columns: 1fr 80px 35px 430px; grid-template-rows: 1fr; overflow: hidden; position: relative; }
 
 
 
@@ -279,7 +279,7 @@
 
     <tbody id="peaksTableBody">
 
-                            <tr><td colspan="7" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">AWAITING DATA...</td></tr>
+                            <tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">AWAITING DATA...</td></tr>
 
                         </tbody>
 
@@ -788,26 +788,55 @@
 
 
     // applyCumulative: maxS passed in directly — eliminates Object.keys() scan.
-
-    function applyCumulative(hist, maxS) {
-
-        let cum = 0;
-
-        const res = {};
-
-        for (let i = maxS; i >= 1; i--) {
-
-            const v = hist[i];
-
-            if (v) cum += v;
-
-            if (cum > 0) res[i] = cum;
-
+    
+        function applyCumulative(hist, maxS) {
+    
+            let cum = 0;
+    
+            const res = {};
+    
+            for (let i = maxS; i >= 1; i--) {
+    
+                const v = hist[i];
+    
+                if (v) cum += v;
+    
+                if (cum > 0) res[i] = cum;
+    
+            }
+    
+            return res;
+    
         }
-
-        return res;
-
-    }
+    
+        // computeGapMapFromEvents: given a row's terminal streak-lengths in chronological
+        // order, returns maxRun[s1] = worst run of consecutive "blew-through" occurrences
+        // (events with length > s1) between confirmed exact-length-s1 reversals.
+        function computeGapMapFromEvents(events) {
+    
+            const maxRun = [];
+    
+            const curRun = [];
+    
+            for (let i = 0; i < events.length; i++) {
+    
+                const L = events[i];
+    
+                for (let s = 1; s < L; s++) {
+    
+                    curRun[s] = (curRun[s] || 0) + 1;
+    
+                    if (curRun[s] > (maxRun[s] || 0)) maxRun[s] = curRun[s];
+    
+                }
+    
+                curRun[L] = 0;
+    
+            }
+    
+            return maxRun;
+    
+        }
 
 
 
@@ -864,12 +893,16 @@
         
 
                     const shG = new Array(c).fill(null);
-
-                    const shR = new Array(c).fill(null);
-
                     
-
-                    const survivalG = {};
+                                        const shR = new Array(c).fill(null);
+                    
+                                        const termLenG = new Array(c).fill(null);
+                    
+                                        const termLenR = new Array(c).fill(null);
+                    
+                                        
+                    
+                                        const survivalG = {};
 
                     const survivalR = {};
 
@@ -984,30 +1017,38 @@
     
 
                     if (newStreak === 1 && rowStreak[row] > 0 && rowColor[row] !== 0 && rowCol[row] === col - 1)
-
-                    {
-
-                        const s = rowStreak[row];
-
-                        if (rowColor[row] === 1) {          
-
-                            if (!shG[row]) shG[row] = {};
-
-                            shG[row][s] = (shG[row][s] || 0) + 1;
-
-                            if (s > shGMax[row]) shGMax[row] = s;
-
-                        } else {                             
-
-                            if (!shR[row]) shR[row] = {};
-
-                            shR[row][s] = (shR[row][s] || 0) + 1;
-
-                            if (s > shRMax[row]) shRMax[row] = s;
-
-                        }
-
-                    }
+                    
+                                        {
+                    
+                                            const s = rowStreak[row];
+                    
+                                            if (rowColor[row] === 1) {          
+                    
+                                                if (!shG[row]) shG[row] = {};
+                    
+                                                shG[row][s] = (shG[row][s] || 0) + 1;
+                    
+                                                if (s > shGMax[row]) shGMax[row] = s;
+                    
+                                                if (!termLenG[row]) termLenG[row] = [];
+                    
+                                                termLenG[row].push(s);
+                    
+                                            } else {                             
+                    
+                                                if (!shR[row]) shR[row] = {};
+                    
+                                                shR[row][s] = (shR[row][s] || 0) + 1;
+                    
+                                                if (s > shRMax[row]) shRMax[row] = s;
+                    
+                                                if (!termLenR[row]) termLenR[row] = [];
+                    
+                                                termLenR[row].push(s);
+                    
+                                            }
+                    
+                                        }
 
     
 
@@ -1038,69 +1079,81 @@
                 // so c2 updates on the very next scan — no reversal required.
 
                 for (let row = 0; row < c; row++) {
-                                                    const liveLen = rowStreak[row];
-                                                    if (liveLen < 1 || rowColor[row] === 0) continue;
-                                    const isG = rowColor[row] === 1;
-                                    if (isG) {
-                                        if (!shG[row]) shG[row] = {};
-                                        shG[row][liveLen] = (shG[row][liveLen] || 0) + 1;
-                                        if (liveLen > shGMax[row]) shGMax[row] = liveLen;
-                                    } else {
-                                        if (!shR[row]) shR[row] = {};
-                                        shR[row][liveLen] = (shR[row][liveLen] || 0) + 1;
-                                        if (liveLen > shRMax[row]) shRMax[row] = liveLen;
-                                    }
-                                }
+                                                                    const liveLen = rowStreak[row];
+                                                                    if (liveLen < 1 || rowColor[row] === 0) continue;
+                                                    const isG = rowColor[row] === 1;
+                                                    if (isG) {
+                                                        if (!shG[row]) shG[row] = {};
+                                                        shG[row][liveLen] = (shG[row][liveLen] || 0) + 1;
+                                                        if (liveLen > shGMax[row]) shGMax[row] = liveLen;
+                                                        if (!termLenG[row]) termLenG[row] = [];
+                                                        termLenG[row].push(liveLen);
+                                                    } else {
+                                                        if (!shR[row]) shR[row] = {};
+                                                        shR[row][liveLen] = (shR[row][liveLen] || 0) + 1;
+                                                        if (liveLen > shRMax[row]) shRMax[row] = liveLen;
+                                                        if (!termLenR[row]) termLenR[row] = [];
+                                                        termLenR[row].push(liveLen);
+                                                    }
+                                                }
 
 
 
                 for (let r = 0; r < c; r++) {
-
-                    for (let ci = 0; ci < 2; ci++) {   
-
-                        const raw      = ci === 0 ? shG[r]    : shR[r];
-
-                        const maxS     = ci === 0 ? shGMax[r] : shRMax[r];
-
-                        if (!raw || maxS === 0) continue;
-
-    
-
-                        const colColor = ci === 0 ? 'G' : 'R';
-
-                        const cum = applyCumulative(raw, maxS);
-
-    
-
-                        for (const sStr in cum) {
-
-                            const s = sStr | 0;
-
-                            if (s < 1) continue;
-
-                            const c1  = cum[s];
-
-                            const c2  = cum[s + 1] || 0;
-
-                            
-
-                            // Split calculations: REV is based on drops, MOM is based on continuation
-
-                            const pctRev = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
-
-                            const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
-
-                            
-
-                            revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV' });
-
-                            if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
-
-                        }
-
-                    }
-
-                }
+                
+                                    const gapMapG = computeGapMapFromEvents(termLenG[r] || []);
+                
+                                    const gapMapR = computeGapMapFromEvents(termLenR[r] || []);
+                
+                                    for (let ci = 0; ci < 2; ci++) {   
+                
+                                        const raw      = ci === 0 ? shG[r]    : shR[r];
+                
+                                        const maxS     = ci === 0 ? shGMax[r] : shRMax[r];
+                
+                                        if (!raw || maxS === 0) continue;
+                
+                    
+                
+                                        const colColor = ci === 0 ? 'G' : 'R';
+                
+                                        const gapMap   = ci === 0 ? gapMapG : gapMapR;
+                
+                                        const cum = applyCumulative(raw, maxS);
+                
+                    
+                
+                                        for (const sStr in cum) {
+                
+                                            const s = sStr | 0;
+                
+                                            if (s < 1) continue;
+                
+                                            const c1  = cum[s];
+                
+                                            const c2  = cum[s + 1] || 0;
+                
+                                            
+                
+                                            // Split calculations: REV is based on drops, MOM is based on continuation
+                
+                                            const pctRev = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
+                
+                                            const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
+                
+                                            const gap = gapMap[s] || 0;
+                
+                                            
+                
+                                            revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap });
+                
+                                            if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
+                
+                                        }
+                
+                                    }
+                
+                                }
 
                 
 
@@ -3706,7 +3759,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                         const msg = state === 'fetching' ? 'LOADING DATA...' : state === 'err' ? 'DATA ERROR — RETRY LATER' : 'AWAITING DATA...';
 
-                       document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="7" style="padding:15px 0; font-size:12px; font-weight:800; text-align:center; color:#FFD700; letter-spacing:0.1em;">${getPairDisplayName(pair)} — ${msg}</td></tr>`;
+                       document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="8" style="padding:15px 0; font-size:12px; font-weight:800; text-align:center; color:#FFD700; letter-spacing:0.1em;">${getPairDisplayName(pair)} — ${msg}</td></tr>`;
 
                         return;
 
@@ -4120,27 +4173,29 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     if (sEnd > _sessionEndSec   - _sessionStartSec) sEnd   = _sessionEndSec   - _sessionStartSec;
                                                     // Updated UI to show active core count
 
-            document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="7" style="padding: 0;">
-
-                <div style="display: grid; grid-template-columns: 1.8fr 1.2fr 1.2fr 1.7fr 1.2fr 1.2fr 1.7fr; font-size: 9px; font-weight: 800; align-items: stretch; text-align: center; color: var(--accent-green);">
-
-                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-
-                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-
-                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-
-                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-
-                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-
-                    <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-
-                    <div style="padding: 15px 0; letter-spacing: 0.1em;">SCANNING ALL PAIRS... [${NUM_CORES} CORES ACTIVE]</div>
-
-                </div>
-
-            </td></tr>`;
+            document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="8" style="padding: 0;">
+            
+                            <div style="display: grid; grid-template-columns: 1.6fr 0.9fr 0.9fr 1.4fr 0.9fr 0.9fr 1.2fr 2.2fr; font-size: 9px; font-weight: 800; align-items: stretch; text-align: center; color: var(--accent-green);">
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+            
+                                <div style="padding: 15px 0; letter-spacing: 0.1em;">SCANNING ALL PAIRS... [${NUM_CORES} CORES ACTIVE]</div>
+            
+                            </div>
+            
+                        </td></tr>`;
 
 
 
@@ -4298,57 +4353,57 @@ renderScannerTable(uniqueList, displayDead);                     }
                               
 
                                   function renderScannerTable(aliveList, deadList) {
-
-                                                             var tbody = document.getElementById('peaksTableBody');
-
-                                                             var html = '';
-
-                                                         
-
-                                                                     if(!aliveList || aliveList.length === 0) {
-
-                                                                         html = `<tr><td colspan="7" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
-
-                                                                     } else {
-
-                                                                         if (aliveList && aliveList.length > 0) {
-
-                                                                             aliveList.forEach(data => {
-
-                                                                                 var isRed = data.col === 'R';
-
-                                                                                 var rowClass = isRed ? 'row-red' : 'row-green';
-
-                                                                                 var symbolClean = getPairDisplayName(data.pair);
-
-                                                                                 var thisSigId = `${data.pair}-${data.c}-${data.r}-${data.s1}-${data.s2}-${data.col}-${data.type}`;
-
-                                                                                 var isSelected = thisSigId === lastClickedSigId;
-
-                                                                                 var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
-
-                                                                                 
-
-                                                                                 html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}')">
-                                                                                                                                                                                                                                                       <td style="width:18%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 <td style="width:12%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 <td style="width:17%; font-size:12px; font-weight:700; padding:8px 5px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 5px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 5px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <td style="width:17%; font-size:12px; font-weight:700; padding:8px 5px; text-align:center;">${data.pct}%</td>
-                                                                                 
-                                                                                                                                                                  </tr>`;
-
-                                                                             });
-
-                                                                         }
-
-                                                                     }
-
-                                                                     tbody.innerHTML = html;
-
-                                                                 }
+                                  
+                                                        var tbody = document.getElementById('peaksTableBody');
+                                  
+                                                        var html = '';
+                                  
+                                                        if (!aliveList || aliveList.length === 0) {
+                                  
+                                                            html = `<tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
+                                  
+                                                        } else {
+                                  
+                                                            if (aliveList && aliveList.length > 0) {
+                                  
+                                                                aliveList.forEach(data => {
+                                  
+                                                                    var isRed = data.col === 'R';
+                                  
+                                                                    var rowClass = isRed ? 'row-red' : 'row-green';
+                                  
+                                                                    var symbolClean = getPairDisplayName(data.pair);
+                                  
+                                                                    var thisSigId = `${data.pair}-${data.c}-${data.r}-${data.s1}-${data.s2}-${data.col}-${data.type}`;
+                                  
+                                                                    var isSelected = thisSigId === lastClickedSigId;
+                                  
+                                                                    var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
+                                  
+                                                                    var gapVal = data.gap || 0;
+                                  
+                                                                    var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
+                                  
+                                                                    html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}')">
+                                  <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
+                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
+                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
+                                  <td style="width:14%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
+                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
+                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
+                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor};">G${gapVal}</td>
+                                  <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
+                                  </tr>`;
+                                  
+                                                                });
+                                  
+                                                            }
+                                  
+                                                        }
+                                  
+                                                        tbody.innerHTML = html;
+                                  
+                                                    }
 
 
 
