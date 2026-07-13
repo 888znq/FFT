@@ -814,30 +814,64 @@
         // order, returns maxRun[s1] = worst run of consecutive "blew-through" occurrences
         // (events with length > s1) between confirmed exact-length-s1 reversals.
         function computeGapMapFromEvents(events) {
-    
-            const maxRun = [];
-    
-            const curRun = [];
-    
-            for (let i = 0; i < events.length; i++) {
-    
-                const L = events[i];
-    
-                for (let s = 1; s < L; s++) {
-    
-                    curRun[s] = (curRun[s] || 0) + 1;
-    
-                    if (curRun[s] > (maxRun[s] || 0)) maxRun[s] = curRun[s];
-    
+            
+                    const curRun = [];
+            
+                    const runPeaks = []; // runPeaks[s] = array of each completed run's final length
+            
+                    for (let i = 0; i < events.length; i++) {
+            
+                        const L = events[i];
+            
+                        for (let s = 1; s < L; s++) {
+            
+                            curRun[s] = (curRun[s] || 0) + 1;
+            
+                        }
+            
+                        if (curRun[L] > 0) {
+            
+                            if (!runPeaks[L]) runPeaks[L] = [];
+            
+                            runPeaks[L].push(curRun[L]);
+            
+                        }
+            
+                        curRun[L] = 0;
+            
+                    }
+            
+                    const maxRun = [];
+            
+                    const maxCount = [];
+            
+                    const maxLen = Math.max(curRun.length, runPeaks.length);
+            
+                    for (let s = 1; s < maxLen; s++) {
+            
+                        let m = 0;
+            
+                        if (runPeaks[s]) { for (const v of runPeaks[s]) if (v > m) m = v; }
+            
+                        if ((curRun[s] || 0) > m) m = curRun[s];
+            
+                        if (m === 0) continue;
+            
+                        let cnt = 0;
+            
+                        if (runPeaks[s]) { for (const v of runPeaks[s]) if (v === m) cnt++; }
+            
+                        if ((curRun[s] || 0) === m) cnt++;
+            
+                        maxRun[s] = m;
+            
+                        maxCount[s] = cnt;
+            
+                    }
+            
+                    return { maxRun: maxRun, curRun: curRun, maxCount: maxCount };
+            
                 }
-    
-                curRun[L] = 0;
-    
-            }
-    
-            return { maxRun: maxRun, curRun: curRun };
-    
-        }
 
 
 
@@ -1118,39 +1152,41 @@
                 
                                         const colColor = ci === 0 ? 'G' : 'R';
                 
-                                        const gapMap    = ci === 0 ? gapDataG.maxRun : gapDataR.maxRun;
+                                        const gapMap      = ci === 0 ? gapDataG.maxRun   : gapDataR.maxRun;
+                                                                                                
+                                                                                                                        const curGapMap   = ci === 0 ? gapDataG.curRun   : gapDataR.curRun;
+                                                                                                
+                                                                                                                        const gapCountMap = ci === 0 ? gapDataG.maxCount : gapDataR.maxCount;
                                                         
-                                                                                const curGapMap = ci === 0 ? gapDataG.curRun : gapDataR.curRun;
-                
-                                        const cum = applyCumulative(raw, maxS);
-                
-                    
-                
-                                        for (const sStr in cum) {
-                
-                                            const s = sStr | 0;
-                
-                                            if (s < 1) continue;
-                
-                                            const c1  = cum[s];
-                
-                                            const c2  = cum[s + 1] || 0;
-                
-                                            
-                
-                                            // Split calculations: REV is based on drops, MOM is based on continuation
-                
-                                            const pctRev = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
-                
-                                            const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
-                
-                                            const gap = gapMap[s] || 0;
+                                                                                const cum = applyCumulative(raw, maxS);
+                                                        
                                                             
-                                                                                        const curGap = curGapMap[s] || 0;
-                                                            
-                                                                                        
-                                                            
-                                                                                        revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap });
+                                                        
+                                                                                for (const sStr in cum) {
+                                                        
+                                                                                    const s = sStr | 0;
+                                                        
+                                                                                    if (s < 1) continue;
+                                                        
+                                                                                    const c1  = cum[s];
+                                                        
+                                                                                    const c2  = cum[s + 1] || 0;
+                                                        
+                                                                                    
+                                                        
+                                                                                    // Split calculations: REV is based on drops, MOM is based on continuation
+                                                        
+                                                                                    const pctRev = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
+                                                        
+                                                                                    const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
+                                                        
+                                                                                    const gap = gapMap[s] || 0;
+                                                                                                    
+                                                                                                                                const curGap = curGapMap[s] || 0;
+                                                                                                    
+                                                                                                                                const gapCount = (gapCountMap && gapCountMap[s]) || 0;
+                                                                                                    
+                                                                                                                                revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap, gapCount });
                 
                                             if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
                 
@@ -4392,19 +4428,21 @@ renderScannerTable(uniqueList, displayDead);                     }
                                                                     var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
                                   
                                                                     var gapVal = data.gap || 0;
-                                                                                                      
-                                                                                                                                    var curGapVal = data.curGap || 0;
-                                                                                                      
-                                                                                                                                    var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
-                                                                                                      
-                                                                                                                                    html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
+                                                                                                                                                                          
+                                                                                                                                                                                                        var curGapVal = data.curGap || 0;
+                                                                                                                                                                          
+                                                                                                                                                                                                        var gapCountVal = data.gapCount || 0;
+                                                                                                                                                                          
+                                                                                                                                                                                                        var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
+                                                                                                                                                                          
+                                                                                                                                                                                                        html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
                                   <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
                                   <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                   <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
                                   <td style="width:14%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
                                   <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
                                   <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
-                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor};">G${gapVal}</td>
+                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor};">F${gapVal}-${gapCountVal}</td>
                                   <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
                                   </tr>`;
                                   
@@ -4541,40 +4579,40 @@ renderScannerTable(uniqueList, displayDead);                     }
 
 
             currentInstances.forEach((inst, idx) => {
-            
-                            const xPos = Math.round((inst.col * CELL_W) - scrollL);
-            
-                            const yPos = Math.round((inst.row * CELL_H) - scrollT);
-            
-            
-            
-                            if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
-                            
-                                                if (idx === currentInstanceIndex) {
-                            
-                                                    // Active/selected instance: purple border, no fill
-                            
-                                                    ctx.strokeStyle = "#D500F9"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
-                            
-                                                } else {
-                            
-                                                    // Non-active instance: neutral yellow border
-                                                    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
-                            
-                                                }
-                            
-                                                // Permanent T/F label: purple for both, letter (T/F) is the differentiator; false runs show F1, F2, F3...
-                                                                                                                    ctx.save();
-                                                                                                                    ctx.font = "800 11px 'Inter', 'JetBrains Mono'";
-                                                                                                                    ctx.textAlign = "center";
-                                                                                                                    ctx.textBaseline = "middle";
-                                                                                                                    ctx.fillStyle = "#D500F9";
-                                                                                                                    ctx.fillText(inst.isFalse ? ("F" + (inst.falseSeq || 1)) : "T", xPos + CELL_W - 8, yPos + 9);
-                                                                                                                    ctx.restore();
-                                                                            
-                                                                                            }
-                                                                            
-                                                                                        });
+                        
+                                        const xPos = Math.round((inst.col * CELL_W) - scrollL);
+                        
+                                        const yPos = Math.round((inst.row * CELL_H) - scrollT);
+                        
+                        
+                        
+                                        if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                                        
+                                                            if (idx === currentInstanceIndex) {
+                                        
+                                                                // Active/selected instance: purple border, no fill
+                                        
+                                                                ctx.strokeStyle = "#D500F9"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                                        
+                                                            } else {
+                                        
+                                                                // Non-active instance: purple border (box stays purple in every state)
+                                                                ctx.strokeStyle = "#D500F9"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                                        
+                                                            }
+                                        
+                                                            // Permanent T/F label: yellow for both, letter (T/F) is the differentiator; false runs show F1, F2, F3...
+                                                                                                                                ctx.save();
+                                                                                                                                ctx.font = "800 8px 'Inter', 'JetBrains Mono'";
+                                                                                                                                ctx.textAlign = "center";
+                                                                                                                                ctx.textBaseline = "middle";
+                                                                                                                                ctx.fillStyle = "#FFD700";
+                                                                                                                                ctx.fillText(inst.isFalse ? ("F" + (inst.falseSeq || 1)) : "T", xPos + CELL_W - 7, yPos + 8);
+                                                                                                                                ctx.restore();
+                                                                                        
+                                                                                                        }
+                                                                                        
+                                                                                                    });
 
 
 
