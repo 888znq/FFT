@@ -814,64 +814,74 @@
         // order, returns maxRun[s1] = worst run of consecutive "blew-through" occurrences
         // (events with length > s1) between confirmed exact-length-s1 reversals.
         function computeGapMapFromEvents(events) {
-            
-                    const curRun = [];
-            
-                    const runPeaks = []; // runPeaks[s] = array of each completed run's final length
-            
-                    for (let i = 0; i < events.length; i++) {
-            
-                        const L = events[i];
-            
-                        for (let s = 1; s < L; s++) {
-            
-                            curRun[s] = (curRun[s] || 0) + 1;
-            
+                    
+                            const curRun = [];
+                    
+                            const runPeaks = []; // runPeaks[s] = array of each completed run's final length
+                    
+                            for (let i = 0; i < events.length; i++) {
+                    
+                                const L = events[i];
+                    
+                                for (let s = 1; s < L; s++) {
+                    
+                                    curRun[s] = (curRun[s] || 0) + 1;
+                    
+                                }
+                    
+                                if (curRun[L] > 0) {
+                    
+                                    if (!runPeaks[L]) runPeaks[L] = [];
+                    
+                                    runPeaks[L].push(curRun[L]);
+                    
+                                }
+                    
+                                curRun[L] = 0;
+                    
+                            }
+                    
+                            const modeRun = [];
+                    
+                            const modeCount = [];
+                    
+                            const maxLen = Math.max(curRun.length, runPeaks.length);
+                    
+                            for (let s = 1; s < maxLen; s++) {
+                    
+                                const freq = {};
+                                            
+                                                        if (runPeaks[s]) { for (const v of runPeaks[s]) { if (v < 2) continue; freq[v] = (freq[v] || 0) + 1; } }
+                                            
+                                                        const liveLen = curRun[s] || 0;
+                                            
+                                                        if (liveLen >= 2) freq[liveLen] = (freq[liveLen] || 0) + 1;
+                    
+                                const lens = Object.keys(freq);
+                    
+                                if (lens.length === 0) continue;
+                    
+                                let bestLen = 0, bestCount = 0;
+                    
+                                for (const lenStr of lens) {
+                    
+                                    const len = lenStr | 0;
+                    
+                                    const cnt = freq[lenStr];
+                    
+                                    if (cnt > bestCount || (cnt === bestCount && len < bestLen)) { bestCount = cnt; bestLen = len; }
+                    
+                                }
+                    
+                                modeRun[s] = bestLen;
+                    
+                                modeCount[s] = bestCount;
+                    
+                            }
+                    
+                            return { modeRun: modeRun, curRun: curRun, modeCount: modeCount };
+                    
                         }
-            
-                        if (curRun[L] > 0) {
-            
-                            if (!runPeaks[L]) runPeaks[L] = [];
-            
-                            runPeaks[L].push(curRun[L]);
-            
-                        }
-            
-                        curRun[L] = 0;
-            
-                    }
-            
-                    const maxRun = [];
-            
-                    const maxCount = [];
-            
-                    const maxLen = Math.max(curRun.length, runPeaks.length);
-            
-                    for (let s = 1; s < maxLen; s++) {
-            
-                        let m = 0;
-            
-                        if (runPeaks[s]) { for (const v of runPeaks[s]) if (v > m) m = v; }
-            
-                        if ((curRun[s] || 0) > m) m = curRun[s];
-            
-                        if (m === 0) continue;
-            
-                        let cnt = 0;
-            
-                        if (runPeaks[s]) { for (const v of runPeaks[s]) if (v === m) cnt++; }
-            
-                        if ((curRun[s] || 0) === m) cnt++;
-            
-                        maxRun[s] = m;
-            
-                        maxCount[s] = cnt;
-            
-                    }
-            
-                    return { maxRun: maxRun, curRun: curRun, maxCount: maxCount };
-            
-                }
 
 
 
@@ -1152,11 +1162,11 @@
                 
                                         const colColor = ci === 0 ? 'G' : 'R';
                 
-                                        const gapMap      = ci === 0 ? gapDataG.maxRun   : gapDataR.maxRun;
-                                                                                                
-                                                                                                                        const curGapMap   = ci === 0 ? gapDataG.curRun   : gapDataR.curRun;
-                                                                                                
-                                                                                                                        const gapCountMap = ci === 0 ? gapDataG.maxCount : gapDataR.maxCount;
+                                        const gapMap      = ci === 0 ? gapDataG.modeRun   : gapDataR.modeRun;
+                                                                                                                                        
+                                                                                                                const curGapMap   = ci === 0 ? gapDataG.curRun    : gapDataR.curRun;
+                                                                                                                                        
+                                                                                                                const gapCountMap = ci === 0 ? gapDataG.modeCount : gapDataR.modeCount;
                                                         
                                                                                 const cum = applyCumulative(raw, maxS);
                                                         
