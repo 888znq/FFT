@@ -263,9 +263,12 @@
                                                                                                                                                                         <option value="10">X10-X11</option>
                                                                                                                                                                         <option value="11">X11-X12</option>
                                                                                                                                                                         <option value="12">X12-X13</option>
-                                                                                                                                                                    </select>
-                                                                                                                                                                </span>
-                                                                                    <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
+                                                                                                                                                                                                                                                                                                                                            </select>
+                                                                                                                                                                                                                                                                                                                                        </span>
+                                                                                                                                                                                                                                                            <span style="position:relative; display:inline-block; flex-shrink:0;">
+                                                                                                                                                                                                                                                                <select id="sessionLengthSelect" onchange="onSessionLengthChange()" class="ctrl-input ctrl-select" style="width:92px; font-size:11px; color:#FFFFFF;"></select>
+                                                                                                                                                                                                                                                            </span>
+                                                                                                                                                                                                                                                            <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
                                                                                                                                                                 <button id="r0OnlyBtn" onclick="toggleR0Only()" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">R0</button>
                                                                                     <div style="flex:1; height:4px; background:#222; border-radius:2px; overflow:hidden;">
                                                                                         <div id="scanTimerProgressBar" style="height:100%; width:100%; background:#FFD700; border-radius:2px; transition:width 1s linear;"></div>
@@ -1283,21 +1286,28 @@
                                                         };
                                         
                                                 var CAT_SESSION_WINDOWS = {
-                                                                                                    'FRX': { start: 300, end: 1020 },
-                                                                                                    'CRY': { start: 0,   end: 1440 },
-                                                                                                    'DRV': { start: 0,   end: 1440 },
-                                                                                                    'MTL': { start: 0,   end: 1440 }
-                                                                                                };
-                                                                                        
-                                                                                                function _applyCatSessionWindow(cat) {
-                                                                                                    var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
-                                                                                                    sessionWindowStartMin = win.start;
-                                                                                                    sessionWindowEndMin = win.end;
-                                                                                                    _saveSessionWindow();
-                                                                                                    _refreshSessionSliderUI();
-                                                                                                }
-                                                                                        
-                                                                                                var activeCat = 'CRY';
+                                                                                                                                                    'FRX': { start: 300, end: 1020 },
+                                                                                                                                                    'CRY': { start: 0,   end: 1440 },
+                                                                                                                                                    'DRV': { start: 0,   end: 1440 },
+                                                                                                                                                    'MTL': { start: 0,   end: 1440 }
+                                                                                                                                                };
+                                                                                                                                        
+                                                                                                                                                function _applyCatSessionWindow(cat) {
+                                                                                                                                                    var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
+                                                                                                                                                    var winLen = win.end - win.start;
+                                                                                                                                                    var defaultLen = (winLen % 180 === 0) ? 180 : winLen;
+                                                                                                                                                    var nowMin = _currentUtcMinuteOfDay();
+                                                                                                                                                    var maxIdx = Math.max(0, Math.floor(winLen / defaultLen) - 1);
+                                                                                                                                                    var idx = Math.floor((nowMin - win.start) / defaultLen);
+                                                                                                                                                    if (idx < 0) idx = 0;
+                                                                                                                                                    if (idx > maxIdx) idx = maxIdx;
+                                                                                                                                                    sessionWindowStartMin = win.start + idx * defaultLen;
+                                                                                                                                                    sessionWindowEndMin = sessionWindowStartMin + defaultLen;
+                                                                                                                                                    _saveSessionWindow();
+                                                                                                                                                    _refreshSessionSliderUI();
+                                                                                                                                                }
+                                                                                                                                        
+                                                                                                                                                var activeCat = 'CRY';
                                                                                         
                                                                                                 var ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
                                                                                                 
@@ -1612,10 +1622,23 @@
                     return m + 'm';
                 }
         
-                function _currentSessionLength() {
-                    var len = sessionWindowEndMin - sessionWindowStartMin;
-                    return SESSION_DIVISORS.indexOf(len) !== -1 ? len : 1440;
-                }
+                function _divisorsOf(n) {
+                                    var res = [];
+                                    for (var i = 1; i <= n; i++) { if (n % i === 0) res.push(i); }
+                                    return res;
+                                }
+                
+                                function _activeCatWindow() {
+                                    return CAT_SESSION_WINDOWS[activeCat] || CAT_SESSION_WINDOWS['FRX'];
+                                }
+                
+                                function _currentSessionLength() {
+                                    var win = _activeCatWindow();
+                                    var winLen = win.end - win.start;
+                                    var len = sessionWindowEndMin - sessionWindowStartMin;
+                                    var divisors = _divisorsOf(winLen);
+                                    return divisors.indexOf(len) !== -1 ? len : winLen;
+                                }
         
                 function _currentUtcMinuteOfDay() {
                     var now = new Date();
@@ -1625,9 +1648,12 @@
                 function _populateLengthSelect() {
                     var lenSel = document.getElementById('sessionLengthSelect');
                     if (!lenSel) return;
-                    var curLen = _currentSessionLength();
-                    lenSel.innerHTML = SESSION_DIVISORS.map(function(d) {
-                        var sessions = 1440 / d;
+                    var win = _activeCatWindow();
+                                        var winLen = win.end - win.start;
+                                        var divisors = _divisorsOf(winLen);
+                                        var curLen = _currentSessionLength();
+                                        lenSel.innerHTML = divisors.map(function(d) {
+                                            var sessions = winLen / d;
                         return '<option value="' + d + '"' + (d === curLen ? ' selected' : '') + '>' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
                     }).join('');
                 }
@@ -1640,20 +1666,26 @@
                     var lenSel = document.getElementById('sessionLengthSelect');
                     if (!lenSel) return;
                     var len = parseInt(lenSel.value, 10);
-                    var nowMin = _currentUtcMinuteOfDay();
-                    var idx = Math.floor(nowMin / len);
-                    sessionWindowStartMin = idx * len;
-                    sessionWindowEndMin = sessionWindowStartMin + len;
+                                        var win = _activeCatWindow();
+                                        var winLen = win.end - win.start;
+                                        var maxIdx = Math.max(0, Math.floor(winLen / len) - 1);
+                                        var nowMin = _currentUtcMinuteOfDay();
+                                        var idx = Math.floor((nowMin - win.start) / len);
+                                        if (idx < 0) idx = 0;
+                                        if (idx > maxIdx) idx = maxIdx;
+                                        sessionWindowStartMin = win.start + idx * len;
+                                        sessionWindowEndMin = sessionWindowStartMin + len;
                     window._lastSessionKey = '';
                     lastClickedSigId = '';
                     clickCycleIndex = -1;
                     currentInstances = [];
                     currentInstanceIndex = -1;
                     _saveSessionWindow();
-                    _triggerLiveReboot();
-                }
-        
-                function _isWithinMappedWindow() {
+                                        scheduleSessionBoundaryWipe();
+                                        _triggerLiveReboot();
+                                    }
+                            
+                                    function _isWithinMappedWindow() {
                                                                     if ((activeCat === 'MTL' || activeCat === 'FRX') && isFxWeekendDead()) return false;
                                                                     if (sessionWindowStartMin === 0 && sessionWindowEndMin === 1440) return true;
                                                                     var now = new Date();
