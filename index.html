@@ -1557,10 +1557,12 @@
 
 
         function requestDraw() { requestAnimationFrame(draw); }
-
-        hScroll.addEventListener('scroll', () => requestDraw());
-
-        window.addEventListener('resize', () => { if (timesArray.length > 0) processVisualMatrix(); });
+        
+                hScroll.addEventListener('scroll', () => requestDraw());
+        
+                window.addEventListener('resize', () => { if (timesArray.length > 0) processVisualMatrix(); });
+        
+                document.addEventListener('visibilitychange', () => { if (!document.hidden) requestDraw(); });
 
 
 
@@ -6968,12 +6970,16 @@ let dataList = currentMode === 'REV'
                     });
         
                     window.addEventListener('resize', resize);
-                    setTimeout(() => {
-                        resize();
-                        connect();
-                        requestAnimationFrame(loop);
-                    }, 50);
-                })();
+                                        setTimeout(() => {
+                                            resize();
+                                            connect();
+                                            requestAnimationFrame(loop);
+                                        }, 50);
+                    
+                                        document.addEventListener('visibilitychange', () => {
+                                            if (!document.hidden) { resize(); draw(); updateTimerUI(); }
+                                        });
+                                    })();
         
                 </script>
                 </body>
