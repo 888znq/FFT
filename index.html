@@ -245,7 +245,7 @@
 
         <div class="ctrl-row">
                                                                                     <span style="position:relative; display:inline-block; flex-shrink:0;">
-                                                                                        <input type="number" id="minPctInput" value="85" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:70px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
+                                                                                        <input type="number" id="minPctInput" value="90" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:70px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
                                                                                         <span style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:#FFFFFF; pointer-events:none;">%</span>
                                                                                     </span>
                                                                                     <span style="position:relative; display:inline-block; flex-shrink:0;">
@@ -430,7 +430,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MAX</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="180" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -1295,7 +1295,8 @@
                                                                                                                                                 function _applyCatSessionWindow(cat) {
                                                                                                                                                     var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
                                                                                                                                                     var winLen = win.end - win.start;
-                                                                                                                                                    var defaultLen = (winLen % 180 === 0) ? 180 : winLen;
+                                                                                                                                                    var preferredLen = (cat === 'CRY' || cat === 'DRV' || cat === 'MTL') ? 720 : 180;
+                                                                                                                                                                                                                                                                                                        var defaultLen = (winLen % preferredLen === 0) ? preferredLen : winLen;
                                                                                                                                                     var nowMin = _currentUtcMinuteOfDay();
                                                                                                                                                     var maxIdx = Math.max(0, Math.floor(winLen / defaultLen) - 1);
                                                                                                                                                     var idx = Math.floor((nowMin - win.start) / defaultLen);
