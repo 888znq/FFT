@@ -887,11 +887,11 @@
                     
                                 const freq = {};
                                             
-                                                        if (runPeaks[s]) { for (const v of runPeaks[s]) { if (v < 2) continue; freq[v] = (freq[v] || 0) + 1; } }
+                                                        if (runPeaks[s]) { for (const v of runPeaks[s]) { if (v < 1) continue; freq[v] = (freq[v] || 0) + 1; } }
                                             
                                                         const liveLen = curRun[s] || 0;
                                             
-                                                        if (liveLen >= 2) freq[liveLen] = (freq[liveLen] || 0) + 1;
+                                                        if (liveLen >= 1) freq[liveLen] = (freq[liveLen] || 0) + 1;
                     
                                 const lens = Object.keys(freq);
                     
