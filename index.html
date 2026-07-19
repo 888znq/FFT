@@ -2461,10 +2461,29 @@
 
 
         window.onload = function() {
-                                    _applyCatSessionWindow(activeCat);
-                                    _hideOfflineOverlay();
-                                    autoFetch();
-                                };
+                                                    window._wpsBootWaiting = true;
+                                                    window._wpsBootAlreadyRan = false;
+                                                    window._wpsBootProceed = function() {
+                                                        if (!window._wpsBootWaiting) {
+                                                            if (window._wpsBootAlreadyRan) _triggerLiveReboot();
+                                                            return;
+                                                        }
+                                                        window._wpsBootWaiting = false;
+                                                        window._wpsBootAlreadyRan = true;
+                                                        autoFetch();
+                                                    };
+                                                    if (!window._wpsSessionSynced) {
+                                                        _applyCatSessionWindow(activeCat);
+                                                    }
+                                                    _hideOfflineOverlay();
+                                                    if (window._wpsSessionSynced) {
+                                                        window._wpsBootProceed();
+                                                    } else {
+                                                        setTimeout(function() {
+                                                            if (window._wpsBootWaiting) window._wpsBootProceed();
+                                                        }, 2500);
+                                                    }
+                                                };
 
 
 
@@ -7187,17 +7206,38 @@ let dataList = currentMode === 'REV'
                                                 }
                                     
                                                 function wpsInit() {
-                                                    var fb = wpsGetDb();
-                                                    if (!fb) { setTimeout(wpsInit, 100); return; }
-                                    
-                                                    var stateRef = fb.ref(fb.db, WPS_PATH);
-                                                    fb.onValue(stateRef, function(snapshot) {
-                                                        var val = snapshot.val();
-                                                        _wpsIgnoreNextRemote = true;
-                                                        wpsApplyState(val);
-                                                        _wpsReady = true;
-                                                    });
-                                                }
+                                                                                                                                                    var fb = wpsGetDb();
+                                                                                                                                                    if (!fb) { setTimeout(wpsInit, 100); return; }
+                                                                                                                                    
+                                                                                                                                                    var stateRef = fb.ref(fb.db, WPS_PATH);
+                                                                                                                                                    fb.onValue(stateRef, function(snapshot) {
+                                                                                                                                                        var val = snapshot.val();
+                                                                                                                                                        _wpsIgnoreNextRemote = true;
+                                                                                                                                                        wpsApplyState(val);
+                                                                                                                                                        _wpsReady = true;
+                                                                                                                                    
+                                                                                                                                                        if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
+                                                                                                                                                            var _sLen = parseInt(val.sessionLen, 10);
+                                                                                                                                                            var _win = _activeCatWindow();
+                                                                                                                                                            var _winLen = _win.end - _win.start;
+                                                                                                                                                            var _divisors = _divisorsOf(_winLen);
+                                                                                                                                                            if (_divisors.indexOf(_sLen) !== -1) {
+                                                                                                                                                                var _maxIdx = Math.max(0, Math.floor(_winLen / _sLen) - 1);
+                                                                                                                                                                var _nowMin = _currentUtcMinuteOfDay();
+                                                                                                                                                                var _idx = Math.floor((_nowMin - _win.start) / _sLen);
+                                                                                                                                                                if (_idx < 0) _idx = 0;
+                                                                                                                                                                if (_idx > _maxIdx) _idx = _maxIdx;
+                                                                                                                                                                sessionWindowStartMin = _win.start + _idx * _sLen;
+                                                                                                                                                                sessionWindowEndMin = sessionWindowStartMin + _sLen;
+                                                                                                                                                                _saveSessionWindow();
+                                                                                                                                                                _refreshSessionSliderUI();
+                                                                                                                                                                window._wpsSessionSynced = true;
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                    
+                                                                                                                                                        if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
+                                                                                                                                                    });
+                                                                                                                                                }
                                     
                                                 var _origPopulateLengthSelect = _populateLengthSelect;
                                                                                                 _populateLengthSelect = function() {
