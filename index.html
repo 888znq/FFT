@@ -1712,17 +1712,19 @@
                 }
         
                 function _populateLengthSelect() {
-                    var lenSel = document.getElementById('sessionLengthSelect');
-                    if (!lenSel) return;
-                    var win = _activeCatWindow();
-                                        var winLen = win.end - win.start;
-                                        var divisors = _divisorsOf(winLen);
-                                        var curLen = _currentSessionLength();
-                                        lenSel.innerHTML = divisors.map(function(d) {
-                                            var sessions = winLen / d;
-                        return '<option value="' + d + '"' + (d === curLen ? ' selected' : '') + '>' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
-                    }).join('');
-                }
+                                    var lenSel = document.getElementById('sessionLengthSelect');
+                                    if (!lenSel) return;
+                                    var win = _activeCatWindow();
+                                                        var winLen = win.end - win.start;
+                                                        var divisors = _divisorsOf(winLen);
+                                                        var curLen = _currentSessionLength();
+                                                        var _pendingLen = (typeof window._wpsPendingSessionLen !== 'undefined' && window._wpsPendingSessionLen !== null) ? parseInt(window._wpsPendingSessionLen, 10) : null;
+                                                        var _selectLen = (_pendingLen !== null && divisors.indexOf(_pendingLen) !== -1) ? _pendingLen : curLen;
+                                                        lenSel.innerHTML = divisors.map(function(d) {
+                                                            var sessions = winLen / d;
+                                        return '<option value="' + d + '"' + (d === _selectLen ? ' selected' : '') + '>' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
+                                    }).join('');
+                                }
         
                 function _refreshSessionSliderUI() {
                     _populateLengthSelect();
@@ -7198,21 +7200,24 @@ let dataList = currentMode === 'REV'
                                                 }
                                     
                                                 var _origPopulateLengthSelect = _populateLengthSelect;
-                                                _populateLengthSelect = function() {
-                                                    _origPopulateLengthSelect();
-                                                    if (window._wpsPendingSessionLen !== undefined && window._wpsPendingSessionLen !== null) {
-                                                        var lenSel = document.getElementById('sessionLengthSelect');
-                                                        if (lenSel) {
-                                                            var hasOption = Array.from(lenSel.options).some(function(o) { return o.value === window._wpsPendingSessionLen; });
-                                                            if (hasOption) {
-                                                                lenSel.value = window._wpsPendingSessionLen;
-                                                                _wpsIgnoreNextRemote = true;
-                                                                onSessionLengthChange();
-                                                            }
-                                                        }
-                                                        window._wpsPendingSessionLen = null;
-                                                    }
-                                                };
+                                                                                                _populateLengthSelect = function() {
+                                                                                                    _origPopulateLengthSelect();
+                                                                                                    if (window._wpsPendingSessionLen !== undefined && window._wpsPendingSessionLen !== null) {
+                                                                                                        var lenSel = document.getElementById('sessionLengthSelect');
+                                                                                                        if (lenSel) {
+                                                                                                            var hasOption = Array.from(lenSel.options).some(function(o) { return o.value === window._wpsPendingSessionLen; });
+                                                                                                            if (hasOption && lenSel.value !== window._wpsPendingSessionLen) {
+                                                                                                                lenSel.value = window._wpsPendingSessionLen;
+                                                                                                                _wpsIgnoreNextRemote = true;
+                                                                                                                onSessionLengthChange();
+                                                                                                            }
+                                                                                                        }
+                                                                                                        window._wpsPendingSessionLen = null;
+                                                                                                    }
+                                                                                                };
+                                                                                    
+                                                                                                var _origOnSessionLengthChange = onSessionLengthChange;
+                                                                                                onSessionLengthChange = function() { _origOnSessionLengthChange(); wpsSaveDebounced(); };
                                     
                                                 document.addEventListener('DOMContentLoaded', function() {
                                                     wpsInit();
