@@ -276,17 +276,41 @@
                                                                                     <span id="scanTimerDisplay" style="font-size:12px; font-weight:800; color:#FFD700; font-family:'JetBrains Mono',monospace; flex-shrink:0; min-width:32px; text-align:right;">--</span>
                                                                                 </div>
 
-<div class="table-wrapper">
+<div class="table-wrapper" style="display:flex; flex-direction:column;">
 
-                    <table>
+<div style="font-size:9px; font-weight:800; letter-spacing:0.15em; color:var(--accent-green); background:var(--bg-panel); padding:4px 8px; border-bottom:1px solid var(--border); flex-shrink:0;">▲ TOP 10 REV</div>
 
-    <tbody id="peaksTableBody">
+<div class="table-wrapper" style="flex:0 0 auto; overflow-y:visible;">
+
+    <table>
+
+    <tbody id="peaksTableBodyRev">
 
                             <tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">AWAITING DATA...</td></tr>
 
                         </tbody>
 
                     </table>
+
+                </div>
+
+<div style="font-size:9px; font-weight:800; letter-spacing:0.15em; color:var(--accent-red); background:var(--bg-panel); padding:4px 8px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); flex-shrink:0;">▼ TOP 10 MOM</div>
+
+<div class="table-wrapper" style="flex:0 0 auto; overflow-y:visible;">
+
+    <table>
+
+    <tbody id="peaksTableBodyMom">
+
+                            <tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">AWAITING DATA...</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+<div style="flex:1; background:var(--bg-base);"></div>
 
                 </div>
 
@@ -3856,9 +3880,11 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                         const msg = state === 'fetching' ? 'LOADING DATA...' : state === 'err' ? 'DATA ERROR — RETRY LATER' : 'AWAITING DATA...';
 
-                       document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="8" style="padding:15px 0; font-size:12px; font-weight:800; text-align:center; color:#FFD700; letter-spacing:0.1em;">${getPairDisplayName(pair)} — ${msg}</td></tr>`;
-
-                        return;
+                       var _pairNotLoadedHtml = `<tr><td colspan="8" style="padding:15px 0; font-size:12px; font-weight:800; text-align:center; color:#FFD700; letter-spacing:0.1em;">${getPairDisplayName(pair)} — ${msg}</td></tr>`;
+                                              document.getElementById('peaksTableBodyRev').innerHTML = _pairNotLoadedHtml;
+                                              document.getElementById('peaksTableBodyMom').innerHTML = _pairNotLoadedHtml;
+                       
+                                               return;
 
                     }
 
@@ -4276,29 +4302,31 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     if (sEnd > _sessionEndSec   - _sessionStartSec) sEnd   = _sessionEndSec   - _sessionStartSec;
                                                     // Updated UI to show active core count
 
-            document.getElementById('peaksTableBody').innerHTML = `<tr><td colspan="8" style="padding: 0;">
-            
-                            <div style="display: grid; grid-template-columns: 1.6fr 0.9fr 0.9fr 1.4fr 0.9fr 0.9fr 1.2fr 2.2fr; font-size: 9px; font-weight: 800; align-items: stretch; text-align: center; color: var(--accent-green);">
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
-            
-                                <div style="padding: 15px 0; letter-spacing: 0.1em;">SCANNING ALL PAIRS... [${NUM_CORES} CORES ACTIVE]</div>
-            
-                            </div>
-            
-                        </td></tr>`;
+            var _scanningPlaceholderHtml = `<tr><td colspan="8" style="padding: 0;">
+                        
+                                        <div style="display: grid; grid-template-columns: 1.6fr 0.9fr 0.9fr 1.4fr 0.9fr 0.9fr 1.2fr 2.2fr; font-size: 9px; font-weight: 800; align-items: stretch; text-align: center; color: var(--accent-green);">
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="border-right: 1px solid #FFFFFF; padding: 15px 0;">-</div>
+                        
+                                            <div style="padding: 15px 0; letter-spacing: 0.1em;">SCANNING ALL PAIRS... [${NUM_CORES} CORES ACTIVE]</div>
+                        
+                                        </div>
+                        
+                                    </td></tr>`;
+                        document.getElementById('peaksTableBodyRev').innerHTML = _scanningPlaceholderHtml;
+                        document.getElementById('peaksTableBodyMom').innerHTML = _scanningPlaceholderHtml;
 
 
 
@@ -4373,144 +4401,131 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
        if (!window.trackedSignals) window.trackedSignals = {};
-
-                  if (!window.dethronedLog) window.dethronedLog = [];
-
-              
-
-                  function renderFilteredTable() {
-                                                      window.trackedSignals = {};
-
-                          
-
-                          // Map cross-cycle worker output to actual local timestamps
-
-                          if (typeof globalDethroned !== 'undefined' && globalDethroned.length > 0) {
-
-                              window.dethronedLog = globalDethroned.map(d => ({
-
-                                  ...d,
-
-                                  dethroneTime: (currentStartTsUtc + d.deathIdx) * 1000,
-
-                                  newC2: 'BROKE'
-
-                              }));
-
-                              window.dethronedLog.sort((a, b) => b.dethroneTime - a.dethroneTime);
-
-                          } else {
-
-                              window.dethronedLog = [];
-
-                          }
-
-                          
-
-                          // UI Performance Lock: Cap to 150 items so massive scans don't freeze the DOM
-
-                                                    var displayDead = window.dethronedLog.slice(0, 150);
-
-                                                               
-
-                                                    // 720° — Filtered by Active Mode
-
-var _allSigs = currentMode === 'REV' ? [...globalRevs] : [...globalMoms];
-
-
-
-var _minPctEl = document.getElementById('minPctInput');
-
-var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
-
-var _levelEl = document.getElementById('levelFilterSelect');
-
-var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
-
-var uniqueList = _allSigs
-
-    .filter(x => !_hiddenPairs.has(x.pair))
-
-    .filter(x => x.pct >= _minPct)
-
-    .filter(x => _levelVal === 0 || x.s1 === _levelVal)
-
-    .filter(x => !r0OnlyMode || x.r === 0)
-
-    .sort((a, b) => {
-
-        var scoreA = (a.pct * a.c1);
-
-        var scoreB = (b.pct * b.c1);
-
-        return scoreB - scoreA;
-
-    })
-
-    .slice(0, 100);
-
-
-
-renderScannerTable(uniqueList, displayDead);                     }
-
-                              
-
-                                  function renderScannerTable(aliveList, deadList) {
-                                  
-                                                        var tbody = document.getElementById('peaksTableBody');
-                                  
-                                                        var html = '';
-                                  
-                                                        if (!aliveList || aliveList.length === 0) {
-                                  
-                                                            html = `<tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
-                                  
-                                                        } else {
-                                  
-                                                            if (aliveList && aliveList.length > 0) {
-                                  
-                                                                aliveList.forEach(data => {
-                                  
-                                                                    var isRed = data.col === 'R';
-                                  
-                                                                    var rowClass = isRed ? 'row-red' : 'row-green';
-                                  
-                                                                    var symbolClean = getPairDisplayName(data.pair);
-                                  
-                                                                    var thisSigId = `${data.pair}-${data.c}-${data.r}-${data.s1}-${data.s2}-${data.col}-${data.type}`;
-                                  
-                                                                    var isSelected = thisSigId === lastClickedSigId;
-                                  
-                                                                    var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
-                                  
-                                                                    var gapVal = data.gap || 0;
-                                                                                                                                                                          
-                                                                                                                                                                                                        var curGapVal = data.curGap || 0;
-                                                                                                                                                                          
-                                                                                                                                                                                                        var gapCountVal = data.gapCount || 0;
-                                                                                                                                                                          
-                                                                                                                                                                                                        var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
-                                                                                                                                                                          
-                                                                                                                                                                                                        html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
-                                  <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
-                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
-                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
-                                  <td style="width:14%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
-                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
-                                  <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
-                                  <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor};">F${gapVal}-${gapCountVal}</td>
-                                  <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
-                                  </tr>`;
-                                  
-                                                                });
-                                  
-                                                            }
-                                  
-                                                        }
-                                  
-                                                        tbody.innerHTML = html;
-                                  
-                                                    }
+       
+                         if (!window.dethronedLog) window.dethronedLog = [];
+       
+                     
+       
+                         function renderFilteredTable() {
+                                                             window.trackedSignals = {};
+       
+                                 
+       
+                                 // Map cross-cycle worker output to actual local timestamps
+       
+                                 if (typeof globalDethroned !== 'undefined' && globalDethroned.length > 0) {
+       
+                                     window.dethronedLog = globalDethroned.map(d => ({
+       
+                                         ...d,
+       
+                                         dethroneTime: (currentStartTsUtc + d.deathIdx) * 1000,
+       
+                                         newC2: 'BROKE'
+       
+                                     }));
+       
+                                     window.dethronedLog.sort((a, b) => b.dethroneTime - a.dethroneTime);
+       
+                                 } else {
+       
+                                     window.dethronedLog = [];
+       
+                                 }
+       
+                                 
+       
+                                 // UI Performance Lock: Cap to 150 items so massive scans don't freeze the DOM
+       
+                                                           var displayDead = window.dethronedLog.slice(0, 150);
+       
+       
+       
+       var _minPctEl = document.getElementById('minPctInput');
+       
+       var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
+       
+       var _levelEl = document.getElementById('levelFilterSelect');
+       
+       var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
+       
+       function _buildTop10(list) {
+           return list
+               .filter(x => !_hiddenPairs.has(x.pair))
+               .filter(x => x.pct >= _minPct)
+               .filter(x => _levelVal === 0 || x.s1 === _levelVal)
+               .filter(x => !r0OnlyMode || x.r === 0)
+               .sort((a, b) => (b.pct * b.c1) - (a.pct * a.c1))
+               .slice(0, 10);
+       }
+       
+       var revTop10 = _buildTop10([...globalRevs]);
+       var momTop10 = _buildTop10([...globalMoms]);
+       
+       renderScannerTable(revTop10, momTop10, displayDead);                     }
+       
+                                     
+       
+                                         function _buildScannerRowsHtml(list) {
+       
+                                               if (!list || list.length === 0) {
+       
+                                                   return `<tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
+       
+                                               }
+       
+                                               var html = '';
+       
+                                               list.forEach(data => {
+       
+                                                   var isRed = data.col === 'R';
+       
+                                                   var rowClass = isRed ? 'row-red' : 'row-green';
+       
+                                                   var symbolClean = getPairDisplayName(data.pair);
+       
+                                                   var thisSigId = `${data.pair}-${data.c}-${data.r}-${data.s1}-${data.s2}-${data.col}-${data.type}`;
+       
+                                                   var isSelected = thisSigId === lastClickedSigId;
+       
+                                                   var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
+       
+                                                   var gapVal = data.gap || 0;
+       
+                                                   var curGapVal = data.curGap || 0;
+       
+                                                   var gapCountVal = data.gapCount || 0;
+       
+                                                   var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
+       
+                                                   html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
+                                         <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
+                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
+                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
+                                         <td style="width:14%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
+                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
+                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
+                                         <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor};">F${gapVal}-${gapCountVal}</td>
+                                         <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
+                                         </tr>`;
+       
+                                               });
+       
+                                               return html;
+       
+                                           }
+       
+                                         function renderScannerTable(revList, momList, deadList) {
+       
+                                               var revTbody = document.getElementById('peaksTableBodyRev');
+       
+                                               var momTbody = document.getElementById('peaksTableBodyMom');
+       
+                                               if (revTbody) revTbody.innerHTML = _buildScannerRowsHtml(revList);
+       
+                                               if (momTbody) momTbody.innerHTML = _buildScannerRowsHtml(momList);
+       
+                                           }
 
 
 
@@ -5341,13 +5356,13 @@ let dataList = currentMode === 'REV'
 
               // Highlight the row in the table
 
-              document.querySelectorAll('#peaksTableBody tr').forEach((tr, i) => {
-
-                  tr.style.borderLeft = i === (hunterScanIndex - 1) ? '2px solid #FFD700' : '';
-
-                  tr.style.background = i === (hunterScanIndex - 1) ? 'rgba(255,215,0,0.08)' : '';
-
-              });
+              document.querySelectorAll('#peaksTableBodyRev tr, #peaksTableBodyMom tr').forEach((tr, i) => {
+              
+                                tr.style.borderLeft = i === (hunterScanIndex - 1) ? '2px solid #FFD700' : '';
+              
+                                tr.style.background = i === (hunterScanIndex - 1) ? 'rgba(255,215,0,0.08)' : '';
+              
+                            });
 
 
 
