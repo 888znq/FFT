@@ -449,7 +449,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MIN</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -457,7 +457,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MAX</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="180" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -1326,7 +1326,7 @@
                                                                                                                                                 function _applyCatSessionWindow(cat) {
                                                                                                                                                                                                                                                                                                     var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
                                                                                                                                                                                                                                                                                                     var winLen = win.end - win.start;
-                                                                                                                                                                                                                                                                                                    var preferredLen = 720;
+                                                                                                                                                                                                                                                                                                    var preferredLen = 180;
                                                                                                                                                                                                                                                                                                                                                                                                                                                         var defaultLen = (winLen % preferredLen === 0) ? preferredLen : winLen;
                                                                                                                                                                                                                                                                                                     var nowMin = _currentUtcMinuteOfDay();
                                                                                                                                                     var maxIdx = Math.max(0, Math.floor(winLen / defaultLen) - 1);
@@ -2457,7 +2457,7 @@
                                                     var sMin = idx * d;
                                                     var eMin = sMin + d;
                                                     var label = _fmtLenLabel(d) + ' (' + sessions + '/day)  →  ' + _fmtIstMin(sMin) + '–' + _fmtIstMin(eMin === 1440 ? 0 : eMin) + ' IST';
-                                                    return '<option value="' + d + '"' + (d === 360 ? ' selected' : '') + '>' + label + '</option>';
+                                                    return '<option value="' + d + '"' + (d === 180 ? ' selected' : '') + '>' + label + '</option>';
                                                 }).join('');
         
             overlay.innerHTML = '<div style="width:520px;max-width:94vw;border:1px solid #FFFFFF;border-radius:2px;overflow:hidden;">' +
@@ -4287,9 +4287,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
         function dispatchMultiCycleScan() {
                                                             _startScanCountdown();
-                                                            let minC = parseInt(document.getElementById('scanMin').value) || 120;
+                                                            let minC = parseInt(document.getElementById('scanMin').value) || 60;
         
-                                            let maxC = parseInt(document.getElementById('scanMax').value) || 180;
+                                            let maxC = parseInt(document.getElementById('scanMax').value) || 60;
 
                                     if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
 
