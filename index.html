@@ -17,8 +17,30 @@
         <title>TRINITY OS & WALLSPECTRUM [OMNI-SYNC EDITION]</title>
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
-
-    <style>
+        
+            <script type="module">
+              import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+              import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        
+              const firebaseConfig = {
+                apiKey: "AIzaSyAYHA8Qw3Qw3Qzbyg8MtjrSKcJusNi4VaA6V4",
+                authDomain: "system-data-bf026.firebaseapp.com",
+                databaseURL: "https://system-data-bf026-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "system-data-bf026",
+                storageBucket: "system-data-bf026.firebasestorage.app",
+                messagingSenderId: "718302899022",
+                appId: "1:718302899022:web:f1675dbcc293e138c68c1f"
+              };
+        
+              const app = initializeApp(firebaseConfig);
+              const db = getDatabase(app);
+              window.__wpsDb = db;
+              window.__wpsRef = ref;
+              window.__wpsOnValue = onValue;
+              window.__wpsUpdate = update;
+            </script>
+        
+            <style>
 
         :root {
 
@@ -7013,9 +7035,218 @@ let dataList = currentMode === 'REV'
                                             if (!document.hidden) { resize(); draw(); updateTimerUI(); }
                                         });
                                     })();
-        
-                </script>
-                </body>
-
-        </html> 
+                                    
+                                                    </script>
+                                    
+                                            <script>
+                                            (function() {
+                                                var WPS_PATH = 'wallpanel_state';
+                                                var _wpsIgnoreNextRemote = false;
+                                                var _wpsSaveTimer = null;
+                                                var _wpsReady = false;
+                                    
+                                                function wpsGetDb() {
+                                                    if (!window.__wpsDb) return null;
+                                                    return {
+                                                        db: window.__wpsDb,
+                                                        ref: window.__wpsRef,
+                                                        onValue: window.__wpsOnValue,
+                                                        update: window.__wpsUpdate
+                                                    };
+                                                }
+                                    
+                                                function wpsCollectState() {
+                                                    return {
+                                                        minPct: document.getElementById('minPctInput') ? document.getElementById('minPctInput').value : '85',
+                                                        level: document.getElementById('levelFilterSelect') ? document.getElementById('levelFilterSelect').value : '0',
+                                                        sessionLen: document.getElementById('sessionLengthSelect') ? document.getElementById('sessionLengthSelect').value : null,
+                                                        scanMin: document.getElementById('scanMin') ? document.getElementById('scanMin').value : '60',
+                                                        scanMax: document.getElementById('scanMax') ? document.getElementById('scanMax').value : '60',
+                                                        r0Only: typeof r0OnlyMode !== 'undefined' ? r0OnlyMode : false,
+                                                        activeCat: typeof activeCat !== 'undefined' ? activeCat : 'CRY',
+                                                        mode: typeof currentMode !== 'undefined' ? currentMode : 'REV',
+                                                        fireOn: typeof brokerFireEnabled !== 'undefined' ? brokerFireEnabled : true,
+                                                        _updatedAt: Date.now()
+                                                    };
+                                                }
+                                    
+                                                function wpsSaveNow() {
+                                                    if (_wpsIgnoreNextRemote) { _wpsIgnoreNextRemote = false; return; }
+                                                    if (!_wpsReady) return;
+                                                    var fb = wpsGetDb();
+                                                    if (!fb) return;
+                                                    try {
+                                                        var state = wpsCollectState();
+                                                        var updates = {};
+                                                        updates[WPS_PATH] = state;
+                                                        fb.update(fb.ref(fb.db), updates);
+                                                    } catch(e) {}
+                                                }
+                                    
+                                                function wpsSaveDebounced() {
+                                                    if (_wpsSaveTimer) clearTimeout(_wpsSaveTimer);
+                                                    _wpsSaveTimer = setTimeout(wpsSaveNow, 400);
+                                                }
+                                    
+                                                function wpsApplyState(state) {
+                                                    if (!state) return;
+                                    
+                                                    if (state.minPct !== undefined) {
+                                                        var minPctEl = document.getElementById('minPctInput');
+                                                        if (minPctEl) minPctEl.value = state.minPct;
+                                                    }
+                                                    if (state.level !== undefined) {
+                                                        var levelEl = document.getElementById('levelFilterSelect');
+                                                        if (levelEl) levelEl.value = state.level;
+                                                    }
+                                                    if (state.scanMin !== undefined) {
+                                                        var scanMinEl = document.getElementById('scanMin');
+                                                        if (scanMinEl) { scanMinEl.value = state.scanMin; _userScanRangeLock = true; }
+                                                    }
+                                                    if (state.scanMax !== undefined) {
+                                                        var scanMaxEl = document.getElementById('scanMax');
+                                                        if (scanMaxEl) { scanMaxEl.value = state.scanMax; _userScanRangeLock = true; }
+                                                    }
+                                                    if (state.r0Only) {
+                                                        r0OnlyMode = true;
+                                                        var r0Btn = document.getElementById('r0OnlyBtn');
+                                                        if (r0Btn) {
+                                                            r0Btn.style.background = 'var(--accent-green)';
+                                                            r0Btn.style.color = 'var(--bg-base)';
+                                                            r0Btn.style.borderColor = 'var(--accent-green)';
+                                                        }
+                                                    } else if (state.r0Only === false) {
+                                                        r0OnlyMode = false;
+                                                        var r0BtnOff = document.getElementById('r0OnlyBtn');
+                                                        if (r0BtnOff) {
+                                                            r0BtnOff.style.background = 'var(--bg-base)';
+                                                            r0BtnOff.style.color = '#FFFFFF';
+                                                            r0BtnOff.style.borderColor = '#FFFFFF';
+                                                        }
+                                                    }
+                                                    if (state.mode === 'MOM' && currentMode !== 'MOM') {
+                                                        currentMode = 'MOM';
+                                                        var modeBtn = document.getElementById('uiModeToggleBtn');
+                                                        if (modeBtn) {
+                                                            modeBtn.innerText = 'MOM';
+                                                            modeBtn.style.background = 'var(--accent-green)';
+                                                            modeBtn.style.color = 'var(--bg-base)';
+                                                        }
+                                                    } else if (state.mode === 'REV' && currentMode !== 'REV') {
+                                                        currentMode = 'REV';
+                                                        var modeBtnR = document.getElementById('uiModeToggleBtn');
+                                                        if (modeBtnR) {
+                                                            modeBtnR.innerText = 'REV';
+                                                            modeBtnR.style.background = 'var(--accent-green)';
+                                                            modeBtnR.style.color = 'var(--bg-base)';
+                                                        }
+                                                    }
+                                                    if (state.fireOn === false && brokerFireEnabled !== false) {
+                                                        brokerFireEnabled = false;
+                                                        var fireBtn = document.getElementById('fireToggleBtn');
+                                                        if (fireBtn) {
+                                                            fireBtn.textContent = '🔥 FIRE: OFF';
+                                                            fireBtn.style.color = 'var(--accent-red)';
+                                                            fireBtn.style.borderColor = 'var(--accent-red)';
+                                                            fireBtn.style.background = 'rgba(230,57,70,0.18)';
+                                                        }
+                                                    } else if (state.fireOn === true && brokerFireEnabled !== true) {
+                                                        brokerFireEnabled = true;
+                                                        var fireBtnOn = document.getElementById('fireToggleBtn');
+                                                        if (fireBtnOn) {
+                                                            fireBtnOn.textContent = '🔥 FIRE: ON';
+                                                            fireBtnOn.style.color = '#FFFFFF';
+                                                            fireBtnOn.style.borderColor = '#FFFFFF';
+                                                            fireBtnOn.style.background = 'var(--bg-base)';
+                                                        }
+                                                    }
+                                                    if (state.activeCat && state.activeCat !== activeCat && PAIRS_BY_CAT[state.activeCat]) {
+                                                        activeCat = state.activeCat;
+                                                        ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
+                                                        ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
+                                                            var btn = document.getElementById('catBtn-' + c);
+                                                            if (btn) {
+                                                                if (c === activeCat) {
+                                                                    btn.style.background = 'var(--accent-green)';
+                                                                    btn.style.color = 'var(--bg-base)';
+                                                                } else {
+                                                                    btn.style.background = 'var(--bg-base)';
+                                                                    btn.style.color = '#FFFFFF';
+                                                                }
+                                                            }
+                                                        });
+                                                        activePair = PAIRS_BY_CAT[activeCat][0];
+                                                        var apiPairInput = document.getElementById('apiPair');
+                                                        if (apiPairInput) apiPairInput.value = activePair;
+                                                    }
+                                                    if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
+                                    
+                                                    renderFilteredTable();
+                                                }
+                                    
+                                                function wpsInit() {
+                                                    var fb = wpsGetDb();
+                                                    if (!fb) { setTimeout(wpsInit, 100); return; }
+                                    
+                                                    var stateRef = fb.ref(fb.db, WPS_PATH);
+                                                    fb.onValue(stateRef, function(snapshot) {
+                                                        var val = snapshot.val();
+                                                        _wpsIgnoreNextRemote = true;
+                                                        wpsApplyState(val);
+                                                        _wpsReady = true;
+                                                    });
+                                                }
+                                    
+                                                var _origPopulateLengthSelect = _populateLengthSelect;
+                                                _populateLengthSelect = function() {
+                                                    _origPopulateLengthSelect();
+                                                    if (window._wpsPendingSessionLen !== undefined && window._wpsPendingSessionLen !== null) {
+                                                        var lenSel = document.getElementById('sessionLengthSelect');
+                                                        if (lenSel) {
+                                                            var hasOption = Array.from(lenSel.options).some(function(o) { return o.value === window._wpsPendingSessionLen; });
+                                                            if (hasOption) {
+                                                                lenSel.value = window._wpsPendingSessionLen;
+                                                                _wpsIgnoreNextRemote = true;
+                                                                onSessionLengthChange();
+                                                            }
+                                                        }
+                                                        window._wpsPendingSessionLen = null;
+                                                    }
+                                                };
+                                    
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    wpsInit();
+                                    
+                                                    var minPctEl = document.getElementById('minPctInput');
+                                                    if (minPctEl) minPctEl.addEventListener('change', wpsSaveDebounced);
+                                    
+                                                    var levelEl = document.getElementById('levelFilterSelect');
+                                                    if (levelEl) levelEl.addEventListener('change', wpsSaveDebounced);
+                                    
+                                                    var sessionLenEl = document.getElementById('sessionLengthSelect');
+                                                    if (sessionLenEl) sessionLenEl.addEventListener('change', wpsSaveDebounced);
+                                    
+                                                    var scanMinEl = document.getElementById('scanMin');
+                                                    if (scanMinEl) scanMinEl.addEventListener('change', wpsSaveDebounced);
+                                    
+                                                    var scanMaxEl = document.getElementById('scanMax');
+                                                    if (scanMaxEl) scanMaxEl.addEventListener('change', wpsSaveDebounced);
+                                                });
+                                    
+                                                var _origToggleR0Only = toggleR0Only;
+                                                toggleR0Only = function() { _origToggleR0Only(); wpsSaveDebounced(); };
+                                    
+                                                var _origToggleSignalMode = toggleSignalMode;
+                                                toggleSignalMode = function() { _origToggleSignalMode(); wpsSaveDebounced(); };
+                                    
+                                                var _origSwitchCategory = switchCategory;
+                                                switchCategory = function(cat) { _origSwitchCategory(cat); wpsSaveDebounced(); };
+                                    
+                                                var _origToggleBrokerFire = toggleBrokerFire;
+                                                toggleBrokerFire = function() { _origToggleBrokerFire(); wpsSaveDebounced(); };
+                                            })();
+                                            </script>
+                                                    </body>
+                                    
+                                            </html> 
 
