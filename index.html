@@ -19,26 +19,26 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
         
             <script type="module">
-              import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-              import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        
-              const firebaseConfig = {
-                apiKey: "AIzaSyAYHA8Qw3Qw3Qzbyg8MtjrSKcJusNi4VaA6V4",
-                authDomain: "system-data-bf026.firebaseapp.com",
-                databaseURL: "https://system-data-bf026-default-rtdb.asia-southeast1.firebasedatabase.app",
-                projectId: "system-data-bf026",
-                storageBucket: "system-data-bf026.firebasestorage.app",
-                messagingSenderId: "718302899022",
-                appId: "1:718302899022:web:f1675dbcc293e138c68c1f"
-              };
-        
-              const app = initializeApp(firebaseConfig);
-              const db = getDatabase(app);
-              window.__wpsDb = db;
-              window.__wpsRef = ref;
-              window.__wpsOnValue = onValue;
-              window.__wpsUpdate = update;
-            </script>
+                      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+                      import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+                
+                      const firebaseConfig = {
+                        apiKey: "AIzaSyAYHA8Qw3Qw3Qzbyg8MtjrSKcJusNi4VaA6V4",
+                        authDomain: "system-data-bf026.firebaseapp.com",
+                        databaseURL: "https://system-data-bf026-default-rtdb.asia-southeast1.firebasedatabase.app",
+                        projectId: "system-data-bf026",
+                        storageBucket: "system-data-bf026.firebasestorage.app",
+                        messagingSenderId: "718302899022",
+                        appId: "1:718302899022:web:f1675dbcc293e138c68c1f"
+                      };
+                
+                      const app = initializeApp(firebaseConfig);
+                      const db = getDatabase(app);
+                      window.__wpsDb = db;
+                      window.__wpsRef = ref;
+                      window.__wpsGet = get;
+                      window.__wpsUpdate = update;
+                    </script>
         
             <style>
 
@@ -7067,14 +7067,14 @@ let dataList = currentMode === 'REV'
                                                 var _wpsReady = false;
                                     
                                                 function wpsGetDb() {
-                                                    if (!window.__wpsDb) return null;
-                                                    return {
-                                                        db: window.__wpsDb,
-                                                        ref: window.__wpsRef,
-                                                        onValue: window.__wpsOnValue,
-                                                        update: window.__wpsUpdate
-                                                    };
-                                                }
+                                                                                                    if (!window.__wpsDb) return null;
+                                                                                                    return {
+                                                                                                        db: window.__wpsDb,
+                                                                                                        ref: window.__wpsRef,
+                                                                                                        get: window.__wpsGet,
+                                                                                                        update: window.__wpsUpdate
+                                                                                                    };
+                                                                                                }
                                     
                                                 function wpsCollectState() {
                                                     return {
@@ -7206,38 +7206,40 @@ let dataList = currentMode === 'REV'
                                                 }
                                     
                                                 function wpsInit() {
-                                                                                                                                                    var fb = wpsGetDb();
-                                                                                                                                                    if (!fb) { setTimeout(wpsInit, 100); return; }
-                                                                                                                                    
-                                                                                                                                                    var stateRef = fb.ref(fb.db, WPS_PATH);
-                                                                                                                                                    fb.onValue(stateRef, function(snapshot) {
-                                                                                                                                                        var val = snapshot.val();
-                                                                                                                                                        _wpsIgnoreNextRemote = true;
-                                                                                                                                                        wpsApplyState(val);
-                                                                                                                                                        _wpsReady = true;
-                                                                                                                                    
-                                                                                                                                                        if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
-                                                                                                                                                            var _sLen = parseInt(val.sessionLen, 10);
-                                                                                                                                                            var _win = _activeCatWindow();
-                                                                                                                                                            var _winLen = _win.end - _win.start;
-                                                                                                                                                            var _divisors = _divisorsOf(_winLen);
-                                                                                                                                                            if (_divisors.indexOf(_sLen) !== -1) {
-                                                                                                                                                                var _maxIdx = Math.max(0, Math.floor(_winLen / _sLen) - 1);
-                                                                                                                                                                var _nowMin = _currentUtcMinuteOfDay();
-                                                                                                                                                                var _idx = Math.floor((_nowMin - _win.start) / _sLen);
-                                                                                                                                                                if (_idx < 0) _idx = 0;
-                                                                                                                                                                if (_idx > _maxIdx) _idx = _maxIdx;
-                                                                                                                                                                sessionWindowStartMin = _win.start + _idx * _sLen;
-                                                                                                                                                                sessionWindowEndMin = sessionWindowStartMin + _sLen;
-                                                                                                                                                                _saveSessionWindow();
-                                                                                                                                                                _refreshSessionSliderUI();
-                                                                                                                                                                window._wpsSessionSynced = true;
-                                                                                                                                                            }
-                                                                                                                                                        }
-                                                                                                                                    
-                                                                                                                                                        if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
-                                                                                                                                                    });
-                                                                                                                                                }
+                                                                                                                                                                                                    var fb = wpsGetDb();
+                                                                                                                                                                                                    if (!fb) { setTimeout(wpsInit, 100); return; }
+                                                                                                                                                                                    
+                                                                                                                                                                                                    var stateRef = fb.ref(fb.db, WPS_PATH);
+                                                                                                                                                                                                    fb.get(stateRef).then(function(snapshot) {
+                                                                                                                                                                                                        var val = snapshot.val();
+                                                                                                                                                                                                        wpsApplyState(val);
+                                                                                                                                                                                                        _wpsReady = true;
+                                                                                                                                                                                    
+                                                                                                                                                                                                        if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
+                                                                                                                                                                                                            var _sLen = parseInt(val.sessionLen, 10);
+                                                                                                                                                                                                            var _win = _activeCatWindow();
+                                                                                                                                                                                                            var _winLen = _win.end - _win.start;
+                                                                                                                                                                                                            var _divisors = _divisorsOf(_winLen);
+                                                                                                                                                                                                            if (_divisors.indexOf(_sLen) !== -1) {
+                                                                                                                                                                                                                var _maxIdx = Math.max(0, Math.floor(_winLen / _sLen) - 1);
+                                                                                                                                                                                                                var _nowMin = _currentUtcMinuteOfDay();
+                                                                                                                                                                                                                var _idx = Math.floor((_nowMin - _win.start) / _sLen);
+                                                                                                                                                                                                                if (_idx < 0) _idx = 0;
+                                                                                                                                                                                                                if (_idx > _maxIdx) _idx = _maxIdx;
+                                                                                                                                                                                                                sessionWindowStartMin = _win.start + _idx * _sLen;
+                                                                                                                                                                                                                sessionWindowEndMin = sessionWindowStartMin + _sLen;
+                                                                                                                                                                                                                _saveSessionWindow();
+                                                                                                                                                                                                                _refreshSessionSliderUI();
+                                                                                                                                                                                                                window._wpsSessionSynced = true;
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                        }
+                                                                                                                                                                                    
+                                                                                                                                                                                                        if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
+                                                                                                                                                                                                    }).catch(function() {
+                                                                                                                                                                                                        _wpsReady = true;
+                                                                                                                                                                                                        if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
+                                                                                                                                                                                                    });
+                                                                                                                                                                                                }
                                     
                                                 var _origPopulateLengthSelect = _populateLengthSelect;
                                                                                                 _populateLengthSelect = function() {
@@ -7256,40 +7258,21 @@ let dataList = currentMode === 'REV'
                                                                                                     }
                                                                                                 };
                                                                                     
-                                                                                                var _origOnSessionLengthChange = onSessionLengthChange;
-                                                                                                onSessionLengthChange = function() { _origOnSessionLengthChange(); wpsSaveDebounced(); };
-                                    
-                                                document.addEventListener('DOMContentLoaded', function() {
-                                                    wpsInit();
-                                    
-                                                    var minPctEl = document.getElementById('minPctInput');
-                                                    if (minPctEl) minPctEl.addEventListener('change', wpsSaveDebounced);
-                                    
-                                                    var levelEl = document.getElementById('levelFilterSelect');
-                                                    if (levelEl) levelEl.addEventListener('change', wpsSaveDebounced);
-                                    
-                                                    var sessionLenEl = document.getElementById('sessionLengthSelect');
-                                                    if (sessionLenEl) sessionLenEl.addEventListener('change', wpsSaveDebounced);
-                                    
-                                                    var scanMinEl = document.getElementById('scanMin');
-                                                    if (scanMinEl) scanMinEl.addEventListener('change', wpsSaveDebounced);
-                                    
-                                                    var scanMaxEl = document.getElementById('scanMax');
-                                                    if (scanMaxEl) scanMaxEl.addEventListener('change', wpsSaveDebounced);
-                                                });
-                                    
-                                                var _origToggleR0Only = toggleR0Only;
-                                                toggleR0Only = function() { _origToggleR0Only(); wpsSaveDebounced(); };
-                                    
-                                                var _origToggleSignalMode = toggleSignalMode;
-                                                toggleSignalMode = function() { _origToggleSignalMode(); wpsSaveDebounced(); };
-                                    
-                                                var _origSwitchCategory = switchCategory;
-                                                switchCategory = function(cat) { _origSwitchCategory(cat); wpsSaveDebounced(); };
-                                    
-                                                var _origToggleBrokerFire = toggleBrokerFire;
-                                                toggleBrokerFire = function() { _origToggleBrokerFire(); wpsSaveDebounced(); };
-                                            })();
+                                                                                                document.addEventListener('DOMContentLoaded', function() {
+                                                                                                                                                    wpsInit();
+                                                                                                                                                });
+                                                                                                                                    
+                                                                                                                                                function _wpsSaveOnClose() {
+                                                                                                                                                    if (_wpsSaveTimer) { clearTimeout(_wpsSaveTimer); _wpsSaveTimer = null; }
+                                                                                                                                                    wpsSaveNow();
+                                                                                                                                                }
+                                                                                                                                    
+                                                                                                                                                window.addEventListener('beforeunload', _wpsSaveOnClose);
+                                                                                                                                                window.addEventListener('pagehide', _wpsSaveOnClose);
+                                                                                                                                                document.addEventListener('visibilitychange', function() {
+                                                                                                                                                    if (document.hidden) _wpsSaveOnClose();
+                                                                                                                                                });
+                                                                                                                                            })();
                                             </script>
                                                     </body>
                                     
