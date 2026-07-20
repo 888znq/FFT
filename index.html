@@ -2154,10 +2154,13 @@
             // 1. OMNI-GAP DETECTOR: Find missing internal segments + tail edge
 
                         let chunksToFetch = [];
-
-                        let gapStart = -1;
-
-                        const GAP_THRESHOLD = /^cry/i.test(pair) ? 120 : 900; // Crypto ticks frequently, so a shorter 2-min threshold catches real gaps without falsely flagging normal pauses; FX/DRV/MTL keep 15min to avoid Deriv rate-limit risk from excess chunk requests
+                        
+                                                let gapStart = -1;
+                        
+                                                // Capped to CYCLE (current visual column width): any gap at least one column wide
+                                                // must always be re-fetched, otherwise it falls under the threshold, is skipped forever,
+                                                // and renders as a permanent never-synced "X0" stripe/column.
+                                                const GAP_THRESHOLD = Math.min(/^cry/i.test(pair) ? 120 : 900, CYCLE); // Crypto ticks frequently, so a shorter 2-min threshold catches real gaps without falsely flagging normal pauses; FX/DRV/MTL keep 15min to avoid Deriv rate-limit risk from excess chunk requests
 
             
 
