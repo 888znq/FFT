@@ -7164,23 +7164,26 @@ let dataList = currentMode === 'REV'
                                                     };
                                                 }
                                     
-                                                function wpsSaveNow() {
-                                                    if (_wpsIgnoreNextRemote) { _wpsIgnoreNextRemote = false; return; }
-                                                    if (!_wpsReady) return;
-                                                    var fb = wpsGetDb();
-                                                    if (!fb) return;
-                                                    try {
-                                                        var state = wpsCollectState();
-                                                        var updates = {};
-                                                        updates[WPS_PATH] = state;
-                                                        fb.update(fb.ref(fb.db), updates);
-                                                    } catch(e) {}
-                                                }
-                                    
-                                                function wpsSaveDebounced() {
-                                                    if (_wpsSaveTimer) clearTimeout(_wpsSaveTimer);
-                                                    _wpsSaveTimer = setTimeout(wpsSaveNow, 400);
-                                                }
+                                                var _wpsSavePending = false;
+                                                
+                                                                                                function wpsSaveNow() {
+                                                                                                    if (_wpsIgnoreNextRemote) { _wpsIgnoreNextRemote = false; return; }
+                                                                                                    if (!_wpsReady) { _wpsSavePending = true; return; }
+                                                                                                    var fb = wpsGetDb();
+                                                                                                    if (!fb) { _wpsSavePending = true; return; }
+                                                                                                    try {
+                                                                                                        var state = wpsCollectState();
+                                                                                                        var updates = {};
+                                                                                                        updates[WPS_PATH] = state;
+                                                                                                        fb.update(fb.ref(fb.db), updates);
+                                                                                                        _wpsSavePending = false;
+                                                                                                    } catch(e) {}
+                                                                                                }
+                                                                                    
+                                                                                                function wpsSaveDebounced() {
+                                                                                                    if (_wpsSaveTimer) clearTimeout(_wpsSaveTimer);
+                                                                                                    _wpsSaveTimer = setTimeout(wpsSaveNow, 400);
+                                                                                                }
                                     
                                                 function wpsApplyState(state) {
                                                     if (!state) return;
@@ -7286,7 +7289,8 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                     fb.get(stateRef).then(function(snapshot) {
                                                                                                                                                                                                         var val = snapshot.val();
                                                                                                                                                                                                         wpsApplyState(val);
-                                                                                                                                                                                                        _wpsReady = true;
+                                                                                                                                                                                                                                                                                                                                                                                                                _wpsReady = true;
+                                                                                                                                                                                                                                                                                                                                                                                                                if (_wpsSavePending) wpsSaveNow();
                                                                                                                                                                                     
                                                                                                                                                                                                         if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
                                                                                                                                                                                                             var _sLen = parseInt(val.sessionLen, 10);
@@ -7309,9 +7313,10 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                     
                                                                                                                                                                                                         if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
                                                                                                                                                                                                     }).catch(function() {
-                                                                                                                                                                                                        _wpsReady = true;
-                                                                                                                                                                                                        if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
-                                                                                                                                                                                                    });
+                                                                                                                                                                                                                                                                                                                                                                                                            _wpsReady = true;
+                                                                                                                                                                                                                                                                                                                                                                                                            if (_wpsSavePending) wpsSaveNow();
+                                                                                                                                                                                                                                                                                                                                                                                                            if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
+                                                                                                                                                                                                                                                                                                                                                                                                        });
                                                                                                                                                                                                 }
                                     
                                                 var _origPopulateLengthSelect = _populateLengthSelect;
@@ -7331,9 +7336,24 @@ let dataList = currentMode === 'REV'
                                                                                                     }
                                                                                                 };
                                                                                     
-                                                                                                document.addEventListener('DOMContentLoaded', function() {
-                                                                                                                                                    wpsInit();
-                                                                                                                                                });
+                                                                                                function wpsAttachChangeListeners() {
+                                                                                                                                                    var _liveIds = ['minPctInput', 'levelFilterSelect', 'scanMin', 'scanMax', 'sessionLengthSelect'];
+                                                                                                                                                    _liveIds.forEach(function(id) {
+                                                                                                                                                        var el = document.getElementById(id);
+                                                                                                                                                        if (el) el.addEventListener('change', wpsSaveDebounced);
+                                                                                                                                                    });
+                                                                                                                                                    var _liveClickIds = ['r0OnlyBtn', 'fireToggleBtn', 'uiModeToggleBtn', 'modeToggleBtn', 'catBtn-CRY', 'catBtn-$$$', 'catBtn-DRV', 'catBtn-MTL', 'catBtn-FRX'];
+                                                                                                                                                    _liveClickIds.forEach(function(id) {
+                                                                                                                                                        var el = document.getElementById(id);
+                                                                                                                                                        if (el) el.addEventListener('click', wpsSaveDebounced);
+                                                                                                                                                    });
+                                                                                                                                                }
+                                                                                                
+                                                                                                                                                document.addEventListener('DOMContentLoaded', function() {
+                                                                                                                                                                                                                                                    wpsInit();
+                                                                                                                                                                                                                                                    wpsAttachChangeListeners();
+                                                                                                                                                                                                                                                });
+                                                                                                                                                setInterval(wpsSaveDebounced, 30000);
                                                                                                                                     
                                                                                                                                                 function _wpsSaveOnClose() {
                                                                                                                                                     if (_wpsSaveTimer) { clearTimeout(_wpsSaveTimer); _wpsSaveTimer = null; }
