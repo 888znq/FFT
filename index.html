@@ -1764,12 +1764,13 @@
                                 var _offlineClockTimer = null;
                 
                                 function _goOffline() {
-                                    if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
-                                    if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
-                                    if (derivWs) { try { derivWs.close(1000, 'session-offline'); } catch(e) {} derivWs = null; }
-                                    if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
-                                    if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
-                                    _stopScanCountdown();
+                                                    _stopEdgeSync();
+                                                    if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
+                                                    if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
+                                                    if (derivWs) { try { derivWs.close(1000, 'session-offline'); } catch(e) {} derivWs = null; }
+                                                    if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
+                                                    if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
+                                                    _stopScanCountdown();
                                     var oldBoot = document.getElementById('bootOverlay');
                                     if (oldBoot) oldBoot.remove();
                                     _showOfflineOverlay();
@@ -1823,12 +1824,13 @@
                                                                 }
                 
                                 function _triggerLiveReboot() {
-                                                    _hideOfflineOverlay();
-                                    if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
-                    if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
-                    if (derivWs) { try { derivWs.close(1000, 'session-switch'); } catch(e) {} derivWs = null; }
-                    if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
-                    if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
+                                                                    _hideOfflineOverlay();
+                                                    _stopEdgeSync();
+                                                    if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
+                                                    if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
+                                                    if (derivWs) { try { derivWs.close(1000, 'session-switch'); } catch(e) {} derivWs = null; }
+                                                    if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
+                                                    if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
                     globalRevs = []; globalMoms = []; globalDethroned = [];
                     scanPending = 0; scanQueue = [];
                     allPairData = {}; window.liveTickBuffer = {};
@@ -2349,35 +2351,102 @@
 
 
             // Merge any early live ticks that arrived while we were backfilling
-            if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
-                Object.assign(tickMap, window.liveTickBuffer[pair]);
-            }
-            
-            // FINAL CLOSER: fetching the chunks above takes real wall-clock time, so "now" has
-            // moved forward since fetchEnd was snapshotted — top up straight to the true current
-            // second so no sliver gap remains right before live sync visually takes over.
-            if (sessionIsLive) {
-                const trueNowTs = Math.min(endTs, Math.floor(Date.now() / 1000));
-                if (trueNowTs > fetchEnd) {
-                    const closerMap = await fetchChunk(pair, fetchEnd + 1, trueNowTs);
-                    if (Object.keys(closerMap).length > 0) Object.assign(tickMap, closerMap);
-                    if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
-                        Object.assign(tickMap, window.liveTickBuffer[pair]);
-                    }
-                }
-            }
-            
-            const { times, prices } = buildGrid(tickMap, startTs, endTs);
-            await aofs_write(pair, dateStr, times, prices);
-            return { times, prices };
+                        if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
+                            Object.assign(tickMap, window.liveTickBuffer[pair]);
+                        }
+                        
+                        // FINAL CLOSER: fetching the chunks above takes real wall-clock time, so "now" keeps
+                        // moving forward while we fetch. Loop the top-up instead of firing it once — each pass
+                        // only has to close the tiny sliver that elapsed during the previous pass, converging
+                        // on the true live edge instead of leaving whatever gap remained after one fetch.
+                        if (sessionIsLive) {
+                            let closerFrom = fetchEnd + 1;
+                            for (let closerPass = 0; closerPass < 3; closerPass++) {
+                                if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
+                                    Object.assign(tickMap, window.liveTickBuffer[pair]);
+                                }
+                                const trueNowTs = Math.min(endTs, Math.floor(Date.now() / 1000));
+                                if (closerFrom > trueNowTs) break;
+                                const closerMap = await fetchChunk(pair, closerFrom, trueNowTs);
+                                if (Object.keys(closerMap).length > 0) Object.assign(tickMap, closerMap);
+                                closerFrom = trueNowTs + 1;
+                            }
+                            if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
+                                Object.assign(tickMap, window.liveTickBuffer[pair]);
+                            }
+                        }
+                        
+                        const { times, prices } = buildGrid(tickMap, startTs, endTs);
+                        await aofs_write(pair, dateStr, times, prices);
+                        return { times, prices };
 
         }
 
 
 
-        const _bootPairState = {};
-
-        ALL_PAIRS.forEach(p => { _bootPairState[p] = 'wait'; });
+        // EDGE SYNC: the boot-time closer above can still leave a few seconds unfetched (network
+                // latency between its last "now" snapshot and this function actually returning). Nothing
+                // used to revisit that sliver afterward, so it stayed X0 for the rest of the session instead
+                // of syncing up. This keeps checking the live edge of the active pair and patches it live.
+                var _edgeSyncTimer = null;
+                var _edgeSyncBusy = {};
+        
+                function _startEdgeSync() {
+                    if (_edgeSyncTimer) clearInterval(_edgeSyncTimer);
+                    _edgeSyncTimer = setInterval(_edgeSyncTick, 4000);
+                }
+        
+                function _stopEdgeSync() {
+                    if (_edgeSyncTimer) { clearInterval(_edgeSyncTimer); _edgeSyncTimer = null; }
+                    _edgeSyncBusy = {};
+                }
+        
+                async function _edgeSyncTick() {
+                    if (!_isWithinMappedWindow()) return;
+                    var pair = activePair;
+                    if (_edgeSyncBusy[pair]) return;
+                    var pData = allPairData[pair];
+                    if (!pData || !pData.times || pData.times.length === 0) return;
+        
+                    var nowIdx = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+                    if (nowIdx < 1 || nowIdx >= pData.times.length) return;
+        
+                    var SCAN_BACK = 30;
+                    var scanFrom = Math.max(0, nowIdx - SCAN_BACK);
+                    var gapStart = -1, gapEnd = -1;
+                    for (var i = scanFrom; i < nowIdx; i++) {
+                        if (pData.prices[i] === -1.0) {
+                            if (gapStart === -1) gapStart = i;
+                            gapEnd = i;
+                        }
+                    }
+                    if (gapStart === -1) return;
+        
+                    _edgeSyncBusy[pair] = true;
+                    try {
+                        var sTs = currentStartTsUtc + gapStart;
+                        var eTs = currentStartTsUtc + gapEnd;
+                        var patch = await fetchChunk(pair, sTs, eTs);
+                        if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
+                            Object.assign(patch, window.liveTickBuffer[pair]);
+                        }
+                        if (!allPairData[pair] || allPairData[pair].times !== pData.times) { _edgeSyncBusy[pair] = false; return; }
+                        var patched = false;
+                        for (var ts in patch) {
+                            var idx = parseInt(ts, 10) - currentStartTsUtc;
+                            if (idx >= 0 && idx < pData.prices.length && pData.prices[idx] === -1.0) {
+                                pData.prices[idx] = patch[ts];
+                                patched = true;
+                            }
+                        }
+                        if (patched && pair === activePair) processVisualMatrix();
+                    } catch(e) {}
+                    _edgeSyncBusy[pair] = false;
+                }
+        
+                const _bootPairState = {};
+        
+                ALL_PAIRS.forEach(p => { _bootPairState[p] = 'wait'; });
 
 
 
@@ -2610,14 +2679,15 @@
         
 
                     // INSTANT LIVE: Start capturing live ticks to memory BEFORE heavy backfills begin
-
-                    if (ctxState.isLive) {
-
-                        bootLog(`[INSTANT LIVE] Connecting to Deriv stream early to bridge gap...`, '#D500F9');
-
-                        startLiveSync();
-
-                    }
+                    
+                                        if (ctxState.isLive) {
+                    
+                                            bootLog(`[INSTANT LIVE] Connecting to Deriv stream early to bridge gap...`, '#D500F9');
+                    
+                                            startLiveSync();
+                                            _startEdgeSync();
+                    
+                                        }
 
         
 
