@@ -1767,6 +1767,7 @@
                                                     if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
                                                     if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
                                                     if (derivWs) { try { derivWs.close(1000, 'session-offline'); } catch(e) {} derivWs = null; }
+                                                                                                        if (binanceWs) { try { binanceWs.close(1000, 'session-offline'); } catch(e) {} binanceWs = null; }
                                                     if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
                                                     if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
                                                     _stopScanCountdown();
@@ -1828,6 +1829,7 @@
                                                     if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
                                                     if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
                                                     if (derivWs) { try { derivWs.close(1000, 'session-switch'); } catch(e) {} derivWs = null; }
+                                                                                                        if (binanceWs) { try { binanceWs.close(1000, 'session-switch'); } catch(e) {} binanceWs = null; }
                                                     if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
                                                     if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
                     globalRevs = []; globalMoms = []; globalDethroned = [];
@@ -1924,6 +1926,13 @@
                 // Deriv requires numeric App IDs. Fallback to 1089 (default) if alphanumeric is provided.
                 const safeAppId = /^\d+$/.test(DERIV_APP_ID) ? DERIV_APP_ID : 1089;
                 const DERIV_WS_URL = `wss://ws.derivws.com/websockets/v3?app_id=${safeAppId}`;
+                
+                                // ── BINANCE DATA SOURCE (replaces Deriv for BTC — public feed, no auth, no lag) ──
+                                const BINANCE_SYMBOL_MAP = { "cryBTCUSD": "BTCUSDT" };
+                                const BINANCE_REST_BASE = "https://api.binance.com/api/v3/klines";
+                                const BINANCE_WS_BASE = "wss://stream.binance.com:9443/stream?streams=";
+                                function isBinancePair(pair) { return !!BINANCE_SYMBOL_MAP[pair]; }
+                                let binanceWs = null;
 
         const DB_NAME = 'TrinityAOFS';
 
@@ -2057,9 +2066,65 @@
 
 
 
-        function fetchChunk(pair, segStart, segEnd) {
-
-                    return new Promise((res) => {
+        async function fetchBinanceChunk(pair, segStart, segEnd) {
+        
+                            const symbol = BINANCE_SYMBOL_MAP[pair];
+        
+                            const map = {};
+        
+                            if (!symbol) return map;
+        
+                            const MAX_SPAN = 1000; // Binance klines cap is 1000 rows/request
+        
+                            for (let s = segStart; s <= segEnd; s += MAX_SPAN) {
+        
+                                const e = Math.min(s + MAX_SPAN - 1, segEnd);
+        
+                                const url = `${BINANCE_REST_BASE}?symbol=${symbol}&interval=1s&startTime=${s * 1000}&endTime=${(e + 1) * 1000 - 1}&limit=1000`;
+        
+                                try {
+        
+                                    const ctrl = new AbortController();
+        
+                                    const killTimer = setTimeout(() => ctrl.abort(), 15000);
+        
+                                    const resp = await fetch(url, { signal: ctrl.signal });
+        
+                                    clearTimeout(killTimer);
+        
+                                    if (!resp.ok) { console.warn(`⚠️ BINANCE CHUNK ERROR [${pair}]: HTTP ${resp.status}`); continue; }
+        
+                                    const rows = await resp.json();
+        
+                                    rows.forEach(k => { map[Math.floor(k[0] / 1000)] = parseFloat(k[4]); });
+        
+                                } catch(e) {
+        
+                                    console.warn(`⚠️ BINANCE CHUNK FETCH FAILED [${pair}]: ${e.message}`);
+        
+                                }
+        
+                            }
+        
+                            return map;
+        
+                        }
+        
+        
+        
+                function fetchChunk(pair, segStart, segEnd) {
+        
+                            if (isBinancePair(pair)) return fetchBinanceChunk(pair, segStart, segEnd);
+        
+                            return fetchDerivChunk(pair, segStart, segEnd);
+        
+                        }
+        
+        
+        
+                function fetchDerivChunk(pair, segStart, segEnd) {
+        
+                            return new Promise((res) => {
 
                         let cws;
 
@@ -2808,7 +2873,7 @@
 
                         doneCount++;
                         
-                                                document.getElementById('stats').innerHTML = `DERIV BACKGROUND TOP-UP: <span style="color:#00B0FF;">${doneCount}/${_pairsToFetch.length}</span> TARGETS...`;
+                                                document.getElementById('stats').innerHTML = `${isBinancePair(pair) ? 'BINANCE' : 'DERIV'} BACKGROUND TOP-UP: <span style="color:#00B0FF;">${doneCount}/${_pairsToFetch.length}</span> TARGETS...`;
 
                         bootPairUpdate(); // Keep UI grid updated live
 
@@ -2871,11 +2936,71 @@
 
 
 
-        function startLiveSync() {
-
-                    derivWs = new WebSocket(DERIV_WS_URL);
-
-                    let liveAuthorized = false;
+        function startBinanceLiveSync(pairs) {
+        
+                            if (binanceWs) { try { binanceWs.close(1000, 'restart'); } catch(e) {} binanceWs = null; }
+        
+                            var streams = pairs.filter(isBinancePair).map(function(p) { return BINANCE_SYMBOL_MAP[p].toLowerCase() + '@kline_1s'; }).join('/');
+        
+                            if (!streams) return;
+        
+                            binanceWs = new WebSocket(BINANCE_WS_BASE + streams);
+        
+                            binanceWs.onopen = function() { console.log('✅ Binance live stream connected'); };
+        
+                            binanceWs.onmessage = function(msg) {
+        
+                                try {
+        
+                                    var payload = JSON.parse(msg.data);
+        
+                                    var k = payload.data && payload.data.k;
+        
+                                    if (!k) return;
+        
+                                    var pair = Object.keys(BINANCE_SYMBOL_MAP).find(function(p) { return BINANCE_SYMBOL_MAP[p] === payload.data.s; });
+        
+                                    if (!pair) return;
+        
+                                    globalTickCount++;
+        
+                                    var tickEl = document.getElementById('liveTickDisplay');
+        
+                                    if (tickEl) tickEl.innerText = globalTickCount.toLocaleString();
+        
+                                    injectLiveTick(pair, Math.floor(k.t / 1000), parseFloat(k.c));
+        
+                                } catch(e) {}
+        
+                            };
+        
+                            binanceWs.onerror = function() { try { binanceWs.close(); } catch(e) {} };
+        
+                            binanceWs.onclose = function(evt) {
+        
+                                if (evt.code !== 1000) setTimeout(function() { startBinanceLiveSync(pairs); }, 5000);
+        
+                            };
+        
+                        }
+        
+        
+        
+                function startLiveSync() {
+        
+                            var _catPairs = PAIRS_BY_CAT[activeCat].slice();
+        
+                            var _binPairs = _catPairs.filter(isBinancePair);
+        
+                            var _drvPairs = _catPairs.filter(function(p) { return !isBinancePair(p); });
+        
+                            if (_binPairs.length > 0) startBinanceLiveSync(_binPairs);
+        
+                            if (_drvPairs.length === 0) { setupAutoScan(); return; } // BTC-only session — Deriv WS skipped entirely, no more lag
+        
+                            derivWs = new WebSocket(DERIV_WS_URL);
+        
+                            let liveAuthorized = false;
 
 
 
