@@ -266,10 +266,30 @@
     <div class="peaks-container">
 
         <div class="ctrl-row">
-                                                                                    
-                                                                                                                                                                                                                                                                                                                                                <span style="position:relative; display:inline-block; flex-shrink:0;">
-                                                                                                                                                                                                                                                                                                                                                    <select id="sessionLengthSelect" onchange="onSessionLengthChange()" class="ctrl-input ctrl-select" style="width:92px; font-size:11px; color:#FFFFFF;"></select>
-                                                                                                                                                                                                                                                                                                                                                </span>
+                                                                                    <span style="position:relative; display:inline-block; flex-shrink:0;">
+                                                                                        <input type="number" id="minPctInput" value="85" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:70px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
+                                                                                        <span style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:#FFFFFF; pointer-events:none;">%</span>
+                                                                                    </span>
+                                                                                    <span style="position:relative; display:inline-block; flex-shrink:0;">
+                                                                                                                                                                    <select id="levelFilterSelect" onchange="renderFilteredTable()" class="ctrl-input ctrl-select" style="width:78px; font-size:11px; color:#FFFFFF;">
+                                                                                                                                                                        <option value="0" selected>ALL LVL</option>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <option value="1">X1-X2</option>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <option value="2">X2-X3</option>
+                                                                                                                                                                        <option value="3">X3-X4</option>
+                                                                                                                                                                        <option value="4">X4-X5</option>
+                                                                                                                                                                        <option value="5">X5-X6</option>
+                                                                                                                                                                        <option value="6">X6-X7</option>
+                                                                                                                                                                        <option value="7">X7-X8</option>
+                                                                                                                                                                        <option value="8">X8-X9</option>
+                                                                                                                                                                        <option value="9">X9-X10</option>
+                                                                                                                                                                        <option value="10">X10-X11</option>
+                                                                                                                                                                        <option value="11">X11-X12</option>
+                                                                                                                                                                        <option value="12">X12-X13</option>
+                                                                                                                                                                                                                                                                                                                                            </select>
+                                                                                                                                                                                                                                                                                                                                        </span>
+                                                                                                                                                                                                                                                            <span style="position:relative; display:inline-block; flex-shrink:0;">
+                                                                                                                                                                                                                                                                <select id="sessionLengthSelect" onchange="onSessionLengthChange()" class="ctrl-input ctrl-select" style="width:92px; font-size:11px; color:#FFFFFF;"></select>
+                                                                                                                                                                                                                                                            </span>
                                                                                                                                                                                                                                                             <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
                                                                                                                                                                 <button id="r0OnlyBtn" onclick="toggleR0Only()" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">R0</button>
                                                                                     <div style="flex:1; height:4px; background:#222; border-radius:2px; overflow:hidden;">
@@ -420,7 +440,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-DRV" onclick="switchCategory('DRV')" style="display:none; flex:1;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-DRV" onclick="switchCategory('DRV')" style="flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     font-family:'JetBrains Mono',monospace;">DRV</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
@@ -438,7 +458,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-FRX" onclick="switchCategory('FRX')" style="display:none; flex:1;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-FRX" onclick="switchCategory('FRX')" style="flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </div>
@@ -1302,7 +1322,7 @@
                 
                         var PAIRS_BY_CAT = {
                                                                                             'CRY': [
-                                                                                                                                                                                            "cryBTCUSD"
+                                                                                                                                                                                            "cryBTCUSD", "cryETHUSD"
                                                                                                                                                                                         ],
                                                                                                                                                                                         '$$$': [
                                                                                                                                                                                             "frxEURUSD"
@@ -1402,8 +1422,9 @@
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
                                                             _tickPairs = [
-                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
-                                                                                                                                                                                            ];
+                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
+                                                                                                                            ];
                                                                                                                         } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
@@ -4272,11 +4293,17 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
         function _autoSelectTopSignal() {
-                                    var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
-                                    var topList = _allSigs
-                                        .filter(function(x) { return !_hiddenPairs.has(x.pair); })
-                                        .sort(function(a, b) { return b.c1 !== a.c1 ? b.c1 - a.c1 : a.c2 - b.c2; });
-                            if (topList.length === 0) return;
+                    var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
+                    var _minPctEl = document.getElementById('minPctInput');
+                    var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
+                    var _levelEl = document.getElementById('levelFilterSelect');
+                    var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
+                    var topList = _allSigs
+                        .filter(function(x) { return !_hiddenPairs.has(x.pair); })
+                        .filter(function(x) { return x.pct >= _minPct; })
+                        .filter(function(x) { return _levelVal === 0 || x.s1 === _levelVal; })
+                        .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
+            if (topList.length === 0) return;
             var top = topList[0];
             if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
             if (activePair !== top.pair) {
@@ -4537,29 +4564,27 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        
        
        var _minPctEl = document.getElementById('minPctInput');
-              
-              var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
-              
-              function _buildTop10(list) {
-                  var filtered = list
-                                        .filter(x => !_hiddenPairs.has(x.pair))
-                                        .filter(x => !r0OnlyMode || x.r === 0);
-                  var bestByLevel = {};
-                  filtered.forEach(x => {
-                      var cur = bestByLevel[x.s1];
-                      if (!cur || x.c1 > cur.c1 || (x.c1 === cur.c1 && x.c2 < cur.c2)) {
-                          bestByLevel[x.s1] = x;
-                      }
-                  });
-                  return Object.keys(bestByLevel)
-                      .map(k => bestByLevel[k])
-                      .sort((a, b) => a.s1 - b.s1);
-              }
-              
-              var revTop10 = _buildTop10([...globalRevs]);
-              var momTop10 = _buildTop10([...globalMoms]);
-              
-              renderScannerTable(revTop10, momTop10, displayDead);                     }
+       
+       var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
+       
+       var _levelEl = document.getElementById('levelFilterSelect');
+       
+       var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
+       
+       function _buildTop10(list) {
+           return list
+               .filter(x => !_hiddenPairs.has(x.pair))
+               .filter(x => x.pct >= _minPct)
+               .filter(x => _levelVal === 0 || x.s1 === _levelVal)
+               .filter(x => !r0OnlyMode || x.r === 0)
+               .sort((a, b) => (b.pct * b.c1) - (a.pct * a.c1))
+               .slice(0, 15);
+       }
+       
+       var revTop10 = _buildTop10([...globalRevs]);
+       var momTop10 = _buildTop10([...globalMoms]);
+       
+       renderScannerTable(revTop10, momTop10, displayDead);                     }
        
                                      
        
@@ -6751,8 +6776,9 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                             ];
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
-                                                                                                                                                                                                                                                                                                                                                            ];
+                                                                                                                                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
+                                                                                                                                                                            ];
                                             
                                                                                                                                                                             const DRV_TICK_PAIRS = [
                                                                                                                                                                                 { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
@@ -7125,6 +7151,7 @@ let dataList = currentMode === 'REV'
                                     
                                                 function wpsCollectState() {
                                                     return {
+                                                        minPct: document.getElementById('minPctInput') ? document.getElementById('minPctInput').value : '85',
                                                         level: document.getElementById('levelFilterSelect') ? document.getElementById('levelFilterSelect').value : '0',
                                                         sessionLen: document.getElementById('sessionLengthSelect') ? document.getElementById('sessionLengthSelect').value : null,
                                                         scanMin: document.getElementById('scanMin') ? document.getElementById('scanMin').value : '60',
@@ -7161,6 +7188,10 @@ let dataList = currentMode === 'REV'
                                                 function wpsApplyState(state) {
                                                     if (!state) return;
                                     
+                                                    if (state.minPct !== undefined) {
+                                                        var minPctEl = document.getElementById('minPctInput');
+                                                        if (minPctEl) minPctEl.value = state.minPct;
+                                                    }
                                                     if (state.level !== undefined) {
                                                         var levelEl = document.getElementById('levelFilterSelect');
                                                         if (levelEl) levelEl.value = state.level;
@@ -7226,7 +7257,25 @@ let dataList = currentMode === 'REV'
                                                             fireBtnOn.style.background = 'var(--bg-base)';
                                                         }
                                                     }
-                                                    // activeCat override from Firebase disabled — CRY is always the default category
+                                                    if (state.activeCat && state.activeCat !== activeCat && PAIRS_BY_CAT[state.activeCat]) {
+                                                        activeCat = state.activeCat;
+                                                        ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
+                                                        ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
+                                                            var btn = document.getElementById('catBtn-' + c);
+                                                            if (btn) {
+                                                                if (c === activeCat) {
+                                                                    btn.style.background = 'var(--accent-green)';
+                                                                    btn.style.color = 'var(--bg-base)';
+                                                                } else {
+                                                                    btn.style.background = 'var(--bg-base)';
+                                                                    btn.style.color = '#FFFFFF';
+                                                                }
+                                                            }
+                                                        });
+                                                        activePair = PAIRS_BY_CAT[activeCat][0];
+                                                        var apiPairInput = document.getElementById('apiPair');
+                                                        if (apiPairInput) apiPairInput.value = activePair;
+                                                    }
                                                     if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
                                     
                                                     renderFilteredTable();
@@ -7288,7 +7337,7 @@ let dataList = currentMode === 'REV'
                                                                                                 };
                                                                                     
                                                                                                 function wpsAttachChangeListeners() {
-                                                                                                                                                    var _liveIds = ['levelFilterSelect', 'scanMin', 'scanMax', 'sessionLengthSelect'];
+                                                                                                                                                    var _liveIds = ['minPctInput', 'levelFilterSelect', 'scanMin', 'scanMax', 'sessionLengthSelect'];
                                                                                                                                                     _liveIds.forEach(function(id) {
                                                                                                                                                         var el = document.getElementById(id);
                                                                                                                                                         if (el) el.addEventListener('change', wpsSaveDebounced);
