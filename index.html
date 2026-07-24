@@ -266,10 +266,7 @@
     <div class="peaks-container">
 
         <div class="ctrl-row">
-                                                                                    <span style="position:relative; display:inline-block; flex-shrink:0;">
-                                                                                                                                                                            <input type="number" id="minPctInput" value="85" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:70px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
-                                                                                                                                                                            <span style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:#FFFFFF; pointer-events:none;">%</span>
-                                                                                                                                                                        </span>
+                                                                                    
                                                                                                                                                                                                                                                                                                                                                 <span style="position:relative; display:inline-block; flex-shrink:0;">
                                                                                                                                                                                                                                                                                                                                                     <select id="sessionLengthSelect" onchange="onSessionLengthChange()" class="ctrl-input ctrl-select" style="width:92px; font-size:11px; color:#FFFFFF;"></select>
                                                                                                                                                                                                                                                                                                                                                 </span>
@@ -423,7 +420,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-DRV" onclick="switchCategory('DRV')" style="flex:1;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-DRV" onclick="switchCategory('DRV')" style="display:none; flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     font-family:'JetBrains Mono',monospace;">DRV</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
@@ -441,7 +438,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-FRX" onclick="switchCategory('FRX')" style="flex:1;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-FRX" onclick="switchCategory('FRX')" style="display:none; flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </div>
@@ -1305,7 +1302,7 @@
                 
                         var PAIRS_BY_CAT = {
                                                                                             'CRY': [
-                                                                                                                                                                                            "cryBTCUSD", "cryETHUSD"
+                                                                                                                                                                                            "cryBTCUSD"
                                                                                                                                                                                         ],
                                                                                                                                                                                         '$$$': [
                                                                                                                                                                                             "frxEURUSD"
@@ -1405,9 +1402,8 @@
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
                                                             _tickPairs = [
-                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                            ];
+                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
+                                                                                                                                                                                            ];
                                                                                                                         } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
@@ -4276,14 +4272,11 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
         function _autoSelectTopSignal() {
-                            var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
-                            var _minPctEl = document.getElementById('minPctInput');
-                            var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
-                            var topList = _allSigs
-                                .filter(function(x) { return !_hiddenPairs.has(x.pair); })
-                                .filter(function(x) { return x.pct >= _minPct; })
-                                .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
-                    if (topList.length === 0) return;
+                                    var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
+                                    var topList = _allSigs
+                                        .filter(function(x) { return !_hiddenPairs.has(x.pair); })
+                                        .sort(function(a, b) { return b.c1 !== a.c1 ? b.c1 - a.c1 : a.c2 - b.c2; });
+                            if (topList.length === 0) return;
             var top = topList[0];
             if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
             if (activePair !== top.pair) {
@@ -4549,9 +4542,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
               
               function _buildTop10(list) {
                   var filtered = list
-                      .filter(x => !_hiddenPairs.has(x.pair))
-                      .filter(x => x.pct >= _minPct)
-                      .filter(x => !r0OnlyMode || x.r === 0);
+                                        .filter(x => !_hiddenPairs.has(x.pair))
+                                        .filter(x => !r0OnlyMode || x.r === 0);
                   var bestByLevel = {};
                   filtered.forEach(x => {
                       var cur = bestByLevel[x.s1];
@@ -6759,9 +6751,8 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                             ];
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                            ];
+                                                                                                                                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
+                                                                                                                                                                                                                                                                                                                                                            ];
                                             
                                                                                                                                                                             const DRV_TICK_PAIRS = [
                                                                                                                                                                                 { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
@@ -7134,7 +7125,6 @@ let dataList = currentMode === 'REV'
                                     
                                                 function wpsCollectState() {
                                                     return {
-                                                        minPct: document.getElementById('minPctInput') ? document.getElementById('minPctInput').value : '85',
                                                         level: document.getElementById('levelFilterSelect') ? document.getElementById('levelFilterSelect').value : '0',
                                                         sessionLen: document.getElementById('sessionLengthSelect') ? document.getElementById('sessionLengthSelect').value : null,
                                                         scanMin: document.getElementById('scanMin') ? document.getElementById('scanMin').value : '60',
@@ -7171,10 +7161,6 @@ let dataList = currentMode === 'REV'
                                                 function wpsApplyState(state) {
                                                     if (!state) return;
                                     
-                                                    if (state.minPct !== undefined) {
-                                                        var minPctEl = document.getElementById('minPctInput');
-                                                        if (minPctEl) minPctEl.value = state.minPct;
-                                                    }
                                                     if (state.level !== undefined) {
                                                         var levelEl = document.getElementById('levelFilterSelect');
                                                         if (levelEl) levelEl.value = state.level;
@@ -7240,25 +7226,7 @@ let dataList = currentMode === 'REV'
                                                             fireBtnOn.style.background = 'var(--bg-base)';
                                                         }
                                                     }
-                                                    if (state.activeCat && state.activeCat !== activeCat && PAIRS_BY_CAT[state.activeCat]) {
-                                                        activeCat = state.activeCat;
-                                                        ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
-                                                        ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
-                                                            var btn = document.getElementById('catBtn-' + c);
-                                                            if (btn) {
-                                                                if (c === activeCat) {
-                                                                    btn.style.background = 'var(--accent-green)';
-                                                                    btn.style.color = 'var(--bg-base)';
-                                                                } else {
-                                                                    btn.style.background = 'var(--bg-base)';
-                                                                    btn.style.color = '#FFFFFF';
-                                                                }
-                                                            }
-                                                        });
-                                                        activePair = PAIRS_BY_CAT[activeCat][0];
-                                                        var apiPairInput = document.getElementById('apiPair');
-                                                        if (apiPairInput) apiPairInput.value = activePair;
-                                                    }
+                                                    // activeCat override from Firebase disabled — CRY is always the default category
                                                     if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
                                     
                                                     renderFilteredTable();
@@ -7320,7 +7288,7 @@ let dataList = currentMode === 'REV'
                                                                                                 };
                                                                                     
                                                                                                 function wpsAttachChangeListeners() {
-                                                                                                                                                    var _liveIds = ['minPctInput', 'levelFilterSelect', 'scanMin', 'scanMax', 'sessionLengthSelect'];
+                                                                                                                                                    var _liveIds = ['levelFilterSelect', 'scanMin', 'scanMax', 'sessionLengthSelect'];
                                                                                                                                                     _liveIds.forEach(function(id) {
                                                                                                                                                         var el = document.getElementById(id);
                                                                                                                                                         if (el) el.addEventListener('change', wpsSaveDebounced);
