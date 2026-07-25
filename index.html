@@ -1918,16 +1918,13 @@
 
 
 
-        // SECURITY: a live API token was hardcoded here in plain text — anyone viewing page source
-                // could use it to act on the real Deriv account behind it. Removed. Rotate/revoke that token
-                // in your Deriv account's API Token settings; treat it as compromised since it was exposed here.
-                const DERIV_API_TOKEN = "";
-        
-                // Deriv retired wss://ws.derivws.com/websockets/v3 for market/tick data — it now returns
-                // "Symbol ... is invalid" for every symbol, including crypto. Public, unauthenticated market
-                // data now streams from the new Options API endpoint instead, which needs no app_id or token.
-                // See https://developers.deriv.com/docs/options/ws-public/
-                const DERIV_WS_URL = 'wss://api.derivws.com/trading/v1/options/ws/public';
+        const DERIV_APP_ID = "33wuhc3RztQ6f2rwZijoR";
+
+                const DERIV_API_TOKEN = "pat_af26ff5010877e4f07516004ea3f8ae9c6ab091f9b251c3d3c8384d372e5da57";
+
+                // Deriv requires numeric App IDs. Fallback to 1089 (default) if alphanumeric is provided.
+                const safeAppId = /^\d+$/.test(DERIV_APP_ID) ? DERIV_APP_ID : 1089;
+                const DERIV_WS_URL = `wss://ws.derivws.com/websockets/v3?app_id=${safeAppId}`;
 
         const DB_NAME = 'TrinityAOFS';
 
@@ -6746,7 +6743,7 @@ let dataList = currentMode === 'REV'
         
                 // --- TICK COMPARE APP (ISOLATED EXECUTION CONTEXT) ---
                 (function() {
-                                    const WS_URL = 'wss://api.derivws.com/trading/v1/options/ws/public';
+                    const WS_URL = 'wss://ws.derivws.com/websockets/v3?app_id=1089';
                     const FRX_TICK_PAIRS = [
                                                                 { label:'AUD/CAD', sym:'frxAUDCAD', color:'#00ff88' },
                                                                 { label:'AUD/CHF', sym:'frxAUDCHF', color:'#ffe033' },
