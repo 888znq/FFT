@@ -1376,7 +1376,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     });
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 }
-                                                                                                                                                var _catRowAnchor = document.getElementById('catBtn-CRY');
+                                                                                                                                                
                                                                                                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                 var _fireBtnAnchor = document.getElementById('fireToggleBtn');
                                                                                                                                                                                                                                                                                                 if (_fireBtnAnchor && _fireBtnAnchor.parentElement) _fireBtnAnchor.parentElement.style.display = 'none';
@@ -2258,7 +2258,7 @@
 
                 // Sequential chunk fetching to avoid Deriv WebSocket rate limiting
 
-                                const WORKERS = 4;
+                                const WORKERS = 6;
 
                 for (let i = 0; i < finalChunks.length; i += WORKERS) {
 
@@ -2278,7 +2278,7 @@
 
                         // Stagger WS connections: 1.2s apart to avoid simultaneous open
 
-                        let delay = idx * 1200;
+                        let delay = idx * 900;
 
 
 
@@ -2322,7 +2322,7 @@
 
                     // Longer inter-batch pause to let Deriv WS slots free up
 
-                    await new Promise(r => setTimeout(r, 800));
+                    await new Promise(r => setTimeout(r, 1300));
 
                 }
 
