@@ -6983,8 +6983,29 @@ let dataList = currentMode === 'REV'
                                                                                                     _wpsSaveTimer = setTimeout(wpsSaveNow, 400);
                                                                                                 }
                                     
-                                                function wpsApplyState(state) {
-                                                    if (!state) return;
+                                                function _wpsForceDefaultCat() {
+                                                                                                    activeCat = 'CRY';
+                                                                                                    ALL_PAIRS = PAIRS_BY_CAT['CRY'].slice();
+                                                                                                    ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
+                                                                                                        var btn = document.getElementById('catBtn-' + c);
+                                                                                                        if (btn) {
+                                                                                                            if (c === activeCat) {
+                                                                                                                btn.style.background = 'var(--accent-green)';
+                                                                                                                btn.style.color = 'var(--bg-base)';
+                                                                                                            } else {
+                                                                                                                btn.style.background = 'var(--bg-base)';
+                                                                                                                btn.style.color = '#FFFFFF';
+                                                                                                            }
+                                                                                                        }
+                                                                                                    });
+                                                                                                    activePair = PAIRS_BY_CAT['CRY'][0];
+                                                                                                    var apiPairInput = document.getElementById('apiPair');
+                                                                                                    if (apiPairInput) apiPairInput.value = activePair;
+                                                                                                }
+                                                                                    
+                                                                                                function wpsApplyState(state) {
+                                                                                                    if (!state) return;
+                                                                                                    _wpsForceDefaultCat();
                                     
                                                     if (state.minPct !== undefined) {
                                                         var minPctEl = document.getElementById('minPctInput');
@@ -7055,25 +7076,7 @@ let dataList = currentMode === 'REV'
                                                             fireBtnOn.style.background = 'var(--bg-base)';
                                                         }
                                                     }
-                                                    if (state.activeCat && state.activeCat !== activeCat && PAIRS_BY_CAT[state.activeCat]) {
-                                                        activeCat = state.activeCat;
-                                                        ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
-                                                        ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
-                                                            var btn = document.getElementById('catBtn-' + c);
-                                                            if (btn) {
-                                                                if (c === activeCat) {
-                                                                    btn.style.background = 'var(--accent-green)';
-                                                                    btn.style.color = 'var(--bg-base)';
-                                                                } else {
-                                                                    btn.style.background = 'var(--bg-base)';
-                                                                    btn.style.color = '#FFFFFF';
-                                                                }
-                                                            }
-                                                        });
-                                                        activePair = PAIRS_BY_CAT[activeCat][0];
-                                                        var apiPairInput = document.getElementById('apiPair');
-                                                        if (apiPairInput) apiPairInput.value = activePair;
-                                                    }
+                                                    
                                                     if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
                                     
                                                     renderFilteredTable();
