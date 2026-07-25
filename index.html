@@ -1759,23 +1759,7 @@
                 
                                 
                 
-                                function _showOfflineOverlay() {
-                                                                    var old = document.getElementById('offlineOverlay');
-                                                                    if (old) old.remove();
-                                                                    var div = document.createElement('div');
-                                                                    div.id = 'offlineOverlay';
-                                                                    div.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-base);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
-                                                                    var _winLabel = ((activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$') && isFxWeekendDead())
-                                                                                                                                            ? 'WEEKEND CLOSED: SAT 05:30 \u2192 MON 05:30 IST'
-                                                                                                                                            : 'MAPPED WINDOW: ' + _fmtIstMin(sessionWindowStartMin) + ' \u2192 ' + _fmtIstMin(sessionWindowEndMin === 1440 ? 0 : sessionWindowEndMin) + ' IST';
-                                                                    div.innerHTML = '<div style="text-align:center;"><div style="font-size:13px;font-weight:800;letter-spacing:0.3em;color:var(--accent-red);text-shadow:0 0 10px rgba(230,57,70,0.5);margin-bottom:14px;">⬡ SESSION OFFLINE</div><div style="font-size:10px;font-weight:800;color:#FFFFFF;letter-spacing:0.15em;margin-bottom:10px;">' + _winLabel + '</div><div id="offlineCountdown" style="font-size:11px;font-weight:800;color:#FFD700;letter-spacing:0.1em;">--:--:--</div></div>';
-                                                                    document.body.appendChild(div);
-                                    var statsEl = document.getElementById('stats');
-                                    if (statsEl) statsEl.innerHTML = 'SESSION OFFLINE — OUTSIDE MAPPED WINDOW';
-                                    if (_offlineClockTimer) clearInterval(_offlineClockTimer);
-                                    _offlineClockTimer = setInterval(_updateOfflineCountdown, 1000);
-                                    _updateOfflineCountdown();
-                                }
+                                
                 
                                 function _hideOfflineOverlay() {
                                     if (_offlineClockTimer) { clearInterval(_offlineClockTimer); _offlineClockTimer = null; }
@@ -1783,28 +1767,7 @@
                                     if (el) el.remove();
                                 }
                 
-                                function _updateOfflineCountdown() {
-                                                                    var el = document.getElementById('offlineCountdown');
-                                                                    if (!el) return;
-                                                                    var now = new Date();
-                                                                    var totalSecLeft;
-                                                                                                                                        if ((activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$') && isFxWeekendDead()) {
-                                                                                                                                            var day = now.getUTCDay();
-                                                                                                                                            var nowSecOfDay = now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds();
-                                                                                                                                            var daysUntilMon = day === 6 ? 2 : 1;
-                                                                                                                                            totalSecLeft = daysUntilMon * 86400 - nowSecOfDay;
-                                                                                                                                        } else {
-                                                                        var nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-                                                                        var nowSec = now.getUTCSeconds();
-                                                                        var target = nowMin < sessionWindowStartMin ? sessionWindowStartMin : sessionWindowStartMin + 1440;
-                                                                        totalSecLeft = (target - nowMin) * 60 - nowSec;
-                                                                    }
-                                                                    if (totalSecLeft < 0) totalSecLeft = 0;
-                                                                    var h = Math.floor(totalSecLeft / 3600);
-                                                                    var m = Math.floor((totalSecLeft % 3600) / 60);
-                                                                    var s = totalSecLeft % 60;
-                                                                    el.textContent = 'REOPENS IN ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-                                                                }
+                                
                 
                                 function _triggerLiveReboot() {
                                                                     _hideOfflineOverlay();
