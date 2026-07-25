@@ -82,9 +82,9 @@
 
 
 
-        #h-scroll-track, #v-scroll-track { position: absolute; width: 1px; height: 1px; top: -10px; left: -10px; opacity: 0; pointer-events: none; overflow: auto; }
-
-        #h-spacer, #v-spacer { width: 1px; height: 1px; }
+        #h-scroll-track { position: absolute; width: 1px; height: 1px; top: -10px; left: -10px; opacity: 0; pointer-events: none; overflow: auto; }
+        
+                #h-spacer { width: 1px; height: 1px; }
 
 
 
@@ -256,12 +256,10 @@
                 <div id="streakPanel"><div id="app3-mainContainer"></div></div>
 
         <div id="row-index-panel"></div>
-
-        <div id="v-scroll-track"><div id="v-spacer"></div></div>
-
-
-
-        <div id="wall-finder-pane">
+        
+        
+        
+                <div id="wall-finder-pane">
 
     <div class="peaks-container">
 
@@ -419,8 +417,7 @@
 
                 
 
-                                                    <div id="gapAlertBadge" style="display:none; grid-column: span 2; background:var(--bg-base); border:1px solid #FFD700; border-radius:2px; padding:8px 0; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:14px; letter-spacing:1px; color:#FFD700;">GAP&nbsp;RUN:&nbsp;<span id="gapAlertCur">0</span>&nbsp;/&nbsp;<span id="gapAlertMax">0</span></div>
-                                                                                                        <!-- ROW 0: BROKER FIRE TOGGLE (full width) -->
+                                                    <!-- ROW 0: BROKER FIRE TOGGLE (full width) -->
                                                                                                                                                                                                                 <div style="grid-column: span 2; display:flex; gap:3px;">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     <button id="fireToggleBtn" onclick="toggleBrokerFire()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">🔥 FIRE: ON</button>
                                                                                                                                                                                                                 </div>
@@ -1499,9 +1496,8 @@
                 let globalDethroned = [];
 
                 let currentMode = 'REV';
-
-        let currentFilter = 0;
-                let r0OnlyMode = false;
+                
+                                let r0OnlyMode = false;
                 function toggleR0Only() {
                     r0OnlyMode = !r0OnlyMode;
                     const btn = document.getElementById('r0OnlyBtn');
@@ -1590,17 +1586,15 @@
         let currentInstances = [];
 
         let currentInstanceIndex = -1;
-
-        let liveEdgeCol = -1;
         
-                        var CELL_H = 0;
+                        let liveEdgeCol = -1;
+                        
+                                        var CELL_H = 0;
+                        
         
-                        var histModeActive = false;
-                        var histDuration = 0;
-
+                
         
-
-                let CYCLE = (document.getElementById('cycleInput') ? parseInt(document.getElementById('cycleInput').value) : null) || 60;
+                        let CYCLE = (document.getElementById('cycleInput') ? parseInt(document.getElementById('cycleInput').value) : null) || 60;
 
         const CELL_W = 40, HEADER_H = 20; // Shrunk width by 50% to pack more time bars
 
@@ -1877,26 +1871,16 @@
                                 }
                 
                         function isFxWeekendDead() {
-                                    var picker = document.getElementById('dayPickerInput');
-                                    if (picker && picker.value) {
-                                        var now = new Date();
-                                        var todayStr = now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0') + '-' + String(now.getUTCDate()).padStart(2, '0');
-                                        if (picker.value !== todayStr) return false;
-                                    }
-                                    var now = new Date();
-                                    var day = now.getUTCDay();
-                                    if (day === 6) return true;
-                                    if (day === 0) return true;
-                                    return false;
-                                }
-                
-                        function isFxPair(pair) {
-                            return /^frx/i.test(pair);
-                        }
-
-
-
-        function getTradingContext() {
+                                                                                    var now = new Date();
+                                                                                    var day = now.getUTCDay();
+                                                                                    if (day === 6) return true;
+                                                                                    if (day === 0) return true;
+                                                                                    return false;
+                                                                                }
+                        
+                        
+                        
+                                function getTradingContext() {
                             var now = new Date();
                             var currentUtcEpoch = Math.floor(now.getTime() / 1000);
                             var todayMidnightUtc = currentUtcEpoch - (currentUtcEpoch % 86400);
@@ -1923,8 +1907,8 @@
                 const DERIV_API_TOKEN = "pat_af26ff5010877e4f07516004ea3f8ae9c6ab091f9b251c3d3c8384d372e5da57";
 
                 // Deriv requires numeric App IDs. Fallback to 1089 (default) if alphanumeric is provided.
-                const safeAppId = /^\d+$/.test(DERIV_APP_ID) ? DERIV_APP_ID : 1089;
-                const DERIV_WS_URL = `wss://ws.derivws.com/websockets/v3?app_id=${safeAppId}`;
+                                const safeAppId = /^\d+$/.test(DERIV_APP_ID) ? DERIV_APP_ID : 1089;
+                                const DERIV_WS_URL = `wss://api.derivws.com/trading/v1/options/ws/public?app_id=${safeAppId}`;
 
         const DB_NAME = 'TrinityAOFS';
 
@@ -2075,13 +2059,13 @@
                         }, 30000);
 
                         cws.onopen = () => {
-
-                            if (!done) {
-                                // Skip authorize for public tick data to prevent token errors from blocking downloads
-                                cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 5000, style: "ticks" }));
-                            }
-
-                        };
+                        
+                                                    if (!done) {
+                                                        // Skip authorize for public tick data to prevent token errors from blocking downloads
+                                                        cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 1000, style: "ticks" }));
+                                                    }
+                        
+                                                };
 
                         cws.onmessage = (ev) => {
 
@@ -2247,12 +2231,12 @@
 
 
             // 2. SPLIT & FETCH
-
-            let finalChunks = [];
-
-            const CHUNK = 3600;
-
-            chunksToFetch.forEach(gap => {
+            
+                        let finalChunks = [];
+            
+                        const CHUNK = 900;
+            
+                        chunksToFetch.forEach(gap => {
 
                 for (let s = gap.s; s <= gap.e; s += CHUNK + 1) {
 
@@ -2563,62 +2547,9 @@
 
 
 
-        /* ── SESSION BOUNDARY MODAL ── */
-                function _showSessionPickerModal(onConfirm) {
-            var overlay = document.createElement('div');
-            overlay.id = 'sessionPickerOverlay';
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-base);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
-        
-            var now = new Date();
-            var nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-        
-            var optionsHtml = SESSION_DIVISORS.map(function(d) {
-                                                    var sessions = 1440 / d;
-                                                    var idx = Math.floor(nowMin / d);
-                                                    var sMin = idx * d;
-                                                    var eMin = sMin + d;
-                                                    var label = _fmtLenLabel(d) + ' (' + sessions + '/day)  →  ' + _fmtIstMin(sMin) + '–' + _fmtIstMin(eMin === 1440 ? 0 : eMin) + ' IST';
-                                                    return '<option value="' + d + '"' + (d === 180 ? ' selected' : '') + '>' + label + '</option>';
-                                                }).join('');
-        
-            overlay.innerHTML = '<div style="width:520px;max-width:94vw;border:1px solid #FFFFFF;border-radius:2px;overflow:hidden;">' +
-                '<div style="background:var(--bg-base);padding:16px 20px;border-bottom:1px solid #FFFFFF;font-size:11px;font-weight:800;letter-spacing:0.25em;color:var(--accent-green);text-transform:uppercase;">⬡ SELECT SESSION WINDOW</div>' +
-                '<div style="padding:20px;display:flex;flex-direction:column;gap:14px;background:var(--bg-base);">' +
-                '<div style="font-size:9px;font-weight:800;color:#888;letter-spacing:0.12em;line-height:1.6em;">Choose how to slice today\'s 24h into trading sessions.<br>The visual grid will show ONLY the selected window. You can change this anytime via the top dropdown.</div>' +
-                '<select id="sessionPickerSelect" style="background:var(--bg-base);border:1px solid #FFFFFF;color:#FFFFFF;font-family:\'JetBrains Mono\',monospace;font-weight:800;padding:8px 10px;font-size:11px;border-radius:2px;outline:none;width:100%;">' + optionsHtml + '</select>' +
-                '<div id="sessionPickerPreview" style="font-size:10px;font-weight:800;color:#FFD700;letter-spacing:0.1em;text-align:center;padding:8px;border:1px solid #333;border-radius:2px;"></div>' +
-                '<button id="sessionPickerConfirm" style="background:var(--accent-green);color:var(--bg-base);border:none;padding:12px;font-size:12px;font-weight:800;letter-spacing:2px;cursor:pointer;border-radius:2px;font-family:\'Inter\',monospace;">▶ LOAD SESSION</button>' +
-                '</div></div>';
-        
-            document.body.appendChild(overlay);
-        
-            function updatePreview() {
-                var d = parseInt(document.getElementById('sessionPickerSelect').value, 10);
-                var nowMin2 = new Date().getUTCHours() * 60 + new Date().getUTCMinutes();
-                var idx = Math.floor(nowMin2 / d);
-                var sMin = idx * d;
-                var eMin = sMin + d;
-                document.getElementById('sessionPickerPreview').textContent =
-                    'ACTIVE WINDOW: ' + _fmtIstMin(sMin) + ' → ' + _fmtIstMin(eMin === 1440 ? 0 : eMin) + ' IST  |  ' + _fmtLenLabel(d);
-            }
-        
-            document.getElementById('sessionPickerSelect').addEventListener('change', updatePreview);
-            updatePreview();
-        
-            document.getElementById('sessionPickerConfirm').addEventListener('click', function() {
-                var d = parseInt(document.getElementById('sessionPickerSelect').value, 10);
-                var nowMin2 = new Date().getUTCHours() * 60 + new Date().getUTCMinutes();
-                var idx = Math.floor(nowMin2 / d);
-                sessionWindowStartMin = idx * d;
-                sessionWindowEndMin = sessionWindowStartMin + d;
-                _saveSessionWindow();
-                _populateLengthSelect();
-                document.body.removeChild(overlay);
-                onConfirm();
-            });
-        }
-        
-        async function autoFetch() {
+        /* ── SESSION BOUNDARY LOGIC ── */
+                
+                async function autoFetch() {
                 
                                     var _fxWeekendDead = isFxWeekendDead();
                                                                                             if (_fxWeekendDead && (activeCat === 'MTL' || activeCat === 'FRX')) {
@@ -3787,28 +3718,14 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
             
         
             // 3. Force the table to redraw with the new data
-        
-            renderFilteredTable();
-        
-        }
-
-
-
-        function setDropoffFilter(val) {
-
-            currentFilter = val;
-
-            document.querySelectorAll('.btn-num').forEach(b => b.classList.remove('active'));
-
-            document.getElementById(`flt-${val}`).classList.add('active');
-
-            renderFilteredTable();
-
-        }
-
-
-
-        function openModalApp3(sec) {
+                    
+                        renderFilteredTable();
+                    
+                    }
+            
+            
+            
+                    function openModalApp3(sec) {
 
             const pad = (n, s=2) => String(n).padStart(s, '0');
 
@@ -4079,10 +3996,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                     let targetHist = streakInstances[r][colColor];
 
                     if (targetHist) {
-                                            // Use histDuration when in hist mode, else currentDuration — so column filter always matches the active session
-                                            var _activeDurSec = (typeof histModeActive !== 'undefined' && histModeActive && typeof histDuration !== 'undefined' && histDuration > 0)
-                                                ? histDuration
-                                                : (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
+                                            // Use currentDuration — so column filter always matches the active session
+                                                                                        var _activeDurSec = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
                                             var _sessionMaxCol = Math.floor(_activeDurSec / CYCLE);
                     
                                             if (type === 'REV') {
@@ -4222,7 +4137,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 
                 
                 
-                            document.getElementById('instance-info').innerText = (histModeActive ? `VIEWING: SESSION EDGE` : `VIEWING: LIVE EDGE`);
+                            document.getElementById('instance-info').innerText = `VIEWING: LIVE EDGE`;
                             
                                                         document.getElementById('instance-info').style.color = '#00E676';
                 
@@ -4636,34 +4551,22 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                return html;
        
                                            }
-       
-                                         function renderScannerTable(revList, momList, deadList) {
-       
-                                               var revTbody = document.getElementById('peaksTableBodyRev');
-       
-                                               var momTbody = document.getElementById('peaksTableBodyMom');
-       
-                                               if (revTbody) revTbody.innerHTML = _buildScannerRowsHtml(revList);
-       
-                                               if (momTbody) momTbody.innerHTML = _buildScannerRowsHtml(momList);
-       
-                                           }
-
-
-
-        function roundRect(ctx, x, y, w, h, r) {
-
-            if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
-
-            ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-
-            ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); return ctx;
-
-        }
-
-
-
-        function draw() {
+                                                  
+                                                                                    function renderScannerTable(revList, momList, deadList) {
+                                                  
+                                                                                          var revTbody = document.getElementById('peaksTableBodyRev');
+                                                  
+                                                                                          var momTbody = document.getElementById('peaksTableBodyMom');
+                                                  
+                                                                                          if (revTbody) revTbody.innerHTML = _buildScannerRowsHtml(revList);
+                                                  
+                                                                                          if (momTbody) momTbody.innerHTML = _buildScannerRowsHtml(momList);
+                                                  
+                                                                                      }
+                                           
+                                           
+                                           
+                                                   function draw() {
 
             if (timesArray.length === 0) return;
 
@@ -6668,8 +6571,7 @@ let dataList = currentMode === 'REV'
         <script>
 
         window._otWin = null;
-        window._poWin = null;
-        window._drvWin = null;
+                window._drvWin = null;
         function launchBrokers() {
                             window._otWin = window.open('https://olymptrade.com/platform', 'olymptrade');
                                             var btn = document.getElementById('launchBrokersBtn');
@@ -6742,8 +6644,8 @@ let dataList = currentMode === 'REV'
                                 };
         
                 // --- TICK COMPARE APP (ISOLATED EXECUTION CONTEXT) ---
-                (function() {
-                    const WS_URL = 'wss://ws.derivws.com/websockets/v3?app_id=1089';
+                                (function() {
+                                    const WS_URL = 'wss://api.derivws.com/trading/v1/options/ws/public?app_id=1089';
                     const FRX_TICK_PAIRS = [
                                                                 { label:'AUD/CAD', sym:'frxAUDCAD', color:'#00ff88' },
                                                                 { label:'AUD/CHF', sym:'frxAUDCHF', color:'#ffe033' },
