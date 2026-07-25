@@ -1667,7 +1667,7 @@
                     try { localStorage.setItem('aofs_sessionWindow', JSON.stringify({ startMin: sessionWindowStartMin, endMin: sessionWindowEndMin })); } catch(e) {}
                 }
         
-                var SESSION_DIVISORS = [1,2,3,4,5,6,8,9,10,12,15,16,18,20,24,30,32,36,40,45,48,60,72,80,90,96,120,144,160,180,240,288,360,480,720,1440];
+                
         
                 function _fmtIstMin(m) {
                     var istM = ((m + 330) % 1440 + 1440) % 1440;
@@ -1757,18 +1757,7 @@
                 
                                 var _offlineClockTimer = null;
                 
-                                function _goOffline() {
-                                                    _stopEdgeSync();
-                                                    if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
-                                                    if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
-                                                    if (derivWs) { try { derivWs.close(1000, 'session-offline'); } catch(e) {} derivWs = null; }
-                                                    if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
-                                                    if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
-                                                    _stopScanCountdown();
-                                    var oldBoot = document.getElementById('bootOverlay');
-                                    if (oldBoot) oldBoot.remove();
-                                    _showOfflineOverlay();
-                                }
+                                
                 
                                 function _showOfflineOverlay() {
                                                                     var old = document.getElementById('offlineOverlay');
@@ -2456,23 +2445,11 @@
 
 
 
-        function bootStatus(msg) {
-
-            const el = document.getElementById('bootStatusLine');
-
-            if (el) el.textContent = msg;
-
-        }
+        
 
 
 
-        function bootProgress(done, total) {
-
-            const bar = document.getElementById('bootProgressBar');
-
-            if (bar) bar.style.width = `${Math.round((done/total)*100)}%`;
-
-        }
+        
 
 
 
@@ -5571,7 +5548,7 @@ let dataList = currentMode === 'REV'
 
                     const originalText = btnElement.innerText;
 
-                    const originalBg = btnElement.style.background;
+                    
 
                     
 
@@ -5743,13 +5720,7 @@ let dataList = currentMode === 'REV'
 
                 window.systemThemeHex = "#000432";
 
-                function openPersonalizeModal() {
-
-                    document.getElementById('personalize-modalOverlay').style.display = 'block';
-
-                    document.getElementById('personalize-modal').style.display = 'flex';
-
-                }
+                
 
                 function closePersonalizeModal() {
 
@@ -6646,52 +6617,14 @@ let dataList = currentMode === 'REV'
                 // --- TICK COMPARE APP (ISOLATED EXECUTION CONTEXT) ---
                                 (function() {
                                     const WS_URL = 'wss://api.derivws.com/trading/v1/options/ws/public?app_id=1089';
-                    const FRX_TICK_PAIRS = [
-                                                                { label:'AUD/CAD', sym:'frxAUDCAD', color:'#00ff88' },
-                                                                { label:'AUD/CHF', sym:'frxAUDCHF', color:'#ffe033' },
-                                                                { label:'AUD/JPY', sym:'frxAUDJPY', color:'#00eeff' },
-                                                                { label:'AUD/NZD', sym:'frxAUDNZD', color:'#ff9500' },
-                                                                { label:'AUD/USD', sym:'frxAUDUSD', color:'#cc88ff' },
-                                                                { label:'EUR/AUD', sym:'frxEURAUD', color:'#ffcc00' },
-                                                                { label:'EUR/CAD', sym:'frxEURCAD', color:'#8899ff' },
-                                                                { label:'EUR/CHF', sym:'frxEURCHF', color:'#00ffcc' },
-                                                                { label:'EUR/GBP', sym:'frxEURGBP', color:'#44bbff' },
-                                                                { label:'EUR/JPY', sym:'frxEURJPY', color:'#ff44cc' },
-                                                                { label:'EUR/NZD', sym:'frxEURNZD', color:'#33ff66' },
-                                                                { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' },
-                                                                { label:'GBP/AUD', sym:'frxGBPAUD', color:'#dd66ff' },
-                                                                { label:'GBP/CAD', sym:'frxGBPCAD', color:'#ccff00' },
-                                                                { label:'GBP/CHF', sym:'frxGBPCHF', color:'#00ccff' },
-                                                                { label:'GBP/JPY', sym:'frxGBPJPY', color:'#ff4444' },
-                                                                { label:'GBP/NZD', sym:'frxGBPNZD', color:'#ff6688' },
-                                                                { label:'GBP/USD', sym:'frxGBPUSD', color:'#00ff99' },
-                                                                { label:'NZD/JPY', sym:'frxNZDJPY', color:'#44ffbb' },
-                                                                { label:'NZD/USD', sym:'frxNZDUSD', color:'#ff7722' },
-                                                                { label:'USD/CAD', sym:'frxUSDCAD', color:'#00ffaa' },
-                                                                { label:'USD/CHF', sym:'frxUSDCHF', color:'#ff2244' },
-                                                                { label:'USD/JPY', sym:'frxUSDJPY', color:'#ffaa00' },
-                                                                { label:'USD/NOK', sym:'frxUSDNOK', color:'#ff00ff' },
-                                                                { label:'XAG/USD', sym:'frxXAGUSD', color:'#eef0ff' },
-                                                                { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
-                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                                                                                            ];
+                    
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
                                                                                                                                                                                 { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
                                                                                                                                                                                 { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
                                                                                                                                                                             ];
                                             
-                                                                                                                                                                            const DRV_TICK_PAIRS = [
-                                                                                                                                                                                { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
-                                                                                                                                                                                { label:'V15[1s]',  sym:'1HZ15V',  color:'#ffe033' },
-                                                                                                                                                                                { label:'V25[1s]',  sym:'1HZ25V',  color:'#00eeff' },
-                                                                                                                                                                                { label:'V30[1s]',  sym:'1HZ30V',  color:'#ff9500' },
-                                                                                                                                                                                { label:'V50[1s]',  sym:'1HZ50V',  color:'#cc88ff' },
-                                                                                                                                                                                { label:'V75[1s]',  sym:'1HZ75V',  color:'#44bbff' },
-                                                                                                                                                                                { label:'V90[1s]',  sym:'1HZ90V',  color:'#ff44cc' },
-                                                                                                                                                                                { label:'V100[1s]', sym:'1HZ100V', color:'#33ff66' }
-                                                                                                                                                                            ];
+                                                                                                                                                                            
                                                                                                                                                                 
                                                                                                                                                                             let PAIRS = CRY_TICK_PAIRS.slice();
                             
@@ -6864,7 +6797,7 @@ let dataList = currentMode === 'REV'
                         ctx.fillStyle = '#000432';
                         ctx.fillRect(0, 0, W, H);
                         const { lo, hi } = getRange();
-                        const cR = chartRight();
+                        
                         const zeroY = mapY(0, lo, hi);
                         ctx.strokeStyle = '#ff0000';
                         ctx.lineWidth = 2;
