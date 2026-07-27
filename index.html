@@ -7089,7 +7089,7 @@ let dataList = currentMode === 'REV'
                                                         }
                                                     }
                                                     
-                                                    if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
+                                                    if (false && state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen; // Firebase sessionLen override disabled
                                     
                                                     renderFilteredTable();
                                                 }
@@ -7105,7 +7105,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                                                                                                                                 _wpsReady = true;
                                                                                                                                                                                                                                                                                                                                                                                                                 if (_wpsSavePending) wpsSaveNow();
                                                                                                                                                                                     
-                                                                                                                                                                                                        if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
+                                                                                                                                                                                                        if (false && val && val.sessionLen !== undefined && val.sessionLen !== null) { // Firebase sessionLen override disabled — keep hardcoded category defaults (CRY/DRV/MTL=24H, $$$/FRX=12H)
                                                                                                                                                                                                             var _sLen = parseInt(val.sessionLen, 10);
                                                                                                                                                                                                             var _win = _activeCatWindow();
                                                                                                                                                                                                             var _winLen = _win.end - _win.start;
