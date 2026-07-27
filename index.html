@@ -897,46 +897,50 @@
                             }
                     
                             const modeRun = [];
-                    
-                            const modeCount = [];
-                    
-                            const maxLen = Math.max(curRun.length, runPeaks.length);
-                    
-                            for (let s = 1; s < maxLen; s++) {
-                    
-                                const freq = {};
-                                            
-                                                        if (runPeaks[s]) { for (const v of runPeaks[s]) { if (v < 1) continue; freq[v] = (freq[v] || 0) + 1; } }
-                                            
-                                                        const liveLen = curRun[s] || 0;
-                                            
-                                                        if (liveLen >= 1) freq[liveLen] = (freq[liveLen] || 0) + 1;
-                    
-                                const lens = Object.keys(freq);
-                    
-                                if (lens.length === 0) continue;
-                    
-                                let bestLen = 0, bestCount = 0;
-                    
-                                for (const lenStr of lens) {
-                    
-                                    const len = lenStr | 0;
-                    
-                                    const cnt = freq[lenStr];
-                    
-                                    if (cnt > bestCount || (cnt === bestCount && len < bestLen)) { bestCount = cnt; bestLen = len; }
-                    
-                                }
-                    
-                                modeRun[s] = bestLen;
-                    
-                                modeCount[s] = bestCount;
-                    
-                            }
-                    
-                            return { modeRun: modeRun, curRun: curRun, modeCount: modeCount };
-                    
-                        }
+                                    
+                                                        const modeCount = [];
+                                    
+                                                        const freqMap = [];
+                                    
+                                                        const maxLen = Math.max(curRun.length, runPeaks.length);
+                                    
+                                                        for (let s = 1; s < maxLen; s++) {
+                                    
+                                                            const freq = {};
+                                                                        
+                                                                                    if (runPeaks[s]) { for (const v of runPeaks[s]) { if (v < 1) continue; freq[v] = (freq[v] || 0) + 1; } }
+                                                                        
+                                                                                    const liveLen = curRun[s] || 0;
+                                                                        
+                                                                                    if (liveLen >= 1) freq[liveLen] = (freq[liveLen] || 0) + 1;
+                                    
+                                                            const lens = Object.keys(freq);
+                                    
+                                                            if (lens.length === 0) continue;
+                                    
+                                                            let bestLen = 0, bestCount = 0;
+                                    
+                                                            for (const lenStr of lens) {
+                                    
+                                                                const len = lenStr | 0;
+                                    
+                                                                const cnt = freq[lenStr];
+                                    
+                                                                if (cnt > bestCount || (cnt === bestCount && len > bestLen)) { bestCount = cnt; bestLen = len; }
+                                    
+                                                            }
+                                    
+                                                            modeRun[s] = bestLen;
+                                    
+                                                            modeCount[s] = bestCount;
+                                    
+                                                            freqMap[s] = freq;
+                                    
+                                                        }
+                                    
+                                                        return { modeRun: modeRun, curRun: curRun, modeCount: modeCount, freqMap: freqMap };
+                                    
+                                                    }
 
 
 
@@ -1218,12 +1222,14 @@
                                         const colColor = ci === 0 ? 'G' : 'R';
                 
                                         const gapMap      = ci === 0 ? gapDataG.modeRun   : gapDataR.modeRun;
-                                                                                                                                        
-                                                                                                                const curGapMap   = ci === 0 ? gapDataG.curRun    : gapDataR.curRun;
-                                                                                                                                        
-                                                                                                                const gapCountMap = ci === 0 ? gapDataG.modeCount : gapDataR.modeCount;
-                                                        
-                                                                                const cum = applyCumulative(raw, maxS);
+                                                                                                                                                                                
+                                                                                                                                                        const curGapMap   = ci === 0 ? gapDataG.curRun    : gapDataR.curRun;
+                                                                                                                                                                                
+                                                                                                                                                        const gapCountMap = ci === 0 ? gapDataG.modeCount : gapDataR.modeCount;
+                                                                                                                                                                                
+                                                                                                                                                        const gapFreqMapAll = ci === 0 ? gapDataG.freqMap : gapDataR.freqMap;
+                                                                                                
+                                                                                                                        const cum = applyCumulative(raw, maxS);
                                                         
                                                             
                                                         
@@ -1246,14 +1252,16 @@
                                                                                     const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
                                                         
                                                                                     const gap = gapMap[s] || 0;
+                                                                                                                                                                                        
+                                                                                                                                                                                                                    const curGap = curGapMap[s] || 0;
+                                                                                                                                                                                        
+                                                                                                                                                                                                                    const gapCount = (gapCountMap && gapCountMap[s]) || 0;
+                                                                                                                                                                                        
+                                                                                                                                                                                                                    const gapFreq = (gapFreqMapAll && gapFreqMapAll[s]) || {};
+                                                                                                                                                                                        
+                                                                                                                                                                                                                    revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap, gapCount, gapFreq });
                                                                                                     
-                                                                                                                                const curGap = curGapMap[s] || 0;
-                                                                                                    
-                                                                                                                                const gapCount = (gapCountMap && gapCountMap[s]) || 0;
-                                                                                                    
-                                                                                                                                revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap, gapCount });
-                
-                                            if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
+                                                                                                                                if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
                 
                                         }
                 
@@ -1319,7 +1327,7 @@
                 
                         var PAIRS_BY_CAT = {
                                                                                             'CRY': [
-                                                                                                                                                                                            "cryBTCUSD", "cryETHUSD"
+                                                                                                                                                                                            "cryBTCUSD"
                                                                                                                                                                                         ],
                                                                                                                                                                                         '$$$': [
                                                                                                                                                                                             "frxEURUSD"
@@ -1351,7 +1359,7 @@
                                                                                                                                                 function _applyCatSessionWindow(cat) {
                                                                                                                                                                                                                                                                                                     var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
                                                                                                                                                                                                                                                                                                     var winLen = win.end - win.start;
-                                                                                                                                                                                                                                                                                                    var preferredLen = (cat === 'FRX' || cat === '$$$') ? 720 : 1440;
+                                                                                                                                                                                                                                                                                                    var preferredLen = (cat === 'CRY') ? 1440 : (cat === '$$$') ? 720 : (cat === 'FRX') ? 720 : 1440;
                                                                                                                                                                                                                                                                                                                                                                                                                                                         var defaultLen = (winLen % preferredLen === 0) ? preferredLen : winLen;
                                                                                                                                                                                                                                                                                                     var nowMin = _currentUtcMinuteOfDay();
                                                                                                                                                     var maxIdx = Math.max(0, Math.floor(winLen / defaultLen) - 1);
@@ -1419,9 +1427,8 @@
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
                                                             _tickPairs = [
-                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                            ];
+                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
+                                                                                                                                                                                        ];
                                                                                                                         } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
@@ -4468,23 +4475,29 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                    var selStyle = isSelected ? ' border-left: 2px solid #FFD700 !important; background: rgba(255,215,0,0.08) !important;' : '';
        
                                                    var gapVal = data.gap || 0;
-       
-                                                   var curGapVal = data.curGap || 0;
-       
-                                                   var gapCountVal = data.gapCount || 0;
-       
-                                                   var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
-       
-                                                   html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
-                                         <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
-                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
-                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
-                                         <td style="width:14%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
-                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
-                                         <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
-                                         <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor};">F${gapVal}-${gapCountVal}</td>
-                                         <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
-                                         </tr>`;
+                                                          
+                                                                                                      var curGapVal = data.curGap || 0;
+                                                          
+                                                                                                      var gapCountVal = data.gapCount || 0;
+                                                          
+                                                                                                      var gapFreqObj = data.gapFreq || {};
+                                                          
+                                                                                                      var gapFreqStr = Object.keys(gapFreqObj).map(function(k){ return parseInt(k,10); }).sort(function(a,b){ return a-b; }).map(function(len){ return 'F'+len+'-'+gapFreqObj[len]; }).join('   ');
+                                                          
+                                                                                                      if (!gapFreqStr) gapFreqStr = 'F'+gapVal+'-'+gapCountVal;
+                                                          
+                                                                                                      var gapColor = gapVal >= 3 ? '#FFD700' : (isRed ? 'var(--accent-red)' : 'var(--accent-green)');
+                                                          
+                                                                                                      html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
+                                                                                            <td style="width:16%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
+                                                                                            <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
+                                                                                            <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
+                                                                                            <td style="width:14%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
+                                                                                            <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
+                                                                                            <td style="width:9%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
+                                                                                            <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center; color:${gapColor}; cursor:help;" title="${gapFreqStr}">F${gapVal}-${gapCountVal}</td>
+                                                                                            <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
+                                                                                            </tr>`;
        
                                                });
        
@@ -6583,9 +6596,8 @@ let dataList = currentMode === 'REV'
                     
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                            ];
+                                                                                                                                                                                                                                                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
+                                                                                                                                                                                                                                                                                                                                                        ];
                                             
                                                                                                                                                                             
                                                                                                                                                                 
