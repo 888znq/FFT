@@ -408,7 +408,7 @@
                                                                                                                                                                                                                 <div style="grid-column: span 2; display:flex; gap:3px;">
                                                                                                                                                                                                                                                                                                                         
                                                                                                                                                                                                                                                                                                                                                                                                                                     <button id="showAllBtn" onclick="resetToAllPairs()" style="display:none; flex:0.6; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">ALL</button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                    <button id="hidePairsBtn" onclick="openHidePairsModal()" style="display:flex; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">HIDE PAIRS</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                    <button id="hidePairsBtn" onclick="openHidePairsModal()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">HIDE PAIRS</button>
                                                                                                                                                                                                                                                                                                                         
                                                                                                                                                                                                                                                                                                                                                                                     <button id="launchBrokersBtn" onclick="launchBrokers()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">▶ OLYMPTRADE</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <button id="launchDerivBtn" onclick="launchDerivTerminal()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">▶ DERIV</button>
@@ -420,7 +420,8 @@
                                                     <!-- ROW 0: BROKER FIRE TOGGLE (full width) -->
                                                                                                                                                                                                                 <div style="grid-column: span 2; display:flex; gap:3px;">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     <button id="fireToggleBtn" onclick="toggleBrokerFire()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">🔥 FIRE: ON</button>
-                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <button id="audioToggleBtn" onclick="toggleAudioAlerts()" style="display:flex; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">🔊 AUDIO: ON</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
                                                     
                                                                                                         <!-- ROW 1: CAT TOGGLE (full width) -->
                                                                                                                                                                                                                 
@@ -1434,22 +1435,21 @@
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
                                                                                                                             ];
                                                                                                                         } else if (cat === 'DRV') {
-                                                                                                                    _tickPairs = [
-                                                                                                                        { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
-                                                                                                                        { label:'V15[1s]',  sym:'1HZ15V',  color:'#ffe033' },
-                                                                                                                        { label:'V25[1s]',  sym:'1HZ25V',  color:'#00eeff' },
-                                                                                                                        { label:'V30[1s]',  sym:'1HZ30V',  color:'#ff9500' },
-                                                                                                                        { label:'V50[1s]',  sym:'1HZ50V',  color:'#cc88ff' },
-                                                                                                                        { label:'V75[1s]',  sym:'1HZ75V',  color:'#44bbff' },
-                                                                                                                        { label:'V90[1s]',  sym:'1HZ90V',  color:'#ff44cc' },
-                                                                                                                        { label:'V100[1s]', sym:'1HZ100V', color:'#33ff66' }
-                                                                                                                    ];
-                                                                                                                } else if (cat === 'MTL') {
-                                                                                                                    _tickPairs = [
-                                                                                                                        { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
-                                                                                                                        { label:'XAG/USD', sym:'frxXAGUSD', color:'#eef0ff' }
-                                                                                                                    ];
-                                                                                                                } else {
+                                                                                                                                                                                            _tickPairs = [
+                                                                                                                                                                                                { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
+                                                                                                                                                                                                { label:'V15[1s]',  sym:'1HZ15V',  color:'#ffe033' },
+                                                                                                                                                                                                { label:'V25[1s]',  sym:'1HZ25V',  color:'#00eeff' },
+                                                                                                                                                                                                { label:'V30[1s]',  sym:'1HZ30V',  color:'#ff9500' },
+                                                                                                                                                                                                { label:'V50[1s]',  sym:'1HZ50V',  color:'#cc88ff' },
+                                                                                                                                                                                                { label:'V75[1s]',  sym:'1HZ75V',  color:'#44bbff' },
+                                                                                                                                                                                                { label:'V90[1s]',  sym:'1HZ90V',  color:'#ff44cc' },
+                                                                                                                                                                                                { label:'V100[1s]', sym:'1HZ100V', color:'#33ff66' }
+                                                                                                                                                                                            ];
+                                                                                                                                                                                        } else if (cat === 'MTL') {
+                                                                                                                                                                                            _tickPairs = [
+                                                                                                                                                                                                { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' }
+                                                                                                                                                                                            ];
+                                                                                                                                                                                        } else {
                                                                                                                     _tickPairs = [
                                                                                                                         { label:'AUD/CAD', sym:'frxAUDCAD', color:'#00ff88' },
                                                                                                                         { label:'AUD/CHF', sym:'frxAUDCHF', color:'#ffe033' },
@@ -4922,9 +4922,38 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
-        let _beepAC = null;
-
-        function _getAC() {
+        var audioAlertsEnabled = true;
+        
+                function toggleAudioAlerts() {
+                            audioAlertsEnabled = !audioAlertsEnabled;
+                            var btn = document.getElementById('audioToggleBtn');
+                            if (btn) {
+                                btn.textContent = audioAlertsEnabled ? '🔊 AUDIO: ON' : '🔇 AUDIO: OFF';
+                                btn.style.color = audioAlertsEnabled ? '#FFFFFF' : 'var(--accent-red)';
+                                btn.style.borderColor = audioAlertsEnabled ? '#FFFFFF' : 'var(--accent-red)';
+                                btn.style.background = audioAlertsEnabled ? 'var(--bg-base)' : 'rgba(230,57,70,0.18)';
+                            }
+                            if (!audioAlertsEnabled) _stopAllBeeps();
+                        }
+                
+                        function _wpsFixAudioBtnVisibility() {
+                            var _abtn = document.getElementById('audioToggleBtn');
+                            if (!_abtn || _abtn.dataset.relocated) return;
+                            _abtn.dataset.relocated = '1';
+                            _abtn.style.display = 'flex';
+                            var _row = document.createElement('div');
+                            _row.style.cssText = 'grid-column: span 2; display:flex; gap:3px;';
+                            _abtn.parentNode && _abtn.parentNode.removeChild(_abtn);
+                            _row.appendChild(_abtn);
+                            var _console = document.getElementById('trade-console');
+                            if (_console) _console.appendChild(_row);
+                        }
+                        document.addEventListener('DOMContentLoaded', _wpsFixAudioBtnVisibility);
+                        window.addEventListener('load', _wpsFixAudioBtnVisibility);
+                
+                        let _beepAC = null;
+        
+                function _getAC() {
 
             if (!_beepAC) _beepAC = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -4941,10 +4970,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         });
 
         function _beep(freq, dur, vol, type, offset) {
-
-            try {
-
-                const ac = _getAC(); const t = ac.currentTime + (offset || 0);
+        
+                    if (!audioAlertsEnabled) return;
+        
+                    try {
+        
+                        const ac = _getAC(); const t = ac.currentTime + (offset || 0);
 
                 const osc = ac.createOscillator(); const gain = ac.createGain();
 
