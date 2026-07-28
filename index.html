@@ -1337,8 +1337,8 @@
                                                                                                 "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"
                                                                                             ],
                                                                                             'MTL': [
-                                                                                                "frxXAUUSD", "frxXAGUSD"
-                                                                                            ],
+                                                                                                                                                                                            "frxXAUUSD"
+                                                                                                                                                                                        ],
                                                                                             'FRX': [
                                                                                                                                             "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
                                                                                                                                             "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY",
@@ -1351,7 +1351,7 @@
                                         
                                                 var CAT_SESSION_WINDOWS = {
                                                                                                                                                                                                     'FRX': { start: 300, end: 1020 },
-                                                                                                                                                                                                    '$$$': { start: 300, end: 1020 },
+                                                                                                                                                                                                    '$$$': { start: 0,   end: 1440 },
                                                                                                                                                                                                     'CRY': { start: 0,   end: 1440 },
                                                                                                                                                                                                     'DRV': { start: 0,   end: 1440 },
                                                                                                                                                                                                     'MTL': { start: 0,   end: 1440 }
@@ -1360,7 +1360,7 @@
                                                                                                                                                 function _applyCatSessionWindow(cat) {
                                                                                                                                                                                                                                                                                                     var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
                                                                                                                                                                                                                                                                                                     var winLen = win.end - win.start;
-                                                                                                                                                                                                                                                                                                    var preferredLen = (cat === 'CRY') ? 1440 : (cat === '$$$') ? 720 : (cat === 'FRX') ? 720 : 1440;
+                                                                                                                                                                                                                                                                                                    var preferredLen = (cat === 'CRY') ? 1440 : (cat === '$$$') ? 1440 : (cat === 'FRX') ? 720 : 1440;
                                                                                                                                                                                                                                                                                                                                                                                                                                                         var defaultLen = (winLen % preferredLen === 0) ? preferredLen : winLen;
                                                                                                                                                                                                                                                                                                     var nowMin = _currentUtcMinuteOfDay();
                                                                                                                                                     var maxIdx = Math.max(0, Math.floor(winLen / defaultLen) - 1);
