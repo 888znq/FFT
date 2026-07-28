@@ -1314,9 +1314,15 @@
                     "1HZ75V":  "V75[1s]",
                     "1HZ90V":  "V90[1s]",
                     "1HZ100V": "V100[1s]"
-                };
-        
-                function getPairDisplayName(pair) {
+                                    };
+                    
+                                    var BINANCE_SYMBOL_MAP = {
+                                        "cryETHUSD": "ETHUSDT",
+                                        "cryLTCUSD": "LTCUSDT"
+                                    };
+                                    function isBinancePair(pair) { return !!BINANCE_SYMBOL_MAP[pair]; }
+                            
+                                    function getPairDisplayName(pair) {
                 
                                     if (DRV_DISPLAY[pair]) return DRV_DISPLAY[pair];
                                     return pair.replace(/^(frx|cry|1HZ)/i, '');
@@ -1327,7 +1333,7 @@
                 
                         var PAIRS_BY_CAT = {
                                                                                             'CRY': [
-                                                                                                                                                                                                                                                                                        "cryBTCUSD", "cryETHUSD"
+                                                                                                                                                                                                                                                                                        "cryBTCUSD", "cryETHUSD", "cryLTCUSD"
                                                                                                                                                                                                                                                                                     ],
                                                                                                                                                                                         '$$$': [
                                                                                                                                                                                             "frxEURUSD"
@@ -1426,11 +1432,12 @@
                                                     if (typeof window.mmtSetPairs === 'function') {
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
-                                                                                                                    _tickPairs = [
-                                                                                                                                                                                    { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                                                                    { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                                                                                                ];
-                                                                                                                                                                                } else if (cat === '$$$') {
+                                                                                                                                                                            _tickPairs = [
+                                                                                                                                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                            { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                                                                                                                                            { label:'LTC/USD', sym:'cryLTCUSD', color:'#345d9d' }
+                                                                                                                                                                                                                                                                                                        ];
+                                                                                                                                                                                                                                        } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
                                                                                                                             ];
@@ -1477,11 +1484,12 @@
                                                                                                                         { label:'USD/JPY', sym:'frxUSDJPY', color:'#ffaa00' },
                                                                                                                         { label:'USD/NOK', sym:'frxUSDNOK', color:'#ff00ff' },
                                                                                                                         { label:'XAG/USD', sym:'frxXAGUSD', color:'#eef0ff' },
-                                                                                                                        { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
-                                                                                                                        { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                        { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                    ];
-                                                                                                                }
+                                                                                                                                                                                                                                                { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
+                                                                                                                                                                                                                                                { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                                { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                                                                                                                                                { label:'LTC/USD', sym:'cryLTCUSD', color:'#345d9d' }
+                                                                                                                                                                                                                                            ];
+                                                                                                                                                                                                                                        }
                                                         window.mmtSetPairs(_tickPairs);
                                                     }
                                         
@@ -1782,7 +1790,8 @@
                                                     _stopEdgeSync();
                                                     if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
                                                     if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
-                                                    if (derivWs) { try { derivWs.close(1000, 'session-switch'); } catch(e) {} derivWs = null; }
+                                                                                                        if (derivWs) { try { derivWs.close(1000, 'session-switch'); } catch(e) {} derivWs = null; }
+                                                                                                        stopBinanceLiveSync();
                                                     if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
                                                     if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
                     globalRevs = []; globalMoms = []; globalDethroned = [];
@@ -1813,8 +1822,44 @@
                 }
 
         let derivWs = null;
-        
-                let autoScanInterval = null;
+                        let binanceWs = null;
+                
+                        function startBinanceLiveSync() {
+                            if (binanceWs) { try { binanceWs.close(); } catch(e) {} binanceWs = null; }
+                            var symList = PAIRS_BY_CAT[activeCat].filter(function(p) { return isBinancePair(p); });
+                            if (symList.length === 0) return;
+                            var symToPair = {};
+                            var streams = symList.map(function(p) {
+                                var sym = BINANCE_SYMBOL_MAP[p].toLowerCase();
+                                symToPair[sym] = p;
+                                return sym + '@trade';
+                            }).join('/');
+                            var url = 'wss://stream.binance.com:9443/stream?streams=' + streams;
+                            binanceWs = new WebSocket(url);
+                            binanceWs.onmessage = function(msg) {
+                                try {
+                                    var payload = JSON.parse(msg.data);
+                                    var d = payload.data;
+                                    if (!d || !d.s || d.p === undefined) return;
+                                    var pair = symToPair[d.s.toLowerCase()];
+                                    if (!pair) return;
+                                    var epochSec = Math.floor(d.T / 1000);
+                                    var price = parseFloat(d.p);
+                                    globalTickCount++;
+                                    document.getElementById('liveTickDisplay').innerText = globalTickCount.toLocaleString();
+                                    injectLiveTick(pair, epochSec, price);
+                                } catch(e) {}
+                            };
+                            binanceWs.onclose = function(evt) {
+                                if (evt.code !== 1000) setTimeout(startBinanceLiveSync, 5000);
+                            };
+                        }
+                
+                        function stopBinanceLiveSync() {
+                            if (binanceWs) { try { binanceWs.close(1000, 'session-switch'); } catch(e) {} binanceWs = null; }
+                        }
+                
+                        let autoScanInterval = null;
         
                 function _getReferenceDayOffset() {
                                                     if (activeCat !== 'MTL' && activeCat !== 'FRX' && activeCat !== '$$$') return 0;
@@ -2321,14 +2366,105 @@
                         }
                         
                         const { times, prices } = buildGrid(tickMap, startTs, endTs);
-                        await aofs_write(pair, dateStr, times, prices);
-                        return { times, prices };
-
-        }
-
-
-
-        // EDGE SYNC: the boot-time closer above can still leave a few seconds unfetched (network
+                                                await aofs_write(pair, dateStr, times, prices);
+                                                return { times, prices };
+                        
+                                }
+                        
+                                async function fetchBinanceKlineChunk(symbol, startSec, endSec) {
+                                    var url = 'https://api.binance.com/api/v3/klines?symbol=' + symbol + '&interval=1s&startTime=' + (startSec * 1000) + '&endTime=' + (endSec * 1000) + '&limit=1000';
+                                    try {
+                                        var resp = await fetch(url);
+                                        if (!resp.ok) return {};
+                                        var rows = await resp.json();
+                                        var map = {};
+                                        for (var i = 0; i < rows.length; i++) {
+                                            var openSec = Math.floor(rows[i][0] / 1000);
+                                            map[openSec] = parseFloat(rows[i][4]);
+                                        }
+                                        return map;
+                                    } catch (e) { return {}; }
+                                }
+                        
+                                async function fetchBinanceGrid(pair, dateStr, startTs, endTs) {
+                                    var symbol = BINANCE_SYMBOL_MAP[pair];
+                                    var name = getPairDisplayName(pair);
+                        
+                                    var cached = await aofs_read(pair, dateStr);
+                                    var tickMap = {};
+                        
+                                    if (cached && cached.times.length > 0) {
+                                        tickMap = gridsToTickMap(cached.times, cached.prices, startTs);
+                                    }
+                        
+                                    var nowTs = Math.floor(Date.now() / 1000);
+                                    var fetchEnd = Math.min(endTs, nowTs);
+                        
+                                    var chunksToFetch = [];
+                                    var gapStart = -1;
+                                    var GAP_THRESHOLD = Math.min(120, CYCLE);
+                        
+                                    for (var s = startTs; s <= fetchEnd; s++) {
+                                        if (tickMap[s] === undefined) {
+                                            if (gapStart === -1) gapStart = s;
+                                        } else {
+                                            if (gapStart !== -1) {
+                                                if ((s - 1) - gapStart >= GAP_THRESHOLD) chunksToFetch.push({ s: gapStart, e: s - 1 });
+                                                gapStart = -1;
+                                            }
+                                        }
+                                    }
+                        
+                                    var sessionIsLive = (fetchEnd >= Math.floor(Date.now() / 1000) - 120);
+                                    if (gapStart !== -1 && sessionIsLive) chunksToFetch.push({ s: gapStart, e: fetchEnd });
+                                    if (chunksToFetch.length === 0 && (!cached || !cached.prices || cached.prices.length === 0)) {
+                                        chunksToFetch.push({ s: startTs, e: fetchEnd });
+                                    }
+                        
+                                    var finalChunks = [];
+                                    var CHUNK = 999;
+                                    chunksToFetch.forEach(function(gap) {
+                                        for (var s2 = gap.s; s2 <= gap.e; s2 += CHUNK + 1) {
+                                            finalChunks.push({ s: s2, e: Math.min(s2 + CHUNK, gap.e) });
+                                        }
+                                    });
+                        
+                                    if (finalChunks.length > 0) {
+                                        bootLog(name + ' — found ' + finalChunks.length + ' gap(s) via Binance. Backfilling...', '#FFD700');
+                                        var WORKERS = 6;
+                                        for (var i = 0; i < finalChunks.length; i += WORKERS) {
+                                            var batch = finalChunks.slice(i, i + WORKERS);
+                                            var batchResults = await Promise.all(batch.map(function(c) { return fetchBinanceKlineChunk(symbol, c.s, c.e); }));
+                                            batchResults.forEach(function(map) { Object.assign(tickMap, map); });
+                                            await new Promise(function(r) { setTimeout(r, 250); });
+                                        }
+                                    } else {
+                                        bootLog(name + ' — fully cached (Binance), no gaps found', '#555');
+                                    }
+                        
+                                    if (window.liveTickBuffer && window.liveTickBuffer[pair]) Object.assign(tickMap, window.liveTickBuffer[pair]);
+                        
+                                    if (sessionIsLive) {
+                                        var closerFrom = fetchEnd + 1;
+                                        for (var pass = 0; pass < 3; pass++) {
+                                            if (window.liveTickBuffer && window.liveTickBuffer[pair]) Object.assign(tickMap, window.liveTickBuffer[pair]);
+                                            var trueNowTs = Math.min(endTs, Math.floor(Date.now() / 1000));
+                                            if (closerFrom > trueNowTs) break;
+                                            var closerMap = await fetchBinanceKlineChunk(symbol, closerFrom, trueNowTs);
+                                            if (Object.keys(closerMap).length > 0) Object.assign(tickMap, closerMap);
+                                            closerFrom = trueNowTs + 1;
+                                        }
+                                        if (window.liveTickBuffer && window.liveTickBuffer[pair]) Object.assign(tickMap, window.liveTickBuffer[pair]);
+                                    }
+                        
+                                    var built = buildGrid(tickMap, startTs, endTs);
+                                    await aofs_write(pair, dateStr, built.times, built.prices);
+                                    return { times: built.times, prices: built.prices };
+                                }
+                        
+                        
+                        
+                                // EDGE SYNC: the boot-time closer above can still leave a few seconds unfetched (network
                 // latency between its last "now" snapshot and this function actually returning). Nothing
                 // used to revisit that sliver afterward, so it stayed X0 for the rest of the session instead
                 // of syncing up. This keeps checking the live edge of the active pair and patches it live.
@@ -2367,10 +2503,10 @@
                     if (gapStart === -1) return;
         
                     _edgeSyncBusy[pair] = true;
-                    try {
-                        var sTs = currentStartTsUtc + gapStart;
-                        var eTs = currentStartTsUtc + gapEnd;
-                        var patch = await fetchChunk(pair, sTs, eTs);
+                                        try {
+                                            var sTs = currentStartTsUtc + gapStart;
+                                            var eTs = currentStartTsUtc + gapEnd;
+                                            var patch = isBinancePair(pair) ? await fetchBinanceKlineChunk(BINANCE_SYMBOL_MAP[pair], sTs, eTs) : await fetchChunk(pair, sTs, eTs);
                         if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
                             Object.assign(patch, window.liveTickBuffer[pair]);
                         }
@@ -2655,14 +2791,16 @@
         
 
                         try {
-
-                            var { times, prices } = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
-
-                            allPairData[pair].times  = times;
-
-                            allPairData[pair].prices = prices;
-
-                            _bootPairState[pair] = 'done';
+                        
+                                                    var { times, prices } = isBinancePair(pair)
+                                                        ? await fetchBinanceGrid(pair, ctxState.dateStr, startTs, endTs)
+                                                        : await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                        
+                                                    allPairData[pair].times  = times;
+                        
+                                                    allPairData[pair].prices = prices;
+                        
+                                                    _bootPairState[pair] = 'done';
 
         
 
@@ -2760,14 +2898,15 @@
 
 
                     const subscribeToTicks = () => {
-                                                                var _lsActivePairs = PAIRS_BY_CAT[activeCat].slice();
-                        _lsActivePairs.forEach(function(pair, idx) {
-                            setTimeout(function() {
-                                if (derivWs && derivWs.readyState === WebSocket.OPEN)
-                                    derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
-                            }, idx * 100);
-                        });
-                    };
+                                                                                    var _lsActivePairs = PAIRS_BY_CAT[activeCat].slice().filter(function(p) { return !isBinancePair(p); });
+                                            _lsActivePairs.forEach(function(pair, idx) {
+                                                setTimeout(function() {
+                                                    if (derivWs && derivWs.readyState === WebSocket.OPEN)
+                                                        derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
+                                                }, idx * 100);
+                                            });
+                                            startBinanceLiveSync();
+                                        };
 
                     derivWs.onopen = () => {
 
@@ -6597,9 +6736,10 @@ let dataList = currentMode === 'REV'
                     
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ];
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { label:'LTC/USD', sym:'cryLTCUSD', color:'#345d9d' }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ];
                                             
                                                                                                                                                                             
                                                                                                                                                                 
