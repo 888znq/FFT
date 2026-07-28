@@ -1328,8 +1328,8 @@
                 
                         var PAIRS_BY_CAT = {
                                                                                             'CRY': [
-                                                                                                                                                                                                                                                                                        "cryBTCUSD", "cryETHUSD"
-                                                                                                                                                                                                                                                                                    ],
+                                                                                                                                                                                                                                                                                                                                                                                    "cryBTCUSD", "cryETHUSD", "cryLTCUSD"
+                                                                                                                                                                                                                                                                                                                                                                                ],
                                                                                                                                                                                         '$$$': [
                                                                                                                                                                                             "frxEURUSD"
                                                                                                                                                                                         ],
@@ -1427,11 +1427,12 @@
                                                     if (typeof window.mmtSetPairs === 'function') {
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
-                                                                                                                    _tickPairs = [
-                                                                                                                                                                                    { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                                                                    { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                                                                                                ];
-                                                                                                                                                                                } else if (cat === '$$$') {
+                                                                                                                                                                            _tickPairs = [
+                                                                                                                                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                            { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                                                                                                                                            { label:'LTC/USD', sym:'cryLTCUSD', color:'#345d9d' }
+                                                                                                                                                                                                                                                                                                        ];
+                                                                                                                                                                                                                                        } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
                                                                                                                             ];
@@ -1482,18 +1483,123 @@
                                                                                                                         { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
                                                                                                                     ];
                                                                                                                 }
-                                                        window.mmtSetPairs(_tickPairs);
-                                                    }
-                                        
-                                                    _triggerLiveReboot();
-                                                }
+                                                        window.mmtSetPairs(_tickPairs, cat === 'CRY');
+                                                                                                            }
+                                                                                                
+                                                                                                            _triggerLiveReboot();
+                                                                                                        }
 
     
 
         var allPairData = {};
-                                                var activePair = "cryBTCUSD";
+                                                        var activePair = "cryBTCUSD";
+                
+                                var activePairs = null;
         
-                        var activePairs = null;
+                // ── BINANCE PUBLIC API BRIDGE (CRY category only) ──
+                function _isCryPair(pair) {
+                    return PAIRS_BY_CAT['CRY'].indexOf(pair) !== -1;
+                }
+                function _binanceSymbol(pair) {
+                    return pair.replace(/^cry/i, '').toUpperCase() + 'T';
+                }
+                async function _binanceKlineChunk(pair, segStart, segEnd) {
+                    var sym = _binanceSymbol(pair);
+                    var map = {};
+                    var from = segStart;
+                    while (from <= segEnd) {
+                        var to = Math.min(from + 999, segEnd);
+                        var url = 'https://api.binance.com/api/v3/klines?symbol=' + sym + '&interval=1s&startTime=' + (from * 1000) + '&endTime=' + (to * 1000 + 999) + '&limit=1000';
+                        try {
+                            var resp = await fetch(url);
+                            if (resp.ok) {
+                                var rows = await resp.json();
+                                for (var i = 0; i < rows.length; i++) {
+                                    var openSec = Math.floor(rows[i][0] / 1000);
+                                    map[openSec] = parseFloat(rows[i][4]);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ BINANCE CHUNK ERROR [' + sym + ']: ' + e.message);
+                        }
+                        from = to + 1;
+                    }
+                    return map;
+                }
+                async function fetchBinanceGrid(pair, dateStr, startTs, endTs) {
+                    var name = getPairDisplayName(pair);
+                    var cached = await aofs_read(pair, dateStr);
+                    var tickMap = {};
+                    if (cached && cached.times.length > 0) {
+                        tickMap = gridsToTickMap(cached.times, cached.prices, startTs);
+                    }
+                    var nowTs = Math.floor(Date.now() / 1000);
+                    var fetchEnd = Math.min(endTs, nowTs);
+                    var chunksToFetch = [];
+                    var gapStart = -1;
+                    var GAP_THRESHOLD = Math.min(120, CYCLE);
+                    for (var s = startTs; s <= fetchEnd; s++) {
+                        if (tickMap[s] === undefined) {
+                            if (gapStart === -1) gapStart = s;
+                        } else {
+                            if (gapStart !== -1) {
+                                if ((s - 1) - gapStart >= GAP_THRESHOLD) chunksToFetch.push({ s: gapStart, e: s - 1 });
+                                gapStart = -1;
+                            }
+                        }
+                    }
+                    var sessionIsLive = (fetchEnd >= Math.floor(Date.now() / 1000) - 120);
+                    if (gapStart !== -1 && sessionIsLive) chunksToFetch.push({ s: gapStart, e: fetchEnd });
+                    if (chunksToFetch.length === 0 && (!cached || !cached.prices || cached.prices.length === 0)) {
+                        chunksToFetch.push({ s: startTs, e: fetchEnd });
+                    }
+                    if (chunksToFetch.length > 0) {
+                        var totalGapSecs = chunksToFetch.reduce(function(acc, c) { return acc + (c.e - c.s); }, 0);
+                        bootLog(name + ' — found ' + chunksToFetch.length + ' gap(s) totalling ~' + totalGapSecs + 's. Backfilling via Binance...', '#FFD700');
+                        for (var ci = 0; ci < chunksToFetch.length; ci++) {
+                            var gap = chunksToFetch[ci];
+                            var got = await _binanceKlineChunk(pair, gap.s, gap.e);
+                            Object.assign(tickMap, got);
+                            bootLog(name + ' — chunk ' + (ci + 1) + '/' + chunksToFetch.length + ': ' + Object.keys(got).length + ' ticks OK', '#00B0FF');
+                        }
+                    } else {
+                        bootLog(name + ' — fully cached, no gaps found', '#555');
+                    }
+                    if (window.liveTickBuffer && window.liveTickBuffer[pair]) Object.assign(tickMap, window.liveTickBuffer[pair]);
+                    if (sessionIsLive) {
+                        var trueNowTs = Math.min(endTs, Math.floor(Date.now() / 1000));
+                        var closeFrom = fetchEnd + 1 > trueNowTs ? trueNowTs : fetchEnd + 1;
+                        var closerMap = await _binanceKlineChunk(pair, closeFrom, trueNowTs);
+                        Object.assign(tickMap, closerMap);
+                        if (window.liveTickBuffer && window.liveTickBuffer[pair]) Object.assign(tickMap, window.liveTickBuffer[pair]);
+                    }
+                    var built = buildGrid(tickMap, startTs, endTs);
+                    await aofs_write(pair, dateStr, built.times, built.prices);
+                    return built;
+                }
+                var binanceWs = null;
+                function startBinanceLiveSync() {
+                    if (binanceWs) { try { binanceWs.close(1000, 'restart'); } catch(e) {} binanceWs = null; }
+                    var streams = PAIRS_BY_CAT['CRY'].map(function(p) { return _binanceSymbol(p).toLowerCase() + '@trade'; }).join('/');
+                    binanceWs = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
+                    binanceWs.onmessage = function(msg) {
+                        try {
+                            var payload = JSON.parse(msg.data);
+                            var d = payload.data;
+                            if (!d || !d.s) return;
+                            var pair = 'cry' + d.s.replace(/T$/i, '');
+                            var epochSec = Math.floor(d.T / 1000);
+                            var price = parseFloat(d.p);
+                            globalTickCount++;
+                            document.getElementById('liveTickDisplay').innerText = globalTickCount.toLocaleString();
+                            injectLiveTick(pair, epochSec, price);
+                        } catch(e) {}
+                    };
+                    binanceWs.onclose = function(evt) {
+                        if (evt.code !== 1000 && activeCat === 'CRY') setTimeout(startBinanceLiveSync, 5000);
+                    };
+                    setupAutoScan();
+                }
 
 
 
@@ -1783,7 +1889,8 @@
                                                     if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
                                                     if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
                                                     if (derivWs) { try { derivWs.close(1000, 'session-switch'); } catch(e) {} derivWs = null; }
-                                                    if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
+                                                                                                        if (binanceWs) { try { binanceWs.close(1000, 'session-switch'); } catch(e) {} binanceWs = null; }
+                                                                                                        if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
                                                     if (typeof _stopAllBeeps === 'function') _stopAllBeeps();
                     globalRevs = []; globalMoms = []; globalDethroned = [];
                     scanPending = 0; scanQueue = [];
@@ -2369,8 +2476,8 @@
                     _edgeSyncBusy[pair] = true;
                     try {
                         var sTs = currentStartTsUtc + gapStart;
-                        var eTs = currentStartTsUtc + gapEnd;
-                        var patch = await fetchChunk(pair, sTs, eTs);
+                                                var eTs = currentStartTsUtc + gapEnd;
+                                                var patch = _isCryPair(pair) ? await _binanceKlineChunk(pair, sTs, eTs) : await fetchChunk(pair, sTs, eTs);
                         if (window.liveTickBuffer && window.liveTickBuffer[pair]) {
                             Object.assign(patch, window.liveTickBuffer[pair]);
                         }
@@ -2560,13 +2667,17 @@
                     // INSTANT LIVE: Start capturing live ticks to memory BEFORE heavy backfills begin
                     
                                         if (ctxState.isLive) {
-                    
-                                            bootLog(`[INSTANT LIVE] Connecting to Deriv stream early to bridge gap...`, '#D500F9');
-                    
-                                            startLiveSync();
-                                            _startEdgeSync();
-                    
-                                        }
+                                                            
+                                                                                    if (activeCat === 'CRY') {
+                                                                                        bootLog(`[INSTANT LIVE] Connecting to Binance stream early to bridge gap...`, '#D500F9');
+                                                                                        startBinanceLiveSync();
+                                                                                    } else {
+                                                                                        bootLog(`[INSTANT LIVE] Connecting to Deriv stream early to bridge gap...`, '#D500F9');
+                                                                                        startLiveSync();
+                                                                                    }
+                                                                                    _startEdgeSync();
+                                                            
+                                                                                }
 
         
 
@@ -2655,8 +2766,8 @@
         
 
                         try {
-
-                            var { times, prices } = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                        
+                                                    var { times, prices } = _isCryPair(pair) ? await fetchBinanceGrid(pair, ctxState.dateStr, startTs, endTs) : await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
 
                             allPairData[pair].times  = times;
 
@@ -6628,9 +6739,10 @@ let dataList = currentMode === 'REV'
                     
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ];
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    { label:'LTC/USD', sym:'cryLTCUSD', color:'#345d9d' }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ];
                                             
                                                                                                                                                                             
                                                                                                                                                                 
@@ -6678,19 +6790,52 @@ let dataList = currentMode === 'REV'
                                         let ws = null;
                                         let subIndex = 0;
                             
-                                        window.mmtSetPairs = function(newPairs) {
-                                            if (ws && ws.readyState === WebSocket.OPEN) {
-                                                try { ws.send(JSON.stringify({ forget_all: 'ticks' })); } catch(e) {}
-                                            }
-                                            PAIRS = newPairs.slice();
-                                            pairData = PAIRS.map(p => ({ ...p, ticks: [], open: null, price: null }));
-                                            symToIdx = {};
-                                            PAIRS.forEach((p, i) => { symToIdx[p.sym] = i; });
-                                            _rebuildLegend();
-                                            cycleStart = Date.now();
-                                            subIndex = 0;
-                                            if (wsReady) subscribeNext();
-                                        };
+                                        let usingBinance = true;
+                                                                                let binanceTickerWs = null;
+                                                                                function _connectBinanceTicker() {
+                                                                                    if (binanceTickerWs) { try { binanceTickerWs.close(1000, 'restart'); } catch(e) {} binanceTickerWs = null; }
+                                                                                    const streams = PAIRS.map(p => _binanceSymbol(p.sym).toLowerCase() + '@trade').join('/');
+                                                                                    binanceTickerWs = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
+                                                                                    const cs = document.getElementById('mmt-conn-status');
+                                                                                    const ld = document.getElementById('mmt-live-dot');
+                                                                                    binanceTickerWs.onopen = () => { if (cs) cs.textContent = 'Connected'; if (ld) ld.classList.add('on'); cycleStart = Date.now(); };
+                                                                                    binanceTickerWs.onmessage = (e) => {
+                                                                                        try {
+                                                                                            const payload = JSON.parse(e.data);
+                                                                                            const d = payload.data;
+                                                                                            if (!d || !d.s) return;
+                                                                                            const sym = 'cry' + d.s.replace(/T$/i, '');
+                                                                                            handleTick({ symbol: sym, quote: parseFloat(d.p) });
+                                                                                        } catch(err) {}
+                                                                                    };
+                                                                                    binanceTickerWs.onerror = () => { if (cs) cs.textContent = 'Error — retrying…'; if (ld) ld.classList.remove('on'); };
+                                                                                    binanceTickerWs.onclose = (evt) => {
+                                                                                        if (ld) ld.classList.remove('on');
+                                                                                        if (evt.code !== 1000 && usingBinance) setTimeout(_connectBinanceTicker, 5000);
+                                                                                    };
+                                                                                }
+                                                                                function _binanceSymbol(sym) {
+                                                                                    return sym.replace(/^cry/i, '').toUpperCase() + 'T';
+                                                                                }
+                                                                                window.mmtSetPairs = function(newPairs, useBinance) {
+                                                                                    if (ws && ws.readyState === WebSocket.OPEN) {
+                                                                                        try { ws.send(JSON.stringify({ forget_all: 'ticks' })); } catch(e) {}
+                                                                                    }
+                                                                                    if (binanceTickerWs) { try { binanceTickerWs.close(1000, 'switch'); } catch(e) {} binanceTickerWs = null; }
+                                                                                    usingBinance = !!useBinance;
+                                                                                    PAIRS = newPairs.slice();
+                                                                                    pairData = PAIRS.map(p => ({ ...p, ticks: [], open: null, price: null }));
+                                                                                    symToIdx = {};
+                                                                                    PAIRS.forEach((p, i) => { symToIdx[p.sym] = i; });
+                                                                                    _rebuildLegend();
+                                                                                    cycleStart = Date.now();
+                                                                                    subIndex = 0;
+                                                                                    if (usingBinance) {
+                                                                                        _connectBinanceTicker();
+                                                                                    } else if (wsReady) {
+                                                                                        subscribeNext();
+                                                                                    }
+                                                                                };
                             
                                         function connect() {
                                             ws = new WebSocket(WS_URL);
@@ -6775,9 +6920,9 @@ let dataList = currentMode === 'REV'
                             resetting = false;
                             if (rb) rb.style.display = 'none';
                             subIndex = 0;
-                            subscribeNext();
-                        }, 800);
-                    }
+                                                        if (!usingBinance) subscribeNext();
+                                                    }, 800);
+                                                }
         
                     function getRange() {
                         let lo = 0, hi = 0;
@@ -6962,11 +7107,11 @@ let dataList = currentMode === 'REV'
                     });
         
                     window.addEventListener('resize', resize);
-                                        setTimeout(() => {
-                                            resize();
-                                            connect();
-                                            requestAnimationFrame(loop);
-                                        }, 50);
+                                                            setTimeout(() => {
+                                                                resize();
+                                                                if (usingBinance) { _connectBinanceTicker(); } else { connect(); }
+                                                                requestAnimationFrame(loop);
+                                                            }, 50);
                     
                                         document.addEventListener('visibilitychange', () => {
                                             if (!document.hidden) { resize(); draw(); updateTimerUI(); }
