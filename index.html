@@ -1327,8 +1327,8 @@
                 
                         var PAIRS_BY_CAT = {
                                                                                             'CRY': [
-                                                                                                                                                                                            "cryBTCUSD"
-                                                                                                                                                                                        ],
+                                                                                                                                                                                                                                                                                        "cryBTCUSD", "cryETHUSD"
+                                                                                                                                                                                                                                                                                    ],
                                                                                                                                                                                         '$$$': [
                                                                                                                                                                                             "frxEURUSD"
                                                                                                                                                                                         ],
@@ -1426,10 +1426,11 @@
                                                     if (typeof window.mmtSetPairs === 'function') {
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
-                                                            _tickPairs = [
-                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
-                                                                                                                                                                                        ];
-                                                                                                                        } else if (cat === '$$$') {
+                                                                                                                    _tickPairs = [
+                                                                                                                                                                                    { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                    { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
+                                                                                                                                                                                                                                                ];
+                                                                                                                                                                                } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
                                                                                                                             ];
@@ -6596,8 +6597,9 @@ let dataList = currentMode === 'REV'
                     
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                                                                                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
-                                                                                                                                                                                                                                                                                                                                                        ];
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ];
                                             
                                                                                                                                                                             
                                                                                                                                                                 
