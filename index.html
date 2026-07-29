@@ -425,9 +425,9 @@
                                                                                                         <!-- ROW 1: CAT TOGGLE (full width) -->
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <div style="grid-column: span 2; display:flex; gap:3px;">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <button id="catBtn-CRY" onclick="switchCategory('CRY')" style="flex:1;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    background:var(--accent-green); color:var(--bg-base); border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    font-family:'JetBrains Mono',monospace;">All Pairs</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <button id="catBtn-CRY" onclick="openPairPicker()" style="flex:1;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            background:var(--accent-green); color:var(--bg-base); border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            font-family:'JetBrains Mono',monospace;">All Pairs</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <button id="catBtn-$$$" onclick="switchCategory('$$$')" style="display:none; flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         font-family:'JetBrains Mono',monospace;">$$$</button>
@@ -1426,10 +1426,19 @@
                                                     if (typeof window.mmtSetPairs === 'function') {
                                                         var _tickPairs;
                                                         if (cat === 'CRY') {
-                                                            _tickPairs = [
-                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
-                                                                                                                                                                                        ];
-                                                                                                                        } else if (cat === '$$$') {
+                                                                                                                    const fullCryList = [
+                                                                                                                        { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                        { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                        { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
+                                                                                                                        { label:'XAG/USD', sym:'frxXAGUSD', color:'#eef0ff' },
+                                                                                                                        { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
+                                                                                                                        { label:'V75[1s]',  sym:'1HZ75V',  color:'#44bbff' },
+                                                                                                                        { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' },
+                                                                                                                        { label:'USD/JPY', sym:'frxUSDJPY', color:'#ffaa00' }
+                                                                                                                    ];
+                                                                                                                    const targetPairs = activePairs || PAIRS_BY_CAT['CRY'];
+                                                                                                                    _tickPairs = fullCryList.filter(p => targetPairs.includes(p.sym));
+                                                                                                                } else if (cat === '$$$') {
                                                                                                                             _tickPairs = [
                                                                                                                                 { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' }
                                                                                                                             ];
@@ -1490,9 +1499,9 @@
     
 
         var allPairData = {};
-                                                var activePair = "cryBTCUSD";
-        
-                        var activePairs = null;
+                                                                var activePair = "cryBTCUSD";
+                
+                                var activePairs = ["cryBTCUSD"];
 
 
 
@@ -6322,30 +6331,37 @@ let dataList = currentMode === 'REV'
 
 
         function pairPickerApply() {
-
-            if (_ppTempSelected.size === 0) {
-
-                // Nothing selected → reset to full ALL
-
-                activePairs = null;
-
-            } else if (_ppTempSelected.size === ALL_PAIRS.length) {
-
-                activePairs = null; // same as ALL
-
-            } else {
-
-                activePairs = [..._ppTempSelected];
-
-            }
-
-            _updatePairPickerLabel();
-
-            closePairPicker();
-
-            // ── Propagate everywhere ──
-
-            dispatchMultiCycleScan();           // re-scan with new pair set
+        
+                    if (_ppTempSelected.size === 0) {
+                        activePairs = ["cryBTCUSD"];
+                    } else if (_ppTempSelected.size === ALL_PAIRS.length) {
+                        activePairs = null; // same as ALL
+                    } else {
+                        activePairs = [..._ppTempSelected];
+                    }
+        
+                    _updatePairPickerLabel();
+        
+                    closePairPicker();
+        
+                    if (activeCat === 'CRY' && typeof window.mmtSetPairs === 'function') {
+                        const fullCryList = [
+                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                            { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                            { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
+                            { label:'XAG/USD', sym:'frxXAGUSD', color:'#eef0ff' },
+                            { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
+                            { label:'V75[1s]',  sym:'1HZ75V',  color:'#44bbff' },
+                            { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' },
+                            { label:'USD/JPY', sym:'frxUSDJPY', color:'#ffaa00' }
+                        ];
+                        const targetPairs = activePairs || ALL_PAIRS;
+                        window.mmtSetPairs(fullCryList.filter(p => targetPairs.includes(p.sym)));
+                    }
+        
+                    // ── Propagate everywhere ──
+        
+                    dispatchMultiCycleScan();           // re-scan with new pair set
 
             // If activePair is no longer in the selection, switch to first available
 
