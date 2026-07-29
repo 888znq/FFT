@@ -1326,12 +1326,12 @@
                         
                 
                         var PAIRS_BY_CAT = {
-                                                                                            'CRY': [
-                                                                                                                                                                                            "cryBTCUSD"
-                                                                                                                                                                                        ],
-                                                                                                                                                                                        '$$$': [
-                                                                                                                                                                                            "frxEURUSD"
-                                                                                                                                                                                        ],
+                                                                                                                    'CRY': [
+                                                                                                                                                                                                                    "cryBTCUSD", "cryETHUSD", "frxXAUUSD", "frxXAGUSD", "1HZ10V", "1HZ75V", "frxEURUSD", "frxUSDJPY"
+                                                                                                                                                                                                                ],
+                                                                                                                                                                                                                '$$$': [
+                                                                                                                                                                                                                    "frxEURUSD"
+                                                                                                                                                                                                                ],
                                                                                                                                                                                         'DRV': [
                                                                                                 "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"
                                                                                             ],
@@ -1499,9 +1499,10 @@
     
 
         var allPairData = {};
-                                                                var activePair = "cryBTCUSD";
-                
-                                var activePairs = ["cryBTCUSD"];
+                                                                        var activePair = "cryBTCUSD";
+                        
+                                        var activePairs = ["cryBTCUSD"];
+                                        window.pairLiveStatus = window.pairLiveStatus || {};
 
 
 
@@ -2542,16 +2543,16 @@
                             
 
                                         ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
-                                        
-                                                                                                    for (var p of ALL_PAIRS) {
-                                        
-                                                                                                        allPairData[p] = { times: new Int32Array(0), prices: new Float64Array(0) };
-                                        
-                                                                                                        window.liveTickBuffer[p] = {};
-                                        
-                                                                                                    }
-                                        
-                                                                                                    var _pairsToFetch = ALL_PAIRS;
+                                                                                
+                                                                                                                                            for (var p of ALL_PAIRS) {
+                                                                                
+                                                                                                                                                allPairData[p] = { times: new Int32Array(0), prices: new Float64Array(0) };
+                                                                                
+                                                                                                                                                window.liveTickBuffer[p] = {};
+                                                                                
+                                                                                                                                            }
+                                                                                
+                                                                                                                                            var _pairsToFetch = activePairs !== null ? activePairs.slice() : ALL_PAIRS;
 
                             
 
@@ -2667,10 +2668,12 @@
                             var { times, prices } = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
 
                             allPairData[pair].times  = times;
-
-                            allPairData[pair].prices = prices;
-
-                            _bootPairState[pair] = 'done';
+                            
+                                                        allPairData[pair].prices = prices;
+                            
+                                                        _bootPairState[pair] = 'done';
+                            
+                                                        if (window.pairLiveStatus) window.pairLiveStatus[pair] = 'live';
 
         
 
@@ -2768,8 +2771,8 @@
 
 
                     const subscribeToTicks = () => {
-                                                                var _lsActivePairs = PAIRS_BY_CAT[activeCat].slice();
-                        _lsActivePairs.forEach(function(pair, idx) {
+                                                                                    var _lsActivePairs = activePairs !== null ? activePairs.slice() : PAIRS_BY_CAT[activeCat].slice();
+                                            _lsActivePairs.forEach(function(pair, idx) {
                             setTimeout(function() {
                                 if (derivWs && derivWs.readyState === WebSocket.OPEN)
                                     derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
@@ -6330,19 +6333,113 @@ let dataList = currentMode === 'REV'
 
 
 
-        function pairPickerApply() {
-        
-                    if (_ppTempSelected.size === 0) {
-                        activePairs = ["cryBTCUSD"];
-                    } else if (_ppTempSelected.size === ALL_PAIRS.length) {
-                        activePairs = null; // same as ALL
-                    } else {
-                        activePairs = [..._ppTempSelected];
+        function ensurePairFetched(pair) {
+                    if (!window.pairLiveStatus) window.pairLiveStatus = {};
+                    var st = window.pairLiveStatus[pair];
+                    if (st === 'fetching' || st === 'live') return;
+                    if (allPairData[pair] && allPairData[pair].times && allPairData[pair].times.length > 0) {
+                        window.pairLiveStatus[pair] = 'live';
+                        return;
                     }
+                    window.pairLiveStatus[pair] = 'fetching';
+                    if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'fetching';
+                    _showPairBootToast(pair, 'fetching');
+                    if (!allPairData[pair]) allPairData[pair] = { times: new Int32Array(0), prices: new Float64Array(0) };
+                    if (!window.liveTickBuffer[pair]) window.liveTickBuffer[pair] = {};
+                    var ctxState = getTradingContext();
+                    var startTs = ctxState.startTsUtc;
+                    var endTs = startTs + (ctxState.duration || currentDuration || 86400);
+                    (async function() {
+                        try {
+                            var cached = await aofs_read(pair, ctxState.dateStr);
+                            if (cached && cached.times && cached.times.length > 0) {
+                                allPairData[pair].times = cached.times;
+                                allPairData[pair].prices = cached.prices;
+                            }
+                            var gridResult = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                            allPairData[pair].times  = gridResult.times;
+                            allPairData[pair].prices = gridResult.prices;
+                            window.pairLiveStatus[pair] = 'live';
+                            if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'done';
+                            if (derivWs && derivWs.readyState === WebSocket.OPEN) {
+                                derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
+                            }
+                            if (pair === activePair) {
+                                timesArray  = allPairData[pair].times;
+                                pricesArray = allPairData[pair].prices;
+                                processVisualMatrix();
+                            }
+                            dispatchMultiCycleScan();
+                            _showPairBootToast(pair, 'live');
+                        } catch(e) {
+                            window.pairLiveStatus[pair] = 'error';
+                            if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'err';
+                            _showPairBootToast(pair, 'error');
+                        }
+                    })();
+                }
         
-                    _updatePairPickerLabel();
+                function _showPairBootToast(pair, state) {
+                    var name = getPairDisplayName(pair);
+                    var id = 'pairBootToast-' + pair;
+                    var el = document.getElementById(id);
+                    if (!el) {
+                        el = document.createElement('div');
+                        el.id = id;
+                        el.className = 'pair-boot-toast';
+                        el.style.cssText = 'position:fixed; right:16px; z-index:5000; padding:8px 14px; border-radius:3px; font-family:\'JetBrains Mono\',monospace; font-size:11px; font-weight:800; letter-spacing:0.08em; transition:opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; opacity:0; transform:translateX(20px); pointer-events:none;';
+                        document.body.appendChild(el);
+                    }
+                    var stackIdx = Array.prototype.indexOf.call(document.querySelectorAll('.pair-boot-toast'), el);
+                    el.style.bottom = (16 + Math.max(0, stackIdx) * 44) + 'px';
+                    if (state === 'fetching') {
+                        el.style.background = 'var(--bg-base)';
+                        el.style.border = '1px solid #FFD700';
+                        el.style.color = '#FFD700';
+                        el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.4)';
+                        el.textContent = '◑ ' + name + ' — SYNCING…';
+                    } else if (state === 'live') {
+                        el.style.background = 'rgba(46,213,115,0.15)';
+                        el.style.border = '1px solid var(--accent-green)';
+                        el.style.color = 'var(--accent-green)';
+                        el.style.boxShadow = '0 0 18px rgba(46,213,115,0.65)';
+                        el.textContent = '● ' + name + ' — NOW LIVE';
+                    } else {
+                        el.style.background = 'rgba(230,57,70,0.15)';
+                        el.style.border = '1px solid var(--accent-red)';
+                        el.style.color = 'var(--accent-red)';
+                        el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.4)';
+                        el.textContent = '✕ ' + name + ' — SYNC FAILED';
+                    }
+                    requestAnimationFrame(function() {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateX(0)';
+                    });
+                    if (state === 'live' || state === 'error') {
+                        setTimeout(function() {
+                            el.style.opacity = '0';
+                            el.style.transform = 'translateX(20px)';
+                            setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 350);
+                        }, state === 'live' ? 2200 : 3000);
+                    }
+                }
         
-                    closePairPicker();
+                function pairPickerApply() {
+                
+                            if (_ppTempSelected.size === 0) {
+                                activePairs = ["cryBTCUSD"];
+                            } else if (_ppTempSelected.size === ALL_PAIRS.length) {
+                                activePairs = null; // same as ALL
+                            } else {
+                                activePairs = [..._ppTempSelected];
+                            }
+                
+                            _updatePairPickerLabel();
+                
+                            var _pickerTargetPairs = activePairs !== null ? activePairs : ALL_PAIRS;
+                            _pickerTargetPairs.forEach(function(p) { ensurePairFetched(p); });
+                
+                            closePairPicker();
         
                     if (activeCat === 'CRY' && typeof window.mmtSetPairs === 'function') {
                         const fullCryList = [
@@ -6597,14 +6694,15 @@ let dataList = currentMode === 'REV'
                                                                                 };
                 
                                 window.resetToAllPairs = function() {
-                                    activePairs = null;
-                                    _hiddenPairs.clear();
-                                    _updateHidePairsCount();
-                                    _updateHidePairsBtn();
-                                    _updatePairPickerLabel();
-                                    window._autoSelectAfterScan = true;
-                                    dispatchMultiCycleScan();
-                                };
+                                                    activePairs = null;
+                                                    _hiddenPairs.clear();
+                                                    ALL_PAIRS.forEach(function(p) { ensurePairFetched(p); });
+                                                    _updateHidePairsCount();
+                                                    _updateHidePairsBtn();
+                                                    _updatePairPickerLabel();
+                                                    window._autoSelectAfterScan = true;
+                                                    dispatchMultiCycleScan();
+                                                };
         
                 // --- TICK COMPARE APP (ISOLATED EXECUTION CONTEXT) ---
                                 (function() {
@@ -6612,12 +6710,18 @@ let dataList = currentMode === 'REV'
                     
                                                                                                                                                                 
                                                                                                                                                                             const CRY_TICK_PAIRS = [
-                                                                                                                                                                                                                                                                                                                                                            { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' }
-                                                                                                                                                                                                                                                                                                                                                        ];
-                                            
-                                                                                                                                                                            
-                                                                                                                                                                
-                                                                                                                                                                            let PAIRS = CRY_TICK_PAIRS.slice();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'BTC/USD', sym:'cryBTCUSD', color:'#f7931a' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'ETH/USD', sym:'cryETHUSD', color:'#627eea' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'XAU/USD', sym:'frxXAUUSD', color:'#ffdd44' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'XAG/USD', sym:'frxXAGUSD', color:'#eef0ff' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'V10[1s]',  sym:'1HZ10V',  color:'#00ff88' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'V75[1s]',  sym:'1HZ75V',  color:'#44bbff' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { label:'USD/JPY', sym:'frxUSDJPY', color:'#ffaa00' }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ];
+                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                        let PAIRS = activePairs ? CRY_TICK_PAIRS.filter(p => activePairs.includes(p.sym)) : CRY_TICK_PAIRS.slice();
                             
                                         const DURATION = 180;
                                         const PAD      = { l: 4, r: 90, t: 4, b: 4 };
