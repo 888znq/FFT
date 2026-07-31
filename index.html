@@ -1739,46 +1739,54 @@
                 }
         
                 function _populateLengthSelect() {
-                                    var lenSel = document.getElementById('sessionLengthSelect');
-                                    if (!lenSel) return;
-                                    var win = _activeCatWindow();
-                                                        var winLen = win.end - win.start;
-                                                        var divisors = _divisorsOf(winLen);
-                                                        var curLen = _currentSessionLength();
-                                                        var _pendingLen = (typeof window._wpsPendingSessionLen !== 'undefined' && window._wpsPendingSessionLen !== null) ? parseInt(window._wpsPendingSessionLen, 10) : null;
-                                                        var _selectLen = (_pendingLen !== null && divisors.indexOf(_pendingLen) !== -1) ? _pendingLen : curLen;
-                                                        lenSel.innerHTML = divisors.map(function(d) {
-                                                            var sessions = winLen / d;
-                                        return '<option value="' + d + '"' + (d === _selectLen ? ' selected' : '') + '>' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
-                                    }).join('');
-                                }
+                                                    var lenSel = document.getElementById('sessionLengthSelect');
+                                                    if (!lenSel) return;
+                                                    var win = _activeCatWindow();
+                                                                        var winLen = win.end - win.start;
+                                                                        var divisors = _divisorsOf(winLen);
+                                                                        var curLen = _currentSessionLength();
+                                                                        var _pendingLen = (typeof window._wpsPendingSessionLen !== 'undefined' && window._wpsPendingSessionLen !== null) ? parseInt(window._wpsPendingSessionLen, 10) : null;
+                                                                        var _selectLen = (_pendingLen !== null && divisors.indexOf(_pendingLen) !== -1) ? _pendingLen : curLen;
+                                                                        var _isSpecialSessionActive = (sessionWindowStartMin === 300 && sessionWindowEndMin === 1020);
+                                                                        var _lenOptsHtml = divisors.map(function(d) {
+                                                                            var sessions = winLen / d;
+                                                        return '<option value="' + d + '"' + (!_isSpecialSessionActive && d === _selectLen ? ' selected' : '') + '>' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
+                                                    }).join('');
+                                                                        _lenOptsHtml += '<option value="SPECIAL_1030_2230"' + (_isSpecialSessionActive ? ' selected' : '') + '>10:30-22:30 IST (12h)</option>';
+                                                                        lenSel.innerHTML = _lenOptsHtml;
+                                                }
         
                 function _refreshSessionSliderUI() {
                     _populateLengthSelect();
                 }
         
                 function onSessionLengthChange() {
-                    var lenSel = document.getElementById('sessionLengthSelect');
-                    if (!lenSel) return;
-                    var len = parseInt(lenSel.value, 10);
-                                        var win = _activeCatWindow();
-                                        var winLen = win.end - win.start;
-                                        var maxIdx = Math.max(0, Math.floor(winLen / len) - 1);
-                                        var nowMin = _currentUtcMinuteOfDay();
-                                        var idx = Math.floor((nowMin - win.start) / len);
-                                        if (idx < 0) idx = 0;
-                                        if (idx > maxIdx) idx = maxIdx;
-                                        sessionWindowStartMin = win.start + idx * len;
-                                        sessionWindowEndMin = sessionWindowStartMin + len;
-                    window._lastSessionKey = '';
-                    lastClickedSigId = '';
-                    clickCycleIndex = -1;
-                    currentInstances = [];
-                    currentInstanceIndex = -1;
-                    _saveSessionWindow();
-                                        scheduleSessionBoundaryWipe();
-                                        _triggerLiveReboot();
+                                    var lenSel = document.getElementById('sessionLengthSelect');
+                                    if (!lenSel) return;
+                                    if (lenSel.value === 'SPECIAL_1030_2230') {
+                                        sessionWindowStartMin = 300;
+                                        sessionWindowEndMin = 1020;
+                                    } else {
+                                    var len = parseInt(lenSel.value, 10);
+                                                        var win = _activeCatWindow();
+                                                        var winLen = win.end - win.start;
+                                                        var maxIdx = Math.max(0, Math.floor(winLen / len) - 1);
+                                                        var nowMin = _currentUtcMinuteOfDay();
+                                                        var idx = Math.floor((nowMin - win.start) / len);
+                                                        if (idx < 0) idx = 0;
+                                                        if (idx > maxIdx) idx = maxIdx;
+                                                        sessionWindowStartMin = win.start + idx * len;
+                                                        sessionWindowEndMin = sessionWindowStartMin + len;
                                     }
+                                    window._lastSessionKey = '';
+                                    lastClickedSigId = '';
+                                    clickCycleIndex = -1;
+                                    currentInstances = [];
+                                    currentInstanceIndex = -1;
+                                    _saveSessionWindow();
+                                                        scheduleSessionBoundaryWipe();
+                                                        _triggerLiveReboot();
+                                                    }
                             
                                     function _isWithinMappedWindow() {
                                                                                                         if ((activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$') && isFxWeekendDead()) return false;
