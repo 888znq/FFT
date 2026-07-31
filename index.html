@@ -676,8 +676,22 @@
             <button onclick="pairPickerApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
 
         </div>
-
-        <!-- Search box -->
+        
+                <!-- Group quick-select row -->
+        
+                <div style="display:flex; gap:6px; padding:0 8px 8px; border-bottom:1px solid #FFFFFF; flex-shrink:0; flex-wrap:wrap;">
+        
+                    <button id="ppGroupBtn-MTL" onclick="pairPickerToggleGroup('MTL')" style="flex:1; min-width:70px; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">METAL</button>
+        
+                    <button id="ppGroupBtn-CRY" onclick="pairPickerToggleGroup('CRY')" style="flex:1; min-width:70px; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">CRYPTO</button>
+        
+                    <button id="ppGroupBtn-DRV" onclick="pairPickerToggleGroup('DRV')" style="flex:1; min-width:70px; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">DERIV</button>
+        
+                    <button id="ppGroupBtn-FRX" onclick="pairPickerToggleGroup('FRX')" style="flex:1; min-width:70px; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">FOREX</button>
+        
+                </div>
+        
+                <!-- Search box -->
 
         <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
 
@@ -5940,6 +5954,90 @@ let dataList = currentMode === 'REV'
 
         let _ppTempSelected = new Set(); // temp state while modal is open
         
+                                var PAIR_PICKER_GROUPS = {
+        
+                                    'MTL': PAIRS_BY_CAT['MTL'],
+        
+                                    'CRY': ["cryBTCUSD", "cryETHUSD"],
+        
+                                    'DRV': PAIRS_BY_CAT['DRV'],
+        
+                                    'FRX': PAIRS_BY_CAT['FRX']
+        
+                                };
+        
+                                function pairPickerToggleGroup(groupKey) {
+        
+                                    var groupPairs = PAIR_PICKER_GROUPS[groupKey] || [];
+        
+                                    if (groupPairs.length === 0) return;
+        
+                                    var allSelected = groupPairs.every(function(p) { return _ppTempSelected.has(p); });
+        
+                                    if (allSelected) {
+        
+                                        groupPairs.forEach(function(p) { _ppTempSelected.delete(p); });
+        
+                                    } else {
+        
+                                        groupPairs.forEach(function(p) { _ppTempSelected.add(p); });
+        
+                                    }
+        
+                                    var q = document.getElementById('pairPickerSearch') ? document.getElementById('pairPickerSearch').value : '';
+        
+                                    _renderPairGrid(q);
+        
+                                    _updatePairPickerCount();
+        
+                                    _updateGroupButtonStates();
+        
+                                }
+        
+                                function _updateGroupButtonStates() {
+        
+                                    Object.keys(PAIR_PICKER_GROUPS).forEach(function(key) {
+        
+                                        var btn = document.getElementById('ppGroupBtn-' + key);
+        
+                                        if (!btn) return;
+        
+                                        var groupPairs = PAIR_PICKER_GROUPS[key];
+        
+                                        var allSelected = groupPairs.length > 0 && groupPairs.every(function(p) { return _ppTempSelected.has(p); });
+        
+                                        var someSelected = groupPairs.some(function(p) { return _ppTempSelected.has(p); });
+        
+                                        if (allSelected) {
+        
+                                            btn.style.background = 'rgba(46,213,115,0.15)';
+        
+                                            btn.style.color = 'var(--accent-green)';
+        
+                                            btn.style.borderColor = 'var(--accent-green)';
+        
+                                        } else if (someSelected) {
+        
+                                            btn.style.background = 'rgba(255,215,0,0.12)';
+        
+                                            btn.style.color = '#FFD700';
+        
+                                            btn.style.borderColor = '#FFD700';
+        
+                                        } else {
+        
+                                            btn.style.background = 'var(--bg-base)';
+        
+                                            btn.style.color = '#FFFFFF';
+        
+                                            btn.style.borderColor = '#444';
+        
+                                        }
+        
+                                    });
+        
+                                }
+        
                         var _hiddenPairs = new Set(); // pairs temporarily hidden from wall panel only
         
                         var brokerFireEnabled = true; // when false, clicking a wall panel signal only highlights occurrences and does NOT sync/fire the pair to connected brokers
@@ -6140,10 +6238,12 @@ let dataList = currentMode === 'REV'
             document.getElementById('pairPickerModal').style.display = 'flex';
 
             document.getElementById('pairPickerOverlay').style.display = 'block';
-
-            _updatePairPickerCount();
-
-        }
+            
+                        _updatePairPickerCount();
+            
+                        _updateGroupButtonStates();
+            
+                    }
 
 
 
@@ -6218,60 +6318,66 @@ let dataList = currentMode === 'REV'
 
 
         function pairPickerToggle(pair, btn) {
-
-            if (_ppTempSelected.has(pair)) {
-
-                _ppTempSelected.delete(pair);
-
-                btn.style.background  = 'var(--bg-base)';
-
-                btn.style.color       = '#FFFFFF';
-
-                btn.style.borderColor = '#444';
-
-            } else {
-
-                _ppTempSelected.add(pair);
-
-                btn.style.background  = 'rgba(46,213,115,0.15)';
-
-                btn.style.color       = 'var(--accent-green)';
-
-                btn.style.borderColor = 'var(--accent-green)';
-
-            }
-
-            _updatePairPickerCount();
-
-        }
-
-
-
-        function pairPickerSelectAll() {
-
-            ALL_PAIRS.forEach(p => _ppTempSelected.add(p));
-
-            const q = document.getElementById('pairPickerSearch').value;
-
-            _renderPairGrid(q);
-
-            _updatePairPickerCount();
-
-        }
-
-
-
-        function pairPickerSelectNone() {
-
-            _ppTempSelected.clear();
-
-            const q = document.getElementById('pairPickerSearch').value;
-
-            _renderPairGrid(q);
-
-            _updatePairPickerCount();
-
-        }
+        
+                    if (_ppTempSelected.has(pair)) {
+        
+                        _ppTempSelected.delete(pair);
+        
+                        btn.style.background  = 'var(--bg-base)';
+        
+                        btn.style.color       = '#FFFFFF';
+        
+                        btn.style.borderColor = '#444';
+        
+                    } else {
+        
+                        _ppTempSelected.add(pair);
+        
+                        btn.style.background  = 'rgba(46,213,115,0.15)';
+        
+                        btn.style.color       = 'var(--accent-green)';
+        
+                        btn.style.borderColor = 'var(--accent-green)';
+        
+                    }
+        
+                    _updatePairPickerCount();
+        
+                    _updateGroupButtonStates();
+        
+                }
+        
+        
+        
+                function pairPickerSelectAll() {
+        
+                    ALL_PAIRS.forEach(p => _ppTempSelected.add(p));
+        
+                    const q = document.getElementById('pairPickerSearch').value;
+        
+                    _renderPairGrid(q);
+        
+                    _updatePairPickerCount();
+        
+                    _updateGroupButtonStates();
+        
+                }
+        
+        
+        
+                function pairPickerSelectNone() {
+        
+                    _ppTempSelected.clear();
+        
+                    const q = document.getElementById('pairPickerSearch').value;
+        
+                    _renderPairGrid(q);
+        
+                    _updatePairPickerCount();
+        
+                    _updateGroupButtonStates();
+        
+                }
 
 
 
