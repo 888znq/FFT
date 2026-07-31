@@ -4289,9 +4289,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
         function dispatchMultiCycleScan() {
                                                             _startScanCountdown();
-                                                            let minC = parseInt(document.getElementById('scanMin').value) || 60;
-        
-                                            let maxC = parseInt(document.getElementById('scanMax').value) || 60;
+                                                            let minC = parseInt(document.getElementById('scanMin').value) || 120;
+                                                                                                                        
+                                                                                                                                                                    let maxC = parseInt(document.getElementById('scanMax').value) || 180;
 
                                     if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
 
@@ -7216,18 +7216,8 @@ let dataList = currentMode === 'REV'
                                                         var minPctEl = document.getElementById('minPctInput');
                                                         if (minPctEl) minPctEl.value = state.minPct;
                                                     }
-                                                    if (state.level !== undefined) {
-                                                        var levelEl = document.getElementById('levelFilterSelect');
-                                                        if (levelEl) levelEl.value = state.level;
-                                                    }
-                                                    if (state.scanMin !== undefined) {
-                                                        var scanMinEl = document.getElementById('scanMin');
-                                                        if (scanMinEl) { scanMinEl.value = state.scanMin; _userScanRangeLock = true; }
-                                                    }
-                                                    if (state.scanMax !== undefined) {
-                                                        var scanMaxEl = document.getElementById('scanMax');
-                                                        if (scanMaxEl) { scanMaxEl.value = state.scanMax; _userScanRangeLock = true; }
-                                                    }
+                                                    
+                                                    
                                                     if (state.r0Only) {
                                                         r0OnlyMode = true;
                                                         var r0Btn = document.getElementById('r0OnlyBtn');
