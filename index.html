@@ -1364,12 +1364,12 @@
                                                         };
                                         
                                                 var CAT_SESSION_WINDOWS = {
-                                                                                                                                                                                                    'FRX': { start: 300, end: 1020 },
-                                                                                                                                                                                                    '$$$': { start: 300, end: 1020 },
-                                                                                                                                                                                                    'CRY': { start: 0,   end: 1440 },
-                                                                                                                                                                                                    'DRV': { start: 0,   end: 1440 },
-                                                                                                                                                                                                    'MTL': { start: 0,   end: 1440 }
-                                                                                                                                                                                                };
+                                                                                                                                                                                                                                                    'FRX': { start: 300, end: 1020 },
+                                                                                                                                                                                                                                                    '$$$': { start: 300, end: 1020 },
+                                                                                                                                                                                                                                                    'CRY': { start: 300, end: 1020 },
+                                                                                                                                                                                                                                                    'DRV': { start: 300, end: 1020 },
+                                                                                                                                                                                                                                                    'MTL': { start: 300, end: 1020 }
+                                                                                                                                                                                                                                                };
                                                                                                                                         
                                                                                                                                                 function _applyCatSessionWindow(cat) {
                                                                                                                                                                                                                                                                                                                                                     // Default boot/category-switch session is always the fixed 10:30–22:30 IST window
@@ -1841,16 +1841,18 @@
                 let autoScanInterval = null;
         
                 function _getReferenceDayOffset() {
-                                                    if (activeCat !== 'MTL' && activeCat !== 'FRX' && activeCat !== '$$$') return 0;
+                                                    var isFxStyle = (activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$');
                                     var now = new Date();
                                     var day = now.getUTCDay();
                                     var nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
                                     var winStartMin = sessionWindowStartMin;
                                     var winEndMin   = sessionWindowEndMin;
-                                    if (day === 6) return 1;
-                                    if (day === 0) return 2;
+                                    if (isFxStyle) {
+                                        if (day === 6) return 1;
+                                        if (day === 0) return 2;
+                                    }
                                     if (nowMin >= winEndMin) return 0;
-                                    if (nowMin < winStartMin) return (day === 1) ? 3 : 1;
+                                    if (nowMin < winStartMin) return (isFxStyle && day === 1) ? 3 : 1;
                                     return 0;
                                 }
                 
@@ -2524,7 +2526,7 @@
                 async function autoFetch() {
                 
                                     var _fxWeekendDead = isFxWeekendDead();
-                                                                                            if (_fxWeekendDead && (activeCat === 'MTL' || activeCat === 'FRX')) {
+                                                                                            if (_fxWeekendDead && (activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$')) {
                                                                                                         bootLog('FX MARKET CLOSED — showing last available trading day (frozen, read-only).', '#FFD700');
                                                                                                     }
         
