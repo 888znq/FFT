@@ -7153,19 +7153,14 @@ let dataList = currentMode === 'REV'
                                                                                                 }
                                     
                                                 function wpsCollectState() {
-                                                    return {
-                                                        minPct: document.getElementById('minPctInput') ? document.getElementById('minPctInput').value : '85',
-                                                        level: document.getElementById('levelFilterSelect') ? document.getElementById('levelFilterSelect').value : '0',
-                                                        sessionLen: document.getElementById('sessionLengthSelect') ? document.getElementById('sessionLengthSelect').value : null,
-                                                        scanMin: document.getElementById('scanMin') ? document.getElementById('scanMin').value : '60',
-                                                        scanMax: document.getElementById('scanMax') ? document.getElementById('scanMax').value : '60',
-                                                        r0Only: typeof r0OnlyMode !== 'undefined' ? r0OnlyMode : false,
-                                                        activeCat: typeof activeCat !== 'undefined' ? activeCat : 'CRY',
-                                                        mode: typeof currentMode !== 'undefined' ? currentMode : 'REV',
-                                                        fireOn: typeof brokerFireEnabled !== 'undefined' ? brokerFireEnabled : true,
-                                                        _updatedAt: Date.now()
-                                                    };
-                                                }
+                                                                                                    return {
+                                                                                                        r0Only: typeof r0OnlyMode !== 'undefined' ? r0OnlyMode : false,
+                                                                                                        activeCat: typeof activeCat !== 'undefined' ? activeCat : 'CRY',
+                                                                                                        mode: typeof currentMode !== 'undefined' ? currentMode : 'REV',
+                                                                                                        fireOn: typeof brokerFireEnabled !== 'undefined' ? brokerFireEnabled : true,
+                                                                                                        _updatedAt: Date.now()
+                                                                                                    };
+                                                                                                }
                                     
                                                 var _wpsSavePending = false;
                                                 
@@ -7188,37 +7183,51 @@ let dataList = currentMode === 'REV'
                                                                                                     _wpsSaveTimer = setTimeout(wpsSaveNow, 400);
                                                                                                 }
                                     
-                                                function _wpsForceDefaultCat() {
-                                                                                                    activeCat = 'CRY';
-                                                                                                    ALL_PAIRS = PAIRS_BY_CAT['CRY'].slice();
-                                                                                                    ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
-                                                                                                        var btn = document.getElementById('catBtn-' + c);
-                                                                                                        if (btn) {
-                                                                                                            if (c === activeCat) {
-                                                                                                                btn.style.background = 'var(--accent-green)';
-                                                                                                                btn.style.color = 'var(--bg-base)';
-                                                                                                            } else {
-                                                                                                                btn.style.background = 'var(--bg-base)';
-                                                                                                                btn.style.color = '#FFFFFF';
-                                                                                                            }
-                                                                                                        }
-                                                                                                    });
-                                                                                                    activePair = PAIRS_BY_CAT['CRY'][0];
-                                                                                                    var apiPairInput = document.getElementById('apiPair');
-                                                                                                    if (apiPairInput) apiPairInput.value = activePair;
-                                                                                                }
+                                                function _wpsForceDefaultCat(cat) {
+                                                                                                                                                    activeCat = (cat && PAIRS_BY_CAT[cat]) ? cat : 'CRY';
+                                                                                                                                                    ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
+                                                                                                                                                    ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
+                                                                                                                                                        var btn = document.getElementById('catBtn-' + c);
+                                                                                                                                                        if (btn) {
+                                                                                                                                                            if (c === activeCat) {
+                                                                                                                                                                btn.style.background = 'var(--accent-green)';
+                                                                                                                                                                btn.style.color = 'var(--bg-base)';
+                                                                                                                                                            } else {
+                                                                                                                                                                btn.style.background = 'var(--bg-base)';
+                                                                                                                                                                btn.style.color = '#FFFFFF';
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    });
+                                                                                                                                                    activePair = PAIRS_BY_CAT[activeCat][0];
+                                                                                                                                                    var apiPairInput = document.getElementById('apiPair');
+                                                                                                                                                    if (apiPairInput) apiPairInput.value = activePair;
+                                                                                                                                                }
                                                                                     
                                                                                                 function wpsApplyState(state) {
-                                                                                                    if (!state) return;
-                                                                                                    _wpsForceDefaultCat();
+                                                                                                                                                                                                    if (!state) return;
+                                                                                                                                                                                                    _wpsForceDefaultCat(state.activeCat);
                                     
                                                     if (state.minPct !== undefined) {
-                                                        var minPctEl = document.getElementById('minPctInput');
-                                                        if (minPctEl) minPctEl.value = state.minPct;
-                                                    }
+                                                                                                            var minPctEl = document.getElementById('minPctInput');
+                                                                                                            if (minPctEl) minPctEl.value = state.minPct;
+                                                                                                        }
                                                     
+                                                                                                        if (state.level !== undefined) {
+                                                                                                            var levelEl = document.getElementById('levelFilterSelect');
+                                                                                                            if (levelEl) levelEl.value = state.level;
+                                                                                                        }
                                                     
-                                                    if (state.r0Only) {
+                                                                                                        if (state.scanMin !== undefined) {
+                                                                                                            var scanMinEl = document.getElementById('scanMin');
+                                                                                                            if (scanMinEl) scanMinEl.value = state.scanMin;
+                                                                                                        }
+                                                    
+                                                                                                        if (state.scanMax !== undefined) {
+                                                                                                            var scanMaxEl = document.getElementById('scanMax');
+                                                                                                            if (scanMaxEl) scanMaxEl.value = state.scanMax;
+                                                                                                        }
+                                                    
+                                                                                                        if (state.r0Only) {
                                                         r0OnlyMode = true;
                                                         var r0Btn = document.getElementById('r0OnlyBtn');
                                                         if (r0Btn) {
@@ -7272,7 +7281,7 @@ let dataList = currentMode === 'REV'
                                                         }
                                                     }
                                                     
-                                                    if (false && state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen; // Firebase sessionLen override disabled
+                                                    if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
                                     
                                                     renderFilteredTable();
                                                 }
@@ -7288,7 +7297,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                                                                                                                                 _wpsReady = true;
                                                                                                                                                                                                                                                                                                                                                                                                                 if (_wpsSavePending) wpsSaveNow();
                                                                                                                                                                                     
-                                                                                                                                                                                                        if (false && val && val.sessionLen !== undefined && val.sessionLen !== null) { // Firebase sessionLen override disabled — keep hardcoded category defaults (CRY/DRV/MTL=24H, $$$/FRX=12H)
+                                                                                                                                                                                                        if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
                                                                                                                                                                                                             var _sLen = parseInt(val.sessionLen, 10);
                                                                                                                                                                                                             var _win = _activeCatWindow();
                                                                                                                                                                                                             var _winLen = _win.end - _win.start;
