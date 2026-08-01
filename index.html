@@ -277,9 +277,7 @@
                                                                                                                                                                         <option value="12">X12-X13</option>
                                                                                                                                                                                                                                                                                                                                             </select>
                                                                                                                                                                                                                                                                                                                                         </span>
-                                                                                                                                                                                                                                                            <span style="position:relative; display:inline-block; flex-shrink:0;">
-                                                                                                                                                                                                                                                                <select id="sessionLengthSelect" onchange="onSessionLengthChange()" class="ctrl-input ctrl-select" style="width:92px; font-size:11px; color:#FFFFFF;"></select>
-                                                                                                                                                                                                                                                            </span>
+                                                                                                                                                                                                                                                            
                                                                                                                                                                                                                                                             <span style="font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
                                                                                                                                                                 <button id="r0OnlyBtn" onclick="toggleR0Only()" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">R0</button>
                                                                                     <div style="flex:1; height:4px; background:#222; border-radius:2px; overflow:hidden;">
@@ -1754,24 +1752,9 @@
                 }
         
                 function onSessionLengthChange() {
-                                    var lenSel = document.getElementById('sessionLengthSelect');
-                                    if (!lenSel) return;
-                                    if (lenSel.value === 'SPECIAL_1030_2230') {
-                                        sessionWindowStartMin = 300;
-                                        sessionWindowEndMin = 1020;
-                                    } else {
-                                    var len = parseInt(lenSel.value, 10);
-                                                        var win = _activeCatWindow();
-                                                        var winLen = win.end - win.start;
-                                                        var maxIdx = Math.max(0, Math.floor(winLen / len) - 1);
-                                                        var nowMin = _currentUtcMinuteOfDay();
-                                                        var idx = Math.floor((nowMin - win.start) / len);
-                                                        if (idx < 0) idx = 0;
-                                                        if (idx > maxIdx) idx = maxIdx;
-                                                        sessionWindowStartMin = win.start + idx * len;
-                                                        sessionWindowEndMin = sessionWindowStartMin + len;
-                                    }
-                                    window._lastSessionKey = '';
+                                                    sessionWindowStartMin = 300;
+                                                    sessionWindowEndMin = 1020;
+                                                    window._lastSessionKey = '';
                                     lastClickedSigId = '';
                                     clickCycleIndex = -1;
                                     currentInstances = [];
@@ -1782,7 +1765,7 @@
                                                     }
                             
                                     function _isWithinMappedWindow() {
-                                                                                                        if ((activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$') && isFxWeekendDead()) return false;
+                                                                                                        if (isFxWeekendDead()) return false;
                                                                     if (sessionWindowStartMin === 0 && sessionWindowEndMin === 1440) return true;
                                                                     var now = new Date();
                                                                     var nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
@@ -1841,7 +1824,7 @@
                 let autoScanInterval = null;
         
                 function _getReferenceDayOffset() {
-                                                    var isFxStyle = (activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$');
+                                                    var isFxStyle = true;
                                     var now = new Date();
                                     var day = now.getUTCDay();
                                     var nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
@@ -2526,9 +2509,9 @@
                 async function autoFetch() {
                 
                                     var _fxWeekendDead = isFxWeekendDead();
-                                                                                            if (_fxWeekendDead && (activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$')) {
-                                                                                                        bootLog('FX MARKET CLOSED — showing last available trading day (frozen, read-only).', '#FFD700');
-                                                                                                    }
+                                                                                            if (_fxWeekendDead) {
+                                                                                                                                                                                                    bootLog('MARKET CLOSED (WEEKEND) — showing last available trading day (frozen, read-only).', '#FFD700');
+                                                                                                                                                                                                }
         
                             var ctxState = getTradingContext();
                             
@@ -6622,7 +6605,7 @@ let dataList = currentMode === 'REV'
                                                 function scheduleSessionBoundaryWipe() {
                                                                                                                                                                                                     if (window._sessionBoundaryTimer) clearTimeout(window._sessionBoundaryTimer);
                                                                                                                                                                                                     if (window._mtlWeekendTimer) { clearTimeout(window._mtlWeekendTimer); window._mtlWeekendTimer = null; }
-                                                                                                                                                                                                    if (activeCat === 'MTL' || activeCat === 'FRX' || activeCat === '$$$') scheduleMtlWeekendBoundary();
+                                                                                                                                                                                                    scheduleMtlWeekendBoundary();
                                                                                                                                                                                                     if (sessionWindowStartMin === 0 && sessionWindowEndMin === 1440) {
                                                                                                                                                                                                         return;
                                                                                                                                                                                                     }
@@ -6668,10 +6651,9 @@ let dataList = currentMode === 'REV'
                                                                                                                                                         enteringOffline = true;
                                                                                                                                                     }
                                                                                                                                                     window._mtlWeekendTimer = setTimeout(function() {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                if (activeCat !== 'MTL' && activeCat !== 'FRX' && activeCat !== '$$$') return;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                _triggerLiveReboot();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                scheduleMtlWeekendBoundary();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            }, msUntilNext);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    _triggerLiveReboot();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    scheduleMtlWeekendBoundary();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }, msUntilNext);
                                                                                                                                                 }
                                                                                                                                                 window.addEventListener('load', scheduleSessionBoundaryWipe);
 
@@ -7283,7 +7265,7 @@ let dataList = currentMode === 'REV'
                                                         }
                                                     }
                                                     
-                                                    if (state.sessionLen !== undefined) window._wpsPendingSessionLen = state.sessionLen;
+                                                    
                                     
                                                     renderFilteredTable();
                                                 }
@@ -7299,24 +7281,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                                                                                                                                 _wpsReady = true;
                                                                                                                                                                                                                                                                                                                                                                                                                 if (_wpsSavePending) wpsSaveNow();
                                                                                                                                                                                     
-                                                                                                                                                                                                        if (val && val.sessionLen !== undefined && val.sessionLen !== null) {
-                                                                                                                                                                                                            var _sLen = parseInt(val.sessionLen, 10);
-                                                                                                                                                                                                            var _win = _activeCatWindow();
-                                                                                                                                                                                                            var _winLen = _win.end - _win.start;
-                                                                                                                                                                                                            var _divisors = _divisorsOf(_winLen);
-                                                                                                                                                                                                            if (_divisors.indexOf(_sLen) !== -1) {
-                                                                                                                                                                                                                var _maxIdx = Math.max(0, Math.floor(_winLen / _sLen) - 1);
-                                                                                                                                                                                                                var _nowMin = _currentUtcMinuteOfDay();
-                                                                                                                                                                                                                var _idx = Math.floor((_nowMin - _win.start) / _sLen);
-                                                                                                                                                                                                                if (_idx < 0) _idx = 0;
-                                                                                                                                                                                                                if (_idx > _maxIdx) _idx = _maxIdx;
-                                                                                                                                                                                                                sessionWindowStartMin = _win.start + _idx * _sLen;
-                                                                                                                                                                                                                sessionWindowEndMin = sessionWindowStartMin + _sLen;
-                                                                                                                                                                                                                _saveSessionWindow();
-                                                                                                                                                                                                                _refreshSessionSliderUI();
-                                                                                                                                                                                                                window._wpsSessionSynced = true;
-                                                                                                                                                                                                            }
-                                                                                                                                                                                                        }
+                                                                                                                                                                                                        
                                                                                                                                                                                     
                                                                                                                                                                                                         if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
                                                                                                                                                                                                     }).catch(function() {
