@@ -473,7 +473,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MAX</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="180" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -4315,7 +4315,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                             _startScanCountdown();
                                                             let minC = parseInt(document.getElementById('scanMin').value) || 60;
                                                                                                                         
-                                                                                                                                                                    let maxC = parseInt(document.getElementById('scanMax').value) || 120;
+                                                                                                                                                                    let maxC = parseInt(document.getElementById('scanMax').value) || 180;
 
                                     if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
 
