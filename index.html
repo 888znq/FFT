@@ -2141,11 +2141,9 @@
 
 
 
-        async function fetchDerivGrid(pair, dateStr, startTs, endTs, logFn) {
-        
-                    if (!logFn) logFn = bootLog;
-        
-                    const name = getPairDisplayName(pair)
+        async function fetchDerivGrid(pair, dateStr, startTs, endTs) {
+
+            const name = getPairDisplayName(pair)
 
 
 
@@ -2284,7 +2282,7 @@
 
                 const totalGapSecs = finalChunks.reduce((acc, c) => acc + (c.e - c.s), 0);
 
-                logFn(`${name} — found ${finalChunks.length} gap(s) totalling ~${totalGapSecs}s. Backfilling...`, '#FFD700');
+                bootLog(`${name} — found ${finalChunks.length} gap(s) totalling ~${totalGapSecs}s. Backfilling...`, '#FFD700');
 
                 
 
@@ -2296,7 +2294,7 @@
 
                     const batch = finalChunks.slice(i, i + WORKERS);
 
-                    logFn(`${name} — fetching chunks ${i+1}-${i+batch.length}`, '#00B0FF');
+                    bootLog(`${name} — fetching chunks ${i+1}-${i+batch.length}`, '#00B0FF');
 
 
 
@@ -2326,7 +2324,7 @@
 
                             if (retries <= MAX_RETRIES) {
 
-                        logFn(`${name} — chunk ${i + idx + 1} retry (${retries}/${MAX_RETRIES})...`, '#FFD700');
+                        bootLog(`${name} — chunk ${i + idx + 1} retry (${retries}/${MAX_RETRIES})...`, '#FFD700');
 
                                 delay = 2000 * retries;
 
@@ -2346,7 +2344,7 @@
 
                         if (got > 0) Object.assign(tickMap, res.map);
 
-                        logFn(`${name} — chunk ${res.num}: ${got > 0 ? got + ' ticks OK' : 'empty (skipped)'}`, got > 0 ? '#555' : '#888');
+                        bootLog(`${name} — chunk ${res.num}: ${got > 0 ? got + ' ticks OK' : 'empty (skipped)'}`, got > 0 ? '#555' : '#888');
 
                     });
 
@@ -2360,7 +2358,7 @@
 
            } else {
 
-                logFn(`${name} — fully cached, no gaps found`, '#555');
+                bootLog(`${name} — fully cached, no gaps found`, '#555');
 
             }
 
@@ -6225,18 +6223,16 @@ let dataList = currentMode === 'REV'
         
 
                 function hpApply() {
-                
-                                    _hiddenPairs = new Set(_hpTempHidden);
-                
-                                    _updateHidePairsBtn();
-                
-                                    closeHidePairsModal();
-                
-                                    ALL_PAIRS.forEach(function(p) { if (!_hiddenPairs.has(p)) ensurePairFetched(p); });
-                
-                                    renderFilteredTable();
-                
-                                }
+
+                    _hiddenPairs = new Set(_hpTempHidden);
+
+                    _updateHidePairsBtn();
+
+                    closeHidePairsModal();
+
+                    renderFilteredTable();
+
+                }
 
         
 
@@ -6469,78 +6465,64 @@ let dataList = currentMode === 'REV'
 
 
         function ensurePairFetched(pair) {
-                            if (!window.pairLiveStatus) window.pairLiveStatus = {};
-                            var st = window.pairLiveStatus[pair];
-                            if (st === 'fetching' || st === 'live') return;
-                            if (allPairData[pair] && allPairData[pair].times && allPairData[pair].times.length > 0) {
-                                window.pairLiveStatus[pair] = 'live';
-                                return;
+                    if (!window.pairLiveStatus) window.pairLiveStatus = {};
+                    var st = window.pairLiveStatus[pair];
+                    if (st === 'fetching' || st === 'live') return;
+                    if (allPairData[pair] && allPairData[pair].times && allPairData[pair].times.length > 0) {
+                        window.pairLiveStatus[pair] = 'live';
+                        return;
+                    }
+                    window.pairLiveStatus[pair] = 'fetching';
+                    if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'fetching';
+                    _showPairBootToast(pair, 'fetching');
+                    if (!allPairData[pair]) allPairData[pair] = { times: new Int32Array(0), prices: new Float64Array(0) };
+                    if (!window.liveTickBuffer[pair]) window.liveTickBuffer[pair] = {};
+                    var ctxState = getTradingContext();
+                    var startTs = ctxState.startTsUtc;
+                    var endTs = startTs + (ctxState.duration || currentDuration || 86400);
+                    (async function() {
+                        try {
+                            var cached = await aofs_read(pair, ctxState.dateStr);
+                            if (cached && cached.times && cached.times.length > 0) {
+                                allPairData[pair].times = cached.times;
+                                allPairData[pair].prices = cached.prices;
                             }
-                            window.pairLiveStatus[pair] = 'fetching';
-                            if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'fetching';
-                            _showPairBootToast(pair, 'fetching');
-                            var _pbtLogFn = function(msg, color) {
-                                var toastEl = document.getElementById('pairBootToast-' + pair);
-                                var box = toastEl ? toastEl.querySelector('.pbt-log-lines') : null;
-                                if (!box) return;
-                                var line = document.createElement('div');
-                                line.style.cssText = 'font-size:8px;font-weight:700;letter-spacing:0.04em;padding:1px 0;color:' + (color || '#FFFFFF') + ';font-family:\'JetBrains Mono\',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
-                                line.textContent = msg;
-                                box.appendChild(line);
-                                var wrap = box.parentElement;
-                                if (wrap) wrap.scrollTop = wrap.scrollHeight;
-                            };
-                            if (!allPairData[pair]) allPairData[pair] = { times: new Int32Array(0), prices: new Float64Array(0) };
-                            if (!window.liveTickBuffer[pair]) window.liveTickBuffer[pair] = {};
-                            var ctxState = getTradingContext();
-                            var startTs = ctxState.startTsUtc;
-                            var endTs = startTs + (ctxState.duration || currentDuration || 86400);
-                            (async function() {
-                                try {
-                                    var cached = await aofs_read(pair, ctxState.dateStr);
-                                    if (cached && cached.times && cached.times.length > 0) {
-                                        allPairData[pair].times = cached.times;
-                                        allPairData[pair].prices = cached.prices;
-                                    }
-                                    var gridResult = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs, _pbtLogFn);
-                                    allPairData[pair].times  = gridResult.times;
-                                    allPairData[pair].prices = gridResult.prices;
-                                    window.pairLiveStatus[pair] = 'live';
-                                    if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'done';
-                                    if (derivWs && derivWs.readyState === WebSocket.OPEN) {
-                                        derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
-                                    }
-                                    if (pair === activePair) {
-                                        timesArray  = allPairData[pair].times;
-                                        pricesArray = allPairData[pair].prices;
-                                        processVisualMatrix();
-                                    }
-                                    dispatchMultiCycleScan();
-                                    _showPairBootToast(pair, 'live');
-                                } catch(e) {
-                                    window.pairLiveStatus[pair] = 'error';
-                                    if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'err';
-                                    _showPairBootToast(pair, 'error');
-                                }
-                            })();
+                            var gridResult = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                            allPairData[pair].times  = gridResult.times;
+                            allPairData[pair].prices = gridResult.prices;
+                            window.pairLiveStatus[pair] = 'live';
+                            if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'done';
+                            if (derivWs && derivWs.readyState === WebSocket.OPEN) {
+                                derivWs.send(JSON.stringify({ ticks: pair, subscribe: 1 }));
+                            }
+                            if (pair === activePair) {
+                                timesArray  = allPairData[pair].times;
+                                pricesArray = allPairData[pair].prices;
+                                processVisualMatrix();
+                            }
+                            dispatchMultiCycleScan();
+                            _showPairBootToast(pair, 'live');
+                        } catch(e) {
+                            window.pairLiveStatus[pair] = 'error';
+                            if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'err';
+                            _showPairBootToast(pair, 'error');
                         }
+                    })();
+                }
         
                 function _ensurePairBootToastStyles() {
                                     if (document.getElementById('pairBootToastStyles')) return;
                                     var st = document.createElement('style');
                                     st.id = 'pairBootToastStyles';
                                     st.textContent = '@keyframes pbtSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}' +
-                                                                            '@keyframes pbtIndeterminate{0%{left:-40%;width:40%;}50%{left:30%;width:55%;}100%{left:100%;width:40%;}}' +
-                                                                            '.pbt-spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,215,0,0.25);border-top-color:#FFD700;border-radius:50%;animation:pbtSpin 0.7s linear infinite;margin-right:6px;vertical-align:middle;}' +
-                                                                            '.pbt-bar-track{position:relative;width:100%;height:3px;background:rgba(255,255,255,0.14);border-radius:2px;overflow:hidden;margin-top:6px;}' +
-                                                                            '.pbt-bar-fill{position:absolute;top:0;height:100%;border-radius:2px;background:#FFD700;}' +
-                                                                            '.pbt-bar-fill.indeterminate{animation:pbtIndeterminate 1.1s ease-in-out infinite;}' +
-                                                                            '.pbt-bar-fill.complete{left:0 !important;width:100% !important;background:var(--accent-green) !important;animation:none !important;transition:width 0.3s ease, background 0.3s ease;}' +
-                                                                            '.pbt-bar-fill.failed{left:0 !important;width:100% !important;background:var(--accent-red) !important;animation:none !important;}' +
-                                                                            '.pbt-log-box{margin-top:6px;max-height:70px;overflow-y:auto;border-top:1px solid rgba(255,255,255,0.12);padding-top:4px;display:flex;flex-direction:column;}' +
-                                                                            '.pbt-log-box::-webkit-scrollbar{width:4px;}' +
-                                                                            '.pbt-log-box::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.4);}';
-                                                                        document.head.appendChild(st);
+                                        '@keyframes pbtIndeterminate{0%{left:-40%;width:40%;}50%{left:30%;width:55%;}100%{left:100%;width:40%;}}' +
+                                        '.pbt-spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(255,215,0,0.25);border-top-color:#FFD700;border-radius:50%;animation:pbtSpin 0.7s linear infinite;margin-right:6px;vertical-align:middle;}' +
+                                        '.pbt-bar-track{position:relative;width:100%;height:3px;background:rgba(255,255,255,0.14);border-radius:2px;overflow:hidden;margin-top:6px;}' +
+                                        '.pbt-bar-fill{position:absolute;top:0;height:100%;border-radius:2px;background:#FFD700;}' +
+                                        '.pbt-bar-fill.indeterminate{animation:pbtIndeterminate 1.1s ease-in-out infinite;}' +
+                                        '.pbt-bar-fill.complete{left:0 !important;width:100% !important;background:var(--accent-green) !important;animation:none !important;transition:width 0.3s ease, background 0.3s ease;}' +
+                                        '.pbt-bar-fill.failed{left:0 !important;width:100% !important;background:var(--accent-red) !important;animation:none !important;}';
+                                    document.head.appendChild(st);
                                 }
                 
                                 function _showPairBootToast(pair, state) {
@@ -6549,31 +6531,29 @@ let dataList = currentMode === 'REV'
                                     var id = 'pairBootToast-' + pair;
                                     var el = document.getElementById(id);
                                     if (!el) {
-                                                                            el = document.createElement('div');
-                                                                            el.id = id;
-                                                                            el.className = 'pair-boot-toast';
-                                                                            el.style.cssText = 'position:fixed; right:16px; z-index:5000; width:230px; padding:8px 12px; border-radius:3px; font-family:\'JetBrains Mono\',monospace; font-size:11px; font-weight:800; letter-spacing:0.06em; transition:opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; opacity:0; transform:translateX(20px); pointer-events:none;';
-                                                                            el.innerHTML = '<div style="font-size:8px;letter-spacing:0.2em;opacity:0.65;margin-bottom:3px;">⬡ AOFS BOOT SEQUENCE</div><div style="display:flex; align-items:center;"><span class="pbt-icon"></span><span class="pbt-label"></span></div><div class="pbt-bar-track"><div class="pbt-bar-fill indeterminate" style="width:40%;"></div></div><div class="pbt-log-box"><div class="pbt-log-lines"></div></div>';
-                                                                            document.body.appendChild(el);
-                                                                        }
-                                                                        var stackIdx = Array.prototype.indexOf.call(document.querySelectorAll('.pair-boot-toast'), el);
-                                                                        el.style.bottom = (16 + Math.max(0, stackIdx) * 130) + 'px';
-                                                    
-                                                                        var iconEl = el.querySelector('.pbt-icon');
-                                                                        var labelEl = el.querySelector('.pbt-label');
-                                                                        var barEl = el.querySelector('.pbt-bar-fill');
-                                                                        var logBoxEl = el.querySelector('.pbt-log-lines');
-                                                    
-                                                                        if (state === 'fetching') {
-                                                                            el.style.background = 'var(--bg-base)';
-                                                                            el.style.border = '1px solid #FFD700';
-                                                                            el.style.color = '#FFD700';
-                                                                            el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.4)';
-                                                                            if (iconEl) iconEl.innerHTML = '<span class="pbt-spinner"></span>';
-                                                                            if (labelEl) labelEl.textContent = name + ' — SYNCING…';
-                                                                            if (barEl) { barEl.className = 'pbt-bar-fill indeterminate'; barEl.style.width = '40%'; barEl.style.background = '#FFD700'; }
-                                                                            if (logBoxEl) logBoxEl.innerHTML = '';
-                                                                        } else if (state === 'live') {
+                                        el = document.createElement('div');
+                                        el.id = id;
+                                        el.className = 'pair-boot-toast';
+                                        el.style.cssText = 'position:fixed; right:16px; z-index:5000; width:190px; padding:8px 12px; border-radius:3px; font-family:\'JetBrains Mono\',monospace; font-size:11px; font-weight:800; letter-spacing:0.06em; transition:opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; opacity:0; transform:translateX(20px); pointer-events:none;';
+                                        el.innerHTML = '<div style="display:flex; align-items:center;"><span class="pbt-icon"></span><span class="pbt-label"></span></div><div class="pbt-bar-track"><div class="pbt-bar-fill indeterminate" style="width:40%;"></div></div>';
+                                        document.body.appendChild(el);
+                                    }
+                                    var stackIdx = Array.prototype.indexOf.call(document.querySelectorAll('.pair-boot-toast'), el);
+                                    el.style.bottom = (16 + Math.max(0, stackIdx) * 50) + 'px';
+                
+                                    var iconEl = el.querySelector('.pbt-icon');
+                                    var labelEl = el.querySelector('.pbt-label');
+                                    var barEl = el.querySelector('.pbt-bar-fill');
+                
+                                    if (state === 'fetching') {
+                                        el.style.background = 'var(--bg-base)';
+                                        el.style.border = '1px solid #FFD700';
+                                        el.style.color = '#FFD700';
+                                        el.style.boxShadow = '0 2px 10px rgba(0,0,0,0.4)';
+                                        if (iconEl) iconEl.innerHTML = '<span class="pbt-spinner"></span>';
+                                        if (labelEl) labelEl.textContent = name + ' — SYNCING…';
+                                        if (barEl) { barEl.className = 'pbt-bar-fill indeterminate'; barEl.style.width = '40%'; barEl.style.background = '#FFD700'; }
+                                    } else if (state === 'live') {
                                         el.style.background = 'rgba(46,213,115,0.15)';
                                         el.style.border = '1px solid var(--accent-green)';
                                         el.style.color = 'var(--accent-green)';
@@ -6840,31 +6820,29 @@ let dataList = currentMode === 'REV'
         
                 // --- NEW FILTER FUNCTION: CALLED WHEN CANVAS PAIR IS CLICKED ---
                                         window.filterWallPanelByPair = function(pairSym) {
-                                                                                                                                                                    var targetCat = 'FRX';
-                                                                                                                                                                    if (PAIRS_BY_CAT['CRY'] && PAIRS_BY_CAT['CRY'].includes(pairSym)) targetCat = 'CRY';
-                                                                                                                                                                    else if (PAIRS_BY_CAT['DRV'] && PAIRS_BY_CAT['DRV'].includes(pairSym)) targetCat = 'DRV';
-                                                                                
-                                                                                                                            function applyFilter() {
-                                                                                                                                _hiddenPairs.delete(pairSym);
-                                                                                                                                activePairs = [pairSym];
-                                                                                                                                activePair = pairSym;
-                                                                                                                                var apiPairInput = document.getElementById('apiPair');
-                                                                                                                                if (apiPairInput) apiPairInput.value = pairSym;
-                                                                                
-                                                                                                                                syncPairToBrokers(pairSym.replace(/^(frx|cry|1HZ)/i, ''), pairSym.replace(/^(frx|cry)/i, ''));
-                                                                                
-                                                                                                                                ensurePairFetched(pairSym);
-                                                                                
-                                                                                                                                if (allPairData[pairSym] && allPairData[pairSym].times.length > 0) {
-                                                                                                                                    timesArray = allPairData[pairSym].times;
-                                                                                                                                    pricesArray = allPairData[pairSym].prices;
-                                                                                                                                    processVisualMatrix();
-                                                                                                                                }
-                                                                                
-                                                                                                                                _updatePairPickerLabel();
-                                                                                                                                window._autoSelectAfterScan = true;
-                                                                                                                                dispatchMultiCycleScan();
-                                                                                                                            }
+                                                                                                                            var targetCat = 'FRX';
+                                                                                                                            if (PAIRS_BY_CAT['CRY'] && PAIRS_BY_CAT['CRY'].includes(pairSym)) targetCat = 'CRY';
+                                                                                                                            else if (PAIRS_BY_CAT['DRV'] && PAIRS_BY_CAT['DRV'].includes(pairSym)) targetCat = 'DRV';
+                                        
+                                                                                    function applyFilter() {
+                                                                                        _hiddenPairs.delete(pairSym);
+                                                                                        activePairs = [pairSym];
+                                                                                        activePair = pairSym;
+                                                                                        var apiPairInput = document.getElementById('apiPair');
+                                                                                        if (apiPairInput) apiPairInput.value = pairSym;
+                                        
+                                                                                        syncPairToBrokers(pairSym.replace(/^(frx|cry|1HZ)/i, ''), pairSym.replace(/^(frx|cry)/i, ''));
+                                        
+                                                                                        if (allPairData[pairSym] && allPairData[pairSym].times.length > 0) {
+                                                                                            timesArray = allPairData[pairSym].times;
+                                                                                            pricesArray = allPairData[pairSym].prices;
+                                                                                            processVisualMatrix();
+                                                                                        }
+                                        
+                                                                                        _updatePairPickerLabel();
+                                                                                        window._autoSelectAfterScan = true;
+                                                                                        dispatchMultiCycleScan();
+                                                                                    }
                                         
                                                                                     if (activeCat !== targetCat) {
                                                                                         switchCategory(targetCat);
