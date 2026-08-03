@@ -617,16 +617,20 @@
                 </div>
     
                 <div style="padding:6px 8px; border-bottom:1px solid #333; font-size:9px; color:#888; font-weight:700; letter-spacing:0.08em; flex-shrink:0;">
-    
-                    Select a pair below to initiate a fresh live sync sequence.
-    
-                </div>
+                    
+                                    Select as many pairs as you want below, then tap APPLY to sync them together.
+                    
+                                </div>
     
                 <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
-    
-                    <button onclick="hpSelectNone()" style="flex:1; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">SYNC ALL PAIRS IN CATEGORY</button>
-    
-                </div>
+                    
+                                    <button onclick="hpSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+                    
+                                    <button onclick="hpSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
+                    
+                                    <button onclick="hpApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
+                    
+                                </div>
     
                 <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
     
@@ -637,12 +641,12 @@
                 <div id="hidePairsGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
     
                 <div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">
-    
-                    <span id="hidePairsCount"></span>
-    
-                    <span style="color:#555;">tap to sync instantly</span>
-    
-                </div>
+                    
+                                    <span id="hidePairsCount"></span>
+                    
+                                    <span style="color:#555;">tap to toggle · hold APPLY to confirm</span>
+                    
+                                </div>
     
             </div>
 
@@ -6108,90 +6112,115 @@ let dataList = currentMode === 'REV'
 
                 ════════════════════════════════════════════════════ */
 
-                var _hpTempHidden = new Set();
-
-        
-
-                function openHidePairsModal() {
+                var _hpMultiSelected = new Set();
                 
-                            _renderHidePairsGrid('');
+                        
                 
-                            document.getElementById('hidePairsSearch').value = '';
+                                function openHidePairsModal() {
+                                
+                                            var base = activePairs !== null ? activePairs : ALL_PAIRS;
+                                
+                                            _hpMultiSelected = new Set(base);
+                                
+                                            _renderHidePairsGrid('');
+                                
+                                            document.getElementById('hidePairsSearch').value = '';
+                                
+                                            document.getElementById('hidePairsModal').style.display = 'flex';
+                                
+                                            document.getElementById('hidePairsOverlay').style.display = 'block';
+                                
+                                            _updateHidePairsCount();
+                                
+                                        }
                 
-                            document.getElementById('hidePairsModal').style.display = 'flex';
+                        
                 
-                            document.getElementById('hidePairsOverlay').style.display = 'block';
+                                function closeHidePairsModal() {
+                                    _closeModalPair('hidePairsModal', 'hidePairsOverlay');
+                                }
                 
-                            _updateHidePairsCount();
+                        
                 
-                        }
-
-        
-
-                function closeHidePairsModal() {
-                    _closeModalPair('hidePairsModal', 'hidePairsOverlay');
-                }
-
-        
-
-                function _renderHidePairsGrid(filter) {
-                
-                            var grid = document.getElementById('hidePairsGrid');
-                
-                            var q = filter.toUpperCase().replace(/^(FRX|CRY|1HZ)/i, '');
-                
-                            var pairs = ALL_PAIRS.filter(function(p) {
-                
-                                var name = p.replace(/^(frx|cry|1HZ)/i, '');
-                
-                                return !q || name.includes(q);
-                
-                            });
-                
-                            grid.innerHTML = pairs.map(function(p) {
-                
-                                var name = getPairDisplayName(p);
-                
-                                var isActive = (activePairs && activePairs.length === 1 && p === activePair);
-                
-                                var bg = isActive ? 'rgba(255,215,0,0.12)' : 'var(--bg-base)';
-                
-                                var col = isActive ? '#FFD700' : '#FFFFFF';
-                
-                                var brd = isActive ? '#FFD700' : '#444';
-                
-                                var suffix = isActive ? ' ★' : '';
-                
-                                return '<button onclick="hpToggle(\'' + p + '\', this)" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:\'JetBrains Mono\',monospace;" data-pair="' + p + '">' + name + suffix + '</button>';
-                
-                            }).join('');
-                
-                        }
-                
-                        function hpToggle(pair, btn) {
-                            activePairs = [pair];
-                            activePair = pair;
-                            var apiPairInput = document.getElementById('apiPair');
-                            if (apiPairInput) apiPairInput.value = pair;
-                            closeHidePairsModal();
-                            _triggerLiveReboot();
-                            autoFetch();
-                        }
-                
-                        function hpSelectNone() {
-                            activePairs = null;
-                            closeHidePairsModal();
-                            _triggerLiveReboot();
-                            autoFetch();
-                        }
-                
-                        function hpApply() {
-                            // Deprecated, removed button
-                        }
-                
-                        function _updateHidePairsCount() {
-                            document.getElementById('hidePairsCount').textContent = ALL_PAIRS.length + ' pairs available';
-                        }
+                                function _renderHidePairsGrid(filter) {
+                                
+                                            var grid = document.getElementById('hidePairsGrid');
+                                
+                                            var q = filter.toUpperCase().replace(/^(FRX|CRY|1HZ)/i, '');
+                                
+                                            var pairs = ALL_PAIRS.filter(function(p) {
+                                
+                                                var name = p.replace(/^(frx|cry|1HZ)/i, '');
+                                
+                                                return !q || name.includes(q);
+                                
+                                            });
+                                
+                                            grid.innerHTML = pairs.map(function(p) {
+                                
+                                                var name = getPairDisplayName(p);
+                                
+                                                var isSel = _hpMultiSelected.has(p);
+                                
+                                                var bg = isSel ? 'rgba(46,213,115,0.15)' : 'var(--bg-base)';
+                                
+                                                var col = isSel ? 'var(--accent-green)' : '#FFFFFF';
+                                
+                                                var brd = isSel ? 'var(--accent-green)' : '#444';
+                                
+                                                return '<button onclick="hpToggle(\'' + p + '\', this)" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:\'JetBrains Mono\',monospace;" data-pair="' + p + '">' + name + '</button>';
+                                
+                                            }).join('');
+                                
+                                            _updateHidePairsCount();
+                                
+                                        }
+                                
+                                        function hpToggle(pair, btn) {
+                                            if (_hpMultiSelected.has(pair)) {
+                                                _hpMultiSelected.delete(pair);
+                                            } else {
+                                                _hpMultiSelected.add(pair);
+                                            }
+                                            var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
+                                            _renderHidePairsGrid(q);
+                                        }
+                                
+                                        function hpSelectAll() {
+                                            ALL_PAIRS.forEach(function(p) { _hpMultiSelected.add(p); });
+                                            var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
+                                            _renderHidePairsGrid(q);
+                                        }
+                                
+                                        function hpSelectNone() {
+                                            _hpMultiSelected.clear();
+                                            var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
+                                            _renderHidePairsGrid(q);
+                                        }
+                                
+                                        function hpApply() {
+                                            if (_hpMultiSelected.size === 0) {
+                                                activePairs = ["cryBTCUSD"];
+                                            } else if (_hpMultiSelected.size === ALL_PAIRS.length) {
+                                                activePairs = null;
+                                            } else {
+                                                activePairs = [..._hpMultiSelected];
+                                            }
+                                            if (activePairs !== null && !activePairs.includes(activePair)) {
+                                                activePair = activePairs[0];
+                                                var apiPairInput = document.getElementById('apiPair');
+                                                if (apiPairInput) apiPairInput.value = activePair;
+                                            }
+                                            _updatePairPickerLabel();
+                                            closeHidePairsModal();
+                                            _triggerLiveReboot();
+                                            autoFetch();
+                                        }
+                                
+                                        function _updateHidePairsCount() {
+                                            var n = _hpMultiSelected.size;
+                                            document.getElementById('hidePairsCount').textContent = n + ' / ' + ALL_PAIRS.length + ' selected';
+                                        }
 
         
 
