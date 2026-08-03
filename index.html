@@ -603,50 +603,48 @@
 
 
     <!-- ══ HIDE PAIRS MODAL ══ -->
-
-        <div id="hidePairsOverlay" onclick="closeHidePairsModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
-
-        <div id="hidePairsModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:2px; overflow:hidden;">
-
-            <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-
-                <span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-red);">HIDE PAIRS FROM WALL</span>
-
-                <button onclick="closeHidePairsModal()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
-
+    
+            <div id="hidePairsOverlay" onclick="closeHidePairsModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
+    
+            <div id="hidePairsModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:2px; overflow:hidden;">
+    
+                <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    
+                    <span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-green);">SYNC NEW PAIR</span>
+    
+                    <button onclick="closeHidePairsModal()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
+    
+                </div>
+    
+                <div style="padding:6px 8px; border-bottom:1px solid #333; font-size:9px; color:#888; font-weight:700; letter-spacing:0.08em; flex-shrink:0;">
+    
+                    Select a pair below to initiate a fresh live sync sequence.
+    
+                </div>
+    
+                <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+    
+                    <button onclick="hpSelectNone()" style="flex:1; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">SYNC ALL PAIRS IN CATEGORY</button>
+    
+                </div>
+    
+                <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
+    
+                    <input id="hidePairsSearch" type="text" placeholder="Search pair..." oninput="_renderHidePairsGrid(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none;">
+    
+                </div>
+    
+                <div id="hidePairsGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
+    
+                <div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">
+    
+                    <span id="hidePairsCount"></span>
+    
+                    <span style="color:#555;">tap to sync instantly</span>
+    
+                </div>
+    
             </div>
-
-            <div style="padding:6px 8px; border-bottom:1px solid #333; font-size:9px; color:#888; font-weight:700; letter-spacing:0.08em; flex-shrink:0;">
-
-                Selected pairs hidden from wall panel only. Scanning continues. Tap again to restore.
-
-            </div>
-
-            <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
-
-                <button onclick="hpSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">SHOW ALL</button>
-
-                <button onclick="hpApply()" style="flex:2; background:var(--accent-red); color:#FFFFFF; border:1px solid var(--accent-red); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
-
-            </div>
-
-            <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
-
-                <input id="hidePairsSearch" type="text" placeholder="Search pair..." oninput="_renderHidePairsGrid(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none;">
-
-            </div>
-
-            <div id="hidePairsGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
-
-            <div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">
-
-                <span id="hidePairsCount">none hidden</span>
-
-                <span style="color:#555;">red = hidden · tap to toggle</span>
-
-            </div>
-
-        </div>
 
     
 
@@ -6115,20 +6113,18 @@ let dataList = currentMode === 'REV'
         
 
                 function openHidePairsModal() {
-
-                    _hpTempHidden = new Set(_hiddenPairs);
-
-                    _renderHidePairsGrid('');
-
-                    document.getElementById('hidePairsSearch').value = '';
-
-                    document.getElementById('hidePairsModal').style.display = 'flex';
-
-                    document.getElementById('hidePairsOverlay').style.display = 'block';
-
-                    _updateHidePairsCount();
-
-                }
+                
+                            _renderHidePairsGrid('');
+                
+                            document.getElementById('hidePairsSearch').value = '';
+                
+                            document.getElementById('hidePairsModal').style.display = 'flex';
+                
+                            document.getElementById('hidePairsOverlay').style.display = 'block';
+                
+                            _updateHidePairsCount();
+                
+                        }
 
         
 
@@ -6139,116 +6135,63 @@ let dataList = currentMode === 'REV'
         
 
                 function _renderHidePairsGrid(filter) {
-
-                                    var grid = document.getElementById('hidePairsGrid');
-
-                                    var q = filter.toUpperCase().replace(/^(FRX|CRY|1HZ)/i, '');
-
-                                    var pairs = ALL_PAIRS.filter(function(p) {
-
-                                        var name = p.replace(/^(frx|cry|1HZ)/i, '');
-
-                                        return !q || name.includes(q);
-
-                                    });
-
-                    grid.innerHTML = pairs.map(function(p) {
-                    
-                                            var name = getPairDisplayName(p);
-                    
-                                            var hidden = _hpTempHidden.has(p);
-                    
-                                            var isActive = (p === activePair);
-                    
-                                            var bg = hidden ? 'rgba(230,57,70,0.18)' : (isActive ? 'rgba(255,215,0,0.12)' : 'var(--bg-base)');
-                    
-                                            var col = hidden ? 'var(--accent-red)' : (isActive ? '#FFD700' : '#FFFFFF');
-                    
-                                            var brd = hidden ? 'var(--accent-red)' : (isActive ? '#FFD700' : '#444');
-                    
-                                            var suffix = hidden ? ' ✕' : (isActive ? ' ★' : '');
-                    
-                                            return '<button onclick="hpToggle(\'' + p + '\', this)" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:\'JetBrains Mono\',monospace;" data-pair="' + p + '">' + name + suffix + '</button>';
-                    
-                                        }).join('');
-
-                }
-
-        
-
-                function hpToggle(pair, btn) {
-
-                    if (_hpTempHidden.has(pair)) {
-
-                        _hpTempHidden.delete(pair);
-
-                        btn.style.background  = 'var(--bg-base)';
-
-                        btn.style.color       = '#FFFFFF';
-
-                        btn.style.borderColor = '#444';
-
-                        btn.textContent       = getPairDisplayName(pair);
-
-                    } else {
-
-                        _hpTempHidden.add(pair);
-
-                        btn.style.background  = 'rgba(230,57,70,0.18)';
-
-                        btn.style.color       = 'var(--accent-red)';
-
-                        btn.style.borderColor = 'var(--accent-red)';
-
-                        btn.textContent       = getPairDisplayName(pair) + ' ✕';
-
-                    }
-
-                    _updateHidePairsCount();
-
-                }
-
-        
-
-                function hpSelectNone() {
-
-                    _hpTempHidden.clear();
-
-                    _renderHidePairsGrid(document.getElementById('hidePairsSearch').value);
-
-                    _updateHidePairsCount();
-
-                }
-
-        
-
-                function hpApply() {
-
-                    _hiddenPairs = new Set(_hpTempHidden);
-
-                    _updateHidePairsBtn();
-
-                    closeHidePairsModal();
-
-                    renderFilteredTable();
-
-                }
-
-        
-
-                function _updateHidePairsCount() {
-
-                    var n = _hpTempHidden.size;
-
-                    document.getElementById('hidePairsCount').textContent =
-
-                        n === 0 ? 'none hidden' :
-
-                        n === ALL_PAIRS.length ? 'ALL hidden' :
-
-                        n + ' hidden';
-
-                }
+                
+                            var grid = document.getElementById('hidePairsGrid');
+                
+                            var q = filter.toUpperCase().replace(/^(FRX|CRY|1HZ)/i, '');
+                
+                            var pairs = ALL_PAIRS.filter(function(p) {
+                
+                                var name = p.replace(/^(frx|cry|1HZ)/i, '');
+                
+                                return !q || name.includes(q);
+                
+                            });
+                
+                            grid.innerHTML = pairs.map(function(p) {
+                
+                                var name = getPairDisplayName(p);
+                
+                                var isActive = (activePairs && activePairs.length === 1 && p === activePair);
+                
+                                var bg = isActive ? 'rgba(255,215,0,0.12)' : 'var(--bg-base)';
+                
+                                var col = isActive ? '#FFD700' : '#FFFFFF';
+                
+                                var brd = isActive ? '#FFD700' : '#444';
+                
+                                var suffix = isActive ? ' ★' : '';
+                
+                                return '<button onclick="hpToggle(\'' + p + '\', this)" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:\'JetBrains Mono\',monospace;" data-pair="' + p + '">' + name + suffix + '</button>';
+                
+                            }).join('');
+                
+                        }
+                
+                        function hpToggle(pair, btn) {
+                            activePairs = [pair];
+                            activePair = pair;
+                            var apiPairInput = document.getElementById('apiPair');
+                            if (apiPairInput) apiPairInput.value = pair;
+                            closeHidePairsModal();
+                            _triggerLiveReboot();
+                            autoFetch();
+                        }
+                
+                        function hpSelectNone() {
+                            activePairs = null;
+                            closeHidePairsModal();
+                            _triggerLiveReboot();
+                            autoFetch();
+                        }
+                
+                        function hpApply() {
+                            // Deprecated, removed button
+                        }
+                
+                        function _updateHidePairsCount() {
+                            document.getElementById('hidePairsCount').textContent = ALL_PAIRS.length + ' pairs available';
+                        }
 
         
 
