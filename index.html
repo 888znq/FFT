@@ -1776,16 +1776,19 @@
                                                                         var _pendingLen = (typeof window._wpsPendingSessionLen !== 'undefined' && window._wpsPendingSessionLen !== null) ? parseInt(window._wpsPendingSessionLen, 10) : null;
                                                                         var _selectLen = (_pendingLen !== null && divisors.indexOf(_pendingLen) !== -1) ? _pendingLen : curLen;
                                                                         var _fixed24x7 = (activeCat === '24x7');
-                                                                                                                                                var _isSpecialSessionActive = _fixed24x7 ? (sessionWindowStartMin === 0 && sessionWindowEndMin === 1440) : (sessionWindowStartMin === 300 && sessionWindowEndMin === 1020);
+                                                                                                                                                var _is0530Active = _fixed24x7 && (sessionWindowStartMin === 0 && sessionWindowEndMin === 1440);
+                                                                                                                                                var _is1030Active = (sessionWindowStartMin === 300 && sessionWindowEndMin === 1020);
+                                                                                                                                                var _isSpecialSessionActive = _fixed24x7 ? (_is0530Active || _is1030Active) : _is1030Active;
                                                                         var _lenOptsHtml = divisors.map(function(d) {
                                                                             var sessions = winLen / d;
                                                         return '<option value="' + d + '"' + (!_isSpecialSessionActive && d === _selectLen ? ' selected' : '') + '>' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
                                                     }).join('');
                                                                         if (_fixed24x7) {
-                                                                                                                                                    _lenOptsHtml += '<option value="SPECIAL_0530_0530"' + (_isSpecialSessionActive ? ' selected' : '') + '>05:30-05:30 IST (24h)</option>';
-                                                                                                                                                } else {
-                                                                                                                                                    _lenOptsHtml += '<option value="SPECIAL_1030_2230"' + (_isSpecialSessionActive ? ' selected' : '') + '>10:30-22:30 IST (12h)</option>';
-                                                                                                                                                }
+                                                                                                                                                                                                                            _lenOptsHtml += '<option value="SPECIAL_0530_0530"' + (_is0530Active ? ' selected' : '') + '>05:30-05:30 IST (24h)</option>';
+                                                                                                                                                                                                                            _lenOptsHtml += '<option value="SPECIAL_1030_2230"' + (_is1030Active ? ' selected' : '') + '>10:30-22:30 IST (12h)</option>';
+                                                                                                                                                                                                                        } else {
+                                                                                                                                                                                                                            _lenOptsHtml += '<option value="SPECIAL_1030_2230"' + (_isSpecialSessionActive ? ' selected' : '') + '>10:30-22:30 IST (12h)</option>';
+                                                                                                                                                                                                                        }
                                                                                                                                                 lenSel.innerHTML = _lenOptsHtml;
                                                 }
         
