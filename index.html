@@ -416,7 +416,7 @@
                                                     
                                                                                                         <!-- ROW 1: CAT TOGGLE (full width) -->
                                                                                                                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <div style="grid-column: span 2; display:flex; gap:3px; margin-top:-3px;">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <div style="grid-column: span 2; display:flex; gap:3px; margin-top:-3px; flex-wrap:wrap;">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     <button id="catBtn-CRY" onclick="catBtnClick('CRY')" style="display:none; flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 background:var(--accent-green); color:var(--bg-base); border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 font-family:'JetBrains Mono',monospace;">10:30 X 22:30</button>
@@ -451,6 +451,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     <button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">A L L&nbsp;&nbsp;P A I R S</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; width:100%; margin-top:3px;"></div>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </div>
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <!-- SYS button hidden — still accessible via JS -->
@@ -623,20 +624,30 @@
                                 </div>
     
                 <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+                                    
+                                                    <button onclick="hpSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+                                    
+                                                    <button onclick="hpSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
+                                    
+                                                    <button onclick="hpApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
+                                    
+                                                </div>
+                
+                                <div style="display:flex; gap:6px; padding:0 8px 8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+                
+                                                    <button onclick="hpFilterGroup('cry')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">CRYPTO</button>
+                
+                                                    <button onclick="hpFilterGroup('1HZ')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">DERIV</button>
+                
+                                                    <button onclick="hpFilterGroup('frx')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #444; padding:5px 0; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; font-family:'Inter',monospace;">FX</button>
+                
+                                                </div>
                     
-                                    <button onclick="hpSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+                                <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
                     
-                                    <button onclick="hpSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
-                    
-                                    <button onclick="hpApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
+                                    <input id="hidePairsSearch" type="text" placeholder="Search pair..." oninput="_renderHidePairsGrid(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none;">
                     
                                 </div>
-    
-                <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
-    
-                    <input id="hidePairsSearch" type="text" placeholder="Search pair..." oninput="_renderHidePairsGrid(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none;">
-    
-                </div>
     
                 <div id="hidePairsGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
     
@@ -720,7 +731,51 @@
 
 
 
-    <div id="app3-modalOverlay" onclick="closeModalApp3()"></div>
+    <div id="specialBtnModalOverlay" onclick="closeSpecialBtnModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
+    
+        <div id="specialBtnModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:85vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:2px; overflow:hidden;">
+    
+            <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    
+                <span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-green);">NEW SPECIAL BUTTON</span>
+    
+                <button onclick="closeSpecialBtnModal()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
+    
+            </div>
+    
+            <div style="padding:8px; border-bottom:1px solid #333; flex-shrink:0;">
+    
+                <input id="sbNameInput" type="text" placeholder="Button name..." style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:6px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">
+    
+            </div>
+    
+            <div style="padding:8px; border-bottom:1px solid #333; flex-shrink:0;">
+    
+                <select id="sbSessionSelect" class="ctrl-input ctrl-select" style="width:100%; font-size:11px; color:#FFFFFF; height:28px;"></select>
+    
+            </div>
+    
+            <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+    
+                <button onclick="sbSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+    
+                <button onclick="sbSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
+    
+                <button onclick="sbSave()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">SAVE ✓</button>
+    
+            </div>
+    
+            <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
+    
+                <input id="sbPairsSearch" type="text" placeholder="Search pair..." oninput="_renderSbPairsGrid(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">
+    
+            </div>
+    
+            <div id="sbPairsGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
+    
+        </div>
+    
+        <div id="app3-modalOverlay" onclick="closeModalApp3()"></div>
 
     <div id="app3-modal">
 
@@ -1397,6 +1452,10 @@
                                                                                                                                                 var activeCat = '24x7'; // 24x7 is the boot-time default category
                                                                                         
                                                                                                 var ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
+                                                                                                                                                var SPECIAL_ALL_PAIRS = PAIRS_BY_CAT['24x7'].slice();
+                                                                                                                                                window.specialButtons = [];
+                                                                                                                                                window._activeSpecialBtnId = null;
+                                                                                                                                                var _sbTempSelected = new Set();
                                                                                                 
                                                                                                                                                 function _applyFrxOnlyCategoryLock() {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ['CRY', '$$$', 'DRV', 'MTL', 'FRX'].forEach(function(c) {
@@ -6190,16 +6249,24 @@ let dataList = currentMode === 'REV'
                                         }
                                 
                                         function hpSelectAll() {
-                                            ALL_PAIRS.forEach(function(p) { _hpMultiSelected.add(p); });
-                                            var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
-                                            _renderHidePairsGrid(q);
-                                        }
-                                
-                                        function hpSelectNone() {
-                                            _hpMultiSelected.clear();
-                                            var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
-                                            _renderHidePairsGrid(q);
-                                        }
+                                                                                    ALL_PAIRS.forEach(function(p) { _hpMultiSelected.add(p); });
+                                                                                    var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
+                                                                                    _renderHidePairsGrid(q);
+                                                                                }
+                                                                        
+                                                                                function hpSelectNone() {
+                                                                                    _hpMultiSelected.clear();
+                                                                                    var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
+                                                                                    _renderHidePairsGrid(q);
+                                                                                }
+                                        
+                                                                                function hpFilterGroup(prefix) {
+                                                                                    ALL_PAIRS.forEach(function(p) {
+                                                                                        if (p.indexOf(prefix) === 0) _hpMultiSelected.add(p);
+                                                                                    });
+                                                                                    var q = document.getElementById('hidePairsSearch') ? document.getElementById('hidePairsSearch').value : '';
+                                                                                    _renderHidePairsGrid(q);
+                                                                                }
                                 
                                         function hpApply() {
                                             if (_hpMultiSelected.size === 0) {
@@ -6653,7 +6720,202 @@ let dataList = currentMode === 'REV'
 
 
 
-        function scheduleMatrixReboot() {
+        function _renderSpecialButtonsBar() {
+                    var container = document.getElementById('specialButtonsContainer');
+                    if (!container) return;
+                    var html = '<button id="sbAddBtn" onclick="openSpecialBtnModal()" style="flex:0 0 auto; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:\'JetBrains Mono\',monospace;">+ SPECIAL</button>';
+                    (window.specialButtons || []).forEach(function(sb) {
+                        var isActive = window._activeSpecialBtnId === sb.id;
+                        var bg = isActive ? 'var(--accent-green)' : 'var(--bg-base)';
+                        var col = isActive ? 'var(--bg-base)' : '#FFFFFF';
+                        html += '<button onclick="applySpecialButton(\'' + sb.id + '\')" oncontextmenu="deleteSpecialButton(event,\'' + sb.id + '\')" style="flex:0 0 auto; background:' + bg + '; color:' + col + '; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:\'JetBrains Mono\',monospace;">' + sb.name + '</button>';
+                    });
+                    container.innerHTML = html;
+                }
+        
+                function openSpecialBtnModal() {
+                    _sbTempSelected = new Set();
+                    var nameEl = document.getElementById('sbNameInput');
+                    if (nameEl) nameEl.value = '';
+                    _renderSbPairsGrid('');
+                    _populateSbSessionSelect();
+                    document.getElementById('specialBtnModal').style.display = 'flex';
+                    document.getElementById('specialBtnModalOverlay').style.display = 'block';
+                }
+        
+                function closeSpecialBtnModal() {
+                    _closeModalPair('specialBtnModal', 'specialBtnModalOverlay');
+                }
+        
+                function _renderSbPairsGrid(filter) {
+                    var grid = document.getElementById('sbPairsGrid');
+                    if (!grid) return;
+                    var q = filter.toUpperCase().replace(/^(FRX|CRY|1HZ)/i, '');
+                    var pairs = SPECIAL_ALL_PAIRS.filter(function(p) {
+                        var name = p.replace(/^(frx|cry|1HZ)/i, '');
+                        return !q || name.includes(q);
+                    });
+                    grid.innerHTML = pairs.map(function(p) {
+                        var name = getPairDisplayName(p);
+                        var isSel = _sbTempSelected.has(p);
+                        var bg = isSel ? 'rgba(46,213,115,0.15)' : 'var(--bg-base)';
+                        var col = isSel ? 'var(--accent-green)' : '#FFFFFF';
+                        var brd = isSel ? 'var(--accent-green)' : '#444';
+                        return '<button onclick="sbToggle(\'' + p + '\')" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:\'JetBrains Mono\',monospace;" data-pair="' + p + '">' + name + '</button>';
+                    }).join('');
+                }
+        
+                function sbToggle(pair) {
+                    if (_sbTempSelected.has(pair)) { _sbTempSelected.delete(pair); } else { _sbTempSelected.add(pair); }
+                    var q = document.getElementById('sbPairsSearch') ? document.getElementById('sbPairsSearch').value : '';
+                    _renderSbPairsGrid(q);
+                }
+        
+                function sbSelectAll() {
+                    SPECIAL_ALL_PAIRS.forEach(function(p) { _sbTempSelected.add(p); });
+                    var q = document.getElementById('sbPairsSearch') ? document.getElementById('sbPairsSearch').value : '';
+                    _renderSbPairsGrid(q);
+                }
+        
+                function sbSelectNone() {
+                    _sbTempSelected.clear();
+                    var q = document.getElementById('sbPairsSearch') ? document.getElementById('sbPairsSearch').value : '';
+                    _renderSbPairsGrid(q);
+                }
+        
+                function _sbDivisorsOf(n) {
+                    var res = [];
+                    for (var i = 1; i <= n; i++) { if (n % i === 0) res.push(i); }
+                    return res;
+                }
+        
+                function _populateSbSessionSelect() {
+                    var sel = document.getElementById('sbSessionSelect');
+                    if (!sel) return;
+                    var divisors = _sbDivisorsOf(1440);
+                    var html = divisors.map(function(d) {
+                        var sessions = 1440 / d;
+                        return '<option value="' + d + '">' + _fmtLenLabel(d) + ' (' + sessions + '/day)</option>';
+                    }).join('');
+                    html += '<option value="SPECIAL_1030_2230">10:30-22:30 IST (12h)</option>';
+                    html += '<option value="SPECIAL_0530_0530" selected>05:30-05:30 IST (24h)</option>';
+                    sel.innerHTML = html;
+                }
+        
+                function sbSave() {
+                    var nameEl = document.getElementById('sbNameInput');
+                    var name = nameEl ? nameEl.value.trim() : '';
+                    if (!name) { alert('Enter a name for the special button'); return; }
+                    if (_sbTempSelected.size === 0) { alert('Select at least one pair'); return; }
+                    var sessEl = document.getElementById('sbSessionSelect');
+                    var sessVal = sessEl ? sessEl.value : 'SPECIAL_0530_0530';
+                    var sb = {
+                        id: 'sb_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                        name: name,
+                        pairs: Array.from(_sbTempSelected),
+                        sessVal: sessVal
+                    };
+                    window.specialButtons.push(sb);
+                    _renderSpecialButtonsBar();
+                    sbSaveDebounced();
+                    closeSpecialBtnModal();
+                }
+        
+                function applySpecialButton(id) {
+                    var sb = (window.specialButtons || []).find(function(x) { return x.id === id; });
+                    if (!sb) return;
+                    window._activeSpecialBtnId = id;
+                    activePairs = sb.pairs.slice();
+                    _hiddenPairs.clear();
+                    if (sb.sessVal === 'SPECIAL_1030_2230') {
+                        sessionWindowStartMin = 300;
+                        sessionWindowEndMin = 1020;
+                    } else if (sb.sessVal === 'SPECIAL_0530_0530') {
+                        sessionWindowStartMin = 0;
+                        sessionWindowEndMin = 1440;
+                    } else {
+                        var lenMin = parseInt(sb.sessVal, 10);
+                        if (!lenMin || lenMin <= 0 || 1440 % lenMin !== 0) lenMin = 1440;
+                        var nowMin = _currentUtcMinuteOfDay();
+                        var sessionIdx = Math.floor(nowMin / lenMin);
+                        sessionWindowStartMin = sessionIdx * lenMin;
+                        sessionWindowEndMin = sessionWindowStartMin + lenMin;
+                    }
+                    window._lastSessionKey = '';
+                    lastClickedSigId = '';
+                    clickCycleIndex = -1;
+                    currentInstances = [];
+                    currentInstanceIndex = -1;
+                    _saveSessionWindow();
+                    scheduleSessionBoundaryWipe();
+                    _refreshSessionSliderUI();
+                    if (activePairs !== null && activePairs.length > 0) {
+                        activePair = activePairs[0];
+                        var apiPairInput = document.getElementById('apiPair');
+                        if (apiPairInput) apiPairInput.value = activePair;
+                    }
+                    _updatePairPickerLabel();
+                    _renderSpecialButtonsBar();
+                    _triggerLiveReboot();
+                }
+        
+                function deleteSpecialButton(evt, id) {
+                    if (evt && evt.preventDefault) evt.preventDefault();
+                    if (!confirm('Delete this special button?')) return;
+                    window.specialButtons = (window.specialButtons || []).filter(function(x) { return x.id !== id; });
+                    if (window._activeSpecialBtnId === id) window._activeSpecialBtnId = null;
+                    _renderSpecialButtonsBar();
+                    sbSaveDebounced();
+                }
+        
+                var _sbSaveTimer = null;
+                var _sbReady = false;
+                var _sbSavePending = false;
+        
+                function sbGetDb() {
+                    if (!window.__wpsDb) return null;
+                    return { db: window.__wpsDb, ref: window.__wpsRef, get: window.__wpsGet, update: window.__wpsUpdate };
+                }
+        
+                function sbSaveNow() {
+                    if (!_sbReady) { _sbSavePending = true; return; }
+                    var fb = sbGetDb();
+                    if (!fb) { _sbSavePending = true; return; }
+                    try {
+                        var updates = {};
+                        updates['special_buttons'] = window.specialButtons || [];
+                        fb.update(fb.ref(fb.db), updates);
+                        _sbSavePending = false;
+                    } catch(e) {}
+                }
+        
+                function sbSaveDebounced() {
+                    if (_sbSaveTimer) clearTimeout(_sbSaveTimer);
+                    _sbSaveTimer = setTimeout(sbSaveNow, 400);
+                }
+        
+                function sbInit() {
+                    var fb = sbGetDb();
+                    if (!fb) { setTimeout(sbInit, 100); return; }
+                    var sbRef = fb.ref(fb.db, 'special_buttons');
+                    fb.get(sbRef).then(function(snapshot) {
+                        var val = snapshot.val();
+                        window.specialButtons = Array.isArray(val) ? val : [];
+                        _renderSpecialButtonsBar();
+                        _sbReady = true;
+                        if (_sbSavePending) sbSaveNow();
+                    }).catch(function() {
+                        _sbReady = true;
+                        if (_sbSavePending) sbSaveNow();
+                    });
+                }
+        
+                document.addEventListener('DOMContentLoaded', function() {
+                    _renderSpecialButtonsBar();
+                    sbInit();
+                });
+        
+                function scheduleMatrixReboot() {
                             if (window._rebootTimer) clearTimeout(window._rebootTimer);
                             var now = new Date();
                             var nextReboot = new Date();
