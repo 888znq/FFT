@@ -687,9 +687,101 @@
 
     
 
-        <!-- ══ PAIR PICKER MODAL ══ -->
-
-            <div id="pairPickerOverlay" onclick="closePairPicker()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
+        <!-- ══ SPECIAL BUTTON WIZARD (NAME → TIME MAPPING → PAIRS) ══ -->
+        
+                <div id="swModalOverlay" onclick="closeSpecialWizard()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3101;"></div>
+        
+                <div id="swModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:380px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3102; flex-direction:column; border-radius:2px; overflow:hidden;">
+        
+                    <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+        
+                        <span id="swModalTitle" style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-green);">NEW SPECIAL — STEP 1/3: NAME</span>
+        
+                        <button onclick="closeSpecialWizard()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
+        
+                    </div>
+        
+                    <div id="swStep1" style="display:flex; flex-direction:column; gap:10px; padding:16px;">
+        
+                        <label style="font-size:9px; font-weight:800; letter-spacing:0.12em; color:#FFD700;">FIRST, NAME THIS SPECIAL BUTTON</label>
+        
+                        <input id="swNameInput" type="text" placeholder="e.g. My London Session" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:8px 10px; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">
+        
+                        <button onclick="swGoStep2()" style="margin-top:6px; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:8px 0; font-size:11px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NEXT: TIME MAPPING →</button>
+        
+                    </div>
+        
+                    <div id="swStep2" style="display:none; flex-direction:column; gap:10px; padding:16px;">
+        
+                        <label style="font-size:9px; font-weight:800; letter-spacing:0.12em; color:#FFD700;">ENTER TIME MAPPING MANUALLY (IST)</label>
+        
+                        <div style="display:flex; gap:8px;">
+        
+                            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+        
+                                <span style="font-size:9px; font-weight:800; color:#888;">START (HH:MM)</span>
+        
+                                <input id="swStartInput" type="text" placeholder="10:30" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:7px 8px; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box; text-align:center;">
+        
+                            </div>
+        
+                            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+        
+                                <span style="font-size:9px; font-weight:800; color:#888;">END (HH:MM)</span>
+        
+                                <input id="swEndInput" type="text" placeholder="22:30" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:7px 8px; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box; text-align:center;">
+        
+                            </div>
+        
+                        </div>
+        
+                        <div style="font-size:8px; color:#666; font-weight:700; letter-spacing:0.04em;">24H FORMAT, IST. E.G. 09:00 TO 17:00. IF END IS EARLIER THAN START IT WRAPS PAST MIDNIGHT.</div>
+        
+                        <div style="display:flex; gap:6px; margin-top:6px;">
+        
+                            <button onclick="swGoStep1()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:8px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">← BACK</button>
+        
+                            <button onclick="swGoStep3()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:8px 0; font-size:11px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NEXT: PICK PAIRS →</button>
+        
+                        </div>
+        
+                    </div>
+        
+                    <div id="swStep3" style="display:none; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+        
+                        <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+        
+                            <button onclick="swSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+        
+                            <button onclick="swSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
+        
+                        </div>
+        
+                        <div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">
+        
+                            <input id="swPairsSearch" type="text" placeholder="Search pair..." oninput="_swRenderPairsGrid(this.value)" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">
+        
+                        </div>
+        
+                        <div id="swPairsGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
+        
+                        <div style="display:flex; gap:6px; padding:8px; border-top:1px solid #FFFFFF; flex-shrink:0;">
+        
+                            <button onclick="swGoStep2()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:8px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">← BACK</button>
+        
+                            <button onclick="swSave()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:8px 0; font-size:11px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">💾 SAVE SPECIAL</button>
+        
+                        </div>
+        
+                    </div>
+        
+                </div>
+        
+        
+        
+                <!-- ══ PAIR PICKER MODAL ══ -->
+        
+                    <div id="pairPickerOverlay" onclick="closePairPicker()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
 
     <div id="pairPickerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:2px; overflow:hidden;">
 
@@ -6868,7 +6960,7 @@ let dataList = currentMode === 'REV'
         function _renderSpecialButtonsBar() {
                     var container = document.getElementById('specialButtonsContainer');
                     if (!container) return;
-                    var html = '<button id="sbAddBtn" onclick="openHidePairsModal()" style="flex:0 0 auto; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:\'JetBrains Mono\',monospace;">+ SPECIAL</button>';
+                    var html = '<button id="sbAddBtn" onclick="openSpecialWizard()" style="flex:0 0 auto; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:\'JetBrains Mono\',monospace;">+ SPECIAL</button>';
                     (window.specialButtons || []).forEach(function(sb) {
                         var isActive = window._activeSpecialBtnId === sb.id;
                         var bg = isActive ? 'var(--accent-green)' : 'var(--bg-base)';
@@ -6967,25 +7059,34 @@ let dataList = currentMode === 'REV'
                 }
         
                 function applySpecialButton(id) {
-                    var sb = (window.specialButtons || []).find(function(x) { return x.id === id; });
-                    if (!sb) return;
-                    window._activeSpecialBtnId = id;
-                    activePairs = sb.pairs.slice();
-                    _hiddenPairs.clear();
-                    if (sb.sessVal === 'SPECIAL_1030_2230') {
-                        sessionWindowStartMin = 300;
-                        sessionWindowEndMin = 1020;
-                    } else if (sb.sessVal === 'SPECIAL_0530_0530') {
-                        sessionWindowStartMin = 0;
-                        sessionWindowEndMin = 1440;
-                    } else {
-                        var lenMin = parseInt(sb.sessVal, 10);
-                        if (!lenMin || lenMin <= 0 || 1440 % lenMin !== 0) lenMin = 1440;
-                        var nowMin = _currentUtcMinuteOfDay();
-                        var sessionIdx = Math.floor(nowMin / lenMin);
-                        sessionWindowStartMin = sessionIdx * lenMin;
-                        sessionWindowEndMin = sessionWindowStartMin + lenMin;
-                    }
+                                    var sb = (window.specialButtons || []).find(function(x) { return x.id === id; });
+                                    if (!sb) return;
+                                    window._activeSpecialBtnId = id;
+                                    activePairs = sb.pairs.slice();
+                                    _hiddenPairs.clear();
+                                    if (sb.sessVal === 'SPECIAL_1030_2230') {
+                                        sessionWindowStartMin = 300;
+                                        sessionWindowEndMin = 1020;
+                                    } else if (sb.sessVal === 'SPECIAL_0530_0530') {
+                                        sessionWindowStartMin = 0;
+                                        sessionWindowEndMin = 1440;
+                                    } else if (sb.sessVal && sb.sessVal.indexOf('MANUAL_') === 0) {
+                                        var _swParts = sb.sessVal.split('_');
+                                        var _swStartIst = parseInt(_swParts[1], 10);
+                                        var _swEndIst = parseInt(_swParts[2], 10);
+                                        var _swStartUtc = ((_swStartIst - 330) % 1440 + 1440) % 1440;
+                                        var _swEndUtc = ((_swEndIst - 330) % 1440 + 1440) % 1440;
+                                        if (_swEndUtc <= _swStartUtc) _swEndUtc += 1440;
+                                        sessionWindowStartMin = _swStartUtc;
+                                        sessionWindowEndMin = _swEndUtc;
+                                    } else {
+                                        var lenMin = parseInt(sb.sessVal, 10);
+                                        if (!lenMin || lenMin <= 0 || 1440 % lenMin !== 0) lenMin = 1440;
+                                        var nowMin = _currentUtcMinuteOfDay();
+                                        var sessionIdx = Math.floor(nowMin / lenMin);
+                                        sessionWindowStartMin = sessionIdx * lenMin;
+                                        sessionWindowEndMin = sessionWindowStartMin + lenMin;
+                                    }
                     window._lastSessionKey = '';
                     lastClickedSigId = '';
                     clickCycleIndex = -1;
@@ -7005,15 +7106,140 @@ let dataList = currentMode === 'REV'
                 }
         
                 function deleteSpecialButton(evt, id) {
-                    if (evt && evt.preventDefault) evt.preventDefault();
-                    if (!confirm('Delete this special button?')) return;
-                    window.specialButtons = (window.specialButtons || []).filter(function(x) { return x.id !== id; });
-                    if (window._activeSpecialBtnId === id) window._activeSpecialBtnId = null;
-                    _renderSpecialButtonsBar();
-                    sbSaveDebounced();
-                }
-        
-                var _sbSaveTimer = null;
+                                    if (evt && evt.preventDefault) evt.preventDefault();
+                                    if (!confirm('Delete this special button?')) return;
+                                    window.specialButtons = (window.specialButtons || []).filter(function(x) { return x.id !== id; });
+                                    if (window._activeSpecialBtnId === id) window._activeSpecialBtnId = null;
+                                    _renderSpecialButtonsBar();
+                                    sbSaveDebounced();
+                                }
+                        
+                                var _swSelected = new Set();
+                                var _swName = '';
+                                var _swStart = '';
+                                var _swEnd = '';
+                        
+                                function openSpecialWizard() {
+                                    _swSelected = new Set();
+                                    _swName = '';
+                                    _swStart = '';
+                                    _swEnd = '';
+                                    var nameEl = document.getElementById('swNameInput');
+                                    if (nameEl) nameEl.value = '';
+                                    var startEl = document.getElementById('swStartInput');
+                                    if (startEl) startEl.value = '';
+                                    var endEl = document.getElementById('swEndInput');
+                                    if (endEl) endEl.value = '';
+                                    var searchEl = document.getElementById('swPairsSearch');
+                                    if (searchEl) searchEl.value = '';
+                                    _swShowStep(1);
+                                    document.getElementById('swModal').style.display = 'flex';
+                                    document.getElementById('swModalOverlay').style.display = 'block';
+                                }
+                        
+                                function closeSpecialWizard() {
+                                    _closeModalPair('swModal', 'swModalOverlay');
+                                }
+                        
+                                function _swShowStep(n) {
+                                    var t = document.getElementById('swModalTitle');
+                                    var s1 = document.getElementById('swStep1');
+                                    var s2 = document.getElementById('swStep2');
+                                    var s3 = document.getElementById('swStep3');
+                                    if (s1) s1.style.display = n === 1 ? 'flex' : 'none';
+                                    if (s2) s2.style.display = n === 2 ? 'flex' : 'none';
+                                    if (s3) s3.style.display = n === 3 ? 'flex' : 'none';
+                                    if (t) t.textContent = n === 1 ? 'NEW SPECIAL — STEP 1/3: NAME' : (n === 2 ? 'NEW SPECIAL — STEP 2/3: TIME MAPPING' : 'NEW SPECIAL — STEP 3/3: PICK PAIRS');
+                                }
+                        
+                                function swGoStep1() { _swShowStep(1); }
+                        
+                                function swGoStep2() {
+                                    var nameEl = document.getElementById('swNameInput');
+                                    var name = nameEl ? nameEl.value.trim() : '';
+                                    if (!name) { alert('Enter a name first'); return; }
+                                    _swName = name;
+                                    _swShowStep(2);
+                                }
+                        
+                                function _swParseTimeToMin(str) {
+                                    var m = /^(\d{1,2}):(\d{2})$/.exec((str || '').trim());
+                                    if (!m) return null;
+                                    var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+                                    if (isNaN(h) || isNaN(mi) || h < 0 || h > 23 || mi < 0 || mi > 59) return null;
+                                    return h * 60 + mi;
+                                }
+                        
+                                function swGoStep3() {
+                                    var startEl = document.getElementById('swStartInput');
+                                    var endEl = document.getElementById('swEndInput');
+                                    var startStr = startEl ? startEl.value : '';
+                                    var endStr = endEl ? endEl.value : '';
+                                    if (_swParseTimeToMin(startStr) === null || _swParseTimeToMin(endStr) === null) {
+                                        alert('Enter both times as HH:MM, e.g. 10:30');
+                                        return;
+                                    }
+                                    _swStart = startStr.trim();
+                                    _swEnd = endStr.trim();
+                                    _swRenderPairsGrid('');
+                                    _swShowStep(3);
+                                }
+                        
+                                function _swRenderPairsGrid(filter) {
+                                    var grid = document.getElementById('swPairsGrid');
+                                    if (!grid) return;
+                                    var q = (filter || '').toUpperCase().replace(/^(FRX|CRY|1HZ)/i, '');
+                                    var pairs = SPECIAL_ALL_PAIRS.filter(function(p) {
+                                        var name = p.replace(/^(frx|cry|1HZ)/i, '');
+                                        return !q || name.includes(q);
+                                    });
+                                    grid.innerHTML = pairs.map(function(p) {
+                                        var name = getPairDisplayName(p);
+                                        var isSel = _swSelected.has(p);
+                                        var bg = isSel ? 'rgba(46,213,115,0.15)' : 'var(--bg-base)';
+                                        var col = isSel ? 'var(--accent-green)' : '#FFFFFF';
+                                        var brd = isSel ? 'var(--accent-green)' : '#444';
+                                        return '<button onclick="_swToggle(\'' + p + '\')" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:\'JetBrains Mono\',monospace;">' + name + '</button>';
+                                    }).join('');
+                                }
+                        
+                                function _swToggle(pair) {
+                                    if (_swSelected.has(pair)) { _swSelected.delete(pair); } else { _swSelected.add(pair); }
+                                    var q = document.getElementById('swPairsSearch') ? document.getElementById('swPairsSearch').value : '';
+                                    _swRenderPairsGrid(q);
+                                }
+                        
+                                function swSelectAll() {
+                                    SPECIAL_ALL_PAIRS.forEach(function(p) { _swSelected.add(p); });
+                                    var q = document.getElementById('swPairsSearch') ? document.getElementById('swPairsSearch').value : '';
+                                    _swRenderPairsGrid(q);
+                                }
+                        
+                                function swSelectNone() {
+                                    _swSelected.clear();
+                                    var q = document.getElementById('swPairsSearch') ? document.getElementById('swPairsSearch').value : '';
+                                    _swRenderPairsGrid(q);
+                                }
+                        
+                                function swSave() {
+                                    if (_swSelected.size === 0) { alert('Select at least one pair'); return; }
+                                    var startIstMin = _swParseTimeToMin(_swStart);
+                                    var endIstMin = _swParseTimeToMin(_swEnd);
+                                    if (startIstMin === null || endIstMin === null) { alert('Invalid time mapping — go back and re-enter'); return; }
+                                    var sessVal = 'MANUAL_' + startIstMin + '_' + endIstMin;
+                                    var sb = {
+                                        id: 'sb_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                                        name: _swName,
+                                        pairs: Array.from(_swSelected),
+                                        sessVal: sessVal
+                                    };
+                                    window.specialButtons.push(sb);
+                                    _renderSpecialButtonsBar();
+                                    sbSaveDebounced();
+                                    closeSpecialWizard();
+                                }
+                        
+                                var _sbSaveTimer = null;
                 var _sbReady = false;
                 var _sbSavePending = false;
         
