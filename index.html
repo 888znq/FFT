@@ -4045,10 +4045,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                   window._drvWin.postMessage({ trinityOS_pair: cleanPair }, '*');
                                                               }
                                                               window.opener && window.opener.postMessage({ trinityOS_pair: cleanPair }, '*');
-                                                                                                                            window.parent && window.parent.postMessage({ trinityOS_pair: cleanPair }, '*');
-                                                                                                                        } catch(e) {}
-                                                                     
-                                                                                }
+                                                          } catch(e) {}
+       
+                  }
        
                   selectSignal(pair, c, r, s1, s2, colColor, type, -1, gapVal, curGapVal);
                          
@@ -4079,13 +4078,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                             window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
                                                         }
                                                         if (window._drvWin && !window._drvWin.closed) {
-                                                                                                                    // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
-                                                                                                                    window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                                                                                }
-                                                                                                                window.opener && window.opener.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                                                                                window.parent && window.parent.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                                                                            } catch(e) {}
-                                                                              }
+                                                            // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
+                                                            window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
+                                                        }
+                                                        window.opener && window.opener.postMessage({ trinityOS_pair: drvSymbol }, '*');
+                                                    } catch(e) {}
+                      }
 
 
 
@@ -8057,4 +8055,3 @@ let dataList = currentMode === 'REV'
                                                     </body>
                                     
                                             </html> 
-
