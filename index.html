@@ -4079,12 +4079,13 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                             window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
                                                         }
                                                         if (window._drvWin && !window._drvWin.closed) {
-                                                            // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
-                                                            window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                        }
-                                                        window.opener && window.opener.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                    } catch(e) {}
-                      }
+                                                                                                                    // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
+                                                                                                                    window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
+                                                                                                                }
+                                                                                                                window.opener && window.opener.postMessage({ trinityOS_pair: drvSymbol }, '*');
+                                                                                                                window.parent && window.parent.postMessage({ trinityOS_pair: drvSymbol }, '*');
+                                                                                                            } catch(e) {}
+                                                                              }
 
 
 
