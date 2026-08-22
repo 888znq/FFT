@@ -1718,10 +1718,10 @@
     
 
         var allPairData = {};
-                                                                        var activePair = "cryBTCUSD";
-                        
-                                        var activePairs = ["cryBTCUSD"]; // default: BTC/USD preselected, all other pairs unselected
-                                        window.pairLiveStatus = window.pairLiveStatus || {};
+                                                                var activePair = "cryBTCUSD";
+                                
+                                                var activePairs = ["cryBTCUSD", "cryETHUSD"]; // default: BTC/USD and ETH/USD preselected, all other pairs unselected
+                                                window.pairLiveStatus = window.pairLiveStatus || {};
 
 
 
@@ -6508,9 +6508,9 @@ let dataList = currentMode === 'REV'
                                                                                 }
                                 
                                         function hpApply() {
-                                            if (_hpMultiSelected.size === 0) {
-                                                activePairs = ["cryBTCUSD"];
-                                            } else if (_hpMultiSelected.size === ALL_PAIRS.length) {
+                                                                                    if (_hpMultiSelected.size === 0) {
+                                                                                        activePairs = ["cryBTCUSD", "cryETHUSD"];
+                                                                                    } else if (_hpMultiSelected.size === ALL_PAIRS.length) {
                                                 activePairs = null;
                                             } else {
                                                 activePairs = [..._hpMultiSelected];
@@ -6866,10 +6866,10 @@ let dataList = currentMode === 'REV'
                                 }
         
                 function pairPickerApply() {
-                
-                            if (_ppTempSelected.size === 0) {
-                                activePairs = ["cryBTCUSD"];
-                            } else if (_ppTempSelected.size === ALL_PAIRS.length) {
+                                
+                                            if (_ppTempSelected.size === 0) {
+                                                activePairs = ["cryBTCUSD", "cryETHUSD"];
+                                            } else if (_ppTempSelected.size === ALL_PAIRS.length) {
                                 activePairs = null; // same as ALL
                             } else {
                                 activePairs = [..._ppTempSelected];
