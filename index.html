@@ -4005,89 +4005,104 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
-
-       function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
        
-                  if (brokerFireEnabled) {
+              function resolveSignalAction(type, colColor) {
+                  if (type === 'REV') {
+                      return colColor === 'R' ? 'CALL' : 'PUT';
+                  } else {
+                      return colColor === 'G' ? 'CALL' : 'PUT';
+                  }
+              }
        
-                  // cleanPair = stripped for OT/PO/clipboard (e.g. "EURUSD"); 1HZ is KEPT because the clipboard
-                  // value is the only thing the index.html broadcaster forwards to every webview — if it's
-                  // stripped here, Deriv's exact-key lookup (e.g. "1HZ50V") never matches. OT/PO never had
-                  // synthetic-index keys to match in the first place, so keeping 1HZ costs them nothing.
-                  var cleanPair = pair.replace(/^(frx|cry)/i, '');
-                  var otPoPair  = cleanPair;
+              function getPairSignalPacket(pair, activeSig) {
+                  var cleanPair = pair.replace(/^(frx|cry|1HZ)/i, '');
+                  var filterPairSigs = function(arr, sigType) {
+                      return arr.filter(function(x) { return x.pair === pair; })
+                         .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); })
+                         .slice(0, 5)
+                         .map(function(s) {
+                             return {
+                                 type: sigType,
+                                 action: resolveSignalAction(sigType, s.col),
+                                 c: s.c,
+                                 r: s.r,
+                                 s1: s.s1,
+                                 s2: s.s2,
+                                 col: s.col,
+                                 pct: s.pct,
+                                 gap: s.gap || 0,
+                                 curGap: s.curGap || 0
+                             };
+                         });
+                  };
+       
+                  return {
+                      trinityOS_pair: pair,
+                      cleanPair: cleanPair,
+                      active: activeSig ? {
+                          type: activeSig.type,
+                          action: resolveSignalAction(activeSig.type, activeSig.col),
+                          c: activeSig.c,
+                          r: activeSig.r,
+                          s1: activeSig.s1,
+                          s2: activeSig.s2,
+                          col: activeSig.col,
+                          pct: activeSig.pct,
+                          gap: activeSig.gap || 0,
+                          curGap: activeSig.curGap || 0
+                      } : null,
+                      revSignals: filterPairSigs(globalRevs, 'REV'),
+                      momSignals: filterPairSigs(globalMoms, 'MOM'),
+                      timestamp: Date.now()
+                  };
+              }
+       
+              function syncPairToBrokers(otPoPair, derivPair, packet) {
+                  var drvSymbol = derivPair || otPoPair;
+                  var packetString = packet ? JSON.stringify(packet) : drvSymbol;
        
                   try {
-       
-                      (window.AndroidClipboard ? window.AndroidClipboard.write(otPoPair) : navigator.clipboard.writeText(otPoPair));
-       
-                  } catch(e) {
-       
-                      var el = document.createElement('textarea');
-       
-                      el.value = otPoPair;
-       
-                      document.body.appendChild(el);
-       
-                      el.select();
-       
-                      document.execCommand('copy');
-       
-                      document.body.removeChild(el);
-       
+                      if (window.AndroidClipboard) {
+                          window.AndroidClipboard.write(packetString);
+                      } else {
+                          navigator.clipboard.writeText(packetString);
+                      }
+                  } catch (e) {
+                      try {
+                          var el = document.createElement('textarea');
+                          el.value = packetString;
+                          document.body.appendChild(el);
+                          el.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(el);
+                      } catch (e2) {}
                   }
        
-                  // ── TRINITY→Broker postMessage bridge ──
-                             try {
-                                                              if (window._otWin && !window._otWin.closed) {
-                                                                  window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
-                                                              }
-                                                              if (window._drvWin && !window._drvWin.closed) {
-                                                                  // Send raw Deriv API symbol (e.g. "1HZ100V", "frxEURUSD") so preload can map it correctly
-                                                                  window._drvWin.postMessage({ trinityOS_pair: cleanPair }, '*');
-                                                              }
-                                                              window.opener && window.opener.postMessage({ trinityOS_pair: cleanPair }, '*');
-                                                                                                                            window.parent && window.parent.postMessage({ trinityOS_pair: cleanPair }, '*');
-                                                                                                                        } catch(e) {}
-                                                                     
-                                                                                }
+                  var messagePayload = packet || { trinityOS_pair: drvSymbol };
+                  try {
+                      if (window._otWin && !window._otWin.closed) window._otWin.postMessage(messagePayload, '*');
+                      if (window._drvWin && !window._drvWin.closed) window._drvWin.postMessage(messagePayload, '*');
+                      if (window.opener) window.opener.postMessage(messagePayload, '*');
+                      if (window.parent) window.parent.postMessage(messagePayload, '*');
+                  } catch(e) {}
+              }
+       
+              function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
+                  var activeSig = { pair: pair, c: c, r: r, s1: s1, s2: s2, col: colColor, type: type, gap: gapVal, curGap: curGapVal };
+                  
+                  var targetList = type === 'REV' ? globalRevs : globalMoms;
+                  var match = targetList.find(function(x) { return x.pair === pair && x.c === c && x.r === r && x.s1 === s1 && x.col === colColor; });
+                  if (match) activeSig.pct = match.pct;
+       
+                  var packet = getPairSignalPacket(pair, activeSig);
+       
+                  if (brokerFireEnabled) {
+                      var cleanPair = pair.replace(/^(frx|cry)/i, '');
+                      syncPairToBrokers(cleanPair, pair, packet);
+                  }
        
                   selectSignal(pair, c, r, s1, s2, colColor, type, -1, gapVal, curGapVal);
-                         
-                                }
-
-
-
-       // otPoPair = stripped for OT/PO (e.g. "EURUSD"), derivPair = raw symbol for Deriv (e.g. "frxEURUSD" or "1HZ100V")
-       function syncPairToBrokers(otPoPair, derivPair) {
-                          var drvSymbol = derivPair || otPoPair; // fallback so old callers still work
-                          // The clipboard write is what index.html's broadcaster actually forwards to every
-                          // webview — without it, this function only relied on the window.open()/postMessage
-                          // popup-bridge below, which can't reach sibling <webview> panes in this layout.
-                          try {
-                              (window.AndroidClipboard ? window.AndroidClipboard.write(drvSymbol) : navigator.clipboard.writeText(drvSymbol));
-                          } catch (e) {
-                              try {
-                                  var el = document.createElement('textarea');
-                                  el.value = drvSymbol;
-                                  document.body.appendChild(el);
-                                  el.select();
-                                  document.execCommand('copy');
-                                  document.body.removeChild(el);
-                              } catch (e2) {}
-                          }
-                          try {
-                                                        if (window._otWin && !window._otWin.closed) {
-                                                            window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
-                                                        }
-                                                        if (window._drvWin && !window._drvWin.closed) {
-                                                                                                                    // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
-                                                                                                                    window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                                                                                }
-                                                                                                                window.opener && window.opener.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                                                                                window.parent && window.parent.postMessage({ trinityOS_pair: drvSymbol }, '*');
-                                                                                                            } catch(e) {}
-                                                                              }
+              }
 
 
 
