@@ -4007,29 +4007,19 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
 
        function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
-              
-                         if (brokerFireEnabled) {
-              
-                         // cleanPair = stripped for OT/PO/clipboard (e.g. "EURUSD"); 1HZ is KEPT because the clipboard
-                         // value is the only thing the index.html broadcaster forwards to every webview — if it's
-                         // stripped here, Deriv's exact-key lookup (e.g. "1HZ50V") never matches. OT/PO never had
-                         // synthetic-index keys to match in the first place, so keeping 1HZ costs them nothing.
-                         var cleanPair = pair.replace(/^(frx|cry)/i, '');
-                         var otPoPair  = cleanPair;
        
-                         try {
-                             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                                 chrome.storage.local.set({ 
-                                     trinityOS_pair: cleanPair,
-                                     trinityOS_otPoPair: otPoPair,
-                                     trinityOS_ts: Date.now() 
-                                 });
-                             }
-                         } catch(e) {}
-              
-                         try {
-              
-                             (window.AndroidClipboard ? window.AndroidClipboard.write(otPoPair) : navigator.clipboard.writeText(otPoPair));
+                  if (brokerFireEnabled) {
+       
+                  // cleanPair = stripped for OT/PO/clipboard (e.g. "EURUSD"); 1HZ is KEPT because the clipboard
+                  // value is the only thing the index.html broadcaster forwards to every webview — if it's
+                  // stripped here, Deriv's exact-key lookup (e.g. "1HZ50V") never matches. OT/PO never had
+                  // synthetic-index keys to match in the first place, so keeping 1HZ costs them nothing.
+                  var cleanPair = pair.replace(/^(frx|cry)/i, '');
+                  var otPoPair  = cleanPair;
+       
+                  try {
+       
+                      (window.AndroidClipboard ? window.AndroidClipboard.write(otPoPair) : navigator.clipboard.writeText(otPoPair));
        
                   } catch(e) {
        
@@ -4048,16 +4038,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                   }
        
                   // ── TRINITY→Broker postMessage bridge ──
-                                               try {
-                                                    // ── 🟢 FIX: BROADCAST DIRECTLY TO ALL OS IFRAMES ──
-                                                    var frames = document.querySelectorAll('iframe.window-content');
-                                                    for (var i = 0; i < frames.length; i++) {
-                                                        if (frames[i].contentWindow) {
-                                                            frames[i].contentWindow.postMessage({ trinityOS_pair: otPoPair }, '*');
-                                                        }
-                                                    }
-                                                    // ────────────────────────────────────────────────
-                                                                                if (window._otWin && !window._otWin.closed) {
+                             try {
+                                                              if (window._otWin && !window._otWin.closed) {
                                                                   window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
                                                               }
                                                               if (window._drvWin && !window._drvWin.closed) {
@@ -4077,25 +4059,14 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
        // otPoPair = stripped for OT/PO (e.g. "EURUSD"), derivPair = raw symbol for Deriv (e.g. "frxEURUSD" or "1HZ100V")
-              function syncPairToBrokers(otPoPair, derivPair) {
-                                 var drvSymbol = derivPair || otPoPair; // fallback so old callers still work
-                                 // The clipboard write is what index.html's broadcaster actually forwards to every
-                                 // webview — without it, this function only relied on the window.open()/postMessage
-                                 // popup-bridge below, which can't reach sibling <webview> panes in this layout.
-       
-                                 try {
-                                     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                                         chrome.storage.local.set({ 
-                                             trinityOS_pair: drvSymbol,
-                                             trinityOS_otPoPair: otPoPair,
-                                             trinityOS_ts: Date.now() 
-                                         });
-                                     }
-                                 } catch(e) {}
-       
-                                 try {
-                                     (window.AndroidClipboard ? window.AndroidClipboard.write(drvSymbol) : navigator.clipboard.writeText(drvSymbol));
-                                 } catch (e) {
+       function syncPairToBrokers(otPoPair, derivPair) {
+                          var drvSymbol = derivPair || otPoPair; // fallback so old callers still work
+                          // The clipboard write is what index.html's broadcaster actually forwards to every
+                          // webview — without it, this function only relied on the window.open()/postMessage
+                          // popup-bridge below, which can't reach sibling <webview> panes in this layout.
+                          try {
+                              (window.AndroidClipboard ? window.AndroidClipboard.write(drvSymbol) : navigator.clipboard.writeText(drvSymbol));
+                          } catch (e) {
                               try {
                                   var el = document.createElement('textarea');
                                   el.value = drvSymbol;
@@ -4106,18 +4077,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                               } catch (e2) {}
                           }
                           try {
-                                                        // ── 🟢 FIX: BROADCAST DIRECTLY TO ALL OS IFRAMES ──
-                                                        var frames = document.querySelectorAll('iframe.window-content');
-                                                        for (var i = 0; i < frames.length; i++) {
-                                                            if (frames[i].contentWindow) {
-                                                                frames[i].contentWindow.postMessage({ trinityOS_pair: otPoPair }, '*');
-                                                            }
+                                                        if (window._otWin && !window._otWin.closed) {
+                                                            window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
                                                         }
-                                                        // ────────────────────────────────────────────────
-                                                                                  if (window._otWin && !window._otWin.closed) {
-                                                                                      window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
-                                                                                  }
-                          ===BLOCK===
                                                         if (window._drvWin && !window._drvWin.closed) {
                                                                                                                     // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
                                                                                                                     window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
