@@ -4048,8 +4048,16 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                   }
        
                   // ── TRINITY→Broker postMessage bridge ──
-                             try {
-                                                              if (window._otWin && !window._otWin.closed) {
+                                               try {
+                                                    // ── 🟢 FIX: BROADCAST DIRECTLY TO ALL OS IFRAMES ──
+                                                    var frames = document.querySelectorAll('iframe.window-content');
+                                                    for (var i = 0; i < frames.length; i++) {
+                                                        if (frames[i].contentWindow) {
+                                                            frames[i].contentWindow.postMessage({ trinityOS_pair: otPoPair }, '*');
+                                                        }
+                                                    }
+                                                    // ────────────────────────────────────────────────
+                                                                                if (window._otWin && !window._otWin.closed) {
                                                                   window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
                                                               }
                                                               if (window._drvWin && !window._drvWin.closed) {
@@ -4098,9 +4106,18 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                               } catch (e2) {}
                           }
                           try {
-                                                        if (window._otWin && !window._otWin.closed) {
-                                                            window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
+                                                        // ── 🟢 FIX: BROADCAST DIRECTLY TO ALL OS IFRAMES ──
+                                                        var frames = document.querySelectorAll('iframe.window-content');
+                                                        for (var i = 0; i < frames.length; i++) {
+                                                            if (frames[i].contentWindow) {
+                                                                frames[i].contentWindow.postMessage({ trinityOS_pair: otPoPair }, '*');
+                                                            }
                                                         }
+                                                        // ────────────────────────────────────────────────
+                                                                                  if (window._otWin && !window._otWin.closed) {
+                                                                                      window._otWin.postMessage({ trinityOS_pair: otPoPair }, '*');
+                                                                                  }
+                          ===BLOCK===
                                                         if (window._drvWin && !window._drvWin.closed) {
                                                                                                                     // Deriv gets the raw API symbol (e.g. "1HZ100V", "frxEURUSD")
                                                                                                                     window._drvWin.postMessage({ trinityOS_pair: drvSymbol }, '*');
