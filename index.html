@@ -8012,7 +8012,7 @@ let dataList = currentMode === 'REV'
                                     cqA.rows = [
                                         (cqT.kind === 'FIRED' ? '\u25CF HIT ' : (cqT.need === 1 ? '\u25B6 ' : '')) + getPairDisplayName(cqS.pair) + ' ' + cqS.type + ' R' + cqS.r,
                                         'X' + cqS.s1 + '-X' + cqS.s2 + '  ' + cqS.pct + '%' + (cqT.need > 1 ? '  x' + cqT.need : '') + '  ' + tcFmt(cqT.idx, true),
-                                        (cqT.kind === 'FIRED' ? 'RESULT ' + tcFmtIn(cqT.idx + cqS.c - nowSec) : (cqT.idx - nowSec > 0 ? 'IN ' + tcFmtIn(cqT.idx - nowSec) : 'NOW')),
+                                        (cqT.kind === 'FIRED' ? 'RESULT ' + tcFmtIn(cqT.idx + cqS.c - nowSec) : (cqT.idx - nowSec > 0 ? tcFmtIn(cqT.idx - nowSec) : 'NOW')),
                                                                 'C1 ' + cqS.c1 + '   C2 ' + cqS.c2
                                     ];
                                     for (var cqR = 0; cqR < cqA.rows.length; cqR++) {
@@ -8028,7 +8028,86 @@ let dataList = currentMode === 'REV'
                                                     if (cqTw > cqW) cqW = cqTw;
                                                 }
                                                 ctx.font = 'bold 9px ' + MONO;
-                                                var cqBw = Math.ceil(cqW) + 10, cqBh = 82, cqGap = 34;
+                                                var cqBw = Math.ceil(cqW) + 10, cqBh = 62, cqGap = 34;
+                                                                var cqCols = [0, 0, 0, 0, 0, 0, 0];
+                                                                var cqLbl = ['PAIR', 'CYCLE', 'ROW', 'STREAK', 'C1', 'C2', 'PROB%'];
+                                                                var cqHdrW = 0;
+                                                                for (k = 0; k < callouts.length; k++) {
+                                                                    var cqQ = callouts[k], cqQs = cqQ.tn.sig, cqQt = cqQ.tn;
+                                                                    cqQ.cells = [
+                                                                        '',
+                                                                        'C' + cqQs.c,
+                                                                        'R' + cqQs.r,
+                                                                        'X' + cqQs.s1 + '\u2192X' + cqQs.s2,
+                                                                        String(cqQs.c1),
+                                                                        String(cqQs.c2),
+                                                                        cqQs.pct + '%'
+                                                                    ];
+                                                                    cqQ.det = (cqQt.kind === 'FIRED' ? '\u25CF HIT  ' : (cqQt.need === 1 ? '\u25B6 READY  ' : '')) + tcFmt(cqQt.idx, true);
+                                                                    for (var cqZi = 0; cqZi < 7; cqZi++) {
+                                                                        ctx.font = 'bold 8px ' + MONO;
+                                                                        var cqZl = ctx.measureText(cqLbl[cqZi]).width;
+                                                                        ctx.font = 'bold 10px ' + MONO;
+                                                                        var cqZv = ctx.measureText(cqQ.cells[cqZi]).width;
+                                                                        var cqZm = cqZv;
+                                                                        if (cqZm > cqCols[cqZi]) cqCols[cqZi] = cqZm;
+                                                                    }
+                                                                    ctx.font = 'bold 9px ' + MONO;
+                                                                    ctx.font = 'bold 15px ' + MONO;
+                                                                                        var cqZd = ctx.measureText(cqQ.det).width + 16;
+                                                                    ctx.font = 'bold 15px ' + MONO;
+                                                                    var cqZh = ctx.measureText(getPairDisplayName(cqQ.tn.sig.pair) + ' \u25BC SELL REV').width + ctx.measureText(cqQ.rows[2]).width + 48;
+                                                                    if (cqZd > cqHdrW) cqHdrW = cqZd;
+                                                                    if (cqZh > cqHdrW) cqHdrW = cqZh;
+                                                                }
+                                                                var cqTblW = 16 + 5 * 6;
+                                                                for (var cqZj = 0; cqZj < 7; cqZj++) cqTblW += cqCols[cqZj];
+                                                                cqBw = Math.ceil(Math.max(cqTblW, cqHdrW)) + 2;
+                                                                                var cqMs = function(sec) {
+                                                                                    var m = Math.floor(sec / 60), s = sec % 60, h = Math.floor(m / 60);
+                                                                                    if (h > 0) m = m % 60;
+                                                                                    return (h > 0 ? h + ':' + (m < 10 ? '0' : '') : '') + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+                                                                                };
+                                                                                var cqMaxW = 0;
+                                                                                ctx.font = 'bold 11px ' + MONO;
+                                                                                ctx.letterSpacing = '1px';
+                                                                                for (k = 0; k < callouts.length; k++) {
+                                                                                    var cqU = callouts[k], cqUs = cqU.tn.sig, cqUt = cqU.tn;
+                                                                                    var cqUsec = cqUt.kind === 'FIRED' ? (cqUt.idx + cqUs.c - nowSec) : (cqUt.idx - nowSec);
+                                                                                    cqU.r1 = getPairDisplayName(cqUs.pair) + '  ' + cqUs.type;
+                                                                                    cqU.r2 = 'C' + cqUs.c + ' R' + cqUs.r + ' X' + cqUs.s1 + '-X' + cqUs.s2 + ' ' + cqUs.c1 + ' ' + cqUs.c2 + ' ' + cqUs.pct + '%';
+                                                                                    cqU.r3 = tcFmt(cqUt.idx, true) + '    ' + (cqUsec > 0 ? cqMs(cqUsec) : 'NOW');
+                                                                                    var cqUw = Math.max(ctx.measureText(cqU.r1).width, ctx.measureText(cqU.r2).width, ctx.measureText(cqU.r3).width);
+                                                                                    if (cqUw > cqMaxW) cqMaxW = cqUw;
+                                                                                }
+                                                                                ctx.letterSpacing = '0px';
+                                                                                ctx.font = 'bold 24px Inter, "JetBrains Mono", sans-serif';
+                                                                                                var cqHdrMax = 0;
+                                                                                                for (k = 0; k < callouts.length; k++) {
+                                                                                                    var cqHt = getPairDisplayName(callouts[k].tn.sig.pair) + ' ' + callouts[k].tn.sig.type + ' ' + (callouts[k].up ? 'Buy' : 'Sell');
+                                                                                                    var cqHm = ctx.measureText(cqHt).width;
+                                                                                                    if (cqHm > cqHdrMax) cqHdrMax = cqHm;
+                                                                                                }
+                                                                                                ctx.font = 'bold 11px ' + MONO;
+                                                                                                cqBw = Math.max(150, Math.ceil(cqMaxW) + 26, Math.ceil(cqHdrMax) + 24);
+                                                                                                                var cqNw = 0;
+                                                                                                                for (k = 0; k < callouts.length; k++) {
+                                                                                                                    var cqNa = callouts[k], cqNs = cqNa.tn.sig;
+                                                                                                                    cqNa.n1 = getPairDisplayName(cqNs.pair) + ' ' + cqNs.type;
+                                                                                                                    cqNa.n2 = cqNa.up ? '\u25B2 BUY' : '\u25BC SELL';
+                                                                                                                    cqNa.n3 = 'C' + cqNs.c + '   R' + cqNs.r + '   X' + cqNs.s1 + '\u2192X' + cqNs.s2;
+                                                                                                                    cqNa.n4 = 'C1 ' + cqNs.c1 + '   C2 ' + cqNs.c2 + '   ' + cqNs.pct + '%';
+                                                                                                                    ctx.font = 'bold 15px ' + MONO;
+                                                                                                                    var cqNh = ctx.measureText(cqNa.n1).width + ctx.measureText(cqNa.n2).width + 40;
+                                                                                                                    ctx.font = 'bold 12px ' + MONO;
+                                                                                                                    var cqNb = Math.max(ctx.measureText(cqNa.n3).width, ctx.measureText(cqNa.n4).width) + 24;
+                                                                                                                    ctx.font = 'bold 26px ' + MONO;
+                                                                                                                    var cqNc = ctx.measureText('00:00:00').width + 24;
+                                                                                                                    cqNw = Math.max(cqNw, cqNh, cqNb, cqNc);
+                                                                                                                }
+                                                                                                                cqBw = Math.max(170, Math.ceil(cqNw));
+                                                                                cqBh = 108;
+                                                                ctx.font = 'bold 9px ' + MONO;
                                 var cqX = xOf(nowIdx) + 44;
                                 if (cqX + cqBw > W - PADR) cqX = W - PADR - cqBw;
                                 if (cqX < PADL + 2) cqX = PADL + 2;
@@ -8180,6 +8259,123 @@ let dataList = currentMode === 'REV'
                                     ctx.stroke();
                                     ctx.restore();
                                     ctx.globalAlpha = 0.95;
+                                                        ctx.fillStyle = BG;
+                                                        ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                        ctx.globalAlpha = 1;
+                                                                            ctx.fillStyle = BG;
+                                                                            ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                                            ctx.globalAlpha = 1;
+                                                                                                ctx.fillStyle = BG;
+                                                                                                ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                                                                ctx.fillStyle = cqB.dcol;
+                                                                                                ctx.fillRect(cqX, cqY, cqBw, 28);
+                                                                                                ctx.textBaseline = 'alphabetic';
+                                                                                                ctx.letterSpacing = '0px';
+                                                                                                ctx.font = 'bold 15px ' + MONO;
+                                                                                                ctx.fillStyle = BG;
+                                                                                                ctx.textAlign = 'left';
+                                                                                                ctx.fillText(cqB.n1, cqX + 10, cqY + 19);
+                                                                                                ctx.textAlign = 'right';
+                                                                                                ctx.fillText(cqB.n2, cqX + cqBw - 10, cqY + 19);
+                                                                                                var cqNt = cqB.tn;
+                                                                                                var cqNsc = cqNt.kind === 'FIRED' ? (cqNt.idx + cqS2.c - nowSec) : (cqNt.idx - nowSec);
+                                                                                                ctx.textAlign = 'center';
+                                                                                                ctx.font = 'bold 26px ' + MONO;
+                                                                                                ctx.fillStyle = cqB.dcol;
+                                                                                                ctx.fillText(cqNsc > 0 ? cqMs(cqNsc) : 'NOW', cqX + cqBw / 2, cqY + 57);
+                                                                                                ctx.font = 'bold 9px ' + MONO;
+                                                                                                ctx.fillStyle = cqRdy ? GOLD : DIM;
+                                                                                                ctx.fillText((cqNt.kind === 'FIRED' ? 'HIT ' : 'TRIGGER ') + tcFmt(cqNt.idx, true), cqX + cqBw / 2, cqY + 70);
+                                                                                                ctx.globalAlpha = 0.5;
+                                                                                                ctx.strokeStyle = cqB.dcol;
+                                                                                                ctx.lineWidth = 1;
+                                                                                                ctx.beginPath();
+                                                                                                ctx.moveTo(cqX + 10, cqY + 77);
+                                                                                                ctx.lineTo(cqX + cqBw - 10, cqY + 77);
+                                                                                                ctx.stroke();
+                                                                                                ctx.globalAlpha = 1;
+                                                                                                ctx.font = 'bold 12px ' + MONO;
+                                                                                                ctx.fillStyle = cqB.dcol;
+                                                                                                ctx.fillText(cqB.n3, cqX + cqBw / 2, cqY + 92);
+                                                                                                ctx.fillText(cqB.n4, cqX + cqBw / 2, cqY + 105);
+                                                                                                ctx.lineWidth = cqRdy ? 3 : 2;
+                                                                                                ctx.strokeStyle = cqB.dcol;
+                                                                                                ctx.strokeRect(cqX + 1, cqY + 1, cqBw - 2, cqBh - 2);
+                                                                                                ctx.textAlign = 'left';
+                                                                                                TC.hov.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, o: { sig: cqS2, idx: cqB.tn.idx, kind: cqB.tn.kind, need: cqB.tn.need, ref: cqB.tn.ref, dec: cqB.tn.it.dec } });
+                                                                                                continue;
+                                                                                                ctx.lineWidth = cqRdy ? 3 : 2;
+                                                                            ctx.strokeStyle = cqB.dcol;
+                                                                            ctx.strokeRect(cqX + 1, cqY + 1, cqBw - 2, cqBh - 2);
+                                                                            ctx.beginPath();
+                                                                            ctx.moveTo(cqX + 1, cqY + 31);
+                                                                            ctx.lineTo(cqX + cqBw - 1, cqY + 31);
+                                                                            ctx.stroke();
+                                                                            ctx.fillStyle = cqB.dcol;
+                                                                            ctx.textBaseline = 'alphabetic';
+                                                                            ctx.textAlign = 'center';
+                                                                            ctx.letterSpacing = '0px';
+                                                                            ctx.font = 'bold 24px Inter, "JetBrains Mono", sans-serif';
+                                                                            ctx.fillText(getPairDisplayName(cqS2.pair) + ' ' + cqS2.type + ' ' + (cqB.up ? 'Buy' : 'Sell'), cqX + cqBw / 2, cqY + 25);
+                                                                            ctx.textAlign = 'left';
+                                                                            ctx.font = 'bold 11px ' + MONO;
+                                                                            ctx.letterSpacing = '1px';
+                                                                            ;
+                                                                            ctx.fillText(cqB.r2, cqX + 12, cqY + 52);
+                                                                            ctx.fillText(cqB.r3, cqX + 12, cqY + 70);
+                                                                            ctx.letterSpacing = '0px';
+                                                                            TC.hov.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, o: { sig: cqS2, idx: cqB.tn.idx, kind: cqB.tn.kind, need: cqB.tn.need, ref: cqB.tn.ref, dec: cqB.tn.it.dec } });
+                                                                            continue;
+                                                                            ctx.globalAlpha = 0.16;
+                                                        ctx.fillStyle = cqB.dcol;
+                                                        ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                        ctx.globalAlpha = 1;
+                                                        ctx.fillStyle = cqB.dcol;
+                                                        ctx.fillRect(cqX, cqY, cqBw, 22);
+                                                        ctx.font = 'bold 15px ' + MONO;
+                                                        ctx.fillStyle = BG;
+                                                        ctx.textAlign = 'left';
+                                                        ctx.fillText(cqB.up ? '\u25B2 BUY' : '\u25BC SELL', cqX + 8, cqY + 17);
+                                                        ctx.textAlign = 'right';
+                                                        ctx.fillText(cqB.rows[2], cqX + cqBw - 8, cqY + 17);
+                                                                            ctx.textAlign = 'left';
+                                                                            ctx.fillStyle = cqB.dcol;
+                                                                                                ctx.fillRect(cqX, cqY, cqBw, 22);
+                                                                                                ctx.fillStyle = BG;
+                                                                                                ctx.font = 'bold 15px ' + MONO;
+                                                                                                ctx.textAlign = 'left';
+                                                                                                var cqHx = cqX + 8;
+                                                                                                var cqHp = getPairDisplayName(cqS2.pair);
+                                                                                                ctx.fillText(cqHp, cqHx, cqY + 17);
+                                                                                                cqHx += ctx.measureText(cqHp).width + 8;
+                                                                                                var cqHd = cqB.up ? '\u25B2 BUY' : '\u25BC SELL';
+                                                                                                ctx.fillText(cqHd, cqHx, cqY + 17);
+                                                                                                cqHx += ctx.measureText(cqHd).width + 8;
+                                                                                                ctx.fillText(cqS2.type, cqHx, cqY + 17);
+                                                                                                ctx.textAlign = 'right';
+                                                                                                ctx.fillText(cqB.rows[2], cqX + cqBw - 8, cqY + 17);
+                                                                                                ctx.textAlign = 'left';
+                                                        ctx.lineWidth = cqRdy ? 2.5 : 1.5;
+                                                        ctx.strokeStyle = cqB.dcol;
+                                                        ctx.strokeRect(cqX + 0.5, cqY + 0.5, cqBw - 1, cqBh - 1);
+                                                        var cqTx = cqX + 8;
+                                                        ctx.textAlign = 'left';
+                                                        for (var cqCi2 = 0; cqCi2 < 7; cqCi2++) {
+                                                            ctx.font = 'bold 8px ' + MONO;
+                                                            ctx.fillStyle = DIM;
+                                                            ;
+                                                            ctx.font = 'bold 10px ' + MONO;
+                                                            ctx.fillStyle = cqB.dcol;
+                                                            ctx.fillText(cqB.cells[cqCi2], cqTx, cqY + 36);
+                                                            cqTx += cqCols[cqCi2] + (cqCi2 === 0 ? 0 : 6);
+                                                        }
+                                                        ctx.font = 'bold 9px ' + MONO;
+                                                        ctx.fillStyle = cqRdy ? GOLD : '#FFFFFF';
+                                                        ctx.font = 'bold 15px ' + MONO;
+                                                                            ctx.fillText(cqB.det, cqX + 8, cqY + 55);
+                                                        TC.hov.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, o: { sig: cqS2, idx: cqB.tn.idx, kind: cqB.tn.kind, need: cqB.tn.need, ref: cqB.tn.ref, dec: cqB.tn.it.dec } });
+                                                        continue;
+                                                        ctx.globalAlpha = 0.95;
                                     ctx.fillStyle = BG;
                                     ctx.fillRect(cqX, cqY, cqBw, cqBh);
                                                         ctx.globalAlpha = 0.4;
@@ -8234,7 +8430,7 @@ let dataList = currentMode === 'REV'
                     var exx = e.x + 6;
                     if (exx + ew > W - 2) exx = e.x - ew - 6;
                     ctx.fillStyle = e.color;
-                    ctx.fillText(e.name, exx, Math.max(ptop + 8, Math.min(pbot - 2, e.y - 9)));
+                    ;
                 }
             
                 var lanes = [];
