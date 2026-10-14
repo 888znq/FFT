@@ -7402,7 +7402,7 @@ let dataList = currentMode === 'REV'
         window._otWin = null;
         
         (function() {
-            var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null };
+            var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null, all: true, allMap: null };
             var PADL = 58, PADR = 10, PADT = 48, PADB = 20;
             var ZOOMS = [1, 2, 3, 5, 10, 20, 30, 60, 120, 300];
             var BTN_CSS = "background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; border-radius:2px; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:11px; padding:3px 9px; cursor:pointer;";
@@ -7479,14 +7479,591 @@ let dataList = currentMode === 'REV'
                         out.push(x);
                     }
                     out.sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
-                    out = out.slice(0, 10);
-                    if (selHit && out.indexOf(selHit) === -1) out.push(selHit);
+                    out = out.slice(0, 1);
+                    selHit = null;
                     return out;
                 }
                 TC.rev = pick(globalRevs, 'REV');
                 TC.mom = pick(globalMoms, 'MOM');
             }
         
+            function tcPairColor(pair) {
+                var ix = SPECIAL_ALL_PAIRS.indexOf(pair);
+                if (ix < 0) ix = ALL_PAIRS.indexOf(pair);
+                if (ix < 0) ix = 0;
+                var hue = Math.round((ix * 137.508) % 360);
+                var sat = (ix % 2 === 0) ? 90 : 75;
+                var lit = (ix % 3 === 0) ? 62 : ((ix % 3 === 1) ? 55 : 68);
+                return 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
+            }
+            
+            function tcSyncAllBtn() {
+                var b = document.getElementById('tcAllBtn');
+                if (!b) return;
+                b.style.background = TC.all ? 'var(--accent-green)' : 'var(--bg-base)';
+                b.style.color = TC.all ? 'var(--bg-base)' : '#FFFFFF';
+            }
+            
+            function tcCollectAll() {
+                var minPctEl = document.getElementById('minPctInput');
+                var minPct = minPctEl ? (parseFloat(minPctEl.value) || 85) : 85;
+                var lvEl = document.getElementById('levelFilterSelect');
+                var lv = lvEl ? (parseInt(lvEl.value) || 0) : 0;
+                var r0 = (typeof r0OnlyMode !== 'undefined' && r0OnlyMode);
+                var map = {};
+                var bucket = function(list, key) {
+                    for (var bi = 0; bi < list.length; bi++) {
+                        var x = list[bi];
+                        if (x.pct < minPct) continue;
+                        if (lv !== 0 && x.s1 !== lv) continue;
+                        if (r0 && x.r !== 0) continue;
+                        if (_hiddenPairs.has(x.pair)) continue;
+                        var m = map[x.pair];
+                        if (!m) { m = { rev: null, mom: null }; map[x.pair] = m; }
+                        var cur = m[key];
+                        if (!cur || (x.pct * x.c1) > (cur.pct * cur.c1)) m[key] = x;
+                    }
+                };
+                bucket(globalRevs, 'rev');
+                bucket(globalMoms, 'mom');
+                return map;
+            }
+            
+            function tcDrawAll() {
+                var W = TC.W, H = TC.H, dpr = TC.dpr, ctx = TC.ctx;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                var BG = window.systemThemeHex || '#000432';
+                var TXT = '#E2E8F0', DIM = '#8890b8', GOLD = '#FFD700', CY = '#00E5FF', AM = '#FFB703';
+                ctx.setLineDash([]);
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = BG;
+                ctx.fillRect(0, 0, W, H);
+                ctx.textBaseline = 'alphabetic';
+                ctx.textAlign = 'left';
+                TC.hits = [];
+                TC.hov = [];
+                if (!TC.allMap) TC.allMap = tcCollectAll();
+                var sigMap = TC.allMap;
+                var sEnd = tcSessionEnd();
+                var base = (activePairs !== null && activePairs) ? activePairs : ALL_PAIRS;
+                var pairs = [];
+                var pi, i, k;
+                for (pi = 0; pi < base.length; pi++) {
+                    var bp = base[pi];
+                    var bdat = allPairData[bp];
+                    if (!bdat || !bdat.prices || bdat.prices.length === 0) continue;
+                    if (_hiddenPairs.has(bp)) continue;
+                    pairs.push(bp);
+                }
+                if (pairs.length === 0) {
+                    ctx.fillStyle = GOLD;
+                    ctx.font = 'bold 12px ' + MONO;
+                    ctx.fillText('ALL PAIRS - WAITING FOR DATA...', PADL, 20);
+                    return;
+                }
+                var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+                var live = _isWithinMappedWindow() && nowSec >= 0 && nowSec < sEnd;
+                var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
+                var maxLast = 0;
+                var info = [];
+                for (pi = 0; pi < pairs.length; pi++) {
+                    var ap = allPairData[pairs[pi]].prices;
+                    var apLen = ap.length;
+                    var apLast = tcLastReal(ap, Math.min(live ? nowSec : sEnd, apLen - 1));
+                    if (apLast > maxLast) maxLast = apLast;
+                    info.push({ pair: pairs[pi], prices: ap, len: apLen, last: apLast, color: tcPairColor(pairs[pi]), lo: Infinity, hi: -Infinity, dec: 5, i1: 0 });
+                }
+                var nowIdx = live ? nowSec : maxLast;
+                if (TC.follow) TC.left = nowIdx - plotW * spp * 0.4;
+                else tcClamp(plotW);
+                var left = TC.left, right = left + plotW * spp;
+                var i0 = Math.max(0, Math.floor(left));
+                var st = Math.max(1, Math.floor(spp / 2));
+                var xOf = function(ix2) { return PADL + (ix2 - left) / spp; };
+                var yOfPair = function(itx, v2) { return ptop + (1 - (v2 - itx.lo) / (itx.hi - itx.lo)) * (pbot - ptop); };
+            
+                for (pi = 0; pi < info.length; pi++) {
+                    var it0 = info[pi];
+                    it0.i1 = Math.min(it0.len - 1, sEnd, Math.ceil(right));
+                    for (i = i0; i <= it0.i1; i += st) {
+                        var pv = it0.prices[i];
+                        if (pv === -1) continue;
+                        if (pv < it0.lo) it0.lo = pv;
+                        if (pv > it0.hi) it0.hi = pv;
+                    }
+                    if (!(it0.hi >= it0.lo)) { it0.lo = 0; it0.hi = 1; }
+                    if (!(it0.hi > it0.lo)) {
+                        var mm = Math.abs(it0.lo) * 0.0002 || 0.0001;
+                        it0.lo -= mm;
+                        it0.hi += mm;
+                    }
+                    it0.dec = Math.max(0, Math.min(6, 3 - Math.floor(Math.log10(it0.hi - it0.lo))));
+                    var pad0 = (it0.hi - it0.lo) * 0.08;
+                    it0.lo -= pad0;
+                    it0.hi += pad0;
+                }
+            
+                ctx.font = '10px ' + MONO;
+                ctx.textAlign = 'right';
+                for (k = 0; k <= 4; k++) {
+                    var gy = Math.round(ptop + ((pbot - ptop) * k) / 4) + 0.5;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(PADL, gy); ctx.lineTo(W - PADR, gy); ctx.stroke();
+                    ctx.fillStyle = DIM;
+                    ctx.fillText((100 - k * 25) + '%', PADL - 5, gy + 3);
+                }
+            
+                var xe = xOf(sEnd);
+                if (live) {
+                    var xn = xOf(nowIdx);
+                    var sa = Math.max(PADL, xn), sb = Math.min(W - PADR, xe);
+                    if (sb > sa) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+                        ctx.fillRect(sa, ptop, sb - sa, pbot - ptop);
+                    }
+                }
+                if (xe >= PADL && xe <= W - PADR) {
+                    ctx.strokeStyle = DIM; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+                    ctx.beginPath(); ctx.moveTo(Math.round(xe) + 0.5, ptop); ctx.lineTo(Math.round(xe) + 0.5, pbot); ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            
+                var steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400];
+                var tstep = steps[steps.length - 1];
+                for (k = 0; k < steps.length; k++) {
+                    if (steps[k] / spp >= 78) { tstep = steps[k]; break; }
+                }
+                var off = tcOffset();
+                var firstT = Math.ceil((left + off) / tstep) * tstep - off;
+                ctx.font = '10px ' + MONO;
+                ctx.textAlign = 'center';
+                for (var t = firstT; t <= right; t += tstep) {
+                    if (t < 0 || t > sEnd) continue;
+                    var tx = xOf(t);
+                    if (tx < PADL || tx > W - PADR) continue;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(Math.round(tx) + 0.5, ptop); ctx.lineTo(Math.round(tx) + 0.5, pbot); ctx.stroke();
+                    ctx.fillStyle = DIM;
+                    ctx.fillText(tcFmt(t, tstep < 60), tx, pbot + 13);
+                }
+                ctx.textAlign = 'left';
+            
+                var lastI = -99999;
+                for (var pass = 0; pass < 2; pass++) {
+                    for (pi = 0; pi < info.length; pi++) {
+                        var ln0 = info[pi];
+                        var isAct = (ln0.pair === activePair);
+                        if (isAct !== (pass === 1)) continue;
+                        ctx.strokeStyle = ln0.color;
+                        ctx.lineWidth = isAct ? 3.6 : 2.8;
+                        ctx.globalAlpha = isAct ? 1 : 0.85;
+                        ctx.lineJoin = 'round';
+                        ctx.beginPath();
+                        lastI = -99999;
+                        for (i = i0 - (i0 % Math.max(st, Math.round(spp * 3))); i <= ln0.i1; i += Math.max(st, Math.round(spp * 3))) {
+                            var qb = Math.max(st, Math.round(spp * 3));
+                            var q0 = -1, qs = 0, qn = 0;
+                            for (var qk = Math.max(0, i); qk < i + qb && qk <= ln0.i1; qk++) {
+                                var qv = ln0.prices[qk];
+                                if (qv !== -1) { qs += qv; qn++; }
+                            }
+                            if (qn > 0) q0 = qs / qn;
+                            var qc = i + qb / 2;
+                            if (ln0.last >= 0 && qc > ln0.last) { qc = ln0.last; q0 = ln0.prices[ln0.last]; }
+                            var plx, ply;
+                            if (q0 === -1) continue;
+                            var lx = xOf(qc), ly = yOfPair(ln0, q0);
+                            if (i - lastI > 600) { ctx.moveTo(lx, ly); }
+                            else { ctx.quadraticCurveTo(plx, ply, (plx + lx) / 2, (ply + ly) / 2); }
+                            plx = lx; ply = ly; lastI = i;
+                            if (i + qb > ln0.i1) { ctx.lineTo(lx, ly); }
+                            continue;
+                            if (i - lastI > 600) ctx.moveTo(lx, ly);
+                            else ctx.lineTo(lx, ly);
+                            lastI = i;
+                        }
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            
+                var ends = [];
+                for (pi = 0; pi < info.length; pi++) {
+                    var en = info[pi];
+                    if (en.last >= 0 && en.last >= i0 && en.last <= en.i1) {
+                        var exx0 = xOf(en.last), eyy0 = yOfPair(en, en.prices[en.last]);
+                        ctx.beginPath();
+                        ctx.arc(exx0, eyy0, 4.5, 0, 6.2832);
+                        ctx.fillStyle = en.color;
+                        ctx.fill();
+                        ends.push({ name: getPairDisplayName(en.pair), color: en.color, x: exx0, y: eyy0 });
+                    }
+                }
+            
+                var marks = [], items = [];
+                var tally = { REV: { w: 0, l: 0, p: 0 }, MOM: { w: 0, l: 0, p: 0 } };
+                var nReady = 0, nFired = 0, nextIt = null, nRev = 0, nMom = 0;
+                for (pi = 0; pi < info.length; pi++) {
+                    var pin = info[pi];
+                    var sgs = sigMap[pin.pair];
+                    if (!sgs) continue;
+                    if (sgs.rev) nRev++;
+                    if (sgs.mom) nMom++;
+                    var lim = Math.min(live ? nowSec - 1 : pin.len - 1, pin.len - 1, sEnd - 1);
+                    var sl = [sgs.rev, sgs.mom];
+                    for (k = 0; k < 2; k++) {
+                        var sg0 = sl[k];
+                        if (!sg0) continue;
+                        var pl = tcPlan(sg0, pin.prices, lim, sEnd, pin.last);
+                        for (var hx = 0; hx < pl.hist.length; hx++) {
+                            var hh = pl.hist[hx];
+                            var hw = tcWin(sg0.type, hh.res);
+                            marks.push({ it: pin, sig: sg0, i: hh.i, p: hh.p, res: hh.res, win: hw });
+                            if (hw === 'win') tally[sg0.type].w++;
+                            else if (hw === 'loss') tally[sg0.type].l++;
+                            else if (hw === 'pending') tally[sg0.type].p++;
+                        }
+                        if (pl.kind === 'NONE' || !live) continue;
+                        var node = { it: pin, sig: sg0, idx: pl.idx, need: pl.need, kind: pl.kind, ref: pl.ref };
+                        items.push(node);
+                        if (pl.kind === 'FIRED') nFired++;
+                        else {
+                            if (pl.need === 1) nReady++;
+                            if (!nextIt || pl.idx < nextIt.idx) nextIt = node;
+                        }
+                    }
+                }
+            
+                if (live) {
+                    var xnow = xOf(nowIdx);
+                    if (xnow >= PADL && xnow <= W - PADR) {
+                        ctx.strokeStyle = GOLD; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+                        ctx.beginPath(); ctx.moveTo(Math.round(xnow) + 0.5, ptop); ctx.lineTo(Math.round(xnow) + 0.5, pbot); ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = GOLD; ctx.font = 'bold 9px ' + MONO; ctx.textAlign = 'center';
+                        ctx.fillText('NOW', xnow, pbot - 3);
+                        ctx.textAlign = 'left';
+                    }
+                }
+            
+                for (k = 0; k < marks.length; k++) {
+                    var mk = marks[k];
+                    if (mk.i < i0 || mk.i > mk.it.i1) continue;
+                    var mx = xOf(mk.i), my = yOfPair(mk.it, mk.p);
+                    if (mx < PADL || mx > W - PADR) continue;
+                    var mcol = mk.it.color;
+                    var mUp = (mk.sig.type === 'REV') ? (mk.sig.col === 'R') : (mk.sig.col === 'G');
+                    var mdcol = mUp ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
+                    if (mk.win === 'win' || mk.win === 'loss') {
+                        var ej = mk.i + mk.sig.c;
+                        var ep = (ej < mk.it.len) ? mk.it.prices[ej] : -1;
+                        if (ep !== -1) {
+                            var ex1 = xOf(ej), ey1 = yOfPair(mk.it, ep);
+                            var ecol = mk.win === 'win' ? CY : AM;
+                            if (ex1 >= PADL && ex1 <= W - PADR) {
+                                ctx.save();
+                                ctx.globalAlpha = 0.8;
+                                ctx.strokeStyle = ecol;
+                                ctx.lineWidth = 1.5;
+                                ctx.beginPath();
+                                ctx.moveTo(mx, my);
+                                ctx.lineTo(ex1, ey1);
+                                ctx.stroke();
+                                ctx.globalAlpha = 1;
+                                ctx.shadowColor = ecol;
+                                ctx.shadowBlur = 12;
+                                ctx.beginPath();
+                                ctx.arc(ex1, ey1, 4.5, 0, 6.2832);
+                                ctx.fillStyle = ecol;
+                                ctx.fill();
+                                ctx.shadowBlur = 0;
+                                ctx.lineWidth = 1.5;
+                                ctx.strokeStyle = BG;
+                                ctx.stroke();
+                                ctx.beginPath();
+                                ctx.arc(ex1, ey1, 8, 0, 6.2832);
+                                ctx.lineWidth = 1.2;
+                                ctx.strokeStyle = ecol;
+                                ctx.stroke();
+                                ctx.restore();
+                                TC.hov.push({ x: ex1, y: ey1, r: 9, o: { sig: mk.sig, idx: mk.i, kind: 'MARK', res: mk.res, win: mk.win, p: mk.p, dec: mk.it.dec } });
+                            }
+                        }
+                    }
+                    TC.hov.push({ x: mx, y: my, r: 9, o: { sig: mk.sig, idx: mk.i, kind: 'MARK', res: mk.res, win: mk.win, p: mk.p, dec: mk.it.dec } });
+                    if (mk.res === 'pending') {
+                        ctx.beginPath();
+                        ctx.arc(mx, my, 7, 0, 6.2832);
+                        ctx.lineWidth = 1.2;
+                        ctx.strokeStyle = DIM;
+                        ctx.stroke();
+                    }
+                    ctx.beginPath();
+                    ctx.arc(mx, my, 3.6, 0, 6.2832);
+                    if (mk.sig.type === 'REV') {
+                        ctx.fillStyle = mdcol;
+                        ctx.fill();
+                        ctx.lineWidth = 1.6;
+                        ctx.strokeStyle = '#FF9100';
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.fill();
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = BG;
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = mdcol;
+                                    ctx.fill();
+                                    ctx.lineWidth = 1.8;
+                                    ctx.strokeStyle = '#A855F7';
+                        ctx.stroke();
+                    }
+                    if (mk.win === 'win' || mk.win === 'loss') {
+                        ctx.font = 'bold 12px ' + MONO;
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = mk.win === 'win' ? CY : AM;
+                        ctx.fillText(mk.win === 'win' ? '\u2713' : '\u2717', mx, mk.sig.type === 'MOM' ? my + 17 : my - 8);
+                    }
+                }
+                ctx.textAlign = 'left';
+            
+                var vis = [];
+                for (k = 0; k < items.length; k++) {
+                    var tn = items[k];
+                    var tx2 = xOf(tn.idx);
+                    if (tx2 < PADL - 1 || tx2 > W - PADR + 1) continue;
+                    var tcol = tn.it.color;
+                    var xr = Math.round(tx2) + 0.5;
+                    var dUp = (tn.sig.type === 'REV') ? (tn.sig.col === 'R') : (tn.sig.col === 'G');
+                    var dcol = dUp ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
+                    if (tn.kind !== 'FIRED' && tn.it.last >= 0 && tn.idx > tn.it.last) {
+                        var fx0 = xOf(tn.it.last);
+                        var fy0 = yOfPair(tn.it, tn.it.prices[tn.it.last]);
+                        ctx.save();
+                        ctx.strokeStyle = tcol;
+                        ctx.lineWidth = tn.it.pair === activePair ? 3.6 : 2.8;
+                        ctx.globalAlpha = tn.it.pair === activePair ? 1 : 0.85;
+                        ctx.beginPath();
+                        ctx.moveTo(Math.max(PADL, fx0), fy0);
+                        ctx.lineTo(xr, fy0);
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                        ctx.beginPath();
+                        ctx.arc(xr, fy0, 4.5, 0, 6.2832);
+                        ctx.fillStyle = dcol;
+                        ctx.fill();
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = tn.sig.type === 'REV' ? '#FF9100' : '#A855F7';
+                        ctx.stroke();
+                        if (tn.need === 1) {
+                            ctx.beginPath();
+                            ctx.arc(xr, fy0, 8.5, 0, 6.2832);
+                            ctx.lineWidth = 1.5;
+                            ctx.strokeStyle = GOLD;
+                            ctx.stroke();
+                        }
+                        ctx.beginPath();
+                        ctx.fillStyle = tn.sig.type === 'REV' ? tcol : BG;
+                        ctx.fill();
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = tn.need === 1 ? GOLD : tcol;
+                        ctx.stroke();
+                        ctx.font = 'bold 9px ' + MONO;
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = tcol;
+                        ctx.globalAlpha = 1;
+                        ctx.restore();
+                        TC.hov.push({ x: xr, y: fy0, r: 10, o: { sig: tn.sig, idx: tn.idx, kind: tn.kind, need: tn.need, ref: tn.ref, dec: tn.it.dec } });
+                    }
+                    ctx.save();
+                    ctx.strokeStyle = tcol;
+                    ctx.globalAlpha = 0;
+                    ctx.lineWidth = (tn.need === 1) ? 2 : 1;
+                    ctx.setLineDash([]);
+                    ctx.beginPath(); ctx.moveTo(xr, ptop); ctx.lineTo(xr, pbot); ctx.stroke();
+                    ctx.restore();
+                    ctx.beginPath();
+                    ctx.arc(xr, pbot - 7, 4, 0, 6.2832);
+                    if (tn.sig.type === 'REV') { ctx.fillStyle = dcol; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#FF9100'; ctx.stroke(); }
+                    else { ctx.fillStyle = dcol; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#A855F7'; ctx.stroke(); }
+                    if (tn.kind === 'FIRED') {
+                        var fp = tn.it.prices[tn.idx];
+                        if (fp !== -1) {
+                            ctx.beginPath();
+                            ctx.arc(xr, yOfPair(tn.it, fp), 5, 0, 6.2832);
+                            ctx.fillStyle = tcol; ctx.fill();
+                            ctx.lineWidth = 2; ctx.strokeStyle = '#FFFFFF'; ctx.stroke();
+                        }
+                    }
+                    if (tn.need === 1 && tn.ref !== null && tn.ref !== undefined) {
+                        var yr = yOfPair(tn.it, tn.ref);
+                        if (yr >= ptop && yr <= pbot) {
+                            ctx.save();
+                            ctx.strokeStyle = tcol; ctx.lineWidth = 2;
+                            ctx.beginPath(); ctx.moveTo(xr - 14, yr); ctx.lineTo(xr + 14, yr); ctx.stroke();
+                            ctx.restore();
+                        }
+                    }
+                    TC.hov.push({ x: xr, y: pbot - 7, r: 9, o: { sig: tn.sig, idx: tn.idx, kind: tn.kind, need: tn.need, ref: tn.ref, dec: tn.it.dec } });
+                    var clBoxes;
+                    if (!clBoxes) {
+                        clBoxes = [];
+                        for (var clO = 0; clO < items.length; clO++) {
+                            var clOi = items[clO];
+                            var clOy = (clOi.kind === 'FIRED') ? ((clOi.it.prices[clOi.idx] !== -1) ? yOfPair(clOi.it, clOi.it.prices[clOi.idx]) : pbot - 7) : ((clOi.it.last >= 0 && clOi.idx > clOi.it.last) ? yOfPair(clOi.it, clOi.it.prices[clOi.it.last]) : pbot - 7);
+                            var clOx0 = clOi.it.last >= 0 ? xOf(clOi.it.last) : xOf(clOi.idx);
+                            var clOx1 = xOf(clOi.idx);
+                            clBoxes.push({ x: Math.min(clOx0, clOx1) - 2, y: clOy - 6, w: Math.abs(clOx1 - clOx0) + 4, h: 12 });
+                        }
+                    }
+                    var clAy;
+                    if (tn.kind === 'FIRED') {
+                        var clFp = tn.it.prices[tn.idx];
+                        clAy = (clFp !== -1) ? yOfPair(tn.it, clFp) : (pbot - 7);
+                    } else if (tn.it.last >= 0 && tn.idx > tn.it.last) {
+                        clAy = yOfPair(tn.it, tn.it.prices[tn.it.last]);
+                    } else {
+                        clAy = pbot - 7;
+                    }
+                    var clRows = [
+                        (tn.kind === 'FIRED' ? '\u25CF HIT ' : (tn.need === 1 ? '\u25B6 ' : '')) + getPairDisplayName(tn.sig.pair) + ' ' + tn.sig.type + ' C' + tn.sig.c + ' R' + tn.sig.r,
+                        'X' + tn.sig.s1 + '-X' + tn.sig.s2 + '  ' + tn.sig.pct + '%' + (tn.need > 1 ? '  x' + tn.need : ''),
+                        tcFmt(tn.idx, true) + (tn.kind === 'FIRED' ? '  result ' + tcFmtIn(tn.idx + tn.sig.c - nowSec) : '  in ' + tcFmtIn(tn.idx - nowSec))
+                    ];
+                    ctx.save();
+                    ctx.font = 'bold 9px ' + MONO;
+                    var clMax = 0;
+                    for (var clM = 0; clM < clRows.length; clM++) {
+                        var clMw = ctx.measureText(clRows[clM]).width;
+                        if (clMw > clMax) clMax = clMw;
+                    }
+                    var clW = clMax + 9;
+                    var clH = clRows.length * 11 + 4;
+                    var clX = xr + 14;
+                    if (clX < PADL + 2) clX = PADL + 2;
+                    if (clX + clW > W - PADR) clX = W - PADR - clW;
+                    var clDir = (tn.sig.type === 'REV') ? -1 : 1;
+                    var clY = clDir < 0 ? clAy - 46 - clH : clAy + 46;
+                    for (var clTry = 0; clTry < 40; clTry++) {
+                        var clHit = false;
+                        for (var clJ = 0; clJ < clBoxes.length; clJ++) {
+                            var cb = clBoxes[clJ];
+                            if (clX < cb.x + cb.w + 10 && clX + clW > cb.x - 10 && clY < cb.y + cb.h + 10 && clY + clH > cb.y - 10) {
+                                clHit = true;
+                                clY = clDir < 0 ? cb.y - clH - 10 : cb.y + cb.h + 10;
+                                break;
+                            }
+                        }
+                        if (!clHit) break;
+                    }
+                    clY = Math.max(ptop + 2, Math.min(pbot - clH - 2, clY));
+                    clBoxes.push({ x: clX, y: clY, w: clW, h: clH });
+                    ctx.save();
+                    ctx.strokeStyle = tn.need === 1 ? GOLD : tcol;
+                    ctx.lineWidth = 1;
+                    ctx.globalAlpha = 0.9;
+                    ctx.beginPath();
+                    ctx.moveTo(xr, clAy + (clDir < 0 ? -5 : 5));
+                    ctx.lineTo(Math.max(clX + 3, Math.min(clX + clW - 3, xr)), clDir < 0 ? clY + clH : clY);
+                    ctx.stroke();
+                    ctx.restore();
+                    ctx.globalAlpha = 0.92;
+                    ctx.fillStyle = BG;
+                    ctx.fillStyle = dcol;
+                    ctx.fillRect(clX, clY, clW, clH);
+                    ctx.globalAlpha = 1;
+                    ctx.lineWidth = tn.need === 1 ? 1.5 : 1;
+                    ctx.strokeStyle = tn.need === 1 ? GOLD : tcol;
+                    ctx.strokeRect(clX + 0.5, clY + 0.5, clW - 1, clH - 1);
+                    ctx.textAlign = 'left';
+                    for (var clR = 0; clR < clRows.length; clR++) {
+                        ctx.fillStyle = BG;
+                        ctx.fillText(clRows[clR], clX + 4, clY + 10 + clR * 11);
+                    }
+                    ctx.restore();
+                    TC.hov.push({ x: clX, y: clY, w: clW, h: clH, o: { sig: tn.sig, idx: tn.idx, kind: tn.kind, need: tn.need, ref: tn.ref, dec: tn.it.dec } });
+                }
+            
+                ends.sort(function(a, b) { return a.y - b.y; });
+                for (k = 1; k < ends.length; k++) {
+                    if (ends[k].y - ends[k - 1].y < 11) ends[k].y = ends[k - 1].y + 11;
+                }
+                ctx.font = 'bold 10px ' + MONO;
+                ctx.textAlign = 'left';
+                for (k = 0; k < ends.length; k++) {
+                    var e = ends[k];
+                    var ew = ctx.measureText(e.name).width;
+                    var exx = e.x + 6;
+                    if (exx + ew > W - 2) exx = e.x - ew - 6;
+                    ctx.fillStyle = e.color;
+                    ctx.fillText(e.name, exx, Math.max(ptop + 8, Math.min(pbot - 2, e.y - 9)));
+                }
+            
+                var lanes = [];
+                var maxLane = Math.max(0, Math.floor((pbot - ptop - 34) / 15));
+                for (k = 0; k < vis.length; k++) {
+                    var v = vis[k], vit = v.n, vs = vit.sig;
+                    var pre = vit.kind === 'FIRED' ? '\u25CF HIT ' : (vit.need === 1 ? '\u25B6 ' : '');
+                    var label = pre + getPairDisplayName(vs.pair) + ' ' + vs.type + ' C' + vs.c + ' R' + vs.r + ' X' + vs.s1 + '-X' + vs.s2 + ' ' + vs.pct + '% ' + tcFmt(vit.idx, true) + (vit.need > 1 ? ' x' + vit.need : '');
+                    var lw = ctx.measureText(label).width + 8;
+                    var lleft = v.x + 4;
+                    if (lleft + lw > W - 2) lleft = v.x - lw - 4;
+                    var lane = -1, ln, q, ok;
+                    for (ln = 0; ln < lanes.length; ln++) {
+                        ok = true;
+                        for (q = 0; q < lanes[ln].length; q++) {
+                            if (lleft < lanes[ln][q][1] + 2 && lleft + lw > lanes[ln][q][0] - 2) { ok = false; break; }
+                        }
+                        if (ok) { lane = ln; break; }
+                    }
+                    if (lane === -1) { lanes.push([]); lane = lanes.length - 1; }
+                    lanes[lane].push([lleft, lleft + lw]);
+                    var drawLane = Math.min(lane, maxLane);
+                    var ly2 = ptop + 4 + drawLane * 15;
+                    ctx.fillStyle = BG;
+                    ctx.globalAlpha = 0.9;
+                    ctx.fillRect(lleft, ly2, lw, 14);
+                    ctx.globalAlpha = 1;
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = v.col;
+                    ctx.strokeRect(lleft + 0.5, ly2 + 0.5, lw - 1, 13);
+                    ctx.fillStyle = v.col;
+                    ctx.fillText(label, lleft + 4, ly2 + 10);
+                    TC.hits.push({ x: lleft, y: ly2, w: lw, h: 14, sig: vs });
+                    TC.hov.push({ x: lleft, y: ly2, w: lw, h: 14, o: { sig: vs, idx: vit.idx, kind: vit.kind, need: vit.need, ref: vit.ref, dec: vit.it.dec } });
+                }
+            
+                ctx.textAlign = 'left';
+                ctx.font = 'bold 11px ' + MONO;
+                var line1 = 'ALL PAIRS (' + info.length + ')  |  ' + tcFmt(nowIdx, true) + ' IST  |  ' + (live ? 'LIVE' : 'SESSION CLOSED') + '  |  ' + nRev + ' REV  ' + nMom + ' MOM';
+                ctx.fillStyle = TXT;
+                ctx.fillText(line1, PADL, 13);
+                var line2 = '';
+                if (live) {
+                    if (nextIt) {
+                        var ns2 = nextIt.sig;
+                        line2 = 'NEXT ' + getPairDisplayName(ns2.pair) + ' ' + ns2.type + ' C' + ns2.c + ' R' + ns2.r + ' X' + ns2.s1 + '-X' + ns2.s2 + ' ' + ns2.pct + '%  @' + tcFmt(nextIt.idx, true) + '  in ' + tcFmtIn(nextIt.idx - nowSec) + '  |  READY ' + nReady + '  HIT ' + nFired;
+                    } else {
+                        line2 = nFired > 0 ? ('HIT ' + nFired + '  |  NO UPCOMING TRIGGERS') : 'NO UPCOMING TRIGGERS';
+                    }
+                }
+                ctx.fillStyle = GOLD;
+                ctx.fillText(line2, PADL, 27);
+                var tx3 = PADL;
+                for (k = 0; k < 2; k++) {
+                    var tt = k === 0 ? tally.REV : tally.MOM;
+                    var td = tt.w + tt.l;
+                    tx3 = tcSeg(ctx, (k === 0 ? 'REV ' : 'MOM '), TXT, tx3, 41);
+                    tx3 = tcSeg(ctx, '\u2713' + tt.w + ' ', CY, tx3, 41);
+                    tx3 = tcSeg(ctx, '\u2717' + tt.l + ' ', AM, tx3, 41);
+                    tx3 = tcSeg(ctx, '\u25CB' + tt.p + ' ', DIM, tx3, 41);
+                    tx3 = tcSeg(ctx, (td ? Math.round(tt.w / td * 100) + '%' : '--') + '     ', TXT, tx3, 41);
+                }
+                if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+            }
+            
             function tcPlan(sig, prices, lim, sEnd, lastReal) {
                     var hist = [];
                 var c = sig.c, r = sig.r;
@@ -7551,7 +8128,7 @@ let dataList = currentMode === 'REV'
                 }
             
                 function tcTipHtml(o) {
-                        var s = o.sig, dec = TC.dec;
+                        var s = o.sig, dec = (o.dec !== undefined ? o.dec : TC.dec);
                         var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
                         var GREEN = window.accentGreenHex || '#2ED573', RED = window.accentRedHex || '#E63946';
                         var cc = s.col === 'G' ? GREEN : RED;
@@ -7645,6 +8222,7 @@ let dataList = currentMode === 'REV'
                 if (!b) return;
                 b.style.background = TC.follow ? 'var(--accent-green)' : 'var(--bg-base)';
                 b.style.color = TC.follow ? 'var(--bg-base)' : '#FFFFFF';
+                tcSyncAllBtn();
             }
         
             function tcZoom(dir) {
@@ -7661,6 +8239,7 @@ let dataList = currentMode === 'REV'
             }
         
             function tcClick(mx, my) {
+                if (TC.all) return;
                 for (var i = TC.hits.length - 1; i >= 0; i--) {
                     var h = TC.hits[i];
                     if (mx >= h.x && mx <= h.x + h.w && my >= h.y && my <= h.y + h.h) {
@@ -7688,7 +8267,8 @@ let dataList = currentMode === 'REV'
                 bar.style.cssText = 'position:absolute; top:4px; right:6px; display:flex; gap:4px; z-index:2;';
                 bar.innerHTML = '<button type="button" id="tcZoomOut" style="' + BTN_CSS + '">-</button>' +
                     '<button type="button" id="tcZoomIn" style="' + BTN_CSS + '">+</button>' +
-                    '<button type="button" id="tcLiveBtn" style="' + BTN_CSS + '">LIVE</button>';
+                    '<button type="button" id="tcLiveBtn" style="' + BTN_CSS + '">LIVE</button>' +
+                        '<button type="button" id="tcAllBtn" style="' + BTN_CSS + '">ALL</button>';
                 w.appendChild(bar);
                 vp.appendChild(w);
                 TC.wrap = w;
@@ -7697,6 +8277,13 @@ let dataList = currentMode === 'REV'
         
                 document.getElementById('tcZoomOut').addEventListener('click', function() { tcZoom(1); });
                 document.getElementById('tcZoomIn').addEventListener('click', function() { tcZoom(-1); });
+                document.getElementById('tcAllBtn').addEventListener('click', function() {
+                    TC.all = !TC.all;
+                    TC.allMap = null;
+                    tcHideTip();
+                    tcSyncAllBtn();
+                    tcDraw();
+                });
                 document.getElementById('tcLiveBtn').addEventListener('click', function() {
                     TC.follow = true;
                     tcSyncLiveBtn();
@@ -7757,6 +8344,7 @@ let dataList = currentMode === 'REV'
                     TC.cv.style.width = W + 'px';
                     TC.cv.style.height = H + 'px';
                 }
+                if (TC.all) { tcDrawAll(); return; }
                 if (TC.sigPair !== activePair) tcCollect();
         
                 var ctx = TC.ctx;
@@ -8091,6 +8679,7 @@ let dataList = currentMode === 'REV'
             }
         
             window.tcOnTableRendered = function() {
+                TC.allMap = null;
                 if (!TC.on) { TC.sigPair = null; return; }
                 tcCollect();
                 tcDraw();
