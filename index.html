@@ -539,7 +539,7 @@
 
                 
 
-                        <input type="text" id="apiPair" value="cryBTCUSD" style="display:none;" readonly />
+                        <input type="text" id="apiPair" value="1HZ10V" style="display:none;" readonly />
 
         
 
@@ -1718,9 +1718,10 @@
     
 
         var allPairData = {};
-                                                                var activePair = "cryBTCUSD";
+                                                                var activePair = "1HZ10V";
                                 
-                                                var activePairs = ["cryBTCUSD", "cryETHUSD"]; // default: BTC/USD and ETH/USD preselected, all other pairs unselected
+                                                var DEFAULT_PAIRS = ["1HZ10V", "1HZ25V"]; // test default: two VIX (Volatility 1s) pairs
+                                                var activePairs = DEFAULT_PAIRS.slice(); // default: two VIX pairs preselected, all other pairs unselected
                                                 window.pairLiveStatus = window.pairLiveStatus || {};
 
 
@@ -6509,7 +6510,8 @@ let dataList = currentMode === 'REV'
                                         function hpApply() {
                                                                                     if (_hpMultiSelected.size === 0) {
                                                                                         activePairs = ["cryBTCUSD", "cryETHUSD"];
-                                                                                    } else if (_hpMultiSelected.size === ALL_PAIRS.length) {
+                                                                                    activePairs = DEFAULT_PAIRS.slice();
+                                                                                                                                } else if (_hpMultiSelected.size === ALL_PAIRS.length) {
                                                 activePairs = null;
                                             } else {
                                                 activePairs = [..._hpMultiSelected];
@@ -6868,7 +6870,8 @@ let dataList = currentMode === 'REV'
                                 
                                             if (_ppTempSelected.size === 0) {
                                                 activePairs = ["cryBTCUSD", "cryETHUSD"];
-                                            } else if (_ppTempSelected.size === ALL_PAIRS.length) {
+                                            activePairs = DEFAULT_PAIRS.slice();
+                                                                        } else if (_ppTempSelected.size === ALL_PAIRS.length) {
                                 activePairs = null; // same as ALL
                             } else {
                                 activePairs = [..._ppTempSelected];
@@ -7591,7 +7594,10 @@ let dataList = currentMode === 'REV'
                         if (pv < it0.lo) it0.lo = pv;
                         if (pv > it0.hi) it0.hi = pv;
                     }
-                    if (!(it0.hi >= it0.lo)) { it0.lo = 0; it0.hi = 1; }
+                    if (!(it0.hi >= it0.lo)) {
+                                            if (it0.last >= 0) { it0.lo = it0.prices[it0.last]; it0.hi = it0.lo; }
+                                            else { it0.lo = 0; it0.hi = 1; }
+                                        }
                     if (!(it0.hi > it0.lo)) {
                         var mm = Math.abs(it0.lo) * 0.0002 || 0.0001;
                         it0.lo -= mm;
@@ -7702,7 +7708,7 @@ let dataList = currentMode === 'REV'
                     }
                 }
             
-                var marks = [], items = [];
+                var marks = [], items = [], callouts = [];
                 var tally = { REV: { w: 0, l: 0, p: 0 }, MOM: { w: 0, l: 0, p: 0 } };
                 var nReady = 0, nFired = 0, nextIt = null, nRev = 0, nMom = 0;
                 for (pi = 0; pi < info.length; pi++) {
@@ -7907,7 +7913,18 @@ let dataList = currentMode === 'REV'
                         }
                     }
                     TC.hov.push({ x: xr, y: pbot - 7, r: 9, o: { sig: tn.sig, idx: tn.idx, kind: tn.kind, need: tn.need, ref: tn.ref, dec: tn.it.dec } });
-                    var clBoxes;
+                    var cxAy;
+                                        if (tn.kind === 'FIRED') {
+                                            var cxFp = tn.it.prices[tn.idx];
+                                            cxAy = (cxFp !== -1) ? yOfPair(tn.it, cxFp) : (pbot - 7);
+                                        } else if (tn.it.last >= 0 && tn.idx > tn.it.last) {
+                                            cxAy = yOfPair(tn.it, tn.it.prices[tn.it.last]);
+                                        } else {
+                                            cxAy = pbot - 7;
+                                        }
+                                        callouts.push({ tn: tn, xr: xr, ay: Math.max(ptop + 8, Math.min(pbot - 8, cxAy)), up: dUp, dcol: dcol, tcol: tcol, y: 0, rows: null });
+                                        continue;
+                                        var clBoxes;
                     if (!clBoxes) {
                         clBoxes = [];
                         for (var clO = 0; clO < items.length; clO++) {
@@ -7986,7 +8003,226 @@ let dataList = currentMode === 'REV'
                     TC.hov.push({ x: clX, y: clY, w: clW, h: clH, o: { sig: tn.sig, idx: tn.idx, kind: tn.kind, need: tn.need, ref: tn.ref, dec: tn.it.dec } });
                 }
             
-                ends.sort(function(a, b) { return a.y - b.y; });
+                if (callouts.length > 0) {
+                                ctx.save();
+                                ctx.font = 'bold 9px ' + MONO;
+                                var cqW = 0;
+                                for (k = 0; k < callouts.length; k++) {
+                                    var cqA = callouts[k], cqT = cqA.tn, cqS = cqT.sig;
+                                    cqA.rows = [
+                                        (cqT.kind === 'FIRED' ? '\u25CF HIT ' : (cqT.need === 1 ? '\u25B6 ' : '')) + getPairDisplayName(cqS.pair) + ' ' + cqS.type + ' R' + cqS.r,
+                                        'X' + cqS.s1 + '-X' + cqS.s2 + '  ' + cqS.pct + '%' + (cqT.need > 1 ? '  x' + cqT.need : '') + '  ' + tcFmt(cqT.idx, true),
+                                        (cqT.kind === 'FIRED' ? 'RESULT ' + tcFmtIn(cqT.idx + cqS.c - nowSec) : (cqT.idx - nowSec > 0 ? 'IN ' + tcFmtIn(cqT.idx - nowSec) : 'NOW')),
+                                                                'C1 ' + cqS.c1 + '   C2 ' + cqS.c2
+                                    ];
+                                    for (var cqR = 0; cqR < cqA.rows.length; cqR++) {
+                                        var cqM = ctx.measureText(cqA.rows[cqR]).width;
+                                        if (cqM > cqW) cqW = cqM;
+                                    }
+                                }
+                                ctx.font = 'bold 15px ' + MONO;
+                                                for (k = 0; k < callouts.length; k++) {
+                                                    var cqHw = ctx.measureText(callouts[k].up ? '\u25B2 BUY' : '\u25BC SELL').width + ctx.measureText(String(callouts[k].tn.sig.c)).width + 28;
+                                                    var cqTw = ctx.measureText(callouts[k].rows[2]).width + 16;
+                                                    if (cqHw > cqW) cqW = cqHw;
+                                                    if (cqTw > cqW) cqW = cqTw;
+                                                }
+                                                ctx.font = 'bold 9px ' + MONO;
+                                                var cqBw = Math.ceil(cqW) + 10, cqBh = 82, cqGap = 34;
+                                var cqX = xOf(nowIdx) + 44;
+                                if (cqX + cqBw > W - PADR) cqX = W - PADR - cqBw;
+                                if (cqX < PADL + 2) cqX = PADL + 2;
+                                for (k = 0; k < callouts.length; k++) {
+                                    callouts[k].y = callouts[k].up ? callouts[k].ay + cqGap : callouts[k].ay - cqGap - cqBh;
+                                }
+                                callouts.sort(function(a, b) { return a.y - b.y; });
+                                var cqPrev = ptop + 2;
+                                for (k = 0; k < callouts.length; k++) {
+                                    if (callouts[k].y < cqPrev) callouts[k].y = cqPrev;
+                                    cqPrev = callouts[k].y + cqBh + 4;
+                                }
+                                var cqPlaced = [];
+                                                callouts.sort(function(a, b) { return (a.tn.idx - b.tn.idx) || (a.xr - b.xr); });
+                                                                var cqGapX = 6;
+                                                                for (k = 0; k < callouts.length; k++) {
+                                                                    var cqN = callouts[k];
+                                                                    var cqWant = Math.round(cqN.xr - cqBw / 2);
+                                                                    if (k > 0) cqWant = Math.max(cqWant, callouts[k - 1].bx + cqBw + cqGapX);
+                                                                    cqN.bx = Math.max(PADL + 2, cqWant);
+                                                                }
+                                                                for (k = callouts.length - 1; k >= 0; k--) {
+                                                                    var cqMaxX = (k === callouts.length - 1) ? (W - PADR - cqBw) : (callouts[k + 1].bx - cqBw - cqGapX);
+                                                                    if (callouts[k].bx > cqMaxX) callouts[k].bx = Math.max(PADL + 2, cqMaxX);
+                                                                }
+                                                                for (k = 0; k < callouts.length; k++) {
+                                                                    var cqN2 = callouts[k];
+                                                                    var cqUpFirst = (k % 2 === 0);
+                                                                    var cqAbove = cqN2.ay - 24 - cqBh;
+                                                                    var cqBelow = cqN2.ay + 24;
+                                                                    var cqOkA = cqAbove >= ptop + 2;
+                                                                    var cqOkB = cqBelow + cqBh <= pbot - 2;
+                                                                    var cqYY = cqUpFirst ? (cqOkA ? cqAbove : cqBelow) : (cqOkB ? cqBelow : cqAbove);
+                                                                    cqN2.y = Math.max(ptop + 2, Math.min(pbot - cqBh - 2, cqYY));
+                                                                    cqN2.tFixed = true;
+                                                                                    }
+                                                                                    var cqGrp = {}, cqOrder = [];
+                                                                                    for (k = 0; k < callouts.length; k++) {
+                                                                                        var cqPk = callouts[k].tn.sig.pair;
+                                                                                        if (!cqGrp[cqPk]) { cqGrp[cqPk] = []; cqOrder.push(cqPk); }
+                                                                                        cqGrp[cqPk].push(callouts[k]);
+                                                                                    }
+                                                                                    cqOrder.sort(function(a, b) { return cqGrp[a][0].tn.idx - cqGrp[b][0].tn.idx; });
+                                                                                    var cqRects = [];
+                                                                                    var cqPad = 2;
+                                                                                    for (var cqGi = 0; cqGi < cqOrder.length; cqGi++) {
+                                                                                        var cqG = cqGrp[cqOrder[cqGi]];
+                                                                                        var cqGw = cqG.length * cqBw + (cqG.length - 1) * cqPad;
+                                                                                        var cqMinX = Math.max(xOf(nowIdx), xOf(maxLast)) + 14;
+                                                                                                            var cqGx = Math.max(cqMinX, Math.round(cqG[0].xr - cqBw / 2));
+                                                                                        if (cqGx + cqGw > W - PADR - 2) cqGx = W - PADR - 2 - cqGw;
+                                                                                        if (cqGx < cqMinX) cqGx = cqMinX;
+                                                                                        var cqBaseY = cqG[0].ay;
+                                                                                        var cqCand = [];
+                                                                                        for (var cqTi = 0; cqTi < 5; cqTi++) {
+                                                                                            cqCand.push(cqBaseY - 24 - cqBh - cqTi * (cqBh + 4));
+                                                                                            cqCand.push(cqBaseY + 24 + cqTi * (cqBh + 4));
+                                                                                        }
+                                                                                        var cqGy = null;
+                                                                                        for (var cqCi = 0; cqCi < cqCand.length && cqGy === null; cqCi++) {
+                                                                                            var cqCy2 = cqCand[cqCi];
+                                                                                            if (cqCy2 < ptop + 2 || cqCy2 + cqBh > pbot - 2) continue;
+                                                                                            var cqClear = true;
+                                                                                            for (var cqRi = 0; cqRi < cqRects.length; cqRi++) {
+                                                                                                var cqRc = cqRects[cqRi];
+                                                                                                if (cqGx < cqRc.x + cqRc.w + 4 && cqGx + cqGw > cqRc.x - 4 && cqCy2 < cqRc.y + cqBh + 4 && cqCy2 + cqBh > cqRc.y - 4) { cqClear = false; break; }
+                                                                                            }
+                                                                                            if (cqClear) {
+                                                                                                                        for (var cqLi = 0; cqLi < callouts.length; cqLi++) {
+                                                                                                                            var cqLn = callouts[cqLi];
+                                                                                                                            var cqLe = cqLn.tn.it.last >= 0 ? xOf(cqLn.tn.it.last) : cqLn.xr;
+                                                                                                                            var cqLx0 = Math.min(cqLe, cqLn.xr) - 4;
+                                                                                                                            var cqLx1 = Math.max(cqLe, cqLn.xr) + 4;
+                                                                                                                            if (cqGx < cqLx1 && cqGx + cqGw > cqLx0 && cqCy2 < cqLn.ay + 8 && cqCy2 + cqBh > cqLn.ay - 8) { cqClear = false; break; }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                    if (cqClear) cqGy = cqCy2;
+                                                                                        }
+                                                                                        if (cqGy === null) cqGy = Math.max(ptop + 2, Math.min(pbot - cqBh - 2, cqBaseY - 24 - cqBh));
+                                                                                        cqRects.push({ x: cqGx, y: cqGy, w: cqGw });
+                                                                                        for (var cqMi = 0; cqMi < cqG.length; cqMi++) {
+                                                                                            cqG[cqMi].bx = cqGx + cqMi * (cqBw + cqPad);
+                                                                                            cqG[cqMi].y = cqGy;
+                                                                                        }
+                                                                                    }
+                                                                                    {
+                                                                }
+                                                for (k = 0; k < callouts.length; k++) {
+                                                    var cqP = callouts[k];
+                                                                        if (cqP.tFixed) continue;
+                                                    cqP.bx = Math.max(PADL + 2, Math.min(W - PADR - cqBw, Math.round(cqP.xr - cqBw / 2)));
+                                                    var cqTry = [];
+                                                    for (var cqT2 = 0; cqT2 < 4; cqT2++) {
+                                                        cqTry.push(cqP.ay - 22 - cqBh - cqT2 * (cqBh + 4));
+                                                        cqTry.push(cqP.ay + 22 + cqT2 * (cqBh + 4));
+                                                    }
+                                                    var cqPick = null;
+                                                    for (var cqI = 0; cqI < cqTry.length && cqPick === null; cqI++) {
+                                                        var cqCy = cqTry[cqI];
+                                                        if (cqCy < ptop + 2 || cqCy + cqBh > pbot - 2) continue;
+                                                        var cqFree = true;
+                                                        for (var cqJ = 0; cqJ < cqPlaced.length; cqJ++) {
+                                                            var cqO = cqPlaced[cqJ];
+                                                            if (cqP.bx < cqO.x + cqBw + 4 && cqP.bx + cqBw > cqO.x - 4 && cqCy < cqO.y + cqBh + 4 && cqCy + cqBh > cqO.y - 4) { cqFree = false; break; }
+                                                        }
+                                                        if (cqFree) cqPick = cqCy;
+                                                    }
+                                                    if (cqPick === null) cqPick = Math.max(ptop + 2, Math.min(pbot - cqBh - 2, cqP.ay - 22 - cqBh));
+                                                    cqP.y = cqPick;
+                                                    cqPlaced.push({ x: cqP.bx, y: cqPick });
+                                                }
+                                                var cqLimit = pbot - 2;
+                                for (k = callouts.length - 1; k >= 0; k--) {
+                                    ;
+                                    cqLimit = callouts[k].y - 4;
+                                }
+                                for (k = 0; k < callouts.length; k++) {
+                                    var cqB = callouts[k], cqY = Math.round(cqB.y), cqS2 = cqB.tn.sig;
+                                                        cqX = cqB.bx;
+                                    var cqRdy = (cqB.tn.need === 1 || cqB.tn.kind === 'FIRED');
+                                    var cqEx, cqEy;
+                                    if (cqY + cqBh < cqB.ay) {
+                                        cqEx = Math.max(cqX, Math.min(cqX + cqBw, cqB.xr));
+                                        cqEy = cqY + cqBh;
+                                    } else if (cqY > cqB.ay) {
+                                        cqEx = Math.max(cqX, Math.min(cqX + cqBw, cqB.xr));
+                                        cqEy = cqY;
+                                    } else {
+                                        cqEx = cqX;
+                                        cqEy = cqY + cqBh / 2;
+                                    }
+                                    ctx.save();
+                                    ctx.strokeStyle = cqB.dcol;
+                                    ctx.lineWidth = 1.5;
+                                    ctx.globalAlpha = 0.9;
+                                    ctx.beginPath();
+                                    ctx.moveTo(cqB.xr, cqB.ay);
+                                    ctx.lineTo(cqEx, cqEy);
+                                                        ctx.stroke();
+                                                        var cqDr = cqEy < cqB.ay ? -1 : 1;
+                                                        ctx.beginPath();
+                                                        ctx.moveTo(cqB.xr, cqB.ay + cqDr * 7);
+                                                        ctx.lineTo(cqB.xr - 4.5, cqB.ay + cqDr * 14);
+                                                        ctx.lineTo(cqB.xr + 4.5, cqB.ay + cqDr * 14);
+                                                        ctx.closePath();
+                                                        ctx.fillStyle = cqB.dcol;
+                                                        ctx.fill();
+                                                        ctx.beginPath();
+                                    ctx.stroke();
+                                    ctx.restore();
+                                    ctx.globalAlpha = 0.95;
+                                    ctx.fillStyle = BG;
+                                    ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                        ctx.globalAlpha = 0.4;
+                                                        ctx.fillStyle = cqB.dcol;
+                                                        ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                        ctx.globalAlpha = 1;
+                                                        ctx.fillStyle = cqB.dcol;
+                                                        ctx.fillRect(cqX, cqY, cqBw, 22);
+                                                        ctx.font = 'bold 10px ' + MONO;
+                                                        ctx.textAlign = 'center';
+                                                        ctx.fillStyle = BG;
+                                                        ctx.font = 'bold 15px ' + MONO;
+                                                                            ctx.textAlign = 'left';
+                                                                            ctx.fillText(cqB.up ? '\u25B2 BUY' : '\u25BC SELL', cqX + 8, cqY + 17);
+                                                                            ctx.textAlign = 'right';
+                                                                            ctx.fillText(String(cqS2.c), cqX + cqBw - 8, cqY + 17);
+                                                        ctx.font = 'bold 9px ' + MONO;
+                                    ctx.globalAlpha = 1;
+                                    ctx.lineWidth = cqRdy ? 2.5 : 1.5;
+                                    ctx.strokeStyle = cqB.dcol;
+                                    ctx.strokeRect(cqX + 0.5, cqY + 0.5, cqBw - 1, cqBh - 1);
+                                    ctx.fillStyle = cqS2.type === 'REV' ? '#FF9100' : '#A855F7';
+                                    ;
+                                    ctx.textAlign = 'center';
+                                                        ctx.fillStyle = '#FFFFFF';
+                                    ctx.fillText(cqB.rows[0], cqX + cqBw / 2, cqY + 54);
+                                    ctx.fillStyle = cqB.dcol;
+                                    ctx.fillStyle = '#FFFFFF';
+                                                        ctx.fillText(cqB.rows[1], cqX + cqBw / 2, cqY + 65);
+                                                                            ctx.font = 'bold 11px ' + MONO;
+                                                                            ctx.fillStyle = '#FFFFFF';
+                                                                            ctx.fillText(cqB.rows[3], cqX + cqBw / 2, cqY + 78);
+                                                                            ctx.font = 'bold 9px ' + MONO;
+                                    ctx.fillStyle = cqRdy ? GOLD : TXT;
+                                    ctx.font = 'bold 15px ' + MONO;
+                                                        ctx.fillText(cqB.rows[2], cqX + cqBw / 2, cqY + 42);
+                                                        ctx.font = 'bold 9px ' + MONO;
+                                    TC.hov.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, o: { sig: cqS2, idx: cqB.tn.idx, kind: cqB.tn.kind, need: cqB.tn.need, ref: cqB.tn.ref, dec: cqB.tn.it.dec } });
+                                }
+                                ctx.restore();
+                                ctx.textAlign = 'left';
+                            }
+                            ends.sort(function(a, b) { return a.y - b.y; });
                 for (k = 1; k < ends.length; k++) {
                     if (ends[k].y - ends[k - 1].y < 11) ends[k].y = ends[k - 1].y + 11;
                 }
@@ -9202,7 +9438,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                             }
                                                                                                                                                         }
                                                                                                                                                     });
-                                                                                                                                                    activePair = PAIRS_BY_CAT[activeCat][0];
+                                                                                                                                                    activePair = (activePairs && activePairs.length) ? activePairs[0] : PAIRS_BY_CAT[activeCat][0];
                                                                                                                                                     var apiPairInput = document.getElementById('apiPair');
                                                                                                                                                     if (apiPairInput) apiPairInput.value = activePair;
                                                                                                                                                 }
