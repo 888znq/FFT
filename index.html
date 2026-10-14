@@ -7548,7 +7548,7 @@ let dataList = currentMode === 'REV'
                 if (!TC.allMap) TC.allMap = tcCollectAll();
                 var sigMap = TC.allMap;
                 var sEnd = tcSessionEnd();
-                var base = (activePairs !== null && activePairs) ? activePairs : ALL_PAIRS;
+                var base = TC.all ? ((activePairs !== null && activePairs) ? activePairs : ALL_PAIRS) : [activePair];
                 var pairs = [];
                 var pi, i, k;
                 for (pi = 0; pi < base.length; pi++) {
@@ -7561,7 +7561,7 @@ let dataList = currentMode === 'REV'
                 if (pairs.length === 0) {
                     ctx.fillStyle = GOLD;
                     ctx.font = 'bold 12px ' + MONO;
-                    ctx.fillText('ALL PAIRS - WAITING FOR DATA...', PADL, 20);
+                    ctx.fillText((TC.all ? 'ALL PAIRS' : getPairDisplayName(activePair)) + ' - WAITING FOR DATA...', PADL, 20);
                     return;
                 }
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
@@ -8469,7 +8469,7 @@ let dataList = currentMode === 'REV'
             
                 ctx.textAlign = 'left';
                 ctx.font = 'bold 11px ' + MONO;
-                var line1 = 'ALL PAIRS (' + info.length + ')  |  ' + tcFmt(nowIdx, true) + ' IST  |  ' + (live ? 'LIVE' : 'SESSION CLOSED') + '  |  ' + nRev + ' REV  ' + nMom + ' MOM';
+                var line1 = (TC.all ? 'ALL PAIRS (' + info.length + ')' : getPairDisplayName(activePair)) + '  |  ' + tcFmt(nowIdx, true) + ' IST  |  ' + (live ? 'LIVE' : 'SESSION CLOSED') + '  |  ' + nRev + ' REV  ' + nMom + ' MOM';
                 ctx.fillStyle = TXT;
                 ctx.fillText(line1, PADL, 13);
                 var line2 = '';
@@ -8776,7 +8776,7 @@ let dataList = currentMode === 'REV'
                     TC.cv.style.width = W + 'px';
                     TC.cv.style.height = H + 'px';
                 }
-                if (TC.all) { tcDrawAll(); return; }
+                tcDrawAll(); return;
                 if (TC.sigPair !== activePair) tcCollect();
         
                 var ctx = TC.ctx;
