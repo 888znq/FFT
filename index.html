@@ -9787,7 +9787,7 @@ let dataList = currentMode === 'REV'
                                     if (bxh.w && bxh.o && bxh.o.sig && mx >= bxh.x && mx <= bxh.x + bxh.w && my >= bxh.y && my <= bxh.y + bxh.h) {
                                         var bxs = bxh.o.sig;
                                         if (typeof manualSelectSignal === 'function') {
-                                            manualSelectSignal(bxs.pair, bxs.c, bxs.r, bxs.s1, bxs.s2, bxs.col, bxs.type, bxs.gap || 0, bxs.curGap || 0);
+                                            TC.hitFlag = true; _wpFocusSet(bxs.pair); manualSelectSignal(bxs.pair, bxs.c, bxs.r, bxs.s1, bxs.s2, bxs.col, bxs.type, bxs.gap || 0, bxs.curGap || 0);
                                         }
                                         return;
                                     }
@@ -9797,7 +9797,7 @@ let dataList = currentMode === 'REV'
                     if (mx >= h.x && mx <= h.x + h.w && my >= h.y && my <= h.y + h.h) {
                         var s = h.sig;
                         if (typeof manualSelectSignal === 'function') {
-                            manualSelectSignal(s.pair, s.c, s.r, s.s1, s.s2, s.col, s.type, s.gap || 0, s.curGap || 0);
+                            TC.hitFlag = true; _wpFocusSet(s.pair); manualSelectSignal(s.pair, s.c, s.r, s.s1, s.s2, s.col, s.type, s.gap || 0, s.curGap || 0);
                         }
                         return;
                     }
@@ -9898,7 +9898,9 @@ let dataList = currentMode === 'REV'
                     TC.drag = null;
                     if (!d || d.moved) return;
                     var rc = cv.getBoundingClientRect();
-                    tcClick(e.clientX - rc.left, e.clientY - rc.top);
+                    TC.hitFlag = false;
+                                        tcClick(e.clientX - rc.left, e.clientY - rc.top);
+                                        if (!TC.hitFlag && typeof _wpFocusClear === 'function') _wpFocusClear();
                 });
                 cv.addEventListener('pointercancel', function() { TC.drag = null; });
                         cv.addEventListener('pointerleave', function() { tcHideTip(); });
