@@ -8155,7 +8155,7 @@ let dataList = currentMode === 'REV'
                                                                                                                     var cqNc = ctx.measureText('00:00:00').width + 24;
                                                                                                                     cqNw = Math.max(cqNw, cqNh, cqNb, cqNc);
                                                                                                                 }
-                                                                                                                cqBw = Math.max(170, Math.ceil(cqNw));
+                                                                                                                cqBw = Math.max(260, Math.ceil(cqNw));
                                                                                 cqBh = 108;
                                                                 ctx.font = 'bold 9px ' + MONO;
                                 var cqX = xOf(nowIdx) + 44;
@@ -8324,7 +8324,71 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.font = 'bold 15px ' + MONO;
                                                                                                 ctx.fillStyle = BG;
                                                                                                 ctx.textAlign = 'left';
-                                                                                                ctx.fillText(cqB.n1, cqX + 10, cqY + 19);
+                                                                                                var nbTopH = 66, nbLblH = 14, nbRowH = cqBh - nbTopH - nbLblH;
+                                                                                                var nbLeftW = Math.round(cqBw * 0.46), nbRightW = cqBw - nbLeftW;
+                                                                                                var nbSec = cqB.tn.kind === 'FIRED' ? (cqB.tn.idx + cqS2.c - nowSec) : (cqB.tn.idx - nowSec);
+                                                                                                var nbRowCol = cqS2.col === 'G' ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
+                                                                                                ctx.globalAlpha = 1;
+                                                                                                ctx.fillStyle = BG;
+                                                                                                ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                                                                ctx.fillStyle = cqB.dcol;
+                                                                                                ctx.fillRect(cqX, cqY, nbLeftW, nbTopH);
+                                                                                                ctx.fillRect(cqX + nbLeftW, cqY, nbRightW, 2);
+                                                                                                ctx.textBaseline = 'middle';
+                                                                                                ctx.textAlign = 'center';
+                                                                                                ctx.letterSpacing = '0px';
+                                                                                                ctx.fillStyle = BG;
+                                                                                                ctx.font = 'bold 34px ' + MONO;
+                                                                                                ctx.fillText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
+                                                                                                var nbTxt = nbSec > 0 ? cqMs(nbSec) : 'NOW';
+                                                                                                var nbFs = 32;
+                                                                                                ctx.font = 'bold ' + nbFs + 'px ' + MONO;
+                                                                                                while (nbFs > 14 && ctx.measureText(nbTxt).width > nbRightW - 12) {
+                                                                                                    nbFs -= 2;
+                                                                                                    ctx.font = 'bold ' + nbFs + 'px ' + MONO;
+                                                                                                }
+                                                                                                ctx.fillStyle = cqB.dcol;
+                                                                                                ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
+                                                                                                ctx.font = 'bold 14px ' + MONO;
+                                                                                                ctx.fillStyle = cqRdy ? GOLD : DIM;
+                                                                                                ctx.fillStyle = cqB.dcol; ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
+                                                                                                ctx.strokeStyle = '#FFFFFF';
+                                                                                                ctx.lineWidth = 1;
+                                                                                                ctx.beginPath();
+                                                                                                ctx.strokeStyle = cqB.dcol; ctx.moveTo(cqX, cqY + nbTopH + 0.5);
+                                                                                                ctx.lineTo(cqX + cqBw, cqY + nbTopH + 0.5);
+                                                                                                ctx.moveTo(cqX, cqY + nbTopH + nbLblH + 0.5);
+                                                                                                ctx.lineTo(cqX + cqBw, cqY + nbTopH + nbLblH + 0.5);
+                                                                                                ctx.stroke();
+                                                                                                ctx.font = 'bold 9px ' + MONO;
+                                                                                                ctx.letterSpacing = '4px';
+                                                                                                ctx.fillStyle = '#D500F9';
+                                                                                                ctx.fillStyle = cqB.dcol; ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
+                                                                                                ctx.letterSpacing = '0px';
+                                                                                                var nbWts = [2.2, 1.2, 1.2, 1.9, 1, 1, 1.5];
+                                                                                                var nbCells = [getPairDisplayName(cqS2.pair), 'C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2), cqS2.pct + '%'];
+                                                                                                var nbCx = cqX, nbRy = cqY + nbTopH + nbLblH, nbCw = 0, nbI = 0;
+                                                                                                ctx.font = 'bold 10px ' + MONO;
+                                                                                                for (nbI = 0; nbI < 7; nbI++) {
+                                                                                                    nbCw = cqBw * nbWts[nbI] / 10;
+                                                                                                    ctx.fillStyle = cqB.dcol;
+                                                                                                    ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
+                                                                                                    nbCx += nbCw;
+                                                                                                    if (nbI < 6) {
+                                                                                                        ctx.strokeStyle = '#FFFFFF';
+                                                                                                        ctx.lineWidth = 1;
+                                                                                                        ctx.beginPath();
+                                                                                                        ctx.strokeStyle = cqB.dcol; ctx.moveTo(Math.round(nbCx) + 0.5, nbRy);
+                                                                                                        ctx.lineTo(Math.round(nbCx) + 0.5, cqY + cqBh);
+                                                                                                        ctx.stroke();
+                                                                                                    }
+                                                                                                }
+                                                                                                ctx.lineWidth = cqRdy ? 3 : 2;
+                                                                                                ctx.strokeStyle = cqB.dcol;
+                                                                                                ctx.strokeRect(cqX + 1, cqY + 1, cqBw - 2, cqBh - 2);
+                                                                                                ctx.textAlign = 'left';
+                                                                                                TC.hov.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, o: { sig: cqS2, idx: cqB.tn.idx, kind: cqB.tn.kind, need: cqB.tn.need, ref: cqB.tn.ref, dec: cqB.tn.it.dec } });
+                                                                                                continue;
                                                                                                 ctx.textAlign = 'right';
                                                                                                 ctx.fillText(cqB.n2, cqX + cqBw - 10, cqY + 19);
                                                                                                 var cqNt = cqB.tn;
