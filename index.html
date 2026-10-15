@@ -1897,8 +1897,8 @@
 
         let currentStartTsUtc = 0;
                 let currentDuration = 86400;
-                let sessionWindowStartMin = 0;
-                let sessionWindowEndMin = 1440;
+                let sessionWindowStartMin = Math.floor((new Date().getUTCHours() * 60 + new Date().getUTCMinutes()) / 60) * 60;
+                let sessionWindowEndMin = sessionWindowStartMin + 60;
         
                 function _saveSessionWindow() {
                     try { localStorage.setItem('aofs_sessionWindow', JSON.stringify({ startMin: sessionWindowStartMin, endMin: sessionWindowEndMin })); } catch(e) {}
@@ -2727,7 +2727,7 @@
                                                         window._wpsBootAlreadyRan = true;
                                                         autoFetch();
                                                     };
-                                                    if (!window._wpsSessionSynced) {
+                                                    if (true) {
                                                         _applyCatSessionWindow(activeCat);
                                                     }
                                                     _hideOfflineOverlay();
@@ -7600,8 +7600,8 @@ let dataList = currentMode === 'REV'
                                         map[best.pair][key] = best;
                                     }
                                 };
-                                if (TC.sigMode !== 'MOM') _topPick(globalRevs, 'rev');
-                if (TC.sigMode !== 'REV') _topPick(globalMoms, 'mom');
+                                if (TC.sigMode !== 'MOM') bucket(globalRevs, 'rev');
+                if (TC.sigMode !== 'REV') bucket(globalMoms, 'mom');
                 return map;
             }
             
