@@ -8269,14 +8269,65 @@ let dataList = currentMode === 'REV'
                                                     cqP.y = cqPick;
                                                     cqPlaced.push({ x: cqP.bx, y: cqPick });
                                                 }
-                                                var cqLimit = pbot - 2;
+                                                var cqBwD = cqBw, cqBhD = cqBh, cqFix = null, cqHovFrom = 0;
+                                                                                var nxG = 3;
+                                                                                var nxL = Math.max(xOf(nowIdx), xOf(maxLast)) + 14;
+                                                                                var nxR = W - PADR - 2, nxT = ptop + 2, nxB = pbot - 2;
+                                                                                if (nxL < PADL + 2 || nxR - nxL < 120) nxL = PADL + 2;
+                                                                                var nxAW = nxR - nxL, nxAH = nxB - nxT;
+                                                                                callouts.sort(function(a, b) {
+                                                                                    if (a.up !== b.up) return a.up ? -1 : 1;
+                                                                                    if (a.tn.sig.pair !== b.tn.sig.pair) return a.tn.sig.pair < b.tn.sig.pair ? -1 : 1;
+                                                                                    return a.tn.idx - b.tn.idx;
+                                                                                });
+                                                                                var nxN = callouts.length, nxS = 1, nxCols = 1, nxRows = 1;
+                                                                                for (nxS = 1; nxS >= 0.02; nxS -= 0.01) {
+                                                                                    nxCols = Math.floor((nxAW + nxG) / (cqBwD * nxS + nxG));
+                                                                                    nxRows = Math.floor((nxAH + nxG) / (cqBhD * nxS + nxG));
+                                                                                    if (nxCols >= 1 && nxRows >= 1 && nxCols * nxRows >= nxN) break;
+                                                                                }
+                                                                                if (nxRows < 1) nxRows = 1;
+                                                                                var nxColsUsed = Math.max(1, Math.ceil(nxN / nxRows));
+                                                                                var nxRowsUsed = Math.max(1, Math.ceil(nxN / nxColsUsed));
+                                                                                var nxCw = cqBwD * nxS + nxG, nxCh = cqBhD * nxS + nxG;
+                                                                                for (k = 0; k < nxN; k++) {
+                                                                                    callouts[k].bx = nxL + Math.floor(k / nxRowsUsed) * nxCw;
+                                                                                    callouts[k].y = nxT + (k % nxRowsUsed) * nxCh;
+                                                                                    callouts[k].sc = nxS;
+                                                                                    callouts[k].tFixed = true;
+                                                                                }
+                                                                                ctx.save();
+                                                                                ctx.lineWidth = 1.5;
+                                                                                ctx.globalAlpha = 0.9;
+                                                                                for (k = 0; k < nxN; k++) {
+                                                                                    var nxBox = callouts[k], nxBw = cqBwD * nxBox.sc, nxBh = cqBhD * nxBox.sc, nxBy = Math.round(nxBox.y), nxEx, nxEy;
+                                                                                    if (nxBy + nxBh < nxBox.ay) {
+                                                                                        nxEx = Math.max(nxBox.bx, Math.min(nxBox.bx + nxBw, nxBox.xr));
+                                                                                        nxEy = nxBy + nxBh;
+                                                                                    } else if (nxBy > nxBox.ay) {
+                                                                                        nxEx = Math.max(nxBox.bx, Math.min(nxBox.bx + nxBw, nxBox.xr));
+                                                                                        nxEy = nxBy;
+                                                                                    } else {
+                                                                                        nxEx = nxBox.bx;
+                                                                                        nxEy = nxBy + nxBh / 2;
+                                                                                    }
+                                                                                    ctx.strokeStyle = nxBox.dcol;
+                                                                                    ctx.beginPath();
+                                                                                    ctx.moveTo(nxBox.xr, nxBox.ay);
+                                                                                    ctx.lineTo(nxEx, nxEy);
+                                                                                    ctx.stroke();
+                                                                                }
+                                                                                ctx.restore();
+                                                                                var cqLimit = pbot - 2;
                                 for (k = callouts.length - 1; k >= 0; k--) {
                                     ;
                                     cqLimit = callouts[k].y - 4;
                                 }
                                 for (k = 0; k < callouts.length; k++) {
-                                    var cqB = callouts[k], cqY = Math.round(cqB.y), cqS2 = cqB.tn.sig;
-                                                        cqX = cqB.bx;
+                                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                                                                                                    if (cqFix) { for (var cqFi = cqHovFrom; cqFi < TC.hov.length; cqFi++) { TC.hov[cqFi].w = cqFix.w; TC.hov[cqFi].h = cqFix.h; } cqFix = null; }
+                                                                                                    var cqB = callouts[k], cqY = Math.round(cqB.y), cqS2 = cqB.tn.sig;
+                                                        cqX = cqB.bx; cqBw = cqBwD * (cqB.sc || 1); cqBh = cqBhD * (cqB.sc || 1);
                                     var cqRdy = (cqB.tn.need === 1 || cqB.tn.kind === 'FIRED');
                                     var cqEx, cqEy;
                                     if (cqY + cqBh < cqB.ay) {
@@ -8295,7 +8346,7 @@ let dataList = currentMode === 'REV'
                                     ctx.globalAlpha = 0.9;
                                     ctx.beginPath();
                                     ctx.moveTo(cqB.xr, cqB.ay);
-                                    ctx.lineTo(cqEx, cqEy);
+                                    /* connector is drawn in the pre-pass behind all boxes */
                                                         ctx.stroke();
                                                         var cqDr = cqEy < cqB.ay ? -1 : 1;
                                                         ctx.beginPath();
@@ -8318,13 +8369,17 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.fillStyle = BG;
                                                                                                 ctx.fillRect(cqX, cqY, cqBw, cqBh);
                                                                                                 ctx.fillStyle = cqB.dcol;
-                                                                                                ctx.fillRect(cqX, cqY, cqBw, 28);
+                                                                                                ctx.fillRect(cqX, cqY, cqBw, Math.min(28, cqBh));
                                                                                                 ctx.textBaseline = 'alphabetic';
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 ctx.font = 'bold 15px ' + MONO;
                                                                                                 ctx.fillStyle = BG;
                                                                                                 ctx.textAlign = 'left';
-                                                                                                var nbTopH = 66, nbLblH = 14, nbRowH = cqBh - nbTopH - nbLblH;
+                                                                                                cqFix = { w: cqBw, h: cqBh }; cqHovFrom = TC.hov.length;
+                                                                                                                                                                                                var cqScl = cqB.sc || 1;
+                                                                                                                                                                                                ctx.setTransform(dpr * cqScl, 0, 0, dpr * cqScl, dpr * cqX * (1 - cqScl), dpr * cqY * (1 - cqScl));
+                                                                                                                                                                                                cqBw = cqBwD; cqBh = cqBhD;
+                                                                                                                                                                                                var nbTopH = 66, nbLblH = 14, nbRowH = cqBh - nbTopH - nbLblH;
                                                                                                 var nbLeftW = Math.round(cqBw * 0.46), nbRightW = cqBw - nbLeftW;
                                                                                                 var nbSec = cqB.tn.kind === 'FIRED' ? (cqB.tn.idx + cqS2.c - nowSec) : (cqB.tn.idx - nowSec);
                                                                                                 var nbRowCol = cqS2.col === 'G' ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
@@ -8333,7 +8388,7 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.fillRect(cqX, cqY, cqBw, cqBh);
                                                                                                 ctx.fillStyle = cqB.dcol;
                                                                                                 ctx.fillRect(cqX, cqY, nbLeftW, nbTopH);
-                                                                                                ctx.fillRect(cqX + nbLeftW, cqY, nbRightW, 2);
+                                                                                                ctx.fillStyle = cqB.dcol; ctx.fillRect(cqX, cqY, cqBw, cqBh);
                                                                                                 ctx.textBaseline = 'middle';
                                                                                                 ctx.textAlign = 'center';
                                                                                                 ctx.letterSpacing = '0px';
@@ -8348,14 +8403,14 @@ let dataList = currentMode === 'REV'
                                                                                                     ctx.font = 'bold ' + nbFs + 'px ' + MONO;
                                                                                                 }
                                                                                                 ctx.fillStyle = cqB.dcol;
-                                                                                                ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
+                                                                                                ctx.fillStyle = BG; ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
                                                                                                 ctx.font = 'bold 14px ' + MONO;
                                                                                                 ctx.fillStyle = cqRdy ? GOLD : DIM;
-                                                                                                ctx.fillStyle = cqB.dcol; ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
+                                                                                                ctx.fillStyle = BG; ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
                                                                                                 ctx.strokeStyle = '#FFFFFF';
                                                                                                 ctx.lineWidth = 1;
                                                                                                 ctx.beginPath();
-                                                                                                ctx.strokeStyle = cqB.dcol; ctx.moveTo(cqX, cqY + nbTopH + 0.5);
+                                                                                                ctx.strokeStyle = BG; ctx.moveTo(cqX + nbLeftW + 0.5, cqY); ctx.lineTo(cqX + nbLeftW + 0.5, cqY + nbTopH); ctx.moveTo(cqX, cqY + nbTopH + 0.5);
                                                                                                 ctx.lineTo(cqX + cqBw, cqY + nbTopH + 0.5);
                                                                                                 ctx.moveTo(cqX, cqY + nbTopH + nbLblH + 0.5);
                                                                                                 ctx.lineTo(cqX + cqBw, cqY + nbTopH + nbLblH + 0.5);
@@ -8363,7 +8418,7 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.font = 'bold 9px ' + MONO;
                                                                                                 ctx.letterSpacing = '4px';
                                                                                                 ctx.fillStyle = '#D500F9';
-                                                                                                ctx.fillStyle = cqB.dcol; ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
+                                                                                                ctx.fillStyle = BG; ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 var nbWts = [2.2, 1.2, 1.2, 1.9, 1, 1, 1.5];
                                                                                                 var nbCells = [getPairDisplayName(cqS2.pair), 'C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2), cqS2.pct + '%'];
@@ -8372,13 +8427,13 @@ let dataList = currentMode === 'REV'
                                                                                                 for (nbI = 0; nbI < 7; nbI++) {
                                                                                                     nbCw = cqBw * nbWts[nbI] / 10;
                                                                                                     ctx.fillStyle = cqB.dcol;
-                                                                                                    ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
+                                                                                                    ctx.fillStyle = BG; ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
                                                                                                     nbCx += nbCw;
                                                                                                     if (nbI < 6) {
                                                                                                         ctx.strokeStyle = '#FFFFFF';
                                                                                                         ctx.lineWidth = 1;
                                                                                                         ctx.beginPath();
-                                                                                                        ctx.strokeStyle = cqB.dcol; ctx.moveTo(Math.round(nbCx) + 0.5, nbRy);
+                                                                                                        ctx.strokeStyle = BG; ctx.moveTo(Math.round(nbCx) + 0.5, nbRy);
                                                                                                         ctx.lineTo(Math.round(nbCx) + 0.5, cqY + cqBh);
                                                                                                         ctx.stroke();
                                                                                                     }
@@ -8532,7 +8587,8 @@ let dataList = currentMode === 'REV'
                                 ctx.restore();
                                 ctx.textAlign = 'left';
                             }
-                            ends.sort(function(a, b) { return a.y - b.y; });
+                            if (cqFix) { for (var cqFj = cqHovFrom; cqFj < TC.hov.length; cqFj++) { TC.hov[cqFj].w = cqFix.w; TC.hov[cqFj].h = cqFix.h; } cqFix = null; }
+                                            ends.sort(function(a, b) { return a.y - b.y; });
                 for (k = 1; k < ends.length; k++) {
                     if (ends[k].y - ends[k - 1].y < 11) ends[k].y = ends[k - 1].y + 11;
                 }
