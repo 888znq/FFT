@@ -263,9 +263,9 @@
                                                                                     <span style="position:relative; display:inline-block; flex-shrink:0;">
                                                                                                                                                                     <select id="levelFilterSelect" onchange="renderFilteredTable()" class="ctrl-input ctrl-select" style="width:70px; font-size:11px; color:#FFFFFF;">
                                                                                                                                                                         <option value="0">ALL LVL</option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <option value="1">X1-X2</option>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <option value="1" selected>X1-X2</option>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <option value="2">X2-X3</option>
-                                                                                                                                                                        <option value="3" selected>X3-X4</option>
+                                                                                                                                                                        <option value="3">X3-X4</option>
                                                                                                                                                                         <option value="4">X4-X5</option>
                                                                                                                                                                         <option value="5">X5-X6</option>
                                                                                                                                                                         <option value="6">X6-X7</option>
@@ -1720,7 +1720,7 @@
         var allPairData = {};
                                                                 var activePair = "cryBTCUSD";
                                 
-                                                var DEFAULT_PAIRS = ["cryBTCUSD", "cryETHUSD"]; // default: BTC + ETH
+                                                var DEFAULT_PAIRS = ["cryBTCUSD"]; // default: BTC only
                                                 var activePairs = DEFAULT_PAIRS.slice(); // default: BTC and ETH preselected, all other pairs unselected
                                                 window.pairLiveStatus = window.pairLiveStatus || {};
 
@@ -8428,9 +8428,11 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.textAlign = 'center';
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 ctx.fillStyle = BG;
-                                                                                                ctx.font = 'bold 34px ' + MONO;
-                                                                                                ctx.strokeStyle = BG; ctx.lineWidth = 0.7; ctx.lineJoin = 'round'; ctx.strokeText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
-                                                                                                                                                                                                ctx.fillText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
+                                                                                                ctx.font = 'bold 30px ' + MONO;
+                                                                                                ctx.strokeStyle = BG; ctx.lineWidth = 0.7; ctx.lineJoin = 'round'; ctx.strokeText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + 24);
+                                                                                                                                                                                                ctx.fillText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + 24);
+                                                                                                                                                                                                ctx.font = 'bold 17px ' + MONO;
+                                                                                                                                                                                                ctx.fillText(getPairDisplayName(cqS2.pair), cqX + nbLeftW / 2, cqY + 53);
                                                                                                 var nbTxt = nbSec > 0 ? cqMs(nbSec) : 'NOW';
                                                                                                 var nbFs = 32;
                                                                                                 ctx.font = 'bold ' + nbFs + 'px ' + MONO;
@@ -8459,17 +8461,18 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.fillStyle = BG;
                                                                                                                                                                                                 ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
                                                                                                 ctx.letterSpacing = '0px';
-                                                                                                var nbWts = [2.2, 1.2, 1.2, 1.9, 1, 1, 1.5];
-                                                                                                var nbCells = [getPairDisplayName(cqS2.pair), 'C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2), cqS2.pct + '%'];
+                                                                                                var nbWts = [1.2, 1.2, 1.9, 1, 1, 1.5];
+                                                                                                var nbCells = ['C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2), cqS2.pct + '%'];
                                                                                                 var nbCx = cqX, nbRy = cqY + nbTopH + nbLblH, nbCw = 0, nbI = 0;
                                                                                                 ctx.font = 'bold 10px ' + MONO;
-                                                                                                for (nbI = 0; nbI < 7; nbI++) {
-                                                                                                    nbCw = cqBw * nbWts[nbI] / 10;
+                                                                                                ctx.font = 'bold 14px ' + MONO;
+                                                                                                for (nbI = 0; nbI < 6; nbI++) {
+                                                                                                    nbCw = cqBw * nbWts[nbI] / 7.8;
                                                                                                     ctx.fillStyle = cqB.dcol;
                                                                                                     ctx.fillStyle = BG;
                                                                                                                                                                                                         ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
                                                                                                     nbCx += nbCw;
-                                                                                                    if (nbI < 6) {
+                                                                                                    if (nbI < 5) {
                                                                                                         ctx.strokeStyle = '#FFFFFF';
                                                                                                         ctx.lineWidth = 1;
                                                                                                         ctx.beginPath();
@@ -9909,7 +9912,12 @@ let dataList = currentMode === 'REV'
                                                                                                                                                             }
                                                                                                                                                         }
                                                                                                                                                     });
-                                                                                                                                                    activePair = (activePairs && activePairs.length) ? activePairs[0] : PAIRS_BY_CAT[activeCat][0];
+                                                                                                                                                    activePairs = DEFAULT_PAIRS.slice();
+                                                                                                                                                                                                                                                                                                        activePair = DEFAULT_PAIRS[0];
+                                                                                                                                                                                                                                                                                                        sessionWindowStartMin = Math.floor(_currentUtcMinuteOfDay() / 60) * 60;
+                                                                                                                                                                                                                                                                                                        sessionWindowEndMin = sessionWindowStartMin + 60;
+                                                                                                                                                                                                                                                                                                        _saveSessionWindow();
+                                                                                                                                                                                                                                                                                                        _refreshSessionSliderUI();
                                                                                                                                                     var apiPairInput = document.getElementById('apiPair');
                                                                                                                                                     if (apiPairInput) apiPairInput.value = activePair;
                                                                                                                                                 }
