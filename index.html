@@ -8271,7 +8271,10 @@ let dataList = currentMode === 'REV'
                                                 }
                                                 var cqBwD = cqBw, cqBhD = cqBh, cqFix = null, cqHovFrom = 0;
                                                                                 var nxG = 3;
-                                                                                var nxL = Math.max(xOf(nowIdx), xOf(maxLast)) + 14;
+                                                                                var nxL0 = Math.max(xOf(nowIdx), xOf(maxLast)) + 14;
+                                                                                                                                                                var nxL = nxL0;
+                                                                                                                                                                for (k = 0; k < callouts.length; k++) { if (callouts[k].xr + 14 > nxL) nxL = callouts[k].xr + 14; }
+                                                                                                                                                                if ((W - PADR - 2) - nxL < 120) nxL = nxL0;
                                                                                 var nxR = W - PADR - 2, nxT = ptop + 2, nxB = pbot - 2;
                                                                                 if (nxL < PADL + 2 || nxR - nxL < 120) nxL = PADL + 2;
                                                                                 var nxAW = nxR - nxL, nxAH = nxB - nxT;
@@ -8281,7 +8284,7 @@ let dataList = currentMode === 'REV'
                                                                                     return a.tn.idx - b.tn.idx;
                                                                                 });
                                                                                 var nxN = callouts.length, nxS = 1, nxCols = 1, nxRows = 1;
-                                                                                for (nxS = 1; nxS >= 0.02; nxS -= 0.01) {
+                                                                                for (nxS = 0.8; nxS >= 0.02; nxS -= 0.01) {
                                                                                     nxCols = Math.floor((nxAW + nxG) / (cqBwD * nxS + nxG));
                                                                                     nxRows = Math.floor((nxAH + nxG) / (cqBhD * nxS + nxG));
                                                                                     if (nxCols >= 1 && nxRows >= 1 && nxCols * nxRows >= nxN) break;
@@ -8394,7 +8397,8 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 ctx.fillStyle = BG;
                                                                                                 ctx.font = 'bold 34px ' + MONO;
-                                                                                                ctx.fillText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
+                                                                                                ctx.strokeStyle = BG; ctx.lineWidth = 0.7; ctx.lineJoin = 'round'; ctx.strokeText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
+                                                                                                                                                                                                ctx.fillText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
                                                                                                 var nbTxt = nbSec > 0 ? cqMs(nbSec) : 'NOW';
                                                                                                 var nbFs = 32;
                                                                                                 ctx.font = 'bold ' + nbFs + 'px ' + MONO;
@@ -8403,14 +8407,16 @@ let dataList = currentMode === 'REV'
                                                                                                     ctx.font = 'bold ' + nbFs + 'px ' + MONO;
                                                                                                 }
                                                                                                 ctx.fillStyle = cqB.dcol;
-                                                                                                ctx.fillStyle = BG; ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
+                                                                                                ctx.fillStyle = BG; ctx.strokeStyle = BG; ctx.lineWidth = 0.5; ctx.lineJoin = 'round'; ctx.strokeText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
+                                                                                                                                                                                                ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
                                                                                                 ctx.font = 'bold 14px ' + MONO;
                                                                                                 ctx.fillStyle = cqRdy ? GOLD : DIM;
-                                                                                                ctx.fillStyle = BG; ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
+                                                                                                ctx.fillStyle = BG;
+                                                                                                                                                                                                ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
                                                                                                 ctx.strokeStyle = '#FFFFFF';
                                                                                                 ctx.lineWidth = 1;
                                                                                                 ctx.beginPath();
-                                                                                                ctx.strokeStyle = BG; ctx.moveTo(cqX + nbLeftW + 0.5, cqY); ctx.lineTo(cqX + nbLeftW + 0.5, cqY + nbTopH); ctx.moveTo(cqX, cqY + nbTopH + 0.5);
+                                                                                                ctx.lineWidth = 1.5; ctx.strokeStyle = BG; ctx.moveTo(cqX + nbLeftW + 0.5, cqY); ctx.lineTo(cqX + nbLeftW + 0.5, cqY + nbTopH); ctx.moveTo(cqX, cqY + nbTopH + 0.5);
                                                                                                 ctx.lineTo(cqX + cqBw, cqY + nbTopH + 0.5);
                                                                                                 ctx.moveTo(cqX, cqY + nbTopH + nbLblH + 0.5);
                                                                                                 ctx.lineTo(cqX + cqBw, cqY + nbTopH + nbLblH + 0.5);
@@ -8418,7 +8424,8 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.font = 'bold 9px ' + MONO;
                                                                                                 ctx.letterSpacing = '4px';
                                                                                                 ctx.fillStyle = '#D500F9';
-                                                                                                ctx.fillStyle = BG; ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
+                                                                                                ctx.fillStyle = BG;
+                                                                                                                                                                                                ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 var nbWts = [2.2, 1.2, 1.2, 1.9, 1, 1, 1.5];
                                                                                                 var nbCells = [getPairDisplayName(cqS2.pair), 'C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2), cqS2.pct + '%'];
@@ -8427,13 +8434,14 @@ let dataList = currentMode === 'REV'
                                                                                                 for (nbI = 0; nbI < 7; nbI++) {
                                                                                                     nbCw = cqBw * nbWts[nbI] / 10;
                                                                                                     ctx.fillStyle = cqB.dcol;
-                                                                                                    ctx.fillStyle = BG; ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
+                                                                                                    ctx.fillStyle = BG;
+                                                                                                                                                                                                        ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
                                                                                                     nbCx += nbCw;
                                                                                                     if (nbI < 6) {
                                                                                                         ctx.strokeStyle = '#FFFFFF';
                                                                                                         ctx.lineWidth = 1;
                                                                                                         ctx.beginPath();
-                                                                                                        ctx.strokeStyle = BG; ctx.moveTo(Math.round(nbCx) + 0.5, nbRy);
+                                                                                                        ctx.lineWidth = 1.5; ctx.strokeStyle = BG; ctx.moveTo(Math.round(nbCx) + 0.5, nbRy);
                                                                                                         ctx.lineTo(Math.round(nbCx) + 0.5, cqY + cqBh);
                                                                                                         ctx.stroke();
                                                                                                     }
@@ -9341,6 +9349,12 @@ let dataList = currentMode === 'REV'
             };
         })();
                 window._drvWin = null;
+                        window.addEventListener('load', function() {
+                            setTimeout(function() {
+                                var _tcBtn = document.getElementById('tcToggleBtn');
+                                if (_tcBtn && _tcBtn.textContent.trim() === 'TICK' && typeof window.tcToggle === 'function') window.tcToggle();
+                            }, 300);
+                        });
         function launchBrokers() {
                             window._otWin = window.open('https://olymptrade.com/platform', 'olymptrade');
                                             var btn = document.getElementById('launchBrokersBtn');
