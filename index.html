@@ -2641,7 +2641,7 @@
                         for (var i = 0; i < NUM_CORES; i++) {
                             var w = new Worker(workerBlobUrl);
                                                         w.onerror = function(ev) { evtLog('ERROR', 'WORKER', 'Scan worker error: ' + (ev && ev.message ? ev.message : 'unknown') + (ev && ev.lineno ? ' @ line ' + ev.lineno : '')); };
-                            w.onmessage = function(e) { handleWorkerMessage(e, w); };
+                            w.onmessage = function(e) { handleWorkerMessage(e, e.target); };
                             workerPool.push(w);
                         }
                     }
@@ -3318,7 +3318,7 @@
                                                     window._wpsBootAlreadyRan = false;
                                                     window._wpsBootProceed = function() {
                                                         if (!window._wpsBootWaiting) {
-                                                            if (window._wpsBootAlreadyRan) _triggerLiveReboot();
+                                                            if (window._wpsBootAlreadyRan) evtLog('INFO', 'BOOT', 'Remote settings arrived after boot - applied without a second reload');
                                                             return;
                                                         }
                                                         window._wpsBootWaiting = false;
@@ -3347,6 +3347,7 @@
         /* ── SESSION BOUNDARY LOGIC ── */
                 
                 async function autoFetch() {
+                                    var _bootGen = (window._bootGen = (window._bootGen || 0) + 1);
                 
                                     var _fxWeekendDead = isFxWeekendDead();
                                                                                             if (_fxWeekendDead) {
@@ -3376,7 +3377,7 @@
 
                             
 
-                                        if (derivWs) { derivWs.close(); derivWs = null; }
+                                        if (derivWs) { try { derivWs.close(1000, 'restart'); } catch (e) {} derivWs = null; }
 
                                         if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
 
@@ -3428,6 +3429,7 @@
                                         var cachePromises = _pairsToFetch.map(p => aofs_read(p, ctxState.dateStr));
                     
                                         var cacheResults = await Promise.all(cachePromises);
+                                                            if (_bootGen !== window._bootGen) return;
                     
                             
                     
@@ -3513,6 +3515,7 @@
                                                             throw _fgErr;
                                                         }
                                                         var { times, prices } = _fgRes;
+                                                                                    if (_bootGen !== window._bootGen) return;
 
                             allPairData[pair].times  = times;
                             
@@ -3565,6 +3568,10 @@
                                             var batch = _pairsToFetch.slice(b, b + BATCH_SIZE);
                     
                                             await Promise.all(batch.map(p => processPair(p)));
+                                                                                        if (_bootGen !== window._bootGen) {
+                                                                                            evtLog('INFO', 'BOOT', 'Stale load cancelled - superseded by a newer session load');
+                                                                                            return;
+                                                                                        }
                     
                                             // Brief pause between pairs to let server-side rate limits recover
                     
@@ -3611,7 +3618,9 @@
 
         function startLiveSync() {
 
-                    derivWs = new WebSocket(DERIV_WS_URL);
+                    if (derivWs) { var _oldWs = derivWs; _oldWs.onopen = null; _oldWs.onmessage = null; _oldWs.onerror = null; _oldWs.onclose = null; try { _oldWs.close(1000, 'replaced'); } catch (e) {} }
+                                        derivWs = new WebSocket(DERIV_WS_URL);
+                                        var _thisWs = derivWs;
 
                     let liveAuthorized = false;
 
@@ -3714,7 +3723,7 @@
 
                                 if (data.error) {
 
-                                    console.warn("⚠️ API MESSAGE:", data.error.message);
+                                    console.warn("⚠️ API MESSAGE:", data.error.message, data.error.code || '', data.echo_req ? JSON.stringify(data.echo_req) : '');
 
                                 }
 
@@ -3896,6 +3905,7 @@
 
 
             derivWs.onclose = (evt) => {
+                            if (derivWs !== _thisWs) { evtLog('INFO', 'WS', 'Superseded live socket closed (code ' + evt.code + ') - no reconnect'); return; }
                             evtLog(evt.code === 1000 ? 'INFO' : 'ERROR', 'WS', 'Deriv live socket closed (code ' + evt.code + (evt.reason ? ', ' + evt.reason : '') + ')' + (evt.code !== 1000 ? ' - retrying in 5s' : ''));
                             evtLog(evt.code === 1000 ? 'INFO' : 'ERROR', 'WS', 'Deriv live socket closed (code ' + evt.code + (evt.reason ? ', ' + evt.reason : '') + ')' + (evt.code !== 1000 ? ' - retrying in 5s' : ''));
 
@@ -5027,7 +5037,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                             
                                         if (currentInstances.length === 0) return;
                             
-                                        currentInstanceIndex = idx;
+                                        if (idx < 0) { clickCycleIndex = -1; jumpToLive(); return; }
+                                                                    if (idx >= currentInstances.length) { idx = currentInstances.length - 1; clickCycleIndex = idx; }
+                                                                    currentInstanceIndex = idx;
                             
                                         liveEdgeCol = -1;
                             
@@ -7210,6 +7222,7 @@ let dataList = currentMode === 'REV'
                                             }
                                             _updatePairPickerLabel();
                                             closeHidePairsModal();
+                                                                                        if (true) { _triggerLiveReboot(); return; }
                                             _triggerLiveReboot();
                                             autoFetch();
                                         }
@@ -8075,7 +8088,7 @@ let dataList = currentMode === 'REV'
 
                 // --- PWA SERVICE WORKER REGISTRATION ---
 
-                if ('serviceWorker' in navigator) {
+                if (false && 'serviceWorker' in navigator) {
 
                     window.addEventListener('load', () => {
 
