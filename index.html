@@ -3024,7 +3024,7 @@
 
                     derivWs.onopen = () => {
 
-                        if (DERIV_API_TOKEN && DERIV_API_TOKEN.length > 5) {
+                        if (!/\/public/.test(DERIV_WS_URL) && DERIV_API_TOKEN && DERIV_API_TOKEN.length > 5) {
                             derivWs.send(JSON.stringify({ authorize: DERIV_API_TOKEN }));
                         } else {
                             liveAuthorized = true;
