@@ -8420,7 +8420,7 @@ let dataList = currentMode === 'REV'
                             if (q0 === -1) continue;
                             var lx = xOf(qc), ly = yOfPair(ln0, q0);
                             if (i - lastI > 600) { ctx.moveTo(lx, ly); }
-                            else { ctx.quadraticCurveTo(plx, ply, (plx + lx) / 2, (ply + ly) / 2); }
+                            else { ctx.lineTo(lx, ly); }
                             plx = lx; ply = ly; lastI = i;
                             if (i + qb > ln0.i1) { ctx.lineTo(lx, ly); }
                             continue;
@@ -9221,7 +9221,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                     ctx.globalAlpha = 0.5 + 0.5 * nbPulse;
                                                                                                                                                                                                                                                                                                     ctx.strokeStyle = '#FFFFFF';
                                                                                                                                                                                                                                                                                                     ctx.lineWidth = 2 + 2 * nbPulse;
-                                                                                                                                                                                                                                                                                                    (TC.pulseQ = TC.pulseQ || []).push({ x: cqX, y: cqY, w: cqBw, h: cqBh, s: cqScl, col: cqB.dcol, p: nbPulse });
+                                                                                                                                                                                                                                                                                                    ;
                                                                                                                                                                                                                                                                                                     ctx.restore();
                                                                                                                                                                                                                                                                                                 }
                                                                                                 ctx.strokeStyle = '#FFFFFF';
