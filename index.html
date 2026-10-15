@@ -5432,7 +5432,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                           
                                                                                                       
                                                           
-                                                                                                      html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
+                                                                                                      html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
                                                                                             <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
                                                                                             <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                                                                             <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
@@ -6968,6 +6968,31 @@ let dataList = currentMode === 'REV'
                                 }
         
                         var _hiddenPairs = new Set(); // pairs temporarily hidden from wall panel only
+                                var _wpFocusPair = null;
+                                function _wpFocusSet(pair) {
+                                    _wpFocusPair = pair;
+                                    _hiddenPairs.clear();
+                                    var _wpAll = (activePairs || []).concat(ALL_PAIRS);
+                                    for (var _wi = 0; _wi < _wpAll.length; _wi++) {
+                                        if (_wpAll[_wi] !== pair) _hiddenPairs.add(_wpAll[_wi]);
+                                    }
+                                }
+                                function _wpFocusClear() {
+                                    if (!_wpFocusPair) return;
+                                    _wpFocusPair = null;
+                                    _hiddenPairs.clear();
+                                    renderFilteredTable();
+                                }
+                                window.addEventListener('load', function() {
+                                    var _wpPane = document.getElementById('wall-finder-pane');
+                                    if (!_wpPane) return;
+                                    _wpPane.addEventListener('click', function(e) {
+                                        if (!_wpFocusPair) return;
+                                        var t = e.target;
+                                        if (t && t.closest && t.closest('tr.highlight-gem, button, input, select, .custom-select-wrapper')) return;
+                                        _wpFocusClear();
+                                    });
+                                });
         
                         var brokerFireEnabled = true; // when false, clicking a wall panel signal only highlights occurrences and does NOT sync/fire the pair to connected brokers
         
@@ -8207,7 +8232,7 @@ let dataList = currentMode === 'REV'
                 var ix = SPECIAL_ALL_PAIRS.indexOf(pair);
                 if (ix < 0) ix = ALL_PAIRS.indexOf(pair);
                 if (ix < 0) ix = 0;
-                var hue = Math.round((ix * 137.508) % 360);
+                var hue = 180 + Math.round(((ix * 0.618034) % 1) * 140);
                 var sat = (ix % 2 === 0) ? 90 : 75;
                 var lit = (ix % 3 === 0) ? 62 : ((ix % 3 === 1) ? 55 : 68);
                 return 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
@@ -8345,6 +8370,40 @@ let dataList = currentMode === 'REV'
                     var pad0 = (it0.hi - it0.lo) * 0.08;
                     it0.lo -= pad0;
                     it0.hi += pad0;
+                                        var bqSg = sigMap[it0.pair];
+                                        if (bqSg) {
+                                            var bqMax = 0;
+                                            var bqL = [bqSg.rev, bqSg.mom];
+                                            var bqLim = Math.min(live ? nowSec - 1 : it0.len - 1, it0.len - 1, sEnd - 1);
+                                            for (var bqA = 0; bqA < 2; bqA++) {
+                                                var bqS = bqL[bqA];
+                                                if (!bqS) continue;
+                                                var bqPl = tcPlan(bqS, it0.prices, bqLim, sEnd, it0.last);
+                                                for (var bqH = 0; bqH < bqPl.hist.length; bqH++) {
+                                                    var bqE = bqPl.hist[bqH];
+                                                    if (bqE.res === 'none') continue;
+                                                    var bqEj = bqE.i + bqS.c;
+                                                    if (bqE.i > it0.i1 || bqEj < i0) continue;
+                                                    var bqKe = Math.min(bqEj, (it0.last >= 0 ? it0.last : bqEj), it0.len - 1);
+                                                    var bqKs = Math.max(1, Math.ceil(bqS.c / 300));
+                                                    var bqLo = bqE.p, bqHi = bqE.p;
+                                                    for (var bqK = bqE.i; bqK <= bqKe; bqK += bqKs) {
+                                                        var bqV = it0.prices[bqK];
+                                                        if (bqV === -1 || bqV === undefined) continue;
+                                                        if (bqV < bqLo) bqLo = bqV;
+                                                        if (bqV > bqHi) bqHi = bqV;
+                                                    }
+                                                    if (bqHi - bqLo > bqMax) bqMax = bqHi - bqLo;
+                                                }
+                                            }
+                                            var bqNeed = bqMax / 0.15;
+                                            var bqCur = it0.hi - it0.lo;
+                                            if (bqNeed > bqCur) {
+                                                var bqMid = (it0.hi + it0.lo) / 2;
+                                                it0.lo = bqMid - bqNeed / 2;
+                                                it0.hi = bqMid + bqNeed / 2;
+                                            }
+                                        }
                 }
             
                 ctx.font = '10px ' + MONO;
@@ -8559,6 +8618,8 @@ let dataList = currentMode === 'REV'
                     if (flXe - mx > 2) {
                     var flBy1 = Math.max(ptop, yOfPair(mk.it, flHi) - 2);
                     var flBy2 = Math.min(pbot, yOfPair(mk.it, flLo) + 2);
+                                        mk.tkX = (mx + flXe) / 2;
+                                        mk.tkY = (flBy1 + flBy2) / 2;
                     ctx.save();
                     ctx.fillStyle = flCol;
                     ctx.fillStyle = mk.it.color;
@@ -8646,7 +8707,23 @@ let dataList = currentMode === 'REV'
                                                             ctx.font = 'bold 22px ' + MONO;
                                                             ctx.textAlign = 'center';
                                                             ctx.fillStyle = mk.win === 'win' ? CY : AM;
-                                                            ctx.fillText(mk.win === 'win' ? '\u2713' : '\u2717', mx, mk.sig.type === 'MOM' ? my + 24 : my - 11);
+                                                            var tkX = (mk.tkX !== undefined) ? mk.tkX : mx;
+                                                                                                                        var tkY = (mk.tkY !== undefined) ? mk.tkY : (mk.sig.type === 'MOM' ? my + 24 : my - 11);
+                                                                                                                        ctx.textBaseline = 'middle';
+                                                                                                                        ctx.save();
+                                                                                                                                                                                    ctx.font = 'bold 44px ' + MONO;
+                                                                                                                                                                                    ctx.textAlign = 'center';
+                                                                                                                                                                                    ctx.textBaseline = 'middle';
+                                                                                                                                                                                    var tkCol = mk.win === 'win' ? CY : AM;
+                                                                                                                                                                                    var tkSym = mk.win === 'win' ? '\u2713' : '\u2717';
+                                                                                                                                                                                    ctx.fillStyle = tkCol;
+                                                                                                                                                                                    ctx.shadowColor = tkCol;
+                                                                                                                                                                                    ctx.shadowBlur = 0;
+                                                                                                                                                                                    ctx.fillText(tkSym, tkX, tkY);
+                                                                                                                                                                                    ctx.shadowBlur = 0;
+                                                                                                                                                                                    ctx.fillText(tkSym, tkX, tkY);
+                                                                                                                                                                                    ctx.restore();
+                                                                                                                        ctx.textBaseline = 'alphabetic';
                                                             }
                                                             ctx.textAlign = 'left';
                                                             ctx.beginPath();
@@ -8845,6 +8922,15 @@ let dataList = currentMode === 'REV'
                                 ctx.save();
                                 ctx.font = 'bold 9px ' + MONO;
                                 var cqW = 0;
+                                                                var bsBest = null;
+                                                                if (info.length > 1) {
+                                                                    for (k = 0; k < callouts.length; k++) {
+                                                                        var bsS = callouts[k].tn.sig;
+                                                                        var bsV = bsS.pct * bsS.c1;
+                                                                        if (!bsBest || bsV > bsBest.v) bsBest = { v: bsV, c: callouts[k] };
+                                                                    }
+                                                                    if (bsBest) bsBest.c.best = true;
+                                                                }
                                 for (k = 0; k < callouts.length; k++) {
                                     var cqA = callouts[k], cqT = cqA.tn, cqS = cqT.sig;
                                     cqA.rows = [
@@ -9061,8 +9147,9 @@ let dataList = currentMode === 'REV'
                                                                                 var nxG = 3;
                                                                                 var nxL0 = Math.max(xOf(nowIdx), xOf(maxLast)) + 14;
                                                                                                                                                                 var nxL = nxL0;
-                                                                                                                                                                for (k = 0; k < callouts.length; k++) { if (callouts[k].xr + 14 > nxL) nxL = callouts[k].xr + 14; }
-                                                                                                                                                                if ((W - PADR - 2) - nxL < 120) nxL = nxL0;
+                                                                                                                                                                var nxLf = nxL0;
+                                                                                                                                                                for (k = 0; k < callouts.length; k++) { var nxEnd = callouts[k].xr + 14; if (callouts[k].tn.kind === 'FIRED') { var nxFe = xOf(callouts[k].tn.idx + callouts[k].tn.sig.c) + 14; if (nxFe > nxEnd) nxEnd = nxFe; if (nxFe > nxLf) nxLf = nxFe; } if (nxEnd > nxL) nxL = nxEnd; }
+                                                                                                                                                                if ((W - PADR - 2) - nxL < 120) nxL = nxLf;
                                                                                 var nxR = W - PADR - 2, nxT = ptop + 2, nxB = pbot - 2;
                                                                                 if (nxL < PADL + 2 || nxR - nxL < 120) nxL = PADL + 2;
                                                                                 var nxAW = nxR - nxL, nxAH = nxB - nxT;
@@ -9179,6 +9266,11 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                 var cqScl = cqB.sc || 1;
                                                                                                                                                                                                 ctx.setTransform(dpr * cqScl, 0, 0, dpr * cqScl, dpr * cqX * (1 - cqScl), dpr * cqY * (1 - cqScl));
                                                                                                                                                                                                 cqBw = cqBwD; cqBh = cqBhD;
+                                                                                                                                                                                                                                                                                                if (cqB.best) {
+                                                                                                                                                                                                                                                                                                    if (!TC.pulseQ) TC.pulseQ = [];
+                                                                                                                                                                                                                                                                                                    TC.pulseQ.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, s: cqScl, col: '#FFD700', p: 0.5 + 0.5 * Math.sin(Date.now() / 220) });
+                                                                                                                                                                                                                                                                                                    TC.pulseOn = true;
+                                                                                                                                                                                                                                                                                                }
                                                                                                                                                                                                 var nbTopH = 66, nbLblH = 14, nbRowH = cqBh - nbTopH - nbLblH;
                                                                                                 var nbLeftW = Math.round(cqBw * 0.46), nbRightW = cqBw - nbLeftW;
                                                                                                 var nbSec = cqB.tn.kind === 'FIRED' ? (cqB.tn.idx + cqS2.c - nowSec) : (cqB.tn.idx - nowSec);
@@ -9416,8 +9508,22 @@ let dataList = currentMode === 'REV'
                                                                 ctx.shadowBlur = 6 + 22 * pq.p;
                                                                 ctx.globalAlpha = 0.5 + 0.5 * pq.p;
                                                                 ctx.strokeStyle = '#FFFFFF';
-                                                                ctx.lineWidth = 2 + 2 * pq.p;
+                                                                ctx.strokeStyle = '#FFD700';
+                                                                                                                                ctx.lineWidth = 2 + 2 * pq.p;
                                                                 ctx.strokeRect(pq.x - 1, pq.y - 1, pq.w + 2, pq.h + 2);
+                                                                                                                                if (pq.lbl) {
+                                                                                                                                    ctx.shadowBlur = 0;
+                                                                                                                                    ctx.globalAlpha = 1;
+                                                                                                                                    ctx.font = 'bold 10px ' + MONO;
+                                                                                                                                    ctx.textAlign = 'center';
+                                                                                                                                    ctx.textBaseline = 'middle';
+                                                                                                                                    var pqLw = ctx.measureText(pq.lbl).width + 12;
+                                                                                                                                    var pqLy = pq.y >= 16 ? pq.y - 9 : pq.y + pq.h + 9;
+                                                                                                                                    ctx.fillStyle = GOLD;
+                                                                                                                                    ctx.fillRect(pq.x + pq.w / 2 - pqLw / 2, pqLy - 8, pqLw, 16);
+                                                                                                                                    ctx.fillStyle = BG;
+                                                                                                                                    ctx.fillText(pq.lbl, pq.x + pq.w / 2, pqLy + 1);
+                                                                                                                                }
                                                             }
                                                             ctx.restore();
                                                             TC.pulseQ = [];
