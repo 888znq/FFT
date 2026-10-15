@@ -120,6 +120,10 @@
                 .ctrl-row { display: flex; align-items: center; gap: 4px; padding: 6px 6px; background: var(--bg-panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
                 .ctrl-input { background: var(--bg-base); border: 1px solid #FFFFFF; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-weight: 800; padding: 0 8px; border-radius: 2px; outline: none; height: 28px; box-sizing: border-box; font-size: 11px; }
                 .ctrl-select { padding: 0 6px; }
+                        .ctrl-row > span:has(.ctrl-input) { flex: 1 1 0 !important; min-width: 0; }
+                        .ctrl-row > span:has(.ctrl-input) > .ctrl-input { width: 100% !important; }
+                        .ctrl-row > span:has(.ctrl-input) > .custom-select-wrapper { width: 100% !important; }
+                        .ctrl-row > div { display: none !important; }
 
         .table-wrapper { flex: 1; overflow-y: auto; width: 100%; position: relative; scrollbar-width: none; -ms-overflow-style: none; }
         .table-wrapper::-webkit-scrollbar { display: none; }
@@ -7790,6 +7794,7 @@ let dataList = currentMode === 'REV'
                 }
         
                 function applySpecialButton(id) {
+                                                    if (typeof closePairHub === 'function') closePairHub();
                                                     try { var _sbL = (window.specialButtons || []).find(function(x) { return x.id === id; }); evtLog('INFO', 'UI', 'Special button applied: ' + (_sbL ? _sbL.name + ' [' + _sbL.pairs.length + ' pairs, ' + _sbL.sessVal + ']' : id)); } catch (err) {}
                                     var sb = (window.specialButtons || []).find(function(x) { return x.id === id; });
                                     if (!sb) return;
