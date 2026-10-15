@@ -451,7 +451,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       <button id="tcToggleBtn" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">TICK</button><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button><button id="logBtn" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">LOG</button><button id="logBtn" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">LOG</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </div>
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <!-- SYS button hidden — still accessible via JS -->
@@ -891,7 +891,71 @@
     
         </div>
     
-        <div id="app3-modalOverlay" onclick="closeModalApp3()"></div>
+        <div id="evtLogOverlay" onclick="closeEventLog()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:4001;"></div>
+        
+            <div id="evtLogModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:94vw; max-width:680px; height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:4002; flex-direction:column; border-radius:2px; overflow:hidden;">
+        
+                <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+        
+                    <span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-green);">EVENT LOG</span>
+        
+                    <button onclick="closeEventLog()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
+        
+                </div>
+        
+                <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+        
+                    <button id="evtFltAll" onclick="evtSetFilter('ALL')" style="flex:1; background:var(--accent-green); color:var(--bg-base); border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+        
+                    <button id="evtFltWarn" onclick="evtSetFilter('WARN')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">WARN+</button>
+        
+                    <button id="evtFltErr" onclick="evtSetFilter('ERROR')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ERR</button>
+        
+                    <button id="evtCopyBtn" onclick="copyEventLog()" style="flex:2; background:var(--accent-green); color:var(--bg-base); border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">COPY LOG</button>
+        
+                    <button onclick="clearEventLog()" style="flex:1; background:var(--bg-base); color:var(--accent-red); border:1px solid var(--accent-red); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">CLEAR</button>
+        
+                </div>
+        
+                <div id="evtLogBody" style="flex:1; overflow-y:auto; padding:6px 8px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; line-height:1.5; white-space:pre-wrap; word-break:break-word;"></div>
+        
+                <div id="evtLogFooter" style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0;">0 events</div>
+        
+            </div>
+        
+            <div id="evtLogOverlay" onclick="closeEventLog()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:4001;"></div>
+            
+                <div id="evtLogModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:94vw; max-width:680px; height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:4002; flex-direction:column; border-radius:2px; overflow:hidden;">
+            
+                    <div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+            
+                        <span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:var(--accent-green);">EVENT LOG</span>
+            
+                        <button onclick="closeEventLog()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>
+            
+                    </div>
+            
+                    <div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">
+            
+                        <button id="evtFltAll" onclick="evtSetFilter('ALL')" style="flex:1; background:var(--accent-green); color:var(--bg-base); border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>
+            
+                        <button id="evtFltWarn" onclick="evtSetFilter('WARN')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">WARN+</button>
+            
+                        <button id="evtFltErr" onclick="evtSetFilter('ERROR')" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ERR</button>
+            
+                        <button id="evtCopyBtn" onclick="copyEventLog()" style="flex:2; background:var(--accent-green); color:var(--bg-base); border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">COPY LOG</button>
+            
+                        <button onclick="clearEventLog()" style="flex:1; background:var(--bg-base); color:var(--accent-red); border:1px solid var(--accent-red); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">CLEAR</button>
+            
+                    </div>
+            
+                    <div id="evtLogBody" style="flex:1; overflow-y:auto; padding:6px 8px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; line-height:1.5; white-space:pre-wrap; word-break:break-word;"></div>
+            
+                    <div id="evtLogFooter" style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0;">0 events</div>
+            
+                </div>
+            
+                <div id="app3-modalOverlay" onclick="closeModalApp3()"></div>
 
     <div id="app3-modal">
 
@@ -1019,6 +1083,534 @@
 
             
 
+                            <script>
+                            var EVT_LOG = [];
+                            var EVT_LOG_MAX = 1000;
+                            var EVT_STORE_KEY = 'aofs_eventLog_v1';
+                            var _evtFilter = 'ALL';
+                            var _evtErrCount = 0;
+                            var _evtSaveTimer = null;
+                            var _evtRenderTimer = null;
+                            
+                            function _evtPad(n) { return (n < 10 ? '0' : '') + n; }
+                            
+                            function _evtStamp(ms) {
+                                var d = new Date(ms);
+                                return d.getFullYear() + '-' + _evtPad(d.getMonth() + 1) + '-' + _evtPad(d.getDate()) + ' ' + _evtPad(d.getHours()) + ':' + _evtPad(d.getMinutes()) + ':' + _evtPad(d.getSeconds());
+                            }
+                            
+                            function _evtEsc(s) {
+                                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            }
+                            
+                            function _evtStr(v) {
+                                try {
+                                    if (v instanceof Error) {
+                                        var st = (v.stack && v.stack.indexOf(v.message) !== -1) ? v.stack : (v.name + ': ' + v.message + (v.stack ? '\n' + v.stack : ''));
+                                        return st.split('\n').slice(0, 6).join('\n');
+                                    }
+                                    if (typeof v === 'string') return v;
+                                    if (v && typeof v === 'object') return JSON.stringify(v);
+                                    return String(v);
+                                } catch (err) { return '[unprintable]'; }
+                            }
+                            
+                            function _evtLine(ev) {
+                                return '[' + _evtStamp(ev.t) + '] ' + (ev.old ? '(prev) ' : '') + ev.l + ' ' + ev.c + ': ' + ev.m + (ev.n > 1 ? '  (x' + ev.n + ')' : '');
+                            }
+                            
+                            function _evtPass(ev) {
+                                if (_evtFilter === 'ERROR') return ev.l === 'ERROR';
+                                if (_evtFilter === 'WARN') return ev.l === 'ERROR' || ev.l === 'WARN';
+                                return true;
+                            }
+                            
+                            function _evtIsOpen() {
+                                var m = document.getElementById('evtLogModal');
+                                return !!m && m.style.display === 'flex';
+                            }
+                            
+                            function _evtSaveNow() {
+                                if (_evtSaveTimer) { clearTimeout(_evtSaveTimer); _evtSaveTimer = null; }
+                                try { localStorage.setItem(EVT_STORE_KEY, JSON.stringify(EVT_LOG.slice(-300))); } catch (err) {}
+                            }
+                            
+                            function _evtSaveSoon() {
+                                if (!_evtSaveTimer) _evtSaveTimer = setTimeout(_evtSaveNow, 1500);
+                            }
+                            
+                            function _evtRenderSoon() {
+                                if (_evtRenderTimer || !_evtIsOpen()) return;
+                                _evtRenderTimer = setTimeout(function() { _evtRenderTimer = null; _evtRender(false); }, 250);
+                            }
+                            
+                            function _evtUpdateBtn() {
+                                var b = document.getElementById('logBtn');
+                                if (!b) return;
+                                if (_evtErrCount > 0) {
+                                    b.textContent = 'LOG ' + _evtErrCount;
+                                    b.style.color = 'var(--accent-red)';
+                                    b.style.borderColor = 'var(--accent-red)';
+                                } else {
+                                    b.textContent = 'LOG';
+                                    b.style.color = '#FFFFFF';
+                                    b.style.borderColor = '#FFFFFF';
+                                }
+                            }
+                            
+                            function evtLog(level, cat, msg) {
+                                try {
+                                    var m = _evtStr(msg);
+                                    var last = EVT_LOG.length ? EVT_LOG[EVT_LOG.length - 1] : null;
+                                    if (last && !last.old && last.l === level && last.c === cat && last.m === m) {
+                                        last.n = (last.n || 1) + 1;
+                                        last.t = Date.now();
+                                    } else {
+                                        EVT_LOG.push({ t: Date.now(), l: level, c: cat, m: m, n: 1 });
+                                        if (EVT_LOG.length > EVT_LOG_MAX) EVT_LOG.shift();
+                                    }
+                                    if (level === 'ERROR') _evtErrCount++;
+                                    _evtSaveSoon();
+                                    _evtUpdateBtn();
+                                    _evtRenderSoon();
+                                } catch (err) {}
+                            }
+                            
+                            function _evtRender(forceBottom) {
+                                var body = document.getElementById('evtLogBody');
+                                if (!body) return;
+                                var atBottom = forceBottom || (body.scrollHeight - body.scrollTop - body.clientHeight) < 40;
+                                var html = '';
+                                var shown = 0;
+                                for (var i = 0; i < EVT_LOG.length; i++) {
+                                    var ev = EVT_LOG[i];
+                                    if (!_evtPass(ev)) continue;
+                                    shown++;
+                                    var col = ev.l === 'ERROR' ? 'var(--accent-red)' : (ev.l === 'WARN' ? '#FFD700' : '#E2E8F0');
+                                    html += '<div style="color:' + col + '; border-bottom:1px solid rgba(255,255,255,0.08); padding:2px 0;' + (ev.old ? ' opacity:0.55;' : '') + '">' + _evtEsc(_evtLine(ev)) + '</div>';
+                                }
+                                body.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px; letter-spacing:0.1em;">NO EVENTS</div>';
+                                if (atBottom) body.scrollTop = body.scrollHeight;
+                                var ft = document.getElementById('evtLogFooter');
+                                if (ft) ft.textContent = shown + ' shown / ' + EVT_LOG.length + ' total  |  ' + _evtErrCount + ' errors this session';
+                            }
+                            
+                            function evtSetFilter(f) {
+                                _evtFilter = f;
+                                var ids = { ALL: 'evtFltAll', WARN: 'evtFltWarn', ERROR: 'evtFltErr' };
+                                for (var k in ids) {
+                                    var b = document.getElementById(ids[k]);
+                                    if (!b) continue;
+                                    var on = (k === f);
+                                    b.style.background = on ? 'var(--accent-green)' : 'var(--bg-base)';
+                                    b.style.color = on ? 'var(--bg-base)' : '#FFFFFF';
+                                }
+                                _evtRender(true);
+                            }
+                            
+                            function openEventLog() {
+                                document.getElementById('evtLogOverlay').style.display = 'block';
+                                document.getElementById('evtLogModal').style.display = 'flex';
+                                evtSetFilter(_evtFilter);
+                            }
+                            
+                            function closeEventLog() {
+                                document.getElementById('evtLogModal').style.display = 'none';
+                                document.getElementById('evtLogOverlay').style.display = 'none';
+                            }
+                            
+                            function _evtContext() {
+                                var c = [];
+                                try {
+                                    c.push('Time: ' + _evtStamp(Date.now()) + ' local | ' + new Date().toISOString() + ' UTC');
+                                    c.push('URL: ' + location.href);
+                                    c.push('Agent: ' + navigator.userAgent);
+                                    c.push('Online: ' + navigator.onLine);
+                                } catch (err) {}
+                                try {
+                                    c.push('Category: ' + activeCat + ' | Active pair: ' + activePair + ' | Cycle: ' + CYCLE + ' | Mode: ' + currentMode);
+                                    c.push('Selected pairs: ' + (activePairs ? activePairs.join(',') : 'ALL'));
+                                    c.push('Session window (UTC min): ' + sessionWindowStartMin + ' - ' + sessionWindowEndMin);
+                                    c.push('Live socket: ' + (derivWs ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][derivWs.readyState] : 'none') + ' | Live ticks received: ' + globalTickCount);
+                                    c.push('Signals: ' + globalRevs.length + ' REV / ' + globalMoms.length + ' MOM | Scan jobs pending: ' + scanPending);
+                                    var loaded = [];
+                                    var failed = [];
+                                    for (var p in allPairData) {
+                                        if (allPairData[p] && allPairData[p].times && allPairData[p].times.length > 0) loaded.push(p);
+                                        if (_bootPairState[p] === 'err') failed.push(p);
+                                    }
+                                    c.push('Pairs with data: ' + loaded.length + ' | Failed pairs: ' + (failed.length ? failed.join(',') : 'none'));
+                                    c.push('Armed signal: ' + (_armed ? (_armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' ' + _armed.col) : 'none'));
+                                } catch (err) { c.push('(app state unavailable - main script may have failed to load)'); }
+                                return c.join('\n');
+                            }
+                            
+                            function _evtBuildText() {
+                                var lines = [];
+                                for (var i = 0; i < EVT_LOG.length; i++) {
+                                    if (_evtPass(EVT_LOG[i])) lines.push(_evtLine(EVT_LOG[i]));
+                                }
+                                return '=== TRINITY OS EVENT LOG ===\n' + _evtContext() + '\n--- ' + lines.length + ' events (filter: ' + _evtFilter + ') ---\n' + lines.join('\n');
+                            }
+                            
+                            function _evtFlash(ok) {
+                                var b = document.getElementById('evtCopyBtn');
+                                if (!b) return;
+                                b.textContent = ok ? 'COPIED ✓' : 'COPY FAILED';
+                                setTimeout(function() { b.textContent = 'COPY LOG'; }, 1500);
+                            }
+                            
+                            function _evtFallbackCopy(txt) {
+                                var ok = false;
+                                try {
+                                    var ta = document.createElement('textarea');
+                                    ta.value = txt;
+                                    ta.style.cssText = 'position:fixed; top:0; left:0; opacity:0;';
+                                    document.body.appendChild(ta);
+                                    ta.focus();
+                                    ta.select();
+                                    ok = document.execCommand('copy');
+                                    document.body.removeChild(ta);
+                                } catch (err) {}
+                                _evtFlash(ok);
+                            }
+                            
+                            function copyEventLog() {
+                                var txt = _evtBuildText();
+                                try {
+                                    if (window.AndroidClipboard) { window.AndroidClipboard.write(txt); _evtFlash(true); return; }
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(txt).then(function() { _evtFlash(true); }, function() { _evtFallbackCopy(txt); });
+                                        return;
+                                    }
+                                } catch (err) {}
+                                _evtFallbackCopy(txt);
+                            }
+                            
+                            function clearEventLog() {
+                                EVT_LOG = [];
+                                _evtErrCount = 0;
+                                _evtSaveNow();
+                                _evtUpdateBtn();
+                                evtLog('INFO', 'SYSTEM', 'Log cleared by user');
+                                _evtRender(true);
+                            }
+                            
+                            (function() {
+                                try {
+                                    var raw = localStorage.getItem(EVT_STORE_KEY);
+                                    if (raw) {
+                                        var prev = JSON.parse(raw);
+                                        if (Array.isArray(prev)) {
+                                            for (var i = 0; i < prev.length; i++) prev[i].old = true;
+                                            EVT_LOG = prev;
+                                        }
+                                    }
+                                } catch (err) {}
+                            })();
+                            
+                            window.addEventListener('error', function(ev) {
+                                try {
+                                    if (ev && ev.target && ev.target !== window && ev.target.tagName) {
+                                        evtLog('ERROR', 'RESOURCE', 'Failed to load <' + ev.target.tagName.toLowerCase() + '> ' + (ev.target.src || ev.target.href || ''));
+                                        return;
+                                    }
+                                    var where = ev.lineno ? (' @ line ' + ev.lineno + ':' + ev.colno) : '';
+                                    evtLog('ERROR', 'JS', (ev.error ? _evtStr(ev.error) : ev.message) + where);
+                                } catch (err) {}
+                            }, true);
+                            
+                            window.addEventListener('unhandledrejection', function(ev) {
+                                evtLog('ERROR', 'PROMISE', 'Unhandled rejection: ' + _evtStr(ev.reason));
+                            });
+                            
+                            (function() {
+                                var _ce = console.error;
+                                var _cw = console.warn;
+                                console.error = function() {
+                                    try { evtLog('ERROR', 'CONSOLE', Array.prototype.slice.call(arguments).map(_evtStr).join(' ')); } catch (err) {}
+                                    return _ce.apply(console, arguments);
+                                };
+                                console.warn = function() {
+                                    try { evtLog('WARN', 'CONSOLE', Array.prototype.slice.call(arguments).map(_evtStr).join(' ')); } catch (err) {}
+                                    return _cw.apply(console, arguments);
+                                };
+                            })();
+                            
+                            window.addEventListener('online', function() { evtLog('INFO', 'NETWORK', 'Browser back online'); });
+                            window.addEventListener('offline', function() { evtLog('ERROR', 'NETWORK', 'Browser went offline'); });
+                            window.addEventListener('beforeunload', _evtSaveNow);
+                            window.addEventListener('pagehide', _evtSaveNow);
+                            document.addEventListener('DOMContentLoaded', _evtUpdateBtn);
+                            
+                            evtLog('INFO', 'SYSTEM', '=== SESSION START === ' + navigator.userAgent);
+                            _evtUpdateBtn();
+                            </script>
+                            
+                            <script>
+                            var EVT_LOG = [];
+                            var EVT_LOG_MAX = 1000;
+                            var EVT_STORE_KEY = 'aofs_eventLog_v1';
+                            var _evtFilter = 'ALL';
+                            var _evtErrCount = 0;
+                            var _evtSaveTimer = null;
+                            var _evtRenderTimer = null;
+                            
+                            function _evtPad(n) { return (n < 10 ? '0' : '') + n; }
+                            
+                            function _evtStamp(ms) {
+                                var d = new Date(ms);
+                                return d.getFullYear() + '-' + _evtPad(d.getMonth() + 1) + '-' + _evtPad(d.getDate()) + ' ' + _evtPad(d.getHours()) + ':' + _evtPad(d.getMinutes()) + ':' + _evtPad(d.getSeconds());
+                            }
+                            
+                            function _evtEsc(s) {
+                                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            }
+                            
+                            function _evtStr(v) {
+                                try {
+                                    if (v instanceof Error) {
+                                        var st = (v.stack && v.stack.indexOf(v.message) !== -1) ? v.stack : (v.name + ': ' + v.message + (v.stack ? '\n' + v.stack : ''));
+                                        return st.split('\n').slice(0, 6).join('\n');
+                                    }
+                                    if (typeof v === 'string') return v;
+                                    if (v && typeof v === 'object') return JSON.stringify(v);
+                                    return String(v);
+                                } catch (err) { return '[unprintable]'; }
+                            }
+                            
+                            function _evtLine(ev) {
+                                return '[' + _evtStamp(ev.t) + '] ' + (ev.old ? '(prev) ' : '') + ev.l + ' ' + ev.c + ': ' + ev.m + (ev.n > 1 ? '  (x' + ev.n + ')' : '');
+                            }
+                            
+                            function _evtPass(ev) {
+                                if (_evtFilter === 'ERROR') return ev.l === 'ERROR';
+                                if (_evtFilter === 'WARN') return ev.l === 'ERROR' || ev.l === 'WARN';
+                                return true;
+                            }
+                            
+                            function _evtIsOpen() {
+                                var m = document.getElementById('evtLogModal');
+                                return !!m && m.style.display === 'flex';
+                            }
+                            
+                            function _evtSaveNow() {
+                                if (_evtSaveTimer) { clearTimeout(_evtSaveTimer); _evtSaveTimer = null; }
+                                try { localStorage.setItem(EVT_STORE_KEY, JSON.stringify(EVT_LOG.slice(-300))); } catch (err) {}
+                            }
+                            
+                            function _evtSaveSoon() {
+                                if (!_evtSaveTimer) _evtSaveTimer = setTimeout(_evtSaveNow, 1500);
+                            }
+                            
+                            function _evtRenderSoon() {
+                                if (_evtRenderTimer || !_evtIsOpen()) return;
+                                _evtRenderTimer = setTimeout(function() { _evtRenderTimer = null; _evtRender(false); }, 250);
+                            }
+                            
+                            function _evtUpdateBtn() {
+                                var b = document.getElementById('logBtn');
+                                if (!b) return;
+                                if (_evtErrCount > 0) {
+                                    b.textContent = 'LOG ' + _evtErrCount;
+                                    b.style.color = 'var(--accent-red)';
+                                    b.style.borderColor = 'var(--accent-red)';
+                                } else {
+                                    b.textContent = 'LOG';
+                                    b.style.color = '#FFFFFF';
+                                    b.style.borderColor = '#FFFFFF';
+                                }
+                            }
+                            
+                            function evtLog(level, cat, msg) {
+                                try {
+                                    var m = _evtStr(msg);
+                                    var last = EVT_LOG.length ? EVT_LOG[EVT_LOG.length - 1] : null;
+                                    if (last && !last.old && last.l === level && last.c === cat && last.m === m) {
+                                        last.n = (last.n || 1) + 1;
+                                        last.t = Date.now();
+                                    } else {
+                                        EVT_LOG.push({ t: Date.now(), l: level, c: cat, m: m, n: 1 });
+                                        if (EVT_LOG.length > EVT_LOG_MAX) EVT_LOG.shift();
+                                    }
+                                    if (level === 'ERROR') _evtErrCount++;
+                                    _evtSaveSoon();
+                                    _evtUpdateBtn();
+                                    _evtRenderSoon();
+                                } catch (err) {}
+                            }
+                            
+                            function _evtRender(forceBottom) {
+                                var body = document.getElementById('evtLogBody');
+                                if (!body) return;
+                                var atBottom = forceBottom || (body.scrollHeight - body.scrollTop - body.clientHeight) < 40;
+                                var html = '';
+                                var shown = 0;
+                                for (var i = 0; i < EVT_LOG.length; i++) {
+                                    var ev = EVT_LOG[i];
+                                    if (!_evtPass(ev)) continue;
+                                    shown++;
+                                    var col = ev.l === 'ERROR' ? 'var(--accent-red)' : (ev.l === 'WARN' ? '#FFD700' : '#E2E8F0');
+                                    html += '<div style="color:' + col + '; border-bottom:1px solid rgba(255,255,255,0.08); padding:2px 0;' + (ev.old ? ' opacity:0.55;' : '') + '">' + _evtEsc(_evtLine(ev)) + '</div>';
+                                }
+                                body.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px; letter-spacing:0.1em;">NO EVENTS</div>';
+                                if (atBottom) body.scrollTop = body.scrollHeight;
+                                var ft = document.getElementById('evtLogFooter');
+                                if (ft) ft.textContent = shown + ' shown / ' + EVT_LOG.length + ' total  |  ' + _evtErrCount + ' errors this session';
+                            }
+                            
+                            function evtSetFilter(f) {
+                                _evtFilter = f;
+                                var ids = { ALL: 'evtFltAll', WARN: 'evtFltWarn', ERROR: 'evtFltErr' };
+                                for (var k in ids) {
+                                    var b = document.getElementById(ids[k]);
+                                    if (!b) continue;
+                                    var on = (k === f);
+                                    b.style.background = on ? 'var(--accent-green)' : 'var(--bg-base)';
+                                    b.style.color = on ? 'var(--bg-base)' : '#FFFFFF';
+                                }
+                                _evtRender(true);
+                            }
+                            
+                            function openEventLog() {
+                                document.getElementById('evtLogOverlay').style.display = 'block';
+                                document.getElementById('evtLogModal').style.display = 'flex';
+                                evtSetFilter(_evtFilter);
+                            }
+                            
+                            function closeEventLog() {
+                                document.getElementById('evtLogModal').style.display = 'none';
+                                document.getElementById('evtLogOverlay').style.display = 'none';
+                            }
+                            
+                            function _evtContext() {
+                                var c = [];
+                                try {
+                                    c.push('Time: ' + _evtStamp(Date.now()) + ' local | ' + new Date().toISOString() + ' UTC');
+                                    c.push('URL: ' + location.href);
+                                    c.push('Agent: ' + navigator.userAgent);
+                                    c.push('Online: ' + navigator.onLine);
+                                } catch (err) {}
+                                try {
+                                    c.push('Category: ' + activeCat + ' | Active pair: ' + activePair + ' | Cycle: ' + CYCLE + ' | Mode: ' + currentMode);
+                                    c.push('Selected pairs: ' + (activePairs ? activePairs.join(',') : 'ALL'));
+                                    c.push('Session window (UTC min): ' + sessionWindowStartMin + ' - ' + sessionWindowEndMin);
+                                    c.push('Live socket: ' + (derivWs ? ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][derivWs.readyState] : 'none') + ' | Live ticks received: ' + globalTickCount);
+                                    c.push('Signals: ' + globalRevs.length + ' REV / ' + globalMoms.length + ' MOM | Scan jobs pending: ' + scanPending);
+                                    var loaded = [];
+                                    var failed = [];
+                                    for (var p in allPairData) {
+                                        if (allPairData[p] && allPairData[p].times && allPairData[p].times.length > 0) loaded.push(p);
+                                        if (_bootPairState[p] === 'err') failed.push(p);
+                                    }
+                                    c.push('Pairs with data: ' + loaded.length + ' | Failed pairs: ' + (failed.length ? failed.join(',') : 'none'));
+                                    c.push('Armed signal: ' + (_armed ? (_armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' ' + _armed.col) : 'none'));
+                                } catch (err) { c.push('(app state unavailable - main script may have failed to load)'); }
+                                return c.join('\n');
+                            }
+                            
+                            function _evtBuildText() {
+                                var lines = [];
+                                for (var i = 0; i < EVT_LOG.length; i++) {
+                                    if (_evtPass(EVT_LOG[i])) lines.push(_evtLine(EVT_LOG[i]));
+                                }
+                                return '=== TRINITY OS EVENT LOG ===\n' + _evtContext() + '\n--- ' + lines.length + ' events (filter: ' + _evtFilter + ') ---\n' + lines.join('\n');
+                            }
+                            
+                            function _evtFlash(ok) {
+                                var b = document.getElementById('evtCopyBtn');
+                                if (!b) return;
+                                b.textContent = ok ? 'COPIED ✓' : 'COPY FAILED';
+                                setTimeout(function() { b.textContent = 'COPY LOG'; }, 1500);
+                            }
+                            
+                            function _evtFallbackCopy(txt) {
+                                var ok = false;
+                                try {
+                                    var ta = document.createElement('textarea');
+                                    ta.value = txt;
+                                    ta.style.cssText = 'position:fixed; top:0; left:0; opacity:0;';
+                                    document.body.appendChild(ta);
+                                    ta.focus();
+                                    ta.select();
+                                    ok = document.execCommand('copy');
+                                    document.body.removeChild(ta);
+                                } catch (err) {}
+                                _evtFlash(ok);
+                            }
+                            
+                            function copyEventLog() {
+                                var txt = _evtBuildText();
+                                try {
+                                    if (window.AndroidClipboard) { window.AndroidClipboard.write(txt); _evtFlash(true); return; }
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(txt).then(function() { _evtFlash(true); }, function() { _evtFallbackCopy(txt); });
+                                        return;
+                                    }
+                                } catch (err) {}
+                                _evtFallbackCopy(txt);
+                            }
+                            
+                            function clearEventLog() {
+                                EVT_LOG = [];
+                                _evtErrCount = 0;
+                                _evtSaveNow();
+                                _evtUpdateBtn();
+                                evtLog('INFO', 'SYSTEM', 'Log cleared by user');
+                                _evtRender(true);
+                            }
+                            
+                            (function() {
+                                try {
+                                    var raw = localStorage.getItem(EVT_STORE_KEY);
+                                    if (raw) {
+                                        var prev = JSON.parse(raw);
+                                        if (Array.isArray(prev)) {
+                                            for (var i = 0; i < prev.length; i++) prev[i].old = true;
+                                            EVT_LOG = prev;
+                                        }
+                                    }
+                                } catch (err) {}
+                            })();
+                            
+                            window.addEventListener('error', function(ev) {
+                                try {
+                                    if (ev && ev.target && ev.target !== window && ev.target.tagName) {
+                                        evtLog('ERROR', 'RESOURCE', 'Failed to load <' + ev.target.tagName.toLowerCase() + '> ' + (ev.target.src || ev.target.href || ''));
+                                        return;
+                                    }
+                                    var where = ev.lineno ? (' @ line ' + ev.lineno + ':' + ev.colno) : '';
+                                    evtLog('ERROR', 'JS', (ev.error ? _evtStr(ev.error) : ev.message) + where);
+                                } catch (err) {}
+                            }, true);
+                            
+                            window.addEventListener('unhandledrejection', function(ev) {
+                                evtLog('ERROR', 'PROMISE', 'Unhandled rejection: ' + _evtStr(ev.reason));
+                            });
+                            
+                            (function() {
+                                var _ce = console.error;
+                                var _cw = console.warn;
+                                console.error = function() {
+                                    try { evtLog('ERROR', 'CONSOLE', Array.prototype.slice.call(arguments).map(_evtStr).join(' ')); } catch (err) {}
+                                    return _ce.apply(console, arguments);
+                                };
+                                console.warn = function() {
+                                    try { evtLog('WARN', 'CONSOLE', Array.prototype.slice.call(arguments).map(_evtStr).join(' ')); } catch (err) {}
+                                    return _cw.apply(console, arguments);
+                                };
+                            })();
+                            
+                            window.addEventListener('online', function() { evtLog('INFO', 'NETWORK', 'Browser back online'); });
+                            window.addEventListener('offline', function() { evtLog('ERROR', 'NETWORK', 'Browser went offline'); });
+                            window.addEventListener('beforeunload', _evtSaveNow);
+                            window.addEventListener('pagehide', _evtSaveNow);
+                            document.addEventListener('DOMContentLoaded', _evtUpdateBtn);
+                            
+                            evtLog('INFO', 'SYSTEM', '=== SESSION START === ' + navigator.userAgent);
+                            _evtUpdateBtn();
+                            </script>
+                            
                             <script id="fftWorkerLogic" type="javascript/worker">
 
 
@@ -1600,6 +2192,7 @@
                                                                                                                                                     }
                                                                                                                                                 }
                                                                                                                                                 function switchCategory(cat) {
+                                                                                                                                                                                                                                                                                                    evtLog('INFO', 'UI', 'Category switch requested: ' + cat);
                                                                                                                                                     
                                                                                                     if (activeCat === cat) return;
                                                                                                     activeCat = cat;
@@ -2026,6 +2619,8 @@
                                 
                 
                                 function _triggerLiveReboot() {
+                                                                    try { evtLog('INFO', 'SESSION', 'Live reboot - category ' + activeCat + ', window ' + _fmtIstMin(sessionWindowStartMin) + ' to ' + _fmtIstMin(sessionWindowEndMin === 1440 ? 0 : sessionWindowEndMin) + ' IST, pairs ' + (activePairs ? activePairs.join(',') : 'ALL')); } catch (err) {}
+                                                                    try { evtLog('INFO', 'SESSION', 'Live reboot - category ' + activeCat + ', window ' + _fmtIstMin(sessionWindowStartMin) + ' to ' + _fmtIstMin(sessionWindowEndMin === 1440 ? 0 : sessionWindowEndMin) + ' IST, pairs ' + (activePairs ? activePairs.join(',') : 'ALL')); } catch (err) {}
                                                                     _hideOfflineOverlay();
                                                     _stopEdgeSync();
                                                     if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
@@ -2045,6 +2640,7 @@
                         workerPool = [];
                         for (var i = 0; i < NUM_CORES; i++) {
                             var w = new Worker(workerBlobUrl);
+                                                        w.onerror = function(ev) { evtLog('ERROR', 'WORKER', 'Scan worker error: ' + (ev && ev.message ? ev.message : 'unknown') + (ev && ev.lineno ? ' @ line ' + ev.lineno : '')); };
                             w.onmessage = function(e) { handleWorkerMessage(e, w); };
                             workerPool.push(w);
                         }
@@ -2646,6 +3242,8 @@
 
 
         function bootLog(msg, color) {
+                    if (typeof evtLog === 'function') evtLog(/fail|error|retry|empty|closed|offline/i.test(msg) ? 'WARN' : 'INFO', 'BOOT', msg);
+                    if (typeof evtLog === 'function') evtLog(/fail|error|retry|empty|closed|offline/i.test(msg) ? 'WARN' : 'INFO', 'BOOT', msg);
 
             const box = document.getElementById('bootLogLines');
 
@@ -2907,7 +3505,14 @@
 
                         try {
 
-                            var { times, prices } = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                            var _fgRes;
+                                                        try {
+                                                            _fgRes = await fetchDerivGrid(pair, ctxState.dateStr, startTs, endTs);
+                                                        } catch (_fgErr) {
+                                                            evtLog('ERROR', 'SYNC', name + ' - fetchDerivGrid failed: ' + _evtStr(_fgErr));
+                                                            throw _fgErr;
+                                                        }
+                                                        var { times, prices } = _fgRes;
 
                             allPairData[pair].times  = times;
                             
@@ -3022,7 +3627,13 @@
                         });
                     };
 
-                    derivWs.onopen = () => {
+                    derivWs.onerror = function() { evtLog('ERROR', 'WS', 'Deriv live socket error'); };
+                    
+                                        derivWs.onerror = function() { evtLog('ERROR', 'WS', 'Deriv live socket error'); };
+                                        
+                                                            derivWs.onopen = () => {
+                                                                evtLog('INFO', 'WS', 'Deriv live socket connected');
+                                            evtLog('INFO', 'WS', 'Deriv live socket connected');
 
                         if (!/\/public/.test(DERIV_WS_URL) && DERIV_API_TOKEN && DERIV_API_TOKEN.length > 5) {
                             derivWs.send(JSON.stringify({ authorize: DERIV_API_TOKEN }));
@@ -3285,6 +3896,8 @@
 
 
             derivWs.onclose = (evt) => {
+                            evtLog(evt.code === 1000 ? 'INFO' : 'ERROR', 'WS', 'Deriv live socket closed (code ' + evt.code + (evt.reason ? ', ' + evt.reason : '') + ')' + (evt.code !== 1000 ? ' - retrying in 5s' : ''));
+                            evtLog(evt.code === 1000 ? 'INFO' : 'ERROR', 'WS', 'Deriv live socket closed (code ' + evt.code + (evt.reason ? ', ' + evt.reason : '') + ')' + (evt.code !== 1000 ? ' - retrying in 5s' : ''));
 
                             // Only auto-reconnect if not a deliberate close (code 1000) and market is live
 
@@ -4006,6 +4619,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
 
        function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
+                         evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
        
                   if (brokerFireEnabled) {
        
@@ -4499,6 +5113,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         for (let i = 0; i < NUM_CORES; i++) {
 
             let w = new Worker(workerBlobUrl);
+            
+                        w.onerror = function(ev) { evtLog('ERROR', 'WORKER', 'Scan worker error: ' + (ev && ev.message ? ev.message : 'unknown') + (ev && ev.lineno ? ' @ line ' + ev.lineno : '')); };
 
             w.onmessage = function(e) {
 
@@ -4535,6 +5151,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                 processVisualMatrix();
                                                                 renderFilteredTable();
                                                                                                                                 _refreshArmedGapFromScan();
+                                                                                                                                                                evtLog('INFO', 'SCAN', 'Scan complete - ' + globalRevs.length + ' REV / ' + globalMoms.length + ' MOM signals across ' + (activePairs !== null ? activePairs : ALL_PAIRS).length + ' pairs (cycles ' + document.getElementById('scanMin').value + '-' + document.getElementById('scanMax').value + ')');
+                                                                                                                                                                evtLog('INFO', 'SCAN', 'Scan complete - ' + globalRevs.length + ' REV / ' + globalMoms.length + ' MOM signals across ' + (activePairs !== null ? activePairs : ALL_PAIRS).length + ' pairs (cycles ' + document.getElementById('scanMin').value + '-' + document.getElementById('scanMax').value + ')');
                                                                                                                                 if (window._autoSelectAfterScan) {
                                                                     window._autoSelectAfterScan = false;
                                                                     setTimeout(_autoSelectTopSignal, 200);
@@ -4729,17 +5347,35 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
        
        function _buildTop10(list) {
-           return list
-               .filter(x => !_hiddenPairs.has(x.pair))
-               .filter(x => x.pct >= _minPct)
-               .filter(x => _levelVal === 0 || x.s1 === _levelVal)
-               .filter(x => !r0OnlyMode || x.r === 0)
-               .sort((a, b) => (b.pct * b.c1) - (a.pct * a.c1))
-               .slice(0, 15);
-       }
-       
-       var revTop10 = _buildTop10([...globalRevs]);
-       var momTop10 = _buildTop10([...globalMoms]);
+                  var sorted = list
+                      .filter(x => !_hiddenPairs.has(x.pair))
+                      .filter(x => x.pct >= _minPct)
+                      .filter(x => _levelVal === 0 || x.s1 === _levelVal)
+                      .filter(x => !r0OnlyMode || x.r === 0)
+                      .sort((a, b) => (b.pct * b.c1) - (a.pct * a.c1));
+                  var seen = new Set();
+                  var unique = [];
+                  for (var i = 0; i < sorted.length; i++) {
+                      if (!seen.has(sorted[i].pair)) {
+                          seen.add(sorted[i].pair);
+                          unique.push(sorted[i]);
+                      }
+                  }
+                  return unique;
+              }
+              
+              var revTop10 = _buildTop10([...globalRevs]);
+              var momTop10 = _buildTop10([...globalMoms]);
+              if (false && window._tcSigMode === 'MIX') {
+                  var bestByPair = {};
+                  revTop10.forEach(x => { bestByPair[x.pair] = x; });
+                  momTop10.forEach(x => {
+                      var cur = bestByPair[x.pair];
+                      if (!cur || (x.pct * x.c1) > (cur.pct * cur.c1)) bestByPair[x.pair] = x;
+                  });
+                  revTop10 = revTop10.filter(x => bestByPair[x.pair] === x);
+                  momTop10 = momTop10.filter(x => bestByPair[x.pair] === x);
+              }
        
        renderScannerTable(revTop10, momTop10, displayDead);
               if (typeof window.tcOnTableRendered === 'function') window.tcOnTableRendered();                     }
@@ -5546,7 +6182,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 } else if (streak >= exitAt && _beepState === 'HIT') {
 
-                    _stopAllBeeps(); _playLossBeep();
+                    _stopAllBeeps(); _playLossBeep(); evtLog('INFO', 'ARMED', 'LOSS - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' streak continued to X' + _armed.s2);
                     
                                         _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
@@ -5560,13 +6196,13 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 if (_beepState === 'WARN' && streak >= targetAt) {
 
-                    _stopAllBeeps(); _playMissBeep();
+                    _stopAllBeeps(); _playMissBeep(); evtLog('INFO', 'ARMED', 'MISS - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' reversed before reaching X' + _armed.s1);
                     
                                         _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
                 } else if (_beepState === 'HIT' && streak >= exitAt) {
 
-                    _stopAllBeeps(); _playWinBeep();
+                    _stopAllBeeps(); _playWinBeep(); evtLog('INFO', 'ARMED', 'WIN - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' reversed after hit');
                     
                                         _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
@@ -6558,6 +7194,7 @@ let dataList = currentMode === 'REV'
                                                                                 }
                                 
                                         function hpApply() {
+                                                                                                                            evtLog('INFO', 'UI', 'Pair selection applied: ' + _hpMultiSelected.size + ' selected');
                                                                                     if (_hpMultiSelected.size === 0) {
                                                                                         activePairs = ["cryBTCUSD", "cryETHUSD"];
                                                                                     activePairs = DEFAULT_PAIRS.slice();
@@ -6836,6 +7473,7 @@ let dataList = currentMode === 'REV'
                             _showPairBootToast(pair, 'live');
                         } catch(e) {
                             window.pairLiveStatus[pair] = 'error';
+                                                        evtLog('ERROR', 'SYNC', getPairDisplayName(pair) + ' - ensurePairFetched failed: ' + _evtStr(e));
                             if (typeof _bootPairState !== 'undefined') _bootPairState[pair] = 'err';
                             _showPairBootToast(pair, 'error');
                         }
@@ -7114,6 +7752,7 @@ let dataList = currentMode === 'REV'
                 }
         
                 function applySpecialButton(id) {
+                                                    try { var _sbL = (window.specialButtons || []).find(function(x) { return x.id === id; }); evtLog('INFO', 'UI', 'Special button applied: ' + (_sbL ? _sbL.name + ' [' + _sbL.pairs.length + ' pairs, ' + _sbL.sessVal + ']' : id)); } catch (err) {}
                                     var sb = (window.specialButtons || []).find(function(x) { return x.id === id; });
                                     if (!sb) return;
                                     window._activeSpecialBtnId = id;
@@ -7352,6 +7991,8 @@ let dataList = currentMode === 'REV'
                             console.log(`System will auto-reboot in ${Math.round(msUntilReboot / 60000)} minutes.`);
                             
                             window._rebootTimer = setTimeout(() => {
+                                                            evtLog('WARN', 'SYSTEM', 'Daily auto-reboot triggered - reloading page');
+                                                            if (typeof _evtSaveNow === 'function') _evtSaveNow();
                                 location.reload(); 
                                 console.log("Auto-rebooting for session transition.");
                             }, msUntilReboot);
@@ -7601,9 +8242,18 @@ let dataList = currentMode === 'REV'
                                     }
                                 };
                                 if (TC.sigMode !== 'MOM') bucket(globalRevs, 'rev');
-                if (TC.sigMode !== 'REV') bucket(globalMoms, 'mom');
-                return map;
-            }
+                                                if (TC.sigMode !== 'REV') bucket(globalMoms, 'mom');
+                                                if (TC.sigMode === 'MIX') {
+                                                    for (var mp in map) {
+                                                        var mm = map[mp];
+                                                        if (false && mm.rev && mm.mom) {
+                                                            if ((mm.rev.pct * mm.rev.c1) >= (mm.mom.pct * mm.mom.c1)) mm.mom = null;
+                                                            else mm.rev = null;
+                                                        }
+                                                    }
+                                                }
+                                                return map;
+                                            }
             
             function tcDrawAll() {
                 var W = TC.W, H = TC.H, dpr = TC.dpr, ctx = TC.ctx;
@@ -7837,7 +8487,7 @@ let dataList = currentMode === 'REV'
                     var mdcol = mUp ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
                     if (mk.win === 'win' || mk.win === 'loss') {
                         var ej = mk.i + mk.sig.c;
-                        var ep = (ej < mk.it.len) ? mk.it.prices[ej] : -1;
+                        var ep = -1;
                         if (ep !== -1) {
                             var ex1 = xOf(ej), ey1 = yOfPair(mk.it, ep);
                             var ecol = mk.win === 'win' ? CY : AM;
@@ -7897,13 +8547,13 @@ let dataList = currentMode === 'REV'
                                     ctx.fill();
                                     ctx.lineWidth = 1.8;
                                     ctx.strokeStyle = '#A855F7';
-                        ctx.stroke();
-                    }
-                    if (mk.win === 'win' || mk.win === 'loss') {
-                        ctx.font = 'bold 12px ' + MONO;
-                        ctx.textAlign = 'center';
-                        ctx.fillStyle = mk.win === 'win' ? CY : AM;
-                        ctx.fillText(mk.win === 'win' ? '\u2713' : '\u2717', mx, mk.sig.type === 'MOM' ? my + 17 : my - 8);
+                                                            ctx.stroke();
+                                                        }
+                                                        if (mk.win === 'win' || mk.win === 'loss') {
+                                                            ctx.font = 'bold 22px ' + MONO;
+                                                            ctx.textAlign = 'center';
+                                                            ctx.fillStyle = mk.win === 'win' ? CY : AM;
+                                                            ctx.fillText(mk.win === 'win' ? '\u2713' : '\u2717', mx, mk.sig.type === 'MOM' ? my + 24 : my - 11);
                     }
                 }
                 ctx.textAlign = 'left';
@@ -7981,7 +8631,7 @@ let dataList = currentMode === 'REV'
                         if (yr >= ptop && yr <= pbot) {
                             ctx.save();
                             ctx.strokeStyle = tcol; ctx.lineWidth = 2;
-                            ctx.beginPath(); ctx.moveTo(xr - 14, yr); ctx.lineTo(xr + 14, yr); ctx.stroke();
+                            if (false) { ctx.beginPath(); ctx.moveTo(xr - 14, yr); ctx.lineTo(xr + 14, yr); ctx.stroke(); }
                             ctx.restore();
                         }
                     }
@@ -8447,6 +9097,18 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.fillStyle = cqRdy ? GOLD : DIM;
                                                                                                 ctx.fillStyle = BG;
                                                                                                                                                                                                 ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
+                                                                                                                                                                                                                                                                                                if (cqB.tn.kind === 'FIRED') {
+                                                                                                                                                                                                                                                                                                    TC.activeAt = Date.now();
+                                                                                                                                                                                                                                                                                                    var nbPulse = 0.5 + 0.5 * Math.sin(Date.now() / 150);
+                                                                                                                                                                                                                                                                                                    ctx.save();
+                                                                                                                                                                                                                                                                                                    ctx.shadowColor = cqB.dcol;
+                                                                                                                                                                                                                                                                                                    ctx.shadowBlur = 6 + 22 * nbPulse;
+                                                                                                                                                                                                                                                                                                    ctx.globalAlpha = 0.5 + 0.5 * nbPulse;
+                                                                                                                                                                                                                                                                                                    ctx.strokeStyle = '#FFFFFF';
+                                                                                                                                                                                                                                                                                                    ctx.lineWidth = 2 + 2 * nbPulse;
+                                                                                                                                                                                                                                                                                                    (TC.pulseQ = TC.pulseQ || []).push({ x: cqX, y: cqY, w: cqBw, h: cqBh, s: cqScl, col: cqB.dcol, p: nbPulse });
+                                                                                                                                                                                                                                                                                                    ctx.restore();
+                                                                                                                                                                                                                                                                                                }
                                                                                                 ctx.strokeStyle = '#FFFFFF';
                                                                                                 ctx.lineWidth = 1;
                                                                                                 ctx.beginPath();
@@ -8630,7 +9292,22 @@ let dataList = currentMode === 'REV'
                                 ctx.restore();
                                 ctx.textAlign = 'left';
                             }
-                            if (cqFix) { for (var cqFj = cqHovFrom; cqFj < TC.hov.length; cqFj++) { TC.hov[cqFj].w = cqFix.w; TC.hov[cqFj].h = cqFix.h; } cqFix = null; }
+                            if (TC.pulseQ && TC.pulseQ.length) {
+                                                            ctx.save();
+                                                            for (var pqI = 0; pqI < TC.pulseQ.length; pqI++) {
+                                                                var pq = TC.pulseQ[pqI];
+                                                                ctx.setTransform(dpr * pq.s, 0, 0, dpr * pq.s, dpr * pq.x * (1 - pq.s), dpr * pq.y * (1 - pq.s));
+                                                                ctx.shadowColor = pq.col;
+                                                                ctx.shadowBlur = 6 + 22 * pq.p;
+                                                                ctx.globalAlpha = 0.5 + 0.5 * pq.p;
+                                                                ctx.strokeStyle = '#FFFFFF';
+                                                                ctx.lineWidth = 2 + 2 * pq.p;
+                                                                ctx.strokeRect(pq.x - 1, pq.y - 1, pq.w + 2, pq.h + 2);
+                                                            }
+                                                            ctx.restore();
+                                                            TC.pulseQ = [];
+                                                        }
+                                                        if (cqFix) { for (var cqFj = cqHovFrom; cqFj < TC.hov.length; cqFj++) { TC.hov[cqFj].w = cqFix.w; TC.hov[cqFj].h = cqFix.h; } cqFix = null; }
                                             ends.sort(function(a, b) { return a.y - b.y; });
                 for (k = 1; k < ends.length; k++) {
                     if (ends[k].y - ends[k - 1].y < 11) ends[k].y = ends[k - 1].y + 11;
@@ -8944,21 +9621,22 @@ let dataList = currentMode === 'REV'
                     tcDraw();
                 });
                 document.getElementById('tcSigModeBtn').addEventListener('click', function() {
-                                    TC.sigMode = TC.sigMode === 'MIX' ? 'REV' : (TC.sigMode === 'REV' ? 'MOM' : 'MIX');
-                                    this.textContent = TC.sigMode;
-                                    this.style.background = TC.sigMode === 'MIX' ? 'var(--bg-base)' : 'var(--accent-green)';
-                                    this.style.color = TC.sigMode === 'MIX' ? '#FFFFFF' : 'var(--bg-base)';
-                                                        var _wpRev = document.getElementById('peaksTableBodyRev');
-                                                        var _wpMom = document.getElementById('peaksTableBodyMom');
-                                                        if (_wpRev && _wpMom) {
-                                                            _wpRev.parentElement.parentElement.parentElement.style.display = TC.sigMode === 'MOM' ? 'none' : 'flex';
-                                                            _wpMom.parentElement.parentElement.parentElement.style.display = TC.sigMode === 'REV' ? 'none' : 'flex';
-                                                        }
-                                    TC.allMap = null;
-                                    tcHideTip();
-                                    tcDraw();
+                                                    TC.sigMode = TC.sigMode === 'MIX' ? 'REV' : (TC.sigMode === 'REV' ? 'MOM' : 'MIX');
+                                                    window._tcSigMode = TC.sigMode;
+                                                    this.textContent = TC.sigMode;
+                                                    this.style.background = TC.sigMode === 'MIX' ? 'var(--bg-base)' : 'var(--accent-green)';
+                                                    this.style.color = TC.sigMode === 'MIX' ? '#FFFFFF' : 'var(--bg-base)';
+                                                                        var _wpRev = document.getElementById('peaksTableBodyRev');
+                                                                        var _wpMom = document.getElementById('peaksTableBodyMom');
+                                                                        if (_wpRev && _wpMom) {
+                                                                            _wpRev.parentElement.parentElement.parentElement.style.display = TC.sigMode === 'MOM' ? 'none' : 'flex';
+                                                                            _wpMom.parentElement.parentElement.parentElement.style.display = TC.sigMode === 'REV' ? 'none' : 'flex';
+                                                                        }
+                                                    TC.allMap = null;
+                                                    tcHideTip();
+                                                    renderFilteredTable();
                                 });
-                                document.getElementById('tcLiveBtn').addEventListener('click', function() {
+                                                document.getElementById('tcLiveBtn').addEventListener('click', function() {
                     TC.follow = true;
                     tcSyncLiveBtn();
                     tcDraw();
@@ -9400,6 +10078,8 @@ let dataList = currentMode === 'REV'
                     tcCollect();
                     if (TC.timer) clearInterval(TC.timer);
                     TC.timer = setInterval(tcDraw, 500);
+                                        if (TC.pulseTimer) clearInterval(TC.pulseTimer);
+                                        TC.pulseTimer = setInterval(function() { if (TC.activeAt && Date.now() - TC.activeAt < 400) tcDraw(); }, 80);
                     if (btn) { btn.textContent = 'GRID'; btn.style.background = 'var(--accent-green)'; btn.style.color = 'var(--bg-base)'; }
                     tcSyncLiveBtn();
                     tcDraw();
@@ -9407,6 +10087,7 @@ let dataList = currentMode === 'REV'
                     TC.wrap.style.display = 'none';
                                 tcHideTip();
                     if (TC.timer) { clearInterval(TC.timer); TC.timer = null; }
+                                        if (TC.pulseTimer) { clearInterval(TC.pulseTimer); TC.pulseTimer = null; }
                     if (btn) { btn.textContent = 'TICK'; btn.style.background = 'var(--bg-base)'; btn.style.color = '#FFFFFF'; }
                     if (typeof requestDraw === 'function') requestDraw();
                 }
