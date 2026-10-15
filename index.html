@@ -539,7 +539,7 @@
 
                 
 
-                        <input type="text" id="apiPair" value="cryBTCUSD" style="display:none;" readonly />
+                        <input type="text" id="apiPair" value="1HZ10V" style="display:none;" readonly />
 
         
 
@@ -1718,9 +1718,9 @@
     
 
         var allPairData = {};
-                                                                var activePair = "cryBTCUSD";
+                                                                var activePair = "1HZ10V";
                                 
-                                                var DEFAULT_PAIRS = ["cryBTCUSD", "cryETHUSD"]; // default: BTC/USD + ETH/USD
+                                                var DEFAULT_PAIRS = ["1HZ10V", "1HZ25V"]; // test default: two VIX (Volatility 1s) pairs
                                                 var activePairs = DEFAULT_PAIRS.slice(); // default: two VIX pairs preselected, all other pairs unselected
                                                 window.pairLiveStatus = window.pairLiveStatus || {};
 
@@ -9221,14 +9221,6 @@ let dataList = currentMode === 'REV'
             };
         })();
                 window._drvWin = null;
-                window.addEventListener('load', function() {
-                    setTimeout(function() {
-                        var tcBtn = document.getElementById('tcToggleBtn');
-                        if (typeof window.tcToggle === 'function' && tcBtn && tcBtn.textContent.trim() === 'TICK') {
-                            window.tcToggle();
-                        }
-                    }, 0);
-                });
         function launchBrokers() {
                             window._otWin = window.open('https://olymptrade.com/platform', 'olymptrade');
                                             var btn = document.getElementById('launchBrokersBtn');
