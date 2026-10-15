@@ -7691,14 +7691,14 @@ let dataList = currentMode === 'REV'
                     ctx.beginPath(); ctx.moveTo(PADL, gy); ctx.lineTo(W - PADR, gy); ctx.stroke();
                     ctx.fillStyle = DIM;
                     ctx.fillText((100 - k * 25) + '%', PADL - 5, gy + 3);
-                }
-            
-                var xe = xOf(sEnd);
-                if (live) {
-                    var xn = xOf(nowIdx);
-                    var sa = Math.max(PADL, xn), sb = Math.min(W - PADR, xe);
-                    if (sb > sa) {
-                        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+                                    }
+                                
+                                    var xe = xOf(sEnd);
+                                    if (false) {
+                                        var xn = xOf(nowIdx);
+                                        var sa = Math.max(PADL, xn), sb = Math.min(W - PADR, xe);
+                                        if (sb > sa) {
+                                            ctx.fillStyle = 'rgba(255,255,255,0.04)';
                         ctx.fillRect(sa, ptop, sb - sa, pbot - ptop);
                     }
                 }
@@ -7811,11 +7811,11 @@ let dataList = currentMode === 'REV'
                         else {
                             if (pl.need === 1) nReady++;
                             if (!nextIt || pl.idx < nextIt.idx) nextIt = node;
-                        }
-                    }
-                }
-            
-                if (live) {
+                                                    }
+                                                }
+                                            }
+                                        
+                                            if (false) {
                     var xnow = xOf(nowIdx);
                     if (xnow >= PADL && xnow <= W - PADR) {
                         ctx.strokeStyle = GOLD; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
