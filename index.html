@@ -257,15 +257,15 @@
 
         <div class="ctrl-row">
                                                                                     <span style="position:relative; display:inline-block; flex-shrink:0;">
-                                                                                        <input type="number" id="minPctInput" value="85" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:58px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
+                                                                                        <input type="number" id="minPctInput" value="10" min="0" max="100" onchange="renderFilteredTable()" class="ctrl-input" style="width:58px; text-align:center; font-size:12px; padding-right:16px; color:#FFFFFF;">
                                                                                         <span style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:800; color:#FFFFFF; pointer-events:none;">%</span>
                                                                                     </span>
                                                                                     <span style="position:relative; display:inline-block; flex-shrink:0;">
                                                                                                                                                                     <select id="levelFilterSelect" onchange="renderFilteredTable()" class="ctrl-input ctrl-select" style="width:70px; font-size:11px; color:#FFFFFF;">
-                                                                                                                                                                        <option value="0" selected>ALL LVL</option>
+                                                                                                                                                                        <option value="0">ALL LVL</option>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <option value="1">X1-X2</option>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <option value="2">X2-X3</option>
-                                                                                                                                                                        <option value="3">X3-X4</option>
+                                                                                                                                                                        <option value="3" selected>X3-X4</option>
                                                                                                                                                                         <option value="4">X4-X5</option>
                                                                                                                                                                         <option value="5">X5-X6</option>
                                                                                                                                                                         <option value="6">X6-X7</option>
@@ -468,7 +468,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MIN</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -476,7 +476,7 @@
 
                                                                                                                                                                                                                                                                             <span style="font-size: 9px; font-weight: 800; color: #FFFFFF; margin-right: 4px;">MAX</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="180" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -511,7 +511,7 @@
 
                                     </div>
 
-                                    <input type="number" id="cycleInput" value="60" min="10" readonly class="trinity-input cycle-box" />
+                                    <input type="number" id="cycleInput" value="120" min="10" readonly class="trinity-input cycle-box" />
 
                                     <button id="modeToggleBtn" onclick="toggleSignalMode()" class="btn-toggle mode-rev"></button>
 
@@ -1555,8 +1555,8 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // 24x7 category runs the full 05:30→05:30 IST (24h) window and is never clamped.
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     var win = CAT_SESSION_WINDOWS[cat] || CAT_SESSION_WINDOWS['FRX'];
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     if (cat === '24x7') {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        sessionWindowStartMin = win.start;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        sessionWindowEndMin = win.end;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        sessionWindowStartMin = Math.floor(_currentUtcMinuteOfDay() / 60) * 60;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        sessionWindowEndMin = sessionWindowStartMin + 60;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     } else {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         sessionWindowStartMin = Math.max(win.start, 300);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         sessionWindowEndMin = Math.min(win.end, 1020);
@@ -7455,7 +7455,7 @@ let dataList = currentMode === 'REV'
         window._otWin = null;
         
         (function() {
-            var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null, all: true, allMap: null };
+            var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null, all: true, allMap: null, sigMode: 'REV' };
             var PADL = 58, PADR = 10, PADT = 48, PADB = 20;
             var ZOOMS = [1, 2, 3, 5, 10, 20, 30, 60, 120, 300];
             var BTN_CSS = "background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; border-radius:2px; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:11px; padding:3px 9px; cursor:pointer;";
@@ -7577,8 +7577,23 @@ let dataList = currentMode === 'REV'
                         if (!cur || (x.pct * x.c1) > (cur.pct * cur.c1)) m[key] = x;
                     }
                 };
-                bucket(globalRevs, 'rev');
-                bucket(globalMoms, 'mom');
+                var _topPick = function(list, key) {
+                                    var best = null;
+                                    for (var tpi = 0; tpi < list.length; tpi++) {
+                                        var tx = list[tpi];
+                                        if (tx.pct < minPct) continue;
+                                        if (lv !== 0 && tx.s1 !== lv) continue;
+                                        if (r0 && tx.r !== 0) continue;
+                                        if (_hiddenPairs.has(tx.pair)) continue;
+                                        if (!best || (tx.pct * tx.c1) > (best.pct * best.c1)) best = tx;
+                                    }
+                                    if (best) {
+                                        if (!map[best.pair]) map[best.pair] = { rev: null, mom: null };
+                                        map[best.pair][key] = best;
+                                    }
+                                };
+                                if (TC.sigMode !== 'MOM') _topPick(globalRevs, 'rev');
+                if (TC.sigMode !== 'REV') _topPick(globalMoms, 'mom');
                 return map;
             }
             
@@ -8317,7 +8332,16 @@ let dataList = currentMode === 'REV'
                                                                                     ctx.strokeStyle = nxBox.dcol;
                                                                                     ctx.beginPath();
                                                                                     ctx.moveTo(nxBox.xr, nxBox.ay);
-                                                                                    ctx.lineTo(nxEx, nxEy);
+                                                                                    ctx.lineWidth = 2;
+                                                                                                                                                                        if (nxBox.xr <= nxBox.bx) {
+                                                                                                                                                                            ctx.lineTo(nxBox.xr, nxBy + nxBh / 2);
+                                                                                                                                                                            ctx.lineTo(nxBox.bx, nxBy + nxBh / 2);
+                                                                                                                                                                        } else if (nxBox.xr >= nxBox.bx + nxBw) {
+                                                                                                                                                                            ctx.lineTo(nxBox.xr, nxBy + nxBh / 2);
+                                                                                                                                                                            ctx.lineTo(nxBox.bx + nxBw, nxBy + nxBh / 2);
+                                                                                                                                                                        } else {
+                                                                                                                                                                            ctx.lineTo(nxEx, nxEy);
+                                                                                                                                                                        }
                                                                                     ctx.stroke();
                                                                                 }
                                                                                 ctx.restore();
@@ -8356,7 +8380,7 @@ let dataList = currentMode === 'REV'
                                                         ctx.moveTo(cqB.xr, cqB.ay + cqDr * 7);
                                                         ctx.lineTo(cqB.xr - 4.5, cqB.ay + cqDr * 14);
                                                         ctx.lineTo(cqB.xr + 4.5, cqB.ay + cqDr * 14);
-                                                        ctx.closePath();
+                                                        ctx.beginPath();
                                                         ctx.fillStyle = cqB.dcol;
                                                         ctx.fill();
                                                         ctx.beginPath();
@@ -8849,7 +8873,16 @@ let dataList = currentMode === 'REV'
             }
         
             function tcClick(mx, my) {
-                if (TC.all) return;
+                for (var bxi = TC.hov.length - 1; bxi >= 0; bxi--) {
+                                    var bxh = TC.hov[bxi];
+                                    if (bxh.w && bxh.o && bxh.o.sig && mx >= bxh.x && mx <= bxh.x + bxh.w && my >= bxh.y && my <= bxh.y + bxh.h) {
+                                        var bxs = bxh.o.sig;
+                                        if (typeof manualSelectSignal === 'function') {
+                                            manualSelectSignal(bxs.pair, bxs.c, bxs.r, bxs.s1, bxs.s2, bxs.col, bxs.type, bxs.gap || 0, bxs.curGap || 0);
+                                        }
+                                        return;
+                                    }
+                                }
                 for (var i = TC.hits.length - 1; i >= 0; i--) {
                     var h = TC.hits[i];
                     if (mx >= h.x && mx <= h.x + h.w && my >= h.y && my <= h.y + h.h) {
@@ -8878,23 +8911,43 @@ let dataList = currentMode === 'REV'
                 bar.innerHTML = '<button type="button" id="tcZoomOut" style="' + BTN_CSS + '">-</button>' +
                     '<button type="button" id="tcZoomIn" style="' + BTN_CSS + '">+</button>' +
                     '<button type="button" id="tcLiveBtn" style="' + BTN_CSS + '">LIVE</button>' +
-                        '<button type="button" id="tcAllBtn" style="' + BTN_CSS + '">ALL</button>';
+                        '' +
+                                                '<button type="button" id="tcSigModeBtn" style="' + BTN_CSS + ' background:var(--accent-green); color:var(--bg-base);">REV</button>';
                 w.appendChild(bar);
                 vp.appendChild(w);
                 TC.wrap = w;
                 TC.cv = cv;
                 TC.ctx = cv.getContext('2d');
         
-                document.getElementById('tcZoomOut').addEventListener('click', function() { tcZoom(1); });
+                var _initWpMom = document.getElementById('peaksTableBodyMom');
+                                if (_initWpMom && TC.sigMode === 'REV') {
+                                    _initWpMom.parentElement.parentElement.parentElement.style.display = 'none';
+                                }
+                                document.getElementById('tcZoomOut').addEventListener('click', function() { tcZoom(1); });
                 document.getElementById('tcZoomIn').addEventListener('click', function() { tcZoom(-1); });
-                document.getElementById('tcAllBtn').addEventListener('click', function() {
+                if (document.getElementById('tcAllBtn')) document.getElementById('tcAllBtn').addEventListener('click', function() {
                     TC.all = !TC.all;
                     TC.allMap = null;
                     tcHideTip();
                     tcSyncAllBtn();
                     tcDraw();
                 });
-                document.getElementById('tcLiveBtn').addEventListener('click', function() {
+                document.getElementById('tcSigModeBtn').addEventListener('click', function() {
+                                    TC.sigMode = TC.sigMode === 'MIX' ? 'REV' : (TC.sigMode === 'REV' ? 'MOM' : 'MIX');
+                                    this.textContent = TC.sigMode;
+                                    this.style.background = TC.sigMode === 'MIX' ? 'var(--bg-base)' : 'var(--accent-green)';
+                                    this.style.color = TC.sigMode === 'MIX' ? '#FFFFFF' : 'var(--bg-base)';
+                                                        var _wpRev = document.getElementById('peaksTableBodyRev');
+                                                        var _wpMom = document.getElementById('peaksTableBodyMom');
+                                                        if (_wpRev && _wpMom) {
+                                                            _wpRev.parentElement.parentElement.parentElement.style.display = TC.sigMode === 'MOM' ? 'none' : 'flex';
+                                                            _wpMom.parentElement.parentElement.parentElement.style.display = TC.sigMode === 'REV' ? 'none' : 'flex';
+                                                        }
+                                    TC.allMap = null;
+                                    tcHideTip();
+                                    tcDraw();
+                                });
+                                document.getElementById('tcLiveBtn').addEventListener('click', function() {
                     TC.follow = true;
                     tcSyncLiveBtn();
                     tcDraw();
