@@ -1723,6 +1723,7 @@
     self.onmessage = function(e) {
 
                 const { pair, times, prices, minC, maxC, startIdx, endIdx } = e.data;
+                                var baseTs = e.data.startTsUtc || 0;
 
                 const len = prices.length;
 
@@ -1800,9 +1801,9 @@
 
                         const prevP = i >= sStart + c ? prices[i - c] : -1.0;
 
-                        const col   = (i / c) | 0;   
+                        const col   = Math.floor((baseTs + i) / c);   
 
-                        const row   = i % c;
+                        const row   = (baseTs + i) % c;
 
     
 
@@ -1864,7 +1865,7 @@
 
                             if (!deathLogG[row][s]) {
 
-                                dethronedCycle.push({ pair, c, r: row, s1: s, s2: s + 1, c1: survivalG[row][s], c2: 1, col: 'G', type: 'REV', dethroned: true, deathIdx: (rowCol[row] * c) + row });
+                                dethronedCycle.push({ pair, c, r: row, s1: s, s2: s + 1, c1: survivalG[row][s], c2: 1, col: 'G', type: 'REV', dethroned: true, deathIdx: (rowCol[row] * c) + row - baseTs });
 
                                 deathLogG[row][s] = true;
 
@@ -1884,7 +1885,7 @@
 
                             if (!deathLogR[row][s]) {
 
-                                dethronedCycle.push({ pair, c, r: row, s1: s, s2: s + 1, c1: survivalR[row][s], c2: 1, col: 'R', type: 'REV', dethroned: true, deathIdx: (rowCol[row] * c) + row });
+                                dethronedCycle.push({ pair, c, r: row, s1: s, s2: s + 1, c1: survivalR[row][s], c2: 1, col: 'R', type: 'REV', dethroned: true, deathIdx: (rowCol[row] * c) + row - baseTs });
 
                                 deathLogR[row][s] = true;
 
@@ -2449,6 +2450,7 @@
 
 
         function requestDraw() { requestAnimationFrame(draw); }
+                function _cycleOff() { return (currentStartTsUtc || 0) % CYCLE; }
         
                 hScroll.addEventListener('scroll', () => requestDraw());
         
@@ -4004,7 +4006,7 @@
 
                 if (pair === activePair) {
 
-                                    let totalSec = tArr[index];
+                                    var totalSec = tArr[index] + _cycleOff();
 
                                     let col = Math.floor(totalSec / CYCLE);
 
@@ -4250,6 +4252,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                             var p = pricesArray[i];
 
                                                                             if (p !== -1.0) localMaxIndex = Math.max(localMaxIndex, totalSec);
+                                                                                                        totalSec += _cycleOff();
 
                             let col = Math.floor(totalSec / CYCLE);
 
@@ -4302,6 +4305,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
             const allCols = Object.keys(matrixData).map(Number);
                         if (allCols.length === 0) { requestDraw(); return; }
                         // Cap to session boundary so streakInstances never records columns outside this session
+                                                sEnd += _cycleOff();
                         var _visSessionMaxCol = Math.floor((sEnd - 1) / CYCLE);
                         const maxCol = Math.min(Math.max(...allCols), _visSessionMaxCol);
             
@@ -4417,6 +4421,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                         const allCols = Object.keys(matrixData).map(Number);
             
                         if (allCols.length === 0) return;
+                                                sEnd += _cycleOff();
             
                         var _visSessionMaxCol = Math.floor((sEnd - 1) / CYCLE);
             
@@ -4870,7 +4875,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                     if (targetHist) {
                                             // Use currentDuration — so column filter always matches the active session
                                                                                         var _activeDurSec = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
-                                            var _sessionMaxCol = Math.floor(_activeDurSec / CYCLE);
+                                            var _sessionMaxCol = Math.floor((_activeDurSec + _cycleOff()) / CYCLE);
                     
                                             if (type === 'REV') {
                                                                                         Object.keys(targetHist).forEach(lenStr => {
@@ -4999,7 +5004,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 
                             let totalSec = timesArray[index];
                 
-                            let liveCol = Math.floor(totalSec / CYCLE);
+                            var liveCol = Math.floor((totalSec + _cycleOff()) / CYCLE);
                 
                 
                 
@@ -5053,7 +5058,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                             
                             
                             
-                                        let totalSec = (inst.col * CYCLE) + inst.row;
+                                        var totalSec = (inst.col * CYCLE) + inst.row - _cycleOff();
                             
                                         let displaySec = totalSec + (currentStartTsUtc % 86400) + 19800;
                             
@@ -5281,7 +5286,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                                             scanPending++;
 
-                                            scanQueue.push({ pair: p, times: pData.times, prices: livePricesSlice, minC: cs, maxC: ce, startIdx: sStart, endIdx: sEnd });
+                                            scanQueue.push({ pair: p, times: pData.times, prices: livePricesSlice, minC: cs, maxC: ce, startIdx: sStart, endIdx: sEnd + 1, startTsUtc: currentStartTsUtc });
 
                                         }
 
@@ -5515,7 +5520,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                     for (var r = 0; r < CYCLE; r++) {
 
-                                            var totalSec = (c * CYCLE) + r;
+                                            var totalSec = (c * CYCLE) + r - _cycleOff();
 
                                             // Render if it has a real price OR if it's a historical missing tick (past the current time)
 
@@ -5810,9 +5815,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 const visualCenterX = Math.round((c * CELL_W) - scrollL) + centerOff;
 
-                const totalSec = c * CYCLE;
+                const totalSec = c * CYCLE - _cycleOff();
 
-                const displaySec = totalSec + (currentStartTsUtc % 86400) + 19800;
+                const displaySec = (((totalSec + (currentStartTsUtc % 86400) + 19800) % 86400) + 86400) % 86400;
 
                                 const hTime = Math.floor(displaySec / 3600) % 24;
 
@@ -6148,7 +6153,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
-            const totalSec = allPairData[pair].times[idx];
+            var totalSec = allPairData[pair].times[idx] + _cycleOff();
 
             const tickRow  = totalSec % CYCLE;
 
@@ -9615,7 +9620,7 @@ let dataList = currentMode === 'REV'
             
             function tcPlan(sig, prices, lim, sEnd, lastReal) {
                     var hist = [];
-                var c = sig.c, r = sig.r;
+                var c = sig.c, r = (((sig.r - ((currentStartTsUtc || 0) % sig.c)) % sig.c) + sig.c) % sig.c;
                 var colCode = sig.col === 'G' ? 1 : 2;
                 var color = 0, streak = 0, lastI = -1;
                 for (var i = r; i <= lim; i += c) {
