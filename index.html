@@ -608,12 +608,12 @@
 
 
     <style>
-    #bootOverlay{background:radial-gradient(ellipse at 50% 30%,#0a1466 0%,#000432 65%) !important;}
-    #bootOverlay > div > div:first-child{color:#FFD700 !important;text-shadow:0 0 12px rgba(255,215,0,0.45);}
+    #bootOverlay{background:#000432 !important;}
+    #bootOverlay > div > div:first-child{color:#FFD700 !important;}
     #bootOverlay > div > div:nth-child(2){border-color:#2A3A8F !important;}
-    #bootProgressBar{background:linear-gradient(90deg,#00B0FF,#2ED573) !important;box-shadow:0 0 10px rgba(46,213,115,0.6);}
+    #bootProgressBar{background:#2ED573 !important;}
     #bootLogBox{border-color:#2A3A8F !important;background:transparent !important;}
-    #bootStatusLine{color:#00B0FF !important;text-shadow:0 0 8px rgba(0,176,255,0.5);}
+    #bootStatusLine{color:#00B0FF !important;}
     </style>
     <!-- ══ HIDE PAIRS MODAL ══ -->
     
@@ -3303,7 +3303,7 @@
 
                 const icon = st==='wait'?'○' : st==='cache'?'◐' : st==='fetching'?'◑' : st==='done'?'●' : '✕';
 
-                return `<div style="padding:3px 4px;border:1px solid ${colorMap[st]};background:${colorMap[st]}1F;border-radius:2px;color:${colorMap[st]};text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
+                return `<div style="padding:3px 4px;border:1px solid ${colorMap[st]};border-radius:2px;color:${colorMap[st]};text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
 
             }).join('');
 
