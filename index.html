@@ -76,7 +76,7 @@
 
 
 
-        #canvas-viewport { grid-column: 1; grid-row: 1; overflow: hidden; background: var(--bg-base); position: relative; }
+        #canvas-viewport { grid-column: 1; grid-row: 1; overflow: hidden; background: var(--bg-base); position: relative; touch-action: none; }
 
         #matrixCanvas { display: block; position: absolute; top: 0; left: 0; }
 
@@ -2491,6 +2491,50 @@
         window.addEventListener('mouseup', () => { isDragging = false; });
 
         window.addEventListener('mouseleave', () => { isDragging = false; });
+        
+                var _tdX = 0, _tdScroll = 0, _tdLastX = 0, _tdLastT = 0, _tdVel = 0, _tdRaf = 0;
+        
+                function _tdInertia() {
+                    if (window._gridTouching) return;
+                    if (Math.abs(_tdVel) < 0.02) return;
+                    hScroll.scrollLeft -= _tdVel * 16;
+                    _tdVel *= 0.95;
+                    _tdRaf = requestAnimationFrame(_tdInertia);
+                }
+        
+                viewport.addEventListener('touchstart', function(e) {
+                    if (e.target.closest && e.target.closest('#tcWrap')) return;
+                    if (e.touches.length !== 1) return;
+                    cancelAnimationFrame(_tdRaf);
+                    window._gridTouching = true;
+                    _tdX = e.touches[0].pageX;
+                    _tdScroll = hScroll.scrollLeft;
+                    _tdLastX = _tdX;
+                    _tdLastT = Date.now();
+                    _tdVel = 0;
+                }, { passive: true });
+        
+                viewport.addEventListener('touchmove', function(e) {
+                    if (!window._gridTouching || e.touches.length !== 1) return;
+                    e.preventDefault();
+                    var tx = e.touches[0].pageX;
+                    hScroll.scrollLeft = _tdScroll - (tx - _tdX);
+                    var tn = Date.now();
+                    var dt = tn - _tdLastT;
+                    if (dt > 0) _tdVel = (tx - _tdLastX) / dt;
+                    _tdLastX = tx;
+                    _tdLastT = tn;
+                }, { passive: false });
+        
+                function _tdEnd() {
+                    if (!window._gridTouching) return;
+                    if (Date.now() - _tdLastT > 80) _tdVel = 0;
+                    window._gridTouching = false;
+                    _tdInertia();
+                }
+        
+                viewport.addEventListener('touchend', _tdEnd, { passive: true });
+                viewport.addEventListener('touchcancel', _tdEnd, { passive: true });
 
         window.addEventListener('mousemove', (e) => {
 
@@ -4072,7 +4116,7 @@
 
 
 
-                if (clickCycleIndex === -1 && liveEdgeCol >= 0) {
+                if (clickCycleIndex === -1 && liveEdgeCol >= 0 && !window._gridTouching) {
 
                     const scrollPos = hScroll.scrollLeft;
 
@@ -8556,6 +8600,18 @@ let dataList = currentMode === 'REV'
                     info.push({ pair: pairs[pi], prices: ap, len: apLen, last: apLast, color: tcPairColor(pairs[pi]), lo: Infinity, hi: -Infinity, dec: 5, i1: 0 });
                 }
                 var nowIdx = live ? nowSec : maxLast;
+                                var ocSigNow = lastClickedSigId + '|' + clickCycleIndex + '|' + currentInstanceIndex;
+                                if (TC.ocSig !== ocSigNow) {
+                                    if (clickCycleIndex === -1) {
+                                        TC.ocSig = ocSigNow;
+                                        TC.follow = true;
+                                    } else if (currentInstanceIndex >= 0 && currentInstanceIndex < currentInstances.length) {
+                                        TC.ocSig = ocSigNow;
+                                        var ocJump = currentInstances[currentInstanceIndex];
+                                        TC.follow = false;
+                                        TC.left = (ocJump.col * CYCLE + ocJump.row - _cycleOff()) - plotW * spp / 2;
+                                    }
+                                }
                 if (TC.follow) TC.left = nowIdx - plotW * spp * 0.4;
                 else tcClamp(plotW);
                 var left = TC.left, right = left + plotW * spp;
@@ -9222,7 +9278,66 @@ let dataList = currentMode === 'REV'
                                     ctx.fillText(mtWin ? '\u2713' : '\u2717', (mtXa + mtXb) / 2, (mtY1 + mtY2) / 2);
                                     ctx.restore();
                                 }
-                                if (callouts.length > 0) {
+                                if (typeof lastClickedSigId === 'string' && lastClickedSigId && currentInstances.length > 0) {
+                                                    var ocP = lastClickedSigId.split('-');
+                                                    var ocIt = null;
+                                                    if (ocP.length === 7 && ocP[0] === activePair && (+ocP[1]) === CYCLE) {
+                                                        for (var ocA = 0; ocA < info.length; ocA++) {
+                                                            if (info[ocA].pair === ocP[0]) { ocIt = info[ocA]; break; }
+                                                        }
+                                                    }
+                                                    if (ocIt) {
+                                                        var ocSg = _sigOutFind(ocP[0], +ocP[1], +ocP[2], +ocP[3], +ocP[4], ocP[5], ocP[6]);
+                                                        var ocOff = _cycleOff();
+                                                        var ocPulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+                                                        for (var ocN = 0; ocN < currentInstances.length; ocN++) {
+                                                            var ocInst = currentInstances[ocN];
+                                                            var ocIdx = ocInst.col * CYCLE + ocInst.row - ocOff;
+                                                            if (ocIdx < i0 || ocIdx > ocIt.i1) continue;
+                                                            var ocPv = ocIt.prices[ocIdx];
+                                                            if (ocPv === -1 || ocPv === undefined) continue;
+                                                            var ocX = xOf(ocIdx), ocY = yOfPair(ocIt, ocPv);
+                                                            if (ocX < PADL || ocX > W - PADR) continue;
+                                                            var ocSel = (ocN === currentInstanceIndex);
+                                                            var ocLbl = ocInst.isFalse ? ('F' + (ocInst.falseSeq || 1)) : 'T';
+                                                            var ocLy = (ocY - 17 < ptop + 6) ? ocY + 17 : ocY - 17;
+                                                            ctx.save();
+                                                            ctx.setLineDash([]);
+                                                            if (ocSel) {
+                                                                ctx.strokeStyle = '#D500F9';
+                                                                ctx.globalAlpha = 0.5;
+                                                                ctx.lineWidth = 1;
+                                                                ctx.setLineDash([4, 4]);
+                                                                ctx.beginPath();
+                                                                ctx.moveTo(Math.round(ocX) + 0.5, ptop);
+                                                                ctx.lineTo(Math.round(ocX) + 0.5, pbot);
+                                                                ctx.stroke();
+                                                                ctx.setLineDash([]);
+                                                                TC.pulseOn = true;
+                                                            }
+                                                            ctx.globalAlpha = 1;
+                                                            ctx.beginPath();
+                                                            ctx.arc(ocX, ocY, ocSel ? 10 + 3 * ocPulse : 9, 0, 6.2832);
+                                                            ctx.lineWidth = ocSel ? 3 : 2;
+                                                            ctx.strokeStyle = '#D500F9';
+                                                            ctx.stroke();
+                                                            ctx.font = 'bold 10px ' + MONO;
+                                                            ctx.textAlign = 'center';
+                                                            ctx.textBaseline = 'middle';
+                                                            ctx.lineWidth = 3;
+                                                            ctx.strokeStyle = BG;
+                                                            ctx.strokeText(ocLbl, ocX, ocLy);
+                                                            ctx.fillStyle = '#FFD700';
+                                                            ctx.fillText(ocLbl, ocX, ocLy);
+                                                            ctx.restore();
+                                                            if (ocSg) {
+                                                                var ocRes = (ocIdx + CYCLE > ocIt.last) ? 'pending' : ((ocSg.type === 'REV' && !ocInst.isFalse) ? 'rev' : 'cont');
+                                                                TC.hov.push({ x: ocX, y: ocY, r: 11, o: { sig: ocSg, idx: ocIdx, kind: 'MARK', res: ocRes, win: tcWin(ocSg.type, ocRes), p: ocPv, dec: ocIt.dec } });
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if (callouts.length > 0) {
                                 ctx.save();
                                 ctx.font = 'bold 9px ' + MONO;
                                 var cqW = 0;
@@ -10588,7 +10703,17 @@ let dataList = currentMode === 'REV'
                             out.trig = currentStartTsUtc + pl.idx;
                             return out;
                         };
-            window.tcOnTableRendered = function() {
+            window.tcRedraw = function() { if (TC.on) tcDraw(); };
+                        if (typeof showInstance === 'function' && !window._tcShowWrapped) {
+                            window._tcShowWrapped = true;
+                            var _tcOrigShowInstance = showInstance;
+                            showInstance = function() {
+                                var _tcRet = _tcOrigShowInstance.apply(this, arguments);
+                                try { window.tcRedraw(); } catch (e) {}
+                                return _tcRet;
+                            };
+                        }
+                        window.tcOnTableRendered = function() {
                 TC.allMap = null;
                 if (!TC.on) { TC.sigPair = null; return; }
                 tcCollect();
