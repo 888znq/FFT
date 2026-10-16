@@ -454,7 +454,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <button id="catBtn-FRX" onclick="switchCategory('FRX')" style="display:none; flex:1;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-family:'JetBrains Mono',monospace;">FRX</button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <button id="tcToggleBtn" class="pairIconBtn" data-mode="TICK" title="Tick / Grid" aria-label="Tick / Grid" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">TICK</button><button id="pairHubBtn" title="Pairs" aria-label="Pairs" onclick="togglePairHub()" style="flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:28px; padding:0 6px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.3c0 3.4 6 1.6 6 5 0 1.3-1.3 2.2-3 2.2s-3-1.1-3-2.5"/><path d="M12 4.5V7M12 17v2.5"/></svg></button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <button id="tcToggleBtn" class="pairIconBtn" data-mode="TICK" title="Tick / Grid" aria-label="Tick / Grid" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">TICK</button><button id="pairHubBtn" title="Pairs" aria-label="Pairs" onclick="openPairSelectPopup()" style="flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:28px; padding:0 6px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.3c0 3.4 6 1.6 6 5 0 1.3-1.3 2.2-3 2.2s-3-1.1-3-2.5"/><path d="M12 4.5V7M12 17v2.5"/></svg></button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <style>.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:2px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='var(--bg-base)';b.style.color='#FFFFFF';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </div>
                                                                                                                                                                                                                 
@@ -607,6 +607,14 @@
 
 
 
+    <style>
+    #bootOverlay{background:radial-gradient(ellipse at 50% 30%,#0a1466 0%,#000432 65%) !important;}
+    #bootOverlay > div > div:first-child{color:#FFD700 !important;text-shadow:0 0 12px rgba(255,215,0,0.45);}
+    #bootOverlay > div > div:nth-child(2){border-color:#2A3A8F !important;}
+    #bootProgressBar{background:linear-gradient(90deg,#00B0FF,#2ED573) !important;box-shadow:0 0 10px rgba(46,213,115,0.6);}
+    #bootLogBox{border-color:#2A3A8F !important;background:transparent !important;}
+    #bootStatusLine{color:#00B0FF !important;text-shadow:0 0 8px rgba(0,176,255,0.5);}
+    </style>
     <!-- ══ HIDE PAIRS MODAL ══ -->
     
             <div id="hidePairsOverlay" onclick="closeHidePairsModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
@@ -2122,7 +2130,7 @@
                                                                                                                                                                                         'DRV': [
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ],
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         '24x7': [
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD", "cryBTCUSD", "cryETHUSD", "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY", "frxNZDUSD", "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN", "frxXAGUSD", "frxXAUUSD", "frxXPTUSD", "1HZ10V", "1HZ25V", "1HZ50V", "1HZ75V", "1HZ100V"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD", "cryBTCUSD", "cryETHUSD", "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY", "frxNZDUSD", "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN", "frxUSDPLN", "frxXAGUSD", "frxXAUUSD", "frxXPDUSD", "frxXPTUSD", "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ],
                                                                                                                                                                                                                                                                                     'MTL': [
                                                                                                 "frxXAUUSD", "frxXAGUSD"
@@ -3257,7 +3265,7 @@
 
             const line = document.createElement('div');
 
-            line.style.cssText = `font-size:9px;font-weight:700;letter-spacing:0.06em;padding:1px 0;color:#FFFFFF;font-family:'JetBrains Mono',monospace;`;
+            line.style.cssText = `font-size:9px;font-weight:700;letter-spacing:0.06em;padding:1px 0;color:${({'#555':'#6C7CB8','#888':'#9AA8DA'})[color] || color || '#C8D2F0'};font-family:'JetBrains Mono',monospace;`;
 
             const ts = new Date().toLocaleTimeString('en-GB',{hour12:false});
 
@@ -3285,7 +3293,7 @@
 
             if (!grid) return;
 
-            const colorMap = { wait:'#FFFFFF', cache:'#FFFFFF', fetching:'#FFFFFF', done:'#FFFFFF', err:'#FFFFFF' };
+            const colorMap = { wait:'#5B6AA8', cache:'#FFD700', fetching:'#00B0FF', done:'#2ED573', err:'#E63946' };
 
             grid.innerHTML = ALL_PAIRS.map(p => {
 
@@ -3295,7 +3303,7 @@
 
                 const icon = st==='wait'?'○' : st==='cache'?'◐' : st==='fetching'?'◑' : st==='done'?'●' : '✕';
 
-                return `<div style="padding:3px 4px;border:1px solid #FFFFFF;border-radius:2px;color:${colorMap[st]};text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
+                return `<div style="padding:3px 4px;border:1px solid ${colorMap[st]};background:${colorMap[st]}1F;border-radius:2px;color:${colorMap[st]};text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
 
             }).join('');
 
@@ -10406,6 +10414,152 @@ let dataList = currentMode === 'REV'
                                                     dispatchMultiCycleScan();
                                                 };
         
+                // --- PAIR SELECT POPUP (wall panel pair button) ---
+                (function() {
+                var _selTmp = new Set();
+                var _OV = 'pairSelOverlay';
+                var _MD = 'pairSelPopup';
+                
+                function _nm(p) {
+                return (typeof getPairDisplayName === 'function') ? getPairDisplayName(p) : p;
+                }
+                
+                function _renderGrid() {
+                var grid = document.getElementById('pairSelGrid');
+                if (!grid) return;
+                var inp = document.getElementById('pairSelSearch');
+                var q = inp ? inp.value.trim().toUpperCase() : '';
+                var list = ALL_PAIRS.filter(function(p) {
+                return !q || _nm(p).toUpperCase().indexOf(q) !== -1 || p.toUpperCase().indexOf(q) !== -1;
+                });
+                grid.innerHTML = list.map(function(p) {
+                var on = _selTmp.has(p);
+                var bg = on ? 'rgba(46,213,115,0.15)' : 'var(--bg-base)';
+                var col = on ? 'var(--accent-green)' : '#FFFFFF';
+                var brd = on ? 'var(--accent-green)' : '#444';
+                return '<button data-pair="' + p + '" style="background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:JetBrains Mono,monospace;">' + _nm(p) + '</button>';
+                }).join('');
+                var gOf = function(p) {
+                if (/^cry/.test(p)) return 'CRYPTO';
+                if (/^1HZ/.test(p)) return 'VOLATILITY (1s)';
+                if (/^frx(XAU|XAG|XPT|XPD)/.test(p)) return 'METALS';
+                return 'FOREX';
+                };
+                var order = ['METALS', 'FOREX', 'CRYPTO', 'VOLATILITY (1s)'];
+                var btns = Array.prototype.slice.call(grid.querySelectorAll('button[data-pair]'));
+                grid.innerHTML = '';
+                order.forEach(function(g) {
+                var items = btns.filter(function(b) { return gOf(b.getAttribute('data-pair')) === g; });
+                if (!items.length) return;
+                var selN = items.filter(function(b) { return _selTmp.has(b.getAttribute('data-pair')); }).length;
+                var h = document.createElement('div');
+                h.setAttribute('style', 'grid-column:1/-1; display:flex; justify-content:space-between; font-size:9px; font-weight:800; letter-spacing:0.18em; color:#FFD700; padding:8px 2px 3px; border-bottom:1px solid #333;');
+                h.innerHTML = '<span>' + g + '</span><span style="color:#888;">' + selN + '/' + items.length + '</span>';
+                grid.appendChild(h);
+                items.forEach(function(b) { grid.appendChild(b); });
+                });
+                var cnt = document.getElementById('pairSelCount');
+                if (cnt) cnt.textContent = _selTmp.size + ' / ' + ALL_PAIRS.length + ' selected';
+                }
+                
+                function _build() {
+                if (document.getElementById(_MD)) return;
+                var ov = document.createElement('div');
+                ov.id = _OV;
+                ov.setAttribute('style', 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3201;');
+                ov.addEventListener('click', function() { window.closePairSelectPopup(); });
+                var md = document.createElement('div');
+                md.id = _MD;
+                md.setAttribute('style', 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3202; flex-direction:column; border-radius:2px; overflow:hidden;');
+                md.innerHTML =
+                '<div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">' +
+                '<span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">SELECT PAIRS</span>' +
+                '<button onclick="closePairSelectPopup()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>' +
+                '</div>' +
+                '<div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">' +
+                '<button onclick="pairSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>' +
+                '<button onclick="pairSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>' +
+                '<button onclick="pairSelectApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>' +
+                '</div>' +
+                '<div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">' +
+                '<input id="pairSelSearch" type="text" placeholder="Search pair..." oninput="pairSelectFilter()" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">' +
+                '</div>' +
+                '<div id="pairSelGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>' +
+                '<div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">' +
+                '<span id="pairSelCount"></span>' +
+                '<span style="color:#555;">tap to select / deselect</span>' +
+                '</div>';
+                md.addEventListener('click', function(e) {
+                var t = (e.target && e.target.closest) ? e.target.closest('button[data-pair]') : null;
+                if (!t) return;
+                var p = t.getAttribute('data-pair');
+                if (_selTmp.has(p)) { _selTmp.delete(p); } else { _selTmp.add(p); }
+                _renderGrid();
+                });
+                document.body.appendChild(ov);
+                document.body.appendChild(md);
+                }
+                
+                window.openPairSelectPopup = function() {
+                var existing = document.getElementById(_MD);
+                if (existing && existing.style.display === 'flex') { window.closePairSelectPopup(); return; }
+                _build();
+                var base = (activePairs !== null && activePairs !== undefined) ? activePairs : ALL_PAIRS;
+                _selTmp = new Set(base.filter(function(p) { return ALL_PAIRS.indexOf(p) !== -1; }));
+                var inp = document.getElementById('pairSelSearch');
+                if (inp) inp.value = '';
+                _renderGrid();
+                document.getElementById(_MD).style.display = 'flex';
+                document.getElementById(_OV).style.display = 'block';
+                };
+                
+                window.closePairSelectPopup = function() {
+                var md = document.getElementById(_MD);
+                var ov = document.getElementById(_OV);
+                if (md) md.style.display = 'none';
+                if (ov) ov.style.display = 'none';
+                };
+                
+                window.pairSelectFilter = function() {
+                _renderGrid();
+                };
+                
+                window.pairSelectAll = function() {
+                ALL_PAIRS.forEach(function(p) { _selTmp.add(p); });
+                _renderGrid();
+                };
+                
+                window.pairSelectNone = function() {
+                _selTmp.clear();
+                _renderGrid();
+                };
+                
+                window.pairSelectApply = function() {
+                var chosen = ALL_PAIRS.filter(function(p) { return _selTmp.has(p); });
+                try { evtLog('INFO', 'UI', 'Pair popup applied: ' + chosen.length + ' selected'); } catch (err) {}
+                if (chosen.length === 0) {
+                activePairs = DEFAULT_PAIRS.slice();
+                } else if (chosen.length === ALL_PAIRS.length) {
+                activePairs = null;
+                } else {
+                activePairs = chosen;
+                }
+                _hiddenPairs.clear();
+                _wpFocusPair = null;
+                window._activeSpecialBtnId = null;
+                if (typeof _renderSpecialButtonsBar === 'function') _renderSpecialButtonsBar();
+                if (activePairs !== null && activePairs.indexOf(activePair) === -1) {
+                activePair = activePairs[0];
+                var apiPairInput = document.getElementById('apiPair');
+                if (apiPairInput) apiPairInput.value = activePair;
+                }
+                _updatePairPickerLabel();
+                _updateHidePairsBtn();
+                window.closePairSelectPopup();
+                _triggerLiveReboot();
+                };
+                })();
+                
                 // --- TICK COMPARE APP (ISOLATED EXECUTION CONTEXT) ---
                                 (function() {
                                     const WS_URL = 'wss://api.derivws.com/trading/v1/options/ws/public?app_id=1089';
