@@ -5462,14 +5462,14 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                                       
                                                           
                                                                                                       html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
-                                                                                            <td style="width:22%; font-size:12px; font-weight:700; padding:8px 4px 8px 7px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;">${symbolClean}</td>
-                                                                                            <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
-                                                                                            <td style="width:12%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
-                                                                                            <td style="width:19%; font-size:12px; font-weight:700; padding:8px 4px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
-                                                                                            <td style="width:10%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
-                                                                                            <td style="width:10%; font-size:12px; font-weight:700; padding:8px 3px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
+                                                                                            <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span></td>
+                                                                                            <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
+                                                                                            <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
+                                                                                            <td style="width:18%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
+                                                                                            <td style="width:9%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">${data.c1}</td>
+                                                                                            <td style="width:9%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
                                                                                             
-                                                                                            <td style="width:15%; font-size:12px; font-weight:700; padding:8px 4px; text-align:center;">${data.pct}%</td>
+                                                                                            <td style="width:14%; font-size:11px; font-weight:700; padding:8px 2px; text-align:center;">${data.pct}%</td>
                                                                                             </tr>`;
        
                                                });
@@ -6543,7 +6543,106 @@ let dataList = currentMode === 'REV'
 
                 
 
-                function refreshSimPortfolio() {
+                window.simOpenTrades = [];
+                                window.simClosedTrades = [];
+                
+                                setInterval(function() {
+                                    var hm = document.getElementById('history-modal');
+                                    if (hm && hm.style.display === 'flex') refreshSimPortfolio();
+                                }, 1000);
+                
+                                function refreshSimPortfolio() {
+                                    var _fx = function(v) { v = Number(v); if (!(v > 0)) return '--'; return v.toFixed(v >= 1000 ? 2 : (v >= 10 ? 3 : 5)); };
+                                    var _ft = function(ep) { return ep ? formatTime(ep) : '--'; };
+                                    var _fd = function(s) { s = Number(s) || 0; return s >= 60 ? Math.floor(s / 60) + 'm' + (s % 60 ? ' ' + (s % 60) + 's' : '') : s + 's'; };
+                                    var _lbl = function(t) { return t === 'CALL' ? 'BUY' : (t === 'PUT' ? 'SELL' : t); };
+                                    var _row = function(k, v, c) { return '<div style="display:flex; justify-content:space-between; gap:8px;"><span>' + k + '</span><span style="color:' + (c || '#FFF') + ';">' + v + '</span></div>'; };
+                                    var _card = function(bg, head, rows) { return '<div style="padding:8px; border:1px solid #333; margin-bottom:6px; border-radius:2px; font-size:11px; font-weight:700; display:flex; flex-direction:column; gap:4px; background:' + bg + ';">' + head + '<div style="display:flex; flex-direction:column; gap:3px; font-size:10px; color:#888;">' + rows + '</div></div>'; };
+                                    var _nowEp = Math.floor(Date.now() / 1000);
+                
+                                    var openList = document.getElementById('open-trades-list');
+                                    if (openList) {
+                                        var ot = window.simOpenTrades || [];
+                                        if (ot.length === 0) {
+                                            openList.innerHTML = '<div style="color:#555; text-align:center; padding:15px; font-size:10px; font-weight:800; letter-spacing: 1px;">NO OPEN POSITIONS</div>';
+                                        } else {
+                                            openList.innerHTML = ot.map(function(c) {
+                                                var up = c.type === 'CALL';
+                                                var entry = Number(c.entry_price) || 0;
+                                                var cur = (typeof _rtLastPrice === 'function') ? _rtLastPrice(c.symbol) : 0;
+                                                var win = (entry > 0 && cur > 0) ? (up ? cur > entry : cur < entry) : null;
+                                                var stCol = win === null ? '#888' : (win ? '#2ED573' : '#E63946');
+                                                var stTxt = win === null ? 'WAITING' : (win ? 'WINNING' : 'LOSING');
+                                                var stake = Number(c.stake) || 0;
+                                                var pp = Number(c.payout_pct) || 0;
+                                                var left = Math.max(0, (c.exp_time || 0) - _nowEp);
+                                                var head = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                                                    '<div style="color:' + (up ? '#2ED573' : '#E63946') + '; font-size:12px;">' + _lbl(c.type) + ' <span style="color:#00B0FF;">' + getPairDisplayName(c.symbol) + '</span></div>' +
+                                                    '<div style="color:' + stCol + '; font-size:12px; font-weight:800;">' + stTxt + '</div></div>';
+                                                var rows = _row('ID', c.contract_id, '#FFD700') +
+                                                    _row('ACCOUNT', c.acct ? String(c.acct).toUpperCase() : '--') +
+                                                    _row('STAKE', '$' + stake.toFixed(2)) +
+                                                    _row('PAYOUT %', pp > 0 ? pp + '%' : '--') +
+                                                    _row('IF WIN', pp > 0 ? '+$' + (stake * pp / 100).toFixed(2) : '--', '#2ED573') +
+                                                    _row('IF LOSS', '-$' + stake.toFixed(2), '#E63946') +
+                                                    _row('ENTRY', _fx(entry)) +
+                                                    _row('NOW', _fx(cur), stCol) +
+                                                    _row('OPENED', _ft(c.open_time)) +
+                                                    _row('EXPIRES', _ft(c.exp_time)) +
+                                                    _row('DURATION', _fd(c.duration || ((c.exp_time || 0) - (c.open_time || 0)))) +
+                                                    _row('TIME LEFT', _fd(left), '#FFD700');
+                                                return _card('rgba(0, 176, 255, 0.05)', head, rows);
+                                            }).join('');
+                                        }
+                                    }
+                
+                                    var closedList = document.getElementById('closed-trades-list');
+                                    if (closedList) {
+                                        var ct = window.simClosedTrades || [];
+                                        if (ct.length === 0) {
+                                            closedList.innerHTML = '<div style="color:#555; text-align:center; padding:15px; font-size:10px; font-weight:800; letter-spacing: 1px;">NO RECENT HISTORY</div>';
+                                        } else {
+                                            var wins = 0, losses = 0, net = 0;
+                                            ct.forEach(function(t) {
+                                                var p = (t.pnl !== undefined && t.pnl !== null) ? Number(t.pnl) : (Number(t.payout) - Number(t.stake));
+                                                net += p;
+                                                if (p > 0) wins++; else losses++;
+                                            });
+                                            var sumCol = net >= 0 ? '#2ED573' : '#E63946';
+                                            var summary = '<div style="display:flex; justify-content:space-between; padding:6px 8px; margin-bottom:6px; border:1px solid #FFFFFF; border-radius:2px; font-size:10px; font-weight:800; letter-spacing:0.5px;">' +
+                                                '<span style="color:#FFF;">' + ct.length + ' TRADES</span>' +
+                                                '<span style="color:#2ED573;">&#10003; ' + wins + '</span>' +
+                                                '<span style="color:#E63946;">&#10007; ' + losses + '</span>' +
+                                                '<span style="color:' + sumCol + ';">' + (net >= 0 ? '+' : '-') + '$' + Math.abs(net).toFixed(2) + '</span></div>';
+                                            closedList.innerHTML = summary + ct.map(function(t) {
+                                                var up = t.type === 'CALL';
+                                                var stake = Number(t.stake) || 0;
+                                                var pnl = (t.pnl !== undefined && t.pnl !== null) ? Number(t.pnl) : (Number(t.payout) - stake);
+                                                var isWin = pnl > 0;
+                                                var color = isWin ? '#2ED573' : '#E63946';
+                                                var pp = Number(t.payout_pct) || 0;
+                                                var closeT = t.close_time || t.exp_time;
+                                                var head = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                                                    '<div style="color:' + (up ? '#2ED573' : '#E63946') + '; font-size:12px;">' + _lbl(t.type) + ' <span style="color:#FFD700;">' + getPairDisplayName(t.symbol) + '</span></div>' +
+                                                    '<div style="color:' + color + '; font-weight:800; font-size:13px;">' + (isWin ? '&#10003; +' : '&#10007; -') + '$' + Math.abs(pnl).toFixed(2) + '</div></div>';
+                                                var rows = _row('RESULT', isWin ? 'WIN' : 'LOSS', color) +
+                                                    _row('ID', t.contract_id, '#FFD700') +
+                                                    _row('ACCOUNT', t.acct ? String(t.acct).toUpperCase() : '--') +
+                                                    _row('STAKE', '$' + stake.toFixed(2)) +
+                                                    _row('PAYOUT %', pp > 0 ? pp + '%' : '--') +
+                                                    _row('RETURNED', '$' + (Number(t.payout) || 0).toFixed(2), color) +
+                                                    _row('ENTRY', _fx(t.entry_price)) +
+                                                    _row('EXIT', _fx(t.exit_price), color) +
+                                                    _row('OPENED', _ft(t.open_time)) +
+                                                    _row('CLOSED', _ft(closeT)) +
+                                                    _row('DURATION', _fd(t.duration || ((closeT || 0) - (t.open_time || 0))));
+                                                return _card('rgba(255, 255, 255, 0.02)', head, rows);
+                                            }).join('');
+                                        }
+                                    }
+                                }
+                
+                                function _refreshSimPortfolioOld() {
         
 
                     const openList = document.getElementById('open-trades-list');
@@ -8170,6 +8269,93 @@ let dataList = currentMode === 'REV'
         <script>
 
         window._otWin = null;
+        
+        (function() {
+            var payMap = {};
+            var payReq = {};
+            var payReqId = 500000;
+            var payErrLogged = false;
+        
+            window._payText = function(pair) {
+                var v = payMap[pair];
+                return (v === undefined) ? '' : (v + '%');
+            };
+        
+            function payPaint(pair) {
+                var els = document.querySelectorAll('.payTag');
+                for (var i = 0; i < els.length; i++) {
+                    if (els[i].getAttribute('data-pay') === pair) els[i].textContent = window._payText(pair);
+                }
+            }
+        
+            function payPairs() {
+                var out = [];
+                var seen = {};
+                var tags = document.querySelectorAll('.payTag');
+                for (var i = 0; i < tags.length; i++) {
+                    var p = tags[i].getAttribute('data-pay');
+                    if (p && !seen[p]) { seen[p] = 1; out.push(p); }
+                }
+                return out;
+            }
+        
+            window._payIntercept = function(data) {
+                var ec = data.echo_req || {};
+                if (!ec.proposal) return false;
+                var rid = (data.req_id !== undefined) ? data.req_id : ec.req_id;
+                var pair = payReq[rid];
+                delete payReq[rid];
+                if (!pair) return true;
+                if (data.error) {
+                    delete payMap[pair];
+                    payPaint(pair);
+                    if (!payErrLogged) {
+                        payErrLogged = true;
+                        try { evtLog('WARN', 'PAYOUT', 'Payout quote rejected for ' + pair + ': [' + data.error.code + '] ' + data.error.message); } catch (e) {}
+                    }
+                    return true;
+                }
+                var pr = data.proposal;
+                if (pr && Number(pr.ask_price) > 0 && Number(pr.payout) > 0) {
+                    payMap[pair] = Math.round((Number(pr.payout) / Number(pr.ask_price) - 1) * 100);
+                    payPaint(pair);
+                }
+                return true;
+            };
+        
+            function payPoll() {
+                if (document.hidden) return;
+                if (typeof derivAccountWs === 'undefined' || !derivAccountWs || derivAccountWs.readyState !== 1) return;
+                var pairs = payPairs();
+                var amtEl = document.getElementById('tradeAmount');
+                var expEl = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
+                var amt = amtEl ? (parseFloat(amtEl.value) || 1) : 1;
+                var exp = expEl ? (parseInt(expEl.value, 10) || 300) : 300;
+                pairs.forEach(function(p, i) {
+                    setTimeout(function() {
+                        if (typeof derivAccountWs === 'undefined' || !derivAccountWs || derivAccountWs.readyState !== 1) return;
+                        payReqId++;
+                        payReq[payReqId] = p;
+                        try {
+                            derivAccountWs.send(JSON.stringify({
+                                proposal: 1,
+                                amount: Number(amt),
+                                basis: 'stake',
+                                contract_type: 'CALL',
+                                currency: 'USD',
+                                duration: exp,
+                                duration_unit: 's',
+                                underlying_symbol: p,
+                                req_id: payReqId
+                            }));
+                        } catch (e) {}
+                    }, i * 150);
+                });
+            }
+        
+            setInterval(payPoll, 5000);
+            setTimeout(payPoll, 3000);
+        })();
         
         (function() {
             var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null, all: true, allMap: null, sigMode: 'REV' };
@@ -11464,7 +11650,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                     trade.status = 'CLOSED';
                                                                                                                                                                                                     trade.payout = Math.max(0, trade.stake + pnl);
                                                                                                                                                                                                     trade.exit_price = exitPrice || 0;
-                                                                                                                                                                                                    trade.exp_time = Math.floor(Date.now() / 1000);
+                                                                                                                                                                                                    trade.exp_time = Math.floor(Date.now() / 1000); trade.close_time = trade.exp_time; trade.pnl = pnl;
                                                                                                                                                                                                     sessionTotalPnl += pnl;
                                                                                                                                                                                                     if (!window.simClosedTrades) window.simClosedTrades = [];
                                                                                                                                                                                                     window.simClosedTrades.unshift(trade);
@@ -11475,6 +11661,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                 }
                                                                                                                                                                                                 
                                                                                                                                                                                                 window.__handleAccountMsg = function(data) {
+                                                                                                                                                                                                                                                                                                    if (window._payIntercept && window._payIntercept(data)) return;
                                                                                                                                                                                                     try {
                                                                                                                                                                                                         var ec = data.echo_req || {};
                                                                                                                                                                                                         if (data.error) {
@@ -11508,7 +11695,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                 exp_time: openT + expSec,
                                                                                                                                                                                                                 entry_price: pend.entry || 0,
                                                                                                                                                                                                                 exit_price: 0,
-                                                                                                                                                                                                                payout_pct: (stakeB > 0 && payoutB > 0) ? Math.round(((payoutB - stakeB) / stakeB) * 100) : 0,
+                                                                                                                                                                                                                payout_pct: (stakeB > 0 && payoutB > 0) ? Math.round(((payoutB - stakeB) / stakeB) * 100) : 0, duration: expSec, acct: currentAccountType, payout_amt: payoutB,
                                                                                                                                                                                                                 payout: 0,
                                                                                                                                                                                                                 status: 'OPEN'
                                                                                                                                                                                                             };
