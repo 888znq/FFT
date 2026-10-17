@@ -10770,7 +10770,7 @@ let dataList = currentMode === 'REV'
                                                                             e.stopImmediatePropagation();
                                                                             var taDx = e.clientX - TA.x;
                                                                             TA.x = e.clientX;
-                                                                            if (taDx !== 0) taApply(TC.spp * Math.exp(-taDx / 150), TA.ax);
+                                                                            if (taDx !== 0) taApply(TC.spp * Math.exp(taDx / 150), TA.ax);
                                                                             cv.style.cursor = 'ew-resize';
                                                                             return;
                                                                         }
