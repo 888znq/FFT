@@ -8410,8 +8410,8 @@ let dataList = currentMode === 'REV'
         
         (function() {
             var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null, all: true, allMap: null, sigMode: 'REV' };
-            var PADL = 32, PADR = 10, PADT = 6, PADB = 56;
-            var ZOOMS = [1, 2, 3, 5, 10, 20, 30, 60, 120, 300];
+            var PADL = 2, PADR = 64, PADT = 4, PADB = 24;
+            var ZOOMS = [0.25, 0.5, 1, 2, 3, 5, 10, 20, 30, 60, 120, 300];
             var BTN_CSS = "background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; border-radius:2px; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:11px; padding:3px 9px; cursor:pointer;";
             var MONO = '"JetBrains Mono", monospace';
                         var SOLO_ICO_EXPAND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
@@ -8599,6 +8599,14 @@ let dataList = currentMode === 'REV'
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
                 var live = _isWithinMappedWindow() && nowSec >= 0 && nowSec < sEnd;
                 var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
+                var pwD = allPairData[activePair], pwC = 8, pwI;
+                if (pwD && pwD.prices) {
+                    for (pwI = Math.min(pwD.prices.length - 1, Math.max(0, nowSec)); pwI >= 0; pwI--) {
+                        if (pwD.prices[pwI] !== -1) { pwC = String(pwD.prices[pwI]).length; break; }
+                    }
+                }
+                PADR = Math.max(34, Math.min(84, Math.round(TC.axW || 44)));
+                plotW = W - PADL - PADR;
                 var maxLast = 0;
                 var info = [];
                 for (pi = 0; pi < pairs.length; pi++) {
@@ -8648,7 +8656,7 @@ let dataList = currentMode === 'REV'
                         it0.hi += mm;
                     }
                     it0.dec = Math.max(0, Math.min(6, 3 - Math.floor(Math.log10(it0.hi - it0.lo))));
-                    var pad0 = (it0.hi - it0.lo) * 0.08;
+                    var pad0 = (it0.hi - it0.lo) * 0.04;
                     it0.lo -= pad0;
                     it0.hi += pad0;
                                         var bqSg = sigMap[it0.pair];
@@ -8677,7 +8685,7 @@ let dataList = currentMode === 'REV'
                                                     if (bqHi - bqLo > bqMax) bqMax = bqHi - bqLo;
                                                 }
                                             }
-                                            var bqNeed = bqMax / 0.15;
+                                            var bqNeed = bqMax / 0.5;
                                             var bqCur = it0.hi - it0.lo;
                                             if (bqNeed > bqCur) {
                                                 var bqMid = (it0.hi + it0.lo) / 2;
@@ -8690,7 +8698,40 @@ let dataList = currentMode === 'REV'
                 ctx.font = '10px ' + MONO;
                 ctx.textAlign = 'right';
                 for (k = 0; k <= 4; k++) {
-                    var gy = Math.round(ptop + ((pbot - ptop) * k) / 4) + 0.5;
+                    if (k > 0) continue;
+                    {
+                        var zmZ = TC.yZ || 1, zmO = TC.yOff || 0;
+                        if (zmZ !== 1 || zmO !== 0) {
+                            for (var zmI = 0; zmI < info.length; zmI++) {
+                                var zmA = info[zmI].hi - info[zmI].lo;
+                                var zmC = (info[zmI].hi + info[zmI].lo) / 2 + zmO * zmA;
+                                var zmR = zmA / zmZ;
+                                info[zmI].lo = zmC - zmR / 2;
+                                info[zmI].hi = zmC + zmR / 2;
+                            }
+                        }
+                    }
+                    var pxTicks = [], pxStep = 0;
+                    var gxIt = null;
+                    for (var gxI = 0; gxI < info.length; gxI++) { if (info[gxI].pair === activePair) { gxIt = info[gxI]; break; } }
+                    if (!gxIt && info.length) gxIt = info[0];
+                    if (gxIt && gxIt.hi > gxIt.lo) {
+                        var gxRaw = (gxIt.hi - gxIt.lo) / 5;
+                        var gxMag = Math.pow(10, Math.floor(Math.log10(gxRaw)));
+                        var gxNorm = gxRaw / gxMag;
+                        pxStep = (gxNorm < 1.5 ? 1 : (gxNorm < 3 ? 2 : (gxNorm < 7 ? 5 : 10))) * gxMag;
+                        var gxFirst = Math.ceil(gxIt.lo / pxStep);
+                        var gxLastN = Math.floor(gxIt.hi / pxStep);
+                        for (var gxN = gxFirst; gxN <= gxLastN && gxN - gxFirst < 20; gxN++) {
+                            var gxV = gxN * pxStep;
+                            var gxY = Math.round(yOfPair(gxIt, gxV)) + 0.5;
+                            pxTicks.push({ v: gxV, y: gxY });
+                            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath(); ctx.moveTo(PADL, gxY); ctx.lineTo(W - PADR, gxY); ctx.stroke();
+                        }
+                    }
+                    continue;
                     ctx.strokeStyle = 'rgba(255,255,255,0.12)';
                     ctx.lineWidth = 1;
                     ctx.beginPath(); ctx.moveTo(PADL, gy); ctx.lineTo(W - PADR, gy); ctx.stroke();
@@ -8746,22 +8787,22 @@ let dataList = currentMode === 'REV'
                         ctx.lineJoin = 'round';
                         ctx.beginPath();
                         lastI = -99999;
-                        for (i = i0 - (i0 % Math.max(st, Math.round(spp * 3))); i <= ln0.i1; i += Math.max(st, Math.round(spp * 3))) {
-                            var qb = Math.max(st, Math.round(spp * 3));
+                        for (i = i0 - (i0 % st); i <= ln0.i1; i += st) {
+                            var qb = st;
                             var q0 = -1, qs = 0, qn = 0;
                             for (var qk = Math.max(0, i); qk < i + qb && qk <= ln0.i1; qk++) {
                                 var qv = ln0.prices[qk];
                                 if (qv !== -1) { qs += qv; qn++; }
                             }
                             if (qn > 0) q0 = qs / qn;
-                            var qc = i + qb / 2;
+                            var qc = i + (qb - 1) / 2;
                             if (ln0.last >= 0 && qc > ln0.last) { qc = ln0.last; q0 = ln0.prices[ln0.last]; }
-                            var plx, ply;
+                            var smX, smY;
                             if (q0 === -1) continue;
                             var lx = xOf(qc), ly = yOfPair(ln0, q0);
                             if (i - lastI > 600) { ctx.moveTo(lx, ly); }
                             else { ctx.lineTo(lx, ly); }
-                            plx = lx; ply = ly; lastI = i;
+                            smX = lx; smY = ly; lastI = i;
                             if (i + qb > ln0.i1) { ctx.lineTo(lx, ly); }
                             continue;
                             if (i - lastI > 600) ctx.moveTo(lx, ly);
@@ -8899,6 +8940,7 @@ let dataList = currentMode === 'REV'
                     if (flXe - mx > 2) {
                     var flBy1 = Math.max(ptop, yOfPair(mk.it, flHi) - 2);
                     var flBy2 = Math.min(pbot, yOfPair(mk.it, flLo) + 2);
+                    if (flBy2 - flBy1 < 16) { var flMid = (flBy1 + flBy2) / 2; flBy1 = Math.max(ptop, flMid - 8); flBy2 = Math.min(pbot, flMid + 8); }
                                         mk.tkX = (mx + flXe) / 2;
                                         mk.tkY = (flBy1 + flBy2) / 2;
                     ctx.save();
@@ -9957,6 +9999,120 @@ let dataList = currentMode === 'REV'
                                                             TC.pulseQ = [];
                                                         }
                                                         if (cqFix) { for (var cqFj = cqHovFrom; cqFj < TC.hov.length; cqFj++) { TC.hov[cqFj].w = cqFix.w; TC.hov[cqFj].h = cqFix.h; } cqFix = null; }
+                                            {
+                                                var axIt = null;
+                                                for (var axI = 0; axI < info.length; axI++) { if (info[axI].pair === activePair) { axIt = info[axI]; break; } }
+                                                if (!axIt && info.length) axIt = info[0];
+                                                var axLine = 'rgba(255,255,255,0.22)';
+                                                var axTicks = (typeof pxTicks !== 'undefined' && pxTicks) ? pxTicks : [];
+                                                var axStepV = (typeof pxStep !== 'undefined' && pxStep) ? pxStep : 1;
+                                                ctx.save();
+                                                ctx.setLineDash([]);
+                                                ctx.globalAlpha = 1;
+                                                ctx.shadowBlur = 0;
+                                                ctx.fillStyle = BG;
+                                                ctx.fillRect(W - PADR, 0, PADR, H);
+                                                ctx.fillRect(0, pbot + 1, W, H - pbot - 1);
+                                                ctx.strokeStyle = axLine;
+                                                ctx.lineWidth = 1;
+                                                ctx.beginPath();
+                                                ctx.moveTo(W - PADR + 0.5, ptop);
+                                                ctx.lineTo(W - PADR + 0.5, pbot + 0.5);
+                                                ctx.lineTo(PADL, pbot + 0.5);
+                                                ctx.stroke();
+                                                var axLast = null, axLastY = -1000, axNeedMax = 0;
+                                                if (axIt && axIt.last >= 0) {
+                                                    axLast = axIt.prices[axIt.last];
+                                                    axLastY = Math.max(ptop + 8, Math.min(pbot - 8, yOfPair(axIt, axLast)));
+                                                }
+                                                var axDec = Math.max(0, Math.min(8, Math.ceil(-Math.log10(axStepV) - 1e-9)));
+                                                var axStrDec = 0;
+                                                if (axLast !== null) { var axParts = String(axLast).split('.'); axStrDec = axParts[1] ? axParts[1].length : 0; }
+                                                var axTagDec = Math.min(8, Math.max(axDec + 1, axStrDec));
+                                                ctx.font = '10px ' + MONO;
+                                                ctx.textAlign = 'left';
+                                                ctx.textBaseline = 'middle';
+                                                for (var axK = 0; axK < axTicks.length; axK++) {
+                                                    var axT = axTicks[axK];
+                                                    ctx.font = '10px ' + MONO;
+                                                    var axNeed = Math.ceil(ctx.measureText(axT.v.toFixed(axDec)).width) + 12;
+                                                    if (axK === 0) axNeedMax = 0;
+                                                    if (axNeed > axNeedMax) axNeedMax = axNeed;
+                                                    if (axK === axTicks.length - 1 && Math.abs(axNeedMax - (TC.axW || 0)) > 2) TC.axW = axNeedMax;
+                                                    if (axT.y < ptop + 6 || axT.y > pbot - 6) continue;
+                                                    if (Math.abs(axT.y - axLastY) < 10) continue;
+                                                    ctx.strokeStyle = axLine;
+                                                    ctx.beginPath(); ctx.moveTo(W - PADR, axT.y); ctx.lineTo(W - PADR + 4, axT.y); ctx.stroke();
+                                                    ctx.fillStyle = DIM;
+                                                    ctx.fillText(axT.v.toFixed(axDec), W - PADR + 8, axT.y + 0.5);
+                                                }
+                                                if (axIt && axLast !== null) {
+                                                    var axLx = xOf(axIt.last);
+                                                    var axTagTxt = axLast.toFixed(axTagDec);
+                                                    ctx.font = 'bold 10px ' + MONO;
+                                                    var axTagW = Math.ceil(ctx.measureText(axTagTxt).width) + 14;
+                                                    var axGx = W - 2 - axTagW;
+                                                    if (axLx >= PADL && axLx <= axGx) {
+                                                        ctx.save();
+                                                        ctx.strokeStyle = axIt.color;
+                                                        ctx.globalAlpha = 0.45;
+                                                        ctx.lineWidth = 1;
+                                                        ctx.setLineDash([3, 3]);
+                                                        ctx.beginPath(); ctx.moveTo(axLx, axLastY); ctx.lineTo(axGx, axLastY); ctx.stroke();
+                                                        ctx.restore();
+                                                    }
+                                                    ctx.beginPath();
+                                                    ctx.moveTo(axGx - 4, axLastY);
+                                                    ctx.lineTo(axGx + 2, axLastY - 8);
+                                                    ctx.lineTo(W - 2, axLastY - 8);
+                                                    ctx.lineTo(W - 2, axLastY + 8);
+                                                    ctx.lineTo(axGx + 2, axLastY + 8);
+                                                    ctx.closePath();
+                                                    ctx.fillStyle = axIt.color;
+                                                    ctx.fill();
+                                                    ctx.fillStyle = BG;
+                                                    ctx.font = 'bold 10px ' + MONO;
+                                                    ctx.textAlign = 'left';
+                                                    ctx.fillText(axLast.toFixed(axTagDec), axGx + 6, axLastY + 0.5);
+                                                }
+                                                ctx.textBaseline = 'alphabetic';
+                                                ctx.textAlign = 'center';
+                                                for (var axTm = firstT; axTm <= right; axTm += tstep) {
+                                                    if (axTm < 0 || axTm > sEnd) continue;
+                                                    var axTx = xOf(axTm);
+                                                    if (axTx < PADL || axTx > W - PADR) continue;
+                                                    var axSec = (((Math.floor(axTm) + off) % 86400) + 86400) % 86400;
+                                                    var axMajor = (axSec % 3600 === 0);
+                                                    var axTxt = tcFmt(axTm, tstep < 60);
+                                                    ctx.font = '10px ' + MONO;
+                                                    var axHw = ctx.measureText(axTxt).width / 2;
+                                                    ctx.strokeStyle = axLine;
+                                                    ctx.lineWidth = 1;
+                                                    ctx.beginPath();
+                                                    ctx.moveTo(Math.round(axTx) + 0.5, pbot + 0.5);
+                                                    ctx.lineTo(Math.round(axTx) + 0.5, pbot + (axMajor ? 6 : 4));
+                                                    ctx.stroke();
+                                                    if (axTx - axHw < 2 || axTx + axHw > W - 2) continue;
+                                                    ctx.fillStyle = axMajor ? TXT : DIM;
+                                                    ctx.font = (axMajor ? 'bold ' : '') + '10px ' + MONO;
+                                                    ctx.fillText(axTxt, axTx, pbot + 17);
+                                                }
+                                                if (axIt && axIt.last >= 0) {
+                                                    var axNx = xOf(axIt.last);
+                                                    if (axNx >= PADL && axNx <= W - PADR) {
+                                                        var axNt = tcFmt(axIt.last, true);
+                                                        ctx.font = 'bold 10px ' + MONO;
+                                                        var axNw = ctx.measureText(axNt).width + 12;
+                                                        var axNl = Math.max(2, Math.min(W - PADR - axNw, axNx - axNw / 2));
+                                                        ctx.fillStyle = axIt.color;
+                                                        ctx.fillRect(axNl, pbot + 2, axNw, 16);
+                                                        ctx.fillStyle = BG;
+                                                        ctx.textAlign = 'center';
+                                                        ctx.fillText(axNt, axNl + axNw / 2, pbot + 14);
+                                                    }
+                                                }
+                                                ctx.restore();
+                                            }
                                             ends.sort(function(a, b) { return a.y - b.y; });
                 for (k = 1; k < ends.length; k++) {
                     if (ends[k].y - ends[k - 1].y < 11) ends[k].y = ends[k - 1].y + 11;
@@ -10245,10 +10401,11 @@ let dataList = currentMode === 'REV'
                 cv.style.cssText = 'display:block; position:absolute; top:0; left:0; touch-action:none;';
                 w.appendChild(cv);
                 var bar = document.createElement('div');
-                bar.style.cssText = 'position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:4px; z-index:2;';
+                bar.style.cssText = 'position:absolute; bottom:34px; left:50%; transform:translateX(-50%); display:flex; gap:4px; z-index:2;';
                 bar.innerHTML = '<button type="button" id="tcZoomOut" style="' + BTN_CSS + '">-</button>' +
                     '<button type="button" id="tcZoomIn" style="' + BTN_CSS + '">+</button>' +
                     '<button type="button" id="tcLiveBtn" style="' + BTN_CSS + '">LIVE</button>' +
+                    '<button type="button" id="tcAutoBtn" title="Reset price zoom" style="' + BTN_CSS + ' order:6;">AUTO</button>' +
                         '' +
                                                 '<button type="button" id="tcSigModeBtn" style="' + BTN_CSS + '">REV</button>' +
                                                                                                 '<button type="button" id="tcSoloBtn" title="Fullscreen" aria-label="Fullscreen" style="' + BTN_CSS + ' display:inline-flex; align-items:center; justify-content:center;">' + SOLO_ICO_EXPAND + '</button>';
@@ -10345,6 +10502,195 @@ let dataList = currentMode === 'REV'
                 cv.addEventListener('pointercancel', function() { TC.drag = null; });
                         cv.addEventListener('pointerleave', function() { tcHideTip(); });
                 window.addEventListener('resize', function() { if (TC.on) tcDraw(); });
+                (function() {
+                    var A = { on: false, id: null, y: 0 };
+                    var autoBtn2 = document.getElementById('tcAutoBtn');
+                    function onAxis(e) {
+                        var rc = cv.getBoundingClientRect();
+                        return (e.clientX - rc.left) > (TC.W - PADR) && (e.clientY - rc.top) < (TC.H - PADB);
+                    }
+                    function sync2() {
+                        if (!autoBtn2) return;
+                        var on = ((TC.yZ || 1) !== 1 || (TC.yOff || 0) !== 0);
+                        autoBtn2.style.background = on ? '#FFD700' : 'var(--bg-base)';
+                        autoBtn2.style.color = on ? '#000432' : '#FFFFFF';
+                    }
+                    w.addEventListener('pointerdown', function(e) {
+                        if (e.target !== cv || !onAxis(e)) return;
+                        A.on = true;
+                        A.id = e.pointerId;
+                        A.y = e.clientY;
+                        TC.drag = null;
+                        tcHideTip();
+                        try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+                        cv.style.cursor = 'ns-resize';
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }, true);
+                    w.addEventListener('pointermove', function(e) {
+                        if (A.on) {
+                            if (e.pointerId !== A.id) return;
+                            e.stopPropagation();
+                            var dyA = e.clientY - A.y;
+                            A.y = e.clientY;
+                            TC.yZ = Math.max(0.2, Math.min(40, (TC.yZ || 1) * Math.exp(-dyA / 150)));
+                            sync2();
+                            tcDraw();
+                                                        cv.style.cursor = 'ns-resize';
+                                                        return;
+                                                    }
+                                                    if (e.target === cv && e.pointerType === 'mouse' && onAxis(e)) {
+                                                        e.stopPropagation();
+                                                        tcHideTip();
+                                                        cv.style.cursor = 'ns-resize';
+                                                    }
+                                                }, true);
+                                                function endA(e) {
+                                                    if (!A.on || e.pointerId !== A.id) return;
+                                                    A.on = false;
+                                                    A.id = null;
+                                                    e.stopPropagation();
+                                                    try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+                                                }
+                                                w.addEventListener('pointerup', endA, true);
+                                                w.addEventListener('pointercancel', endA, true);
+                                                w.addEventListener('dblclick', function(e) {
+                                                    if (e.target !== cv || !onAxis(e)) return;
+                                                    TC.yZ = 1;
+                                                    TC.yOff = 0;
+                                                    sync2();
+                                                    tcDraw();
+                                                }, true);
+                                            })();
+                                            (function() {
+                                                var P = {};
+                    var G = { pinch: false, lock: null, sx: 0, sy: 0, lastY: 0, sdx: 0, sdy: 0, sspp: 1, syz: 1, smx: 0, sleft: 0, lmy: 0, tm: false };
+                    var autoBtn = document.getElementById('tcAutoBtn');
+                    function nPtr() { var n = 0, k; for (k in P) n++; return n; }
+                    function two() {
+                        var ids = [], k;
+                        for (k in P) ids.push(k);
+                        return ids.length >= 2 ? [P[ids[0]], P[ids[1]]] : null;
+                    }
+                    function plotH() { return Math.max(40, TC.H - PADT - PADB); }
+                    function clampOff(v) { return Math.max(-3, Math.min(3, v)); }
+                    function syncAuto() {
+                        if (!autoBtn) return;
+                        var on = ((TC.yZ || 1) !== 1 || (TC.yOff || 0) !== 0);
+                        autoBtn.style.background = on ? '#FFD700' : 'var(--bg-base)';
+                        autoBtn.style.color = on ? '#000432' : '#FFFFFF';
+                    }
+                    if (autoBtn) {
+                        autoBtn.addEventListener('click', function() {
+                            TC.yZ = 1;
+                            TC.yOff = 0;
+                            syncAuto();
+                            tcDraw();
+                        });
+                    }
+                    w.addEventListener('pointerdown', function(e) {
+                        if (e.target !== cv || (e.clientX - cv.getBoundingClientRect().left) > TC.W - PADR) return;
+                        if (e.isPrimary) {
+                            P = {};
+                            G.pinch = false;
+                            G.lock = null;
+                            G.sx = e.clientX;
+                            G.sy = e.clientY;
+                            G.lastY = e.clientY;
+                        }
+                        P[e.pointerId] = { x: e.clientX, y: e.clientY };
+                        if (nPtr() === 2) {
+                            var t = two();
+                            var rc = cv.getBoundingClientRect();
+                            G.pinch = true;
+                            G.tm = false;
+                            TC.drag = null;
+                            tcHideTip();
+                            G.sdx = Math.abs(t[0].x - t[1].x);
+                            G.sdy = Math.abs(t[0].y - t[1].y);
+                            G.sspp = TC.spp;
+                            G.syz = TC.yZ || 1;
+                            G.smx = (t[0].x + t[1].x) / 2 - rc.left;
+                            G.sleft = TC.left;
+                            G.lmy = (t[0].y + t[1].y) / 2;
+                            e.stopPropagation();
+                        }
+                    }, true);
+                    w.addEventListener('pointermove', function(e) {
+                        if (!P[e.pointerId]) return;
+                        P[e.pointerId].x = e.clientX;
+                        P[e.pointerId].y = e.clientY;
+                        if (G.pinch) {
+                            var t = two();
+                            if (!t) return;
+                            e.stopPropagation();
+                            var rc = cv.getBoundingClientRect();
+                            var plotW = TC.W - PADL - PADR;
+                            var dx = Math.abs(t[0].x - t[1].x);
+                            var dy = Math.abs(t[0].y - t[1].y);
+                            var mx = (t[0].x + t[1].x) / 2 - rc.left;
+                            var my = (t[0].y + t[1].y) / 2;
+                            var newSpp = G.sspp;
+                            if (G.sdx >= 40 && dx >= 1) newSpp = Math.max(0.1, Math.min(600, G.sspp * G.sdx / dx));
+                            if (Math.abs(newSpp - G.sspp) > 1e-6 || Math.abs(mx - G.smx) > 3) G.tm = true;
+                            if (G.tm) {
+                                var idxMid = G.sleft + (G.smx - PADL) * G.sspp;
+                                TC.follow = false;
+                                TC.spp = newSpp;
+                                TC.left = idxMid - (mx - PADL) * newSpp;
+                                tcClamp(plotW);
+                                tcSyncLiveBtn();
+                            }
+                            if (G.sdy >= 40 && dy >= 1) {
+                                TC.yZ = Math.max(0.2, Math.min(40, G.syz * dy / G.sdy));
+                            }
+                            var dMid = my - G.lmy;
+                            G.lmy = my;
+                            if ((TC.yZ || 1) > 1.05) {
+                                TC.yOff = clampOff((TC.yOff || 0) + dMid / plotH() / (TC.yZ || 1));
+                            }
+                            syncAuto();
+                            tcDraw();
+                            return;
+                        }
+                        if (nPtr() !== 1) return;
+                        var ddx = e.clientX - G.sx, ddy = e.clientY - G.sy;
+                        if (G.lock === null && (Math.abs(ddx) > 6 || Math.abs(ddy) > 6)) {
+                            G.lock = (Math.abs(ddy) > Math.abs(ddx) * 1.6 && (TC.yZ || 1) > 1.05) ? 'v' : 'h';
+                            if (G.lock === 'v') { TC.drag = null; tcHideTip(); }
+                        }
+                        if (G.lock === 'v') {
+                            e.stopPropagation();
+                            TC.yOff = clampOff((TC.yOff || 0) + (e.clientY - G.lastY) / plotH() / (TC.yZ || 1));
+                            G.lastY = e.clientY;
+                            syncAuto();
+                            tcDraw();
+                        }
+                    }, true);
+                    function endPtr(e) {
+                        if (!P[e.pointerId]) return;
+                        var wasPinch = G.pinch;
+                        delete P[e.pointerId];
+                        if (nPtr() < 2) G.pinch = false;
+                        if (wasPinch) {
+                            G.lock = 'x';
+                            e.stopPropagation();
+                        }
+                    }
+                    w.addEventListener('pointerup', endPtr, true);
+                    w.addEventListener('pointercancel', endPtr, true);
+                    w.addEventListener('wheel', function(e) {
+                        var rc = cv.getBoundingClientRect();
+                        var onAxis = (e.clientX - rc.left) > (TC.W - PADR);
+                        if (!(e.altKey || onAxis)) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var f = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+                        TC.yZ = Math.max(0.2, Math.min(40, (TC.yZ || 1) * f));
+                        syncAuto();
+                        tcDraw();
+                    }, { capture: true, passive: false });
+                })();
             }
         
             function tcDraw() {
