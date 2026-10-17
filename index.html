@@ -10414,6 +10414,174 @@ let dataList = currentMode === 'REV'
                 TC.wrap = w;
                 TC.cv = cv;
                 TC.ctx = cv.getContext('2d');
+                                (function() {
+                                    var HOLD_MS = 220;
+                                    var TOL = 14;
+                                    var S = null;
+                                    w.style.userSelect = 'none';
+                                    w.style.webkitUserSelect = 'none';
+                                    w.style.webkitTouchCallout = 'none';
+                                    w.style.webkitTapHighlightColor = 'transparent';
+                                    ['contextmenu', 'selectstart', 'dragstart'].forEach(function(n) {
+                                        w.addEventListener(n, function(e) { e.preventDefault(); }, true);
+                                    });
+                                    function ui(on) {
+                                        w.style.boxShadow = on ? 'inset 0 0 0 2px #FFD700' : 'none';
+                                        cv.style.cursor = on ? 'grabbing' : 'default';
+                                    }
+                                    function flush() {
+                                        if (!S) return;
+                                        S.raf = 0;
+                                        var dx = S.dx, dy = S.dy;
+                                        S.dx = 0;
+                                        S.dy = 0;
+                                        if (!dx && !dy) return;
+                                        var plotW = TC.W - PADL - PADR;
+                                        var plotH = Math.max(40, TC.H - PADT - PADB);
+                                        TC.follow = false;
+                                        TC.left -= dx * TC.spp;
+                                        tcClamp(plotW);
+                                        TC.yOff = Math.max(-3, Math.min(3, (TC.yOff || 0) + dy / plotH / (TC.yZ || 1)));
+                                        var ab = document.getElementById('tcAutoBtn');
+                                        if (ab) { ab.style.background = '#FFD700'; ab.style.color = '#000432'; }
+                                        tcSyncLiveBtn();
+                                        tcDraw();
+                                    }
+                                    function release(why) {
+                                        TC.holding = false;
+                                        if (!S) return;
+                                        if (S.timer) clearTimeout(S.timer);
+                                        if (S.raf) {
+                                            cancelAnimationFrame(S.raf);
+                                            S.raf = 0;
+                                            if (S.armed) flush();
+                                        }
+                                        var was = S.armed;
+                                        S = null;
+                                        if (was) ui(false);
+                                        if (was || why === 'pointercancel') evtLog('INFO', 'HOLD', 'end: ' + why + (was ? ' (was armed)' : ' (not armed)'));
+                                    }
+                                    function arm() {
+                                        if (!S || S.armed) return;
+                                        if (S.timer) { clearTimeout(S.timer); S.timer = null; }
+                                        S.armed = true;
+                                        TC.holding = true;
+                                        TC.drag = null;
+                                        TC.follow = false;
+                                        try { var sl = window.getSelection && window.getSelection(); if (sl && sl.removeAllRanges) sl.removeAllRanges(); } catch (err) {}
+                                        tcHideTip();
+                                        tcSyncLiveBtn();
+                                        ui(true);
+                                        try { if (navigator.vibrate) navigator.vibrate(15); } catch (err2) {}
+                                        evtLog('INFO', 'HOLD', 'armed after ' + Math.round(performance.now() - S.t0) + 'ms (' + S.type + ')');
+                                    }
+                                    w.addEventListener('pointerdown', function(e) {
+                                        release('restart');
+                                        if (e.target !== cv) {
+                                            if (e.target && e.target.tagName !== 'BUTTON') evtLog('WARN', 'HOLD', 'press ignored, target=' + (e.target.id || e.target.tagName));
+                                            return;
+                                        }
+                                        if (e.pointerType === 'mouse' && e.button !== 0) return;
+                                        var rc = cv.getBoundingClientRect();
+                                        if ((e.clientX - rc.left) > TC.W - PADR || (e.clientY - rc.top) > TC.H - PADB) return;
+                                        S = { id: e.pointerId, type: e.pointerType, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, dx: 0, dy: 0, t0: performance.now(), armed: false, timer: null, raf: 0 };
+                                        S.timer = setTimeout(arm, HOLD_MS);
+                                    }, true);
+                                    w.addEventListener('pointermove', function(e) {
+                                        if (!S || e.pointerId !== S.id) return;
+                                        if (!S.armed) {
+                                            if (Math.abs(e.clientX - S.sx) > TOL || Math.abs(e.clientY - S.sy) > TOL) { release('moved'); return; }
+                                            S.lx = e.clientX;
+                                            S.ly = e.clientY;
+                                            if (performance.now() - S.t0 < HOLD_MS) { e.stopImmediatePropagation(); return; }
+                                            arm();
+                                        }
+                                        e.stopImmediatePropagation();
+                                        e.preventDefault();
+                                        S.dx += e.clientX - S.lx;
+                                        S.dy += e.clientY - S.ly;
+                                        S.lx = e.clientX;
+                                        S.ly = e.clientY;
+                                        if (!S.raf) S.raf = requestAnimationFrame(flush);
+                                    }, true);
+                                    function endHold(e) {
+                                        if (S && e.pointerId === S.id) release(e.type);
+                                    }
+                                    w.addEventListener('pointerup', endHold, true);
+                                    w.addEventListener('pointercancel', endHold, true);
+                                    window.addEventListener('pointerup', endHold, true);
+                                    window.addEventListener('pointercancel', endHold, true);
+                                    window.addEventListener('blur', function() { release('blur'); });
+                                    document.addEventListener('visibilitychange', function() { if (document.hidden) release('hidden'); });
+                                    w.addEventListener('touchmove', function(e) { if (S && S.armed) e.preventDefault(); }, { passive: false, capture: true });
+                                })();
+                                (function() {
+                                    var H = null;
+                                    var HOLD_MS = 220;
+                                    var MOVE_TOL = 14;
+                                    function holdUi(on) {
+                                        w.style.boxShadow = on ? 'inset 0 0 0 2px #FFD700' : 'none';
+                                        cv.style.cursor = on ? 'grabbing' : 'default';
+                                    }
+                                    function cancelHold() {
+                                        if (H && H.timer) clearTimeout(H.timer);
+                                        var wasArmed = !!(H && H.armed);
+                                        H = null;
+                                        if (wasArmed) holdUi(false);
+                                    }
+                                    cv.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+                                    w.addEventListener('pointerdown', function(e) {
+                                        if (e.target !== cv) return;
+                                        return;
+                                        if (!e.isPrimary) return;
+                                        if (e.pointerType === 'mouse' && e.button !== 0) return;
+                                        var rc = cv.getBoundingClientRect();
+                                        if ((e.clientX - rc.left) > TC.W - PADR || (e.clientY - rc.top) > TC.H - PADB) return;
+                                        H = { id: e.pointerId, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, armed: false, timer: null };
+                                        H.timer = setTimeout(function() {
+                                            if (!H) return;
+                                            H.timer = null;
+                                            if (!H) return;
+                                            H.armed = true;
+                                            TC.drag = null;
+                                            TC.follow = false;
+                                            tcHideTip();
+                                            tcSyncLiveBtn();
+                                            holdUi(true);
+                                            try { if (navigator.vibrate) navigator.vibrate(15); } catch (err) {}
+                                        }, HOLD_MS);
+                                    }, true);
+                                    w.addEventListener('pointermove', function(e) {
+                                        if (!H || e.pointerId !== H.id) return;
+                                        if (!H.armed) {
+                                            if (Math.abs(e.clientX - H.sx) > MOVE_TOL || Math.abs(e.clientY - H.sy) > MOVE_TOL) { cancelHold(); } else { e.stopImmediatePropagation(); }
+                                            return;
+                                        }
+                                        e.stopImmediatePropagation();
+                                        e.preventDefault();
+                                        if (H.raf) return;
+                                                                H.raf = requestAnimationFrame(function() { if (H) H.raf = 0; });
+                                                                var dx = e.clientX - H.lx;
+                                        var dy = e.clientY - H.ly;
+                                        H.lx = e.clientX;
+                                        H.ly = e.clientY;
+                                        var plotW = TC.W - PADL - PADR;
+                                        var plotH = Math.max(40, TC.H - PADT - PADB);
+                                        TC.follow = false;
+                                        TC.left -= dx * TC.spp;
+                                        tcClamp(plotW);
+                                        TC.yOff = Math.max(-3, Math.min(3, (TC.yOff || 0) + dy / plotH / (TC.yZ || 1)));
+                                        var ab = document.getElementById('tcAutoBtn');
+                                        if (ab) { ab.style.background = '#FFD700'; ab.style.color = '#000432'; }
+                                        tcSyncLiveBtn();
+                                        tcDraw();
+                                    }, true);
+                                    function endHold(e) {
+                                        if (H && e.pointerId === H.id) cancelHold();
+                                    }
+                                    w.addEventListener('pointerup', endHold, true);
+                                    w.addEventListener('pointercancel', endHold, true);
+                                })();
         
                 var _initWpMom = document.getElementById('peaksTableBodyMom');
                                 if (_initWpMom && TC.sigMode === 'REV') {
@@ -10564,6 +10732,77 @@ let dataList = currentMode === 'REV'
                                             })();
                                             (function() {
                                                 var P = {};
+                                                                    var TA = { on: false, id: null, x: 0, ax: 0 };
+                                                                    function taOnTime(e) {
+                                                                        var rc = cv.getBoundingClientRect();
+                                                                        return (e.clientY - rc.top) > (TC.H - PADB) && (e.clientX - rc.left) <= (TC.W - PADR);
+                                                                    }
+                                                                    function taApply(newSpp, ax) {
+                                                                        var plotW = TC.W - PADL - PADR;
+                                                                        newSpp = Math.max(0.1, Math.min(600, newSpp));
+                                                                        if (!TC.follow) {
+                                                                            var idxAt = TC.left + (ax - PADL) * TC.spp;
+                                                                            TC.spp = newSpp;
+                                                                            TC.left = idxAt - (ax - PADL) * newSpp;
+                                                                            tcClamp(plotW);
+                                                                        } else {
+                                                                            TC.spp = newSpp;
+                                                                        }
+                                                                        tcDraw();
+                                                                    }
+                                                                    w.addEventListener('pointerdown', function(e) {
+                                                                        if (e.target !== cv || !taOnTime(e)) return;
+                                                                        if (e.pointerType === 'mouse' && e.button !== 0) return;
+                                                                        TA.on = true;
+                                                                        TA.id = e.pointerId;
+                                                                        TA.x = e.clientX;
+                                                                        TA.ax = e.clientX - cv.getBoundingClientRect().left;
+                                                                        TC.drag = null;
+                                                                        tcHideTip();
+                                                                        try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+                                                                        cv.style.cursor = 'ew-resize';
+                                                                        e.stopImmediatePropagation();
+                                                                        e.preventDefault();
+                                                                    }, true);
+                                                                    w.addEventListener('pointermove', function(e) {
+                                                                        if (TA.on) {
+                                                                            if (e.pointerId !== TA.id) return;
+                                                                            e.stopImmediatePropagation();
+                                                                            var taDx = e.clientX - TA.x;
+                                                                            TA.x = e.clientX;
+                                                                            if (taDx !== 0) taApply(TC.spp * Math.exp(-taDx / 150), TA.ax);
+                                                                            cv.style.cursor = 'ew-resize';
+                                                                            return;
+                                                                        }
+                                                                        if (e.target === cv && e.pointerType === 'mouse' && taOnTime(e)) {
+                                                                            e.stopImmediatePropagation();
+                                                                            tcHideTip();
+                                                                            cv.style.cursor = 'ew-resize';
+                                                                        }
+                                                                    }, true);
+                                                                    function taEnd(e) {
+                                                                        if (!TA.on || e.pointerId !== TA.id) return;
+                                                                        TA.on = false;
+                                                                        TA.id = null;
+                                                                        e.stopPropagation();
+                                                                        try { cv.releasePointerCapture(e.pointerId); } catch (err) {}
+                                                                    }
+                                                                    w.addEventListener('pointerup', taEnd, true);
+                                                                    w.addEventListener('pointercancel', taEnd, true);
+                                                                    w.addEventListener('wheel', function(e) {
+                                                                        if (e.target !== cv || !taOnTime(e)) return;
+                                                                        e.preventDefault();
+                                                                        e.stopImmediatePropagation();
+                                                                        var taF = e.deltaY < 0 ? 1 / 1.15 : 1.15;
+                                                                        taApply(TC.spp * taF, e.clientX - cv.getBoundingClientRect().left);
+                                                                    }, { capture: true, passive: false });
+                                                                    w.addEventListener('dblclick', function(e) {
+                                                                        if (e.target !== cv || !taOnTime(e)) return;
+                                                                        TC.spp = 3;
+                                                                        TC.follow = true;
+                                                                        tcSyncLiveBtn();
+                                                                        tcDraw();
+                                                                    }, true);
                     var G = { pinch: false, lock: null, sx: 0, sy: 0, lastY: 0, sdx: 0, sdy: 0, sspp: 1, syz: 1, smx: 0, sleft: 0, lmy: 0, tm: false };
                     var autoBtn = document.getElementById('tcAutoBtn');
                     function nPtr() { var n = 0, k; for (k in P) n++; return n; }
@@ -11070,6 +11309,79 @@ let dataList = currentMode === 'REV'
                             return out;
                         };
             window.tcRedraw = function() { if (TC.on) tcDraw(); };
+                            (function() {
+                                var D = { down: false, sawDown: false, draws: 0, drawMs: 0, drawMax: 0, plans: 0, planMs: 0, moves: 0, lagSum: 0, lagMax: 0, cancels: 0, ctxMenus: 0, frames: 0, slow: 0, frameMax: 0, longN: 0, longMs: 0, lastFrame: 0, tick: 0 };
+                                window.__dg = {
+                                    draw: function(ms) { D.draws++; D.drawMs += ms; if (ms > D.drawMax) D.drawMax = ms; },
+                                    plan: function(ms) { D.plans++; D.planMs += ms; }
+                                };
+                                function frame(t) {
+                                    if (D.lastFrame) {
+                                        var d = t - D.lastFrame;
+                                        D.frames++;
+                                        if (d > 34) D.slow++;
+                                        if (d > D.frameMax) D.frameMax = d;
+                                    }
+                                    D.lastFrame = t;
+                                    requestAnimationFrame(frame);
+                                }
+                                requestAnimationFrame(frame);
+                                window.addEventListener('pointerdown', function(e) {
+                                    if (e.target && e.target.id === 'tcCanvas') { D.down = true; D.sawDown = true; }
+                                }, true);
+                                window.addEventListener('pointermove', function(e) {
+                                    if (!D.down) return;
+                                    D.moves++;
+                                    var lag = Math.max(0, performance.now() - e.timeStamp);
+                                    D.lagSum += lag;
+                                    if (lag > D.lagMax) D.lagMax = lag;
+                                }, true);
+                                window.addEventListener('pointerup', function() { D.down = false; }, true);
+                                window.addEventListener('pointercancel', function() {
+                                    if (D.down) D.cancels++;
+                                    D.down = false;
+                                }, true);
+                                window.addEventListener('contextmenu', function() { D.ctxMenus++; }, true);
+                                try {
+                                    var po = new PerformanceObserver(function(list) {
+                                        var en = list.getEntries();
+                                        for (var i = 0; i < en.length; i++) { D.longN++; D.longMs += en[i].duration; }
+                                    });
+                                    po.observe({ entryTypes: ['longtask'] });
+                                } catch (err) {}
+                                setInterval(function() {
+                                    if (!TC.on) return;
+                                    D.tick++;
+                                    var dragging = D.sawDown || D.moves > 0;
+                                    if (!dragging && D.tick % 5 !== 0) {
+                                        D.draws = 0; D.drawMs = 0; D.drawMax = 0; D.plans = 0; D.planMs = 0; D.moves = 0; D.lagSum = 0; D.lagMax = 0;
+                                        D.cancels = 0; D.ctxMenus = 0; D.frames = 0; D.slow = 0; D.frameMax = 0; D.longN = 0; D.longMs = 0;
+                                        return;
+                                    }
+                                    var secs = dragging ? 2 : 10;
+                                    var avgDraw = D.draws ? D.drawMs / D.draws : 0;
+                                    var planShare = D.drawMs > 0 ? Math.round(D.planMs / D.drawMs * 100) : 0;
+                                    var avgLag = D.moves ? D.lagSum / D.moves : 0;
+                                    var pairsN = TC.allMap ? Object.keys(TC.allMap).length : 0;
+                                    var msg = (dragging ? '[DRAG] ' : '[IDLE] ') +
+                                        'draws/s=' + (D.draws / secs).toFixed(1) +
+                                        ' avgDraw=' + avgDraw.toFixed(1) + 'ms maxDraw=' + D.drawMax.toFixed(1) + 'ms' +
+                                        ' plan/s=' + (D.plans / secs).toFixed(0) + ' planShare=' + planShare + '%' +
+                                        ' moves/s=' + (D.moves / secs).toFixed(0) +
+                                        ' inputLag avg=' + avgLag.toFixed(1) + 'ms max=' + D.lagMax.toFixed(0) + 'ms' +
+                                        ' slowFrames=' + D.slow + '/' + D.frames + ' worstFrame=' + D.frameMax.toFixed(0) + 'ms' +
+                                        ' longTasks=' + D.longN + '(' + D.longMs.toFixed(0) + 'ms)' +
+                                        ' cancels=' + D.cancels + ' ctxMenu=' + D.ctxMenus +
+                                        ' | pulseTimer=' + (TC.pulseTimer ? 'ON' : 'off') + ' pulseOn=' + (TC.pulseOn ? 'yes' : 'no') +
+                                        ' pairs=' + pairsN + ' hov=' + (TC.hov ? TC.hov.length : 0) +
+                                        ' canvas=' + TC.W + 'x' + TC.H + '@' + TC.dpr + 'x spp=' + TC.spp +
+                                        ' cores=' + (navigator.hardwareConcurrency || '?') + ' mem=' + (navigator.deviceMemory || '?') + 'GB';
+                                                                            evtLog('INFO', 'DIAG', msg);
+                                                                            D.draws = 0; D.drawMs = 0; D.drawMax = 0; D.plans = 0; D.planMs = 0; D.moves = 0; D.lagSum = 0; D.lagMax = 0;
+                                                                            D.cancels = 0; D.ctxMenus = 0; D.frames = 0; D.slow = 0; D.frameMax = 0; D.longN = 0; D.longMs = 0;
+                                                                            D.sawDown = D.down;
+                                                                        }, 2000);
+                                                                    })();
                         if (typeof showInstance === 'function' && !window._tcShowWrapped) {
                             window._tcShowWrapped = true;
                             var _tcOrigShowInstance = showInstance;
@@ -11096,9 +11408,9 @@ let dataList = currentMode === 'REV'
                     TC.follow = true;
                     tcCollect();
                     if (TC.timer) clearInterval(TC.timer);
-                    TC.timer = setInterval(tcDraw, 500);
+                    TC.timer = setInterval(function() { if (!TC.holding) tcDraw(); }, 500);
                                         if (TC.pulseTimer) clearInterval(TC.pulseTimer);
-                                        TC.pulseTimer = setInterval(function() { if ((TC.activeAt && Date.now() - TC.activeAt < 400) || TC.pulseOn) tcDraw(); }, 80);
+                                        TC.pulseTimer = setInterval(function() { if ((TC.activeAt && Date.now() - TC.activeAt < 400) || TC.pulseOn) { if (!TC.holding) tcDraw(); } }, 80);
                     if (btn) { btn.textContent = 'GRID'; btn.style.background = 'var(--bg-base)'; btn.style.color = '#FFFFFF'; }
                     tcSyncLiveBtn();
                     tcDraw();
