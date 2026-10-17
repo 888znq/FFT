@@ -127,6 +127,13 @@
 
         .table-wrapper { flex: 1; overflow-y: auto; width: 100%; position: relative; scrollbar-width: none; -ms-overflow-style: none; }
         .table-wrapper::-webkit-scrollbar { display: none; }
+                body.tc-solo #main-container { grid-template-columns: 1fr; }
+                body.tc-solo #streakPanel, body.tc-solo #row-index-panel, body.tc-solo #wall-finder-pane { display: none !important; }
+                        #tcLiveBtn { order: 1; }
+                        #tcZoomOut { order: 2; }
+                        #tcZoomIn { order: 3; }
+                        #tcSoloBtn { order: 4; }
+                        #tcSigModeBtn { order: 5; }
 
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; font-family: 'Inter', 'JetBrains Mono', monospace; table-layout: fixed; }
 
@@ -8403,10 +8410,12 @@ let dataList = currentMode === 'REV'
         
         (function() {
             var TC = { on: false, follow: true, spp: 3, left: 0, timer: null, wrap: null, cv: null, ctx: null, W: 0, H: 0, dpr: 1, hits: [], hov: [], tip: null, mx: -1, my: -1, dec: 5, drag: null, rev: [], mom: [], sigPair: null, all: true, allMap: null, sigMode: 'REV' };
-            var PADL = 32, PADR = 10, PADT = 30, PADB = 20;
+            var PADL = 32, PADR = 10, PADT = 6, PADB = 56;
             var ZOOMS = [1, 2, 3, 5, 10, 20, 30, 60, 120, 300];
             var BTN_CSS = "background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; border-radius:2px; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:11px; padding:3px 9px; cursor:pointer;";
             var MONO = '"JetBrains Mono", monospace';
+                        var SOLO_ICO_EXPAND = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+                        var SOLO_ICO_EXIT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
         
             function tcSessionEnd() {
                 var dur = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
@@ -10236,12 +10245,13 @@ let dataList = currentMode === 'REV'
                 cv.style.cssText = 'display:block; position:absolute; top:0; left:0; touch-action:none;';
                 w.appendChild(cv);
                 var bar = document.createElement('div');
-                bar.style.cssText = 'position:absolute; top:4px; right:6px; display:flex; gap:4px; z-index:2;';
+                bar.style.cssText = 'position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:4px; z-index:2;';
                 bar.innerHTML = '<button type="button" id="tcZoomOut" style="' + BTN_CSS + '">-</button>' +
                     '<button type="button" id="tcZoomIn" style="' + BTN_CSS + '">+</button>' +
                     '<button type="button" id="tcLiveBtn" style="' + BTN_CSS + '">LIVE</button>' +
                         '' +
-                                                '<button type="button" id="tcSigModeBtn" style="' + BTN_CSS + '">REV</button>';
+                                                '<button type="button" id="tcSigModeBtn" style="' + BTN_CSS + '">REV</button>' +
+                                                                                                '<button type="button" id="tcSoloBtn" title="Fullscreen" aria-label="Fullscreen" style="' + BTN_CSS + ' display:inline-flex; align-items:center; justify-content:center;">' + SOLO_ICO_EXPAND + '</button>';
                 w.appendChild(bar);
                 vp.appendChild(w);
                 TC.wrap = w;
@@ -10277,7 +10287,17 @@ let dataList = currentMode === 'REV'
                                                     tcHideTip();
                                                     renderFilteredTable();
                                 });
-                                                document.getElementById('tcLiveBtn').addEventListener('click', function() {
+                                                document.getElementById('tcSoloBtn').addEventListener('click', function() {
+                                                                    var soloOn = document.body.classList.toggle('tc-solo');
+                                                                    this.innerHTML = soloOn ? SOLO_ICO_EXIT : SOLO_ICO_EXPAND;
+                                                                                        this.title = soloOn ? 'Exit fullscreen' : 'Fullscreen';
+                                                                                        this.setAttribute('aria-label', soloOn ? 'Exit fullscreen' : 'Fullscreen');
+                                                                    this.style.background = 'var(--bg-base)';
+                                                                    this.style.color = '#FFFFFF';
+                                                                    tcHideTip();
+                                                                    setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 30);
+                                                                });
+                                                                document.getElementById('tcLiveBtn').addEventListener('click', function() {
                     TC.follow = true;
                     tcSyncLiveBtn();
                     tcDraw();
