@@ -10632,7 +10632,25 @@ let dataList = currentMode === 'REV'
                 w.addEventListener('wheel', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (e.ctrlKey) { tcZoom(e.deltaY < 0 ? -1 : 1); return; }
+                    var _wDy = e.deltaY, _wDx = e.deltaX;
+                    if (e.deltaMode === 1) { _wDy *= 33; _wDx *= 33; } else if (e.deltaMode === 2) { _wDy *= 400; _wDx *= 400; }
+                    if (!e.shiftKey && _wDy && Math.abs(_wDx) <= Math.abs(_wDy)) {
+                    var _wPlotW = TC.W - PADL - PADR;
+                    var _wAx = Math.max(PADL, Math.min(TC.W - PADR, e.clientX - TC.cv.getBoundingClientRect().left));
+                    var _wNs = Math.max(0.1, Math.min(600, TC.spp * Math.exp(Math.max(-300, Math.min(300, _wDy)) * (e.ctrlKey ? 0.01 : 0.0015))));
+                    if (_wNs !== TC.spp) {
+                    if (!TC.follow) {
+                    var _wIdx = TC.left + (_wAx - PADL) * TC.spp;
+                    TC.spp = _wNs;
+                    TC.left = _wIdx - (_wAx - PADL) * _wNs;
+                    tcClamp(_wPlotW);
+                    } else {
+                    TC.spp = _wNs;
+                    }
+                    tcDraw();
+                    }
+                    return;
+                    }
                     TC.follow = false;
                     TC.left += (e.deltaY || e.deltaX) * TC.spp;
                     tcClamp(TC.W - PADL - PADR);
@@ -10793,7 +10811,7 @@ let dataList = currentMode === 'REV'
                                                                         if (e.target !== cv || !taOnTime(e)) return;
                                                                         e.preventDefault();
                                                                         e.stopImmediatePropagation();
-                                                                        var taF = e.deltaY < 0 ? 1 / 1.15 : 1.15;
+                                                                        var taF = Math.exp(Math.max(-300, Math.min(300, e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY)) * 0.0015);
                                                                         taApply(TC.spp * taF, e.clientX - cv.getBoundingClientRect().left);
                                                                     }, { capture: true, passive: false });
                                                                     w.addEventListener('dblclick', function(e) {
@@ -10924,7 +10942,7 @@ let dataList = currentMode === 'REV'
                         if (!(e.altKey || onAxis)) return;
                         e.preventDefault();
                         e.stopPropagation();
-                        var f = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+                        var f = Math.exp(-Math.max(-300, Math.min(300, e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY)) * 0.0015);
                         TC.yZ = Math.max(0.2, Math.min(40, (TC.yZ || 1) * f));
                         syncAuto();
                         tcDraw();
