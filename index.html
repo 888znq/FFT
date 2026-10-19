@@ -108,6 +108,8 @@
         
                 #main-container::after { content: ''; position: absolute; left: calc(100% - 455px); bottom: 0; width: 1px; height: var(--tc-padb, 0px); background: #E2E8F0; z-index: 60; pointer-events: none; }
                 
+                        #main-container::before { content: ''; position: absolute; left: calc(100% - 375px); bottom: 0; width: 1px; height: var(--tc-padb, 0px); background: #E2E8F0; z-index: 60; pointer-events: none; }
+                
                         #app3-mainContainer { display: flex; flex-direction: column; }
         
                 #app3-mainContainer .app3-list-row { height: auto !important; flex: 1 1 0; min-height: 0; border-bottom: 1px solid var(--bg-base); }
@@ -381,6 +383,21 @@
                                                 html.pc-on body:not(#pcx) #row-index-panel .idx-cell{background:var(--pair-color) !important;background-color:var(--pair-color) !important;border-color:var(--bg-base) !important;}
                                                 html.pc-on body:not(#pcx) #row-index-panel .idx-cell:not([style*="00B0FF"]):not([style*="0, 176, 255"]){color:#000432 !important;-webkit-text-fill-color:#000432 !important;}
                                                 .idx-cell{border-radius:3px !important;}
+                                                                                                /* ===== SIZE SYSTEM (sizes only) ===== */
+                                                                                                html body div#trade-console{padding:8px 8px 10px !important;gap:6px !important;}
+                                                                                                html body div#trade-console > div{gap:6px !important;}
+                                                                                                html body div#trade-console div:has(> #tradeAmount),html body div#trade-console div:has(> #tradeExpiryVisible),html body div#trade-console div:has(> #scanMin),html body div#trade-console div:has(> #scanMax),html body div#trade-console #buyBtn,html body div#trade-console #sellBtn,html body div#trade-console #tcToggleBtn,html body div#trade-console #pairHubBtn,html body div#trade-console #logBtn,html body div#trade-console #tradeHistBtn,html body div#trade-console #accountBalance{height:32px !important;min-height:32px !important;max-height:32px !important;border-radius:16px !important;}
+                                                                                                html body div#trade-console #tradeAmount,html body div#trade-console #tradeExpiryVisible,html body div#trade-console #scanMin,html body div#trade-console #scanMax{font-size:14px !important;}
+                                                                                                html body div#trade-console #accountBalance{font-size:13px !important;line-height:30px !important;}
+                                                                                                html body div#trade-console #pairHubBtn svg,html body div#trade-console #tradeHistBtn svg{width:16px !important;height:16px !important;}
+                                                                                                html body div#trade-console .pairIconBtn::before{width:16px !important;height:16px !important;flex:0 0 16px !important;}
+                                                                                                html body div#wall-finder-pane .ctrl-row{padding:8px 8px !important;gap:6px !important;}
+                                                                                                html body div#wall-finder-pane .ctrl-row .ctrl-input,html body div#wall-finder-pane #r0OnlyBtn,html body div#wall-finder-pane #scanTimerDisplay{height:28px !important;min-height:28px !important;max-height:28px !important;line-height:28px !important;border-radius:14px !important;}
+                                                                                                html body div#wall-finder-pane .ctrl-row .ctrl-input{font-size:12px !important;}
+                                                                                                html body div#wall-finder-pane #r0OnlyBtn{font-size:10px !important;min-width:38px !important;line-height:1 !important;}
+                                                                                                html body div#wall-finder-pane #scanTimerDisplay{font-size:12px !important;min-width:48px !important;}
+                                                                                                #wall-finder-pane div[style*="letter-spacing:0.4em"]{font-size:10px !important;padding:6px 8px !important;margin:4px 8px !important;}
+                                                                                                html body #wall-finder-pane .row-red > td,html body #wall-finder-pane .row-green > td{padding:7px 4px !important;font-size:11px !important;}
 
     </style>
 
@@ -5877,7 +5894,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
-            try { var _spE2 = document.getElementById('streakPanel'); var _spH2 = _spE2 ? _spE2.clientHeight : 0; if (_spH2 > 0) { var _spF2 = Math.max(6, Math.min(14, Math.floor((_spH2 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF2) { window._spFsLast = _spF2; document.documentElement.style.setProperty('--sp-fs', _spF2); } } } catch (e) {}
+            try { var _spE2 = document.getElementById('streakPanel'); var _spH2 = _spE2 ? _spE2.clientHeight : 0; if (_spH2 > 0) { var _spF2 = Math.max(5, Math.min(13, Math.floor((_spH2 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF2) { window._spFsLast = _spF2; document.documentElement.style.setProperty('--sp-fs', _spF2); } } } catch (e) {}
                         ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
                                     ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
                         currentInstances.forEach((inst, idx) => {
@@ -9074,7 +9091,7 @@ let dataList = currentMode === 'REV'
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
                 var live = _isWithinMappedWindow() && nowSec >= 0 && nowSec < sEnd;
                 var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
-                try { document.documentElement.style.setProperty('--tc-padb', Math.max(0, H - Math.round(pbot) - 1) + 'px'); var _spE1 = document.getElementById('streakPanel'); var _spH1 = _spE1 ? _spE1.clientHeight : 0; if (_spH1 > 0) { var _spF1 = Math.max(6, Math.min(14, Math.floor((_spH1 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF1) { window._spFsLast = _spF1; document.documentElement.style.setProperty('--sp-fs', _spF1); } } } catch (e) {}
+                try { document.documentElement.style.setProperty('--tc-padb', Math.max(0, H - Math.round(pbot) - 1) + 'px'); var _spE1 = document.getElementById('streakPanel'); var _spH1 = _spE1 ? _spE1.clientHeight : 0; if (_spH1 > 0) { var _spF1 = Math.max(5, Math.min(13, Math.floor((_spH1 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF1) { window._spFsLast = _spF1; document.documentElement.style.setProperty('--sp-fs', _spF1); } } } catch (e) {}
                                 if (TC.boxesOnly) { tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM); return; }
                 var pwD = allPairData[activePair], pwC = 8, pwI;
                 if (pwD && pwD.prices) {
@@ -9082,7 +9099,7 @@ let dataList = currentMode === 'REV'
                         if (pwD.prices[pwI] !== -1) { pwC = String(pwD.prices[pwI]).length; break; }
                     }
                 }
-                PADR = Math.max(34, Math.min(84, Math.round(TC.axW || 44)));
+                PADR = Math.max(50, Math.min(84, Math.round(TC.axW || 63)));
                 plotW = W - PADL - PADR;
                 var maxLast = 0;
                 var info = [];
@@ -10587,8 +10604,19 @@ let dataList = currentMode === 'REV'
                                                 ctx.shadowBlur = 0;
                                                 ctx.fillStyle = BG;
                                                 ctx.fillStyle = '#E2E8F0';
-                                                var axPc = axIt ? axIt.color : '#E2E8F0'; ctx.fillStyle = BG; ctx.fillRect(W - PADR, 0, PADR, H); ctx.fillStyle = axPc; _calmFill(ctx, W - PADR + 2, ptop, PADR - 4, pbot - ptop);
-                                                ctx.fillStyle = BG; ctx.fillRect(0, pbot + 1, W, H - pbot - 1); ctx.fillStyle = axPc; _calmFill(ctx, PADL, pbot + 2, W - PADR - PADL - 4, H - pbot - 3);
+                                                var axPc = axIt ? axIt.color : '#E2E8F0'; ctx.fillStyle = BG; ctx.fillRect(W - PADR, 0, PADR, H); ctx.fillStyle = axPc; _calmFill(ctx, W - PADR + 4, ptop, PADR - 6, pbot - ptop - 2);
+                                                ctx.fillStyle = BG; ctx.fillRect(0, pbot + 1, W, H - pbot - 1); var _tbY = pbot + 3, _tbH = Math.max(14, H - pbot - 5), _tbM = _tbY + _tbH / 2; ctx.fillStyle = axPc; _calmFill(ctx, PADL, _tbY, W - PADR - 1 - PADL, _tbH);
+                                                                                                ctx.save();
+                                                                                                ctx.setLineDash([]);
+                                                                                                ctx.globalAlpha = 1;
+                                                                                                ctx.shadowBlur = 0;
+                                                                                                ctx.strokeStyle = '#E2E8F0';
+                                                                                                ctx.lineWidth = 1;
+                                                                                                ctx.beginPath();
+                                                                                                ctx.moveTo(Math.round(W - PADR) + 1.5, 0);
+                                                                                                ctx.lineTo(Math.round(W - PADR) + 1.5, H);
+                                                                                                ctx.stroke();
+                                                                                                ctx.restore();
                                                 ctx.strokeStyle = axLine;
                                                 ctx.lineWidth = 1;
                                                 ctx.beginPath();
@@ -10605,7 +10633,7 @@ let dataList = currentMode === 'REV'
                                                 var axLast = null, axLastY = -1000, axNeedMax = 0;
                                                 if (axIt && axIt.last >= 0) {
                                                     axLast = axIt.prices[axIt.last];
-                                                    axLastY = Math.max(ptop + 8, Math.min(pbot - 8, yOfPair(axIt, axLast)));
+                                                    axLastY = Math.max(ptop + 8, Math.min(pbot - 10, yOfPair(axIt, axLast)));
                                                 }
                                                 var axDec = Math.max(0, Math.min(8, Math.ceil(-Math.log10(axStepV) - 1e-9)));
                                                 var axStrDec = 0;
@@ -10617,28 +10645,28 @@ let dataList = currentMode === 'REV'
                                                 for (var axK = 0; axK < axTicks.length; axK++) {
                                                     var axT = axTicks[axK];
                                                     ctx.font = '10px ' + MONO;
-                                                    var axNeed = Math.ceil(ctx.measureText(axT.v.toFixed(axDec)).width) + 12;
+                                                    ctx.font = '9px ' + MONO; var axNeed = Math.ceil(ctx.measureText(axT.v.toFixed(axDec)).width) + 12; if (axLast !== null) { ctx.font = 'bold 9px ' + MONO; axNeed = Math.max(axNeed, Math.ceil(ctx.measureText(axLast.toFixed(axTagDec)).width) + 14); ctx.font = '9px ' + MONO; }
                                                     if (axK === 0) axNeedMax = 0;
                                                     if (axNeed > axNeedMax) axNeedMax = axNeed;
                                                     if (axK === axTicks.length - 1 && Math.abs(axNeedMax - (TC.axW || 0)) > 2) TC.axW = axNeedMax;
-                                                    if (axT.y < ptop + 6 + PADR * 0.4 || axT.y > pbot - 6 - PADR * 0.4) continue;
+                                                    if (axT.y < ptop + 14 || axT.y > pbot - 14 || Math.abs(axT.y - axLastY) < 14) continue;
                                                     if (Math.abs(axT.y - axLastY) < 10) continue;
                                                     ctx.strokeStyle = axLine;
-                                                    ctx.beginPath(); ctx.moveTo(W - PADR, axT.y); ctx.lineTo(W - PADR + 4, axT.y); ctx.stroke();
+                                                    ctx.beginPath(); ctx.moveTo(W - PADR, axT.y); ctx.lineTo(W - PADR + 3, axT.y); ctx.stroke();
                                                     var axTvTxt = axT.v.toFixed(axDec);
                                                                                                         var axTvW = Math.min(PADR - 8, Math.ceil(ctx.measureText(axTvTxt).width) + 12);
                                                                                                         ctx.fillStyle = axIt ? axIt.color : '#E2E8F0';
                                                                                                         ;
                                                                                                         ctx.fillStyle = BG;
                                                                                                         ctx.textAlign = 'center';
-                                                                                                        ctx.fillText(axTvTxt, W - PADR + 4 + axTvW / 2, axT.y + 0.5);
+                                                                                                        ctx.fillText(axTvTxt, W - PADR / 2 + 1, axT.y + 0.5);
                                                                                                         ctx.textAlign = 'left';
                                                 }
                                                 if (axIt && axLast !== null) {
                                                     var axLx = xOf(axIt.last);
                                                     var axTagTxt = axLast.toFixed(axTagDec);
                                                     ctx.font = 'bold 10px ' + MONO;
-                                                    var axTagW = Math.ceil(ctx.measureText(axTagTxt).width) + 14;
+                                                    ctx.font = 'bold 9px ' + MONO; var axTagW = PADR - 6;
                                                     var axGx = W - 2 - axTagW;
                                                     if (axLx >= PADL && axLx <= axGx) {
                                                         ctx.save();
@@ -10663,7 +10691,7 @@ let dataList = currentMode === 'REV'
                                                     ctx.textAlign = 'left';
                                                     ctx.strokeStyle = BG; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.stroke();
                                                                                                         ctx.fillStyle = BG;
-                                                                                                        ctx.fillText(axLast.toFixed(axTagDec), axGx + 8, axLastY + 0.5);
+                                                                                                        ctx.font = 'bold 9px ' + MONO; ctx.textAlign = 'center'; ctx.fillText(axLast.toFixed(axTagDec), axGx + axTagW / 2, axLastY + 0.5); ctx.textAlign = 'left';
                                                 }
                                                 ctx.textBaseline = 'alphabetic';
                                                 ctx.textAlign = 'center';
@@ -10683,12 +10711,13 @@ let dataList = currentMode === 'REV'
                                                     ctx.lineTo(Math.round(axTx) + 0.5, pbot + (axMajor ? 6 : 4));
                                                     ctx.stroke();
                                                     if (axTx - axHw < 2 || axTx + axHw > W - 2) continue;
+                                                                                                        if (axIt && axIt.last >= 0 && Math.abs(axTx - xOf(axIt.last)) < 60) continue;
                                                     ctx.font = (axMajor ? 'bold ' : '') + '10px ' + MONO;
                                                                                                         var axTmW = Math.ceil(ctx.measureText(axTxt).width) + 12;
                                                                                                         ctx.fillStyle = axIt ? axIt.color : '#E2E8F0';
                                                                                                         ;
                                                                                                         ctx.fillStyle = BG;
-                                                                                                        ctx.fillText(axTxt, axTx, pbot + 14);
+                                                                                                        ctx.textBaseline = 'middle'; ctx.fillText(axTxt, axTx, _tbM + 0.5);
                                                 }
                                                 if (axIt && axIt.last >= 0) {
                                                     var axNx = xOf(axIt.last);
@@ -10696,13 +10725,13 @@ let dataList = currentMode === 'REV'
                                                         var axNt = tcFmt(axIt.last, true);
                                                         ctx.font = 'bold 10px ' + MONO;
                                                         var axNw = ctx.measureText(axNt).width + 12;
-                                                        var axNl = Math.max(2, Math.min(W - PADR - axNw, axNx - axNw / 2));
+                                                        var axNl = Math.max(PADL + 3, Math.min(W - PADR - 4 - axNw, axNx - axNw / 2));
                                                         ctx.fillStyle = axIt.color;
-                                                        ctx.fillStyle = BG; _pillFill(ctx, axNl - 2, pbot, axNw + 4, 20);
-                                                                                                                ctx.fillStyle = axIt.color; _pillFill(ctx, axNl, pbot + 2, axNw, 16);
+                                                        ctx.fillStyle = BG; _pillFill(ctx, axNl - 3, _tbY, axNw + 6, _tbH);
+                                                                                                                ctx.fillStyle = axIt.color; _pillFill(ctx, axNl, _tbY + 2, axNw, _tbH - 4);
                                                         ctx.fillStyle = BG;
                                                         ctx.textAlign = 'center';
-                                                        ctx.fillText(axNt, axNl + axNw / 2, pbot + 14);
+                                                        ctx.textBaseline = 'middle'; ctx.fillText(axNt, axNl + axNw / 2, _tbM + 0.5);
                                                     }
                                                 }
                                                 ctx.restore();
