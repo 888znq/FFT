@@ -337,8 +337,10 @@
                                                 html.pc-on body:not(#pcx) .ctrl-row .custom-select-wrapper,html.pc-on body:not(#pcx) .ctrl-row .custom-select-wrapper *{background:var(--pair-color) !important;background-color:var(--pair-color) !important;border-color:var(--pair-color) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}
                                                 html.pc-on body:not(#pcx) #scanTimerDisplay{background:var(--pair-color) !important;color:#000432 !important;}
                                                 html.pc-on body:not(#pcx) #wall-finder-pane div[style*="letter-spacing:0.4em"]{background:var(--pair-color) !important;color:#000432 !important;}
-                                                html.pc-on body:not(#pcx) :is(#app3-modal,#numpadModal,#selPopupModal) > div:first-child{background:var(--pair-color) !important;}
-                                                html.pc-on body:not(#pcx) #numpadDisplay{background:var(--pair-color) !important;color:#000432 !important;}
+                                                                                                html.pc-on body:not(#pcx) :is(#app3-modal,#numpadModal,#selPopupModal) > div:first-child{background:var(--pair-color) !important;}
+                                                                                                html.pc-on body:not(#pcx) #app3-modal{background:var(--pair-color) !important;border-color:var(--bg-base) !important;}
+                                                                                                html.pc-on body:not(#pcx) #app3-modal ::-webkit-scrollbar-track{background:var(--pair-color) !important;}
+                                                                                                html.pc-on body:not(#pcx) #numpadDisplay{background:var(--pair-color) !important;color:#000432 !important;}
                                                 /* ===== 2X EXPAND: expiry, buy/sell, cycle min/max ===== */
                                                 #buyBtn,#sellBtn{height:60px !important;font-size:16px !important;}
                                                 div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){height:56px !important;box-sizing:border-box !important;}
@@ -639,8 +641,8 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </div>
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <!-- SYS button hidden — still accessible via JS -->
-                                                                                                        
-                                                                                                                                                                                                                                                                    <style>html body #trade-console #buyBtn,html body #trade-console #sellBtn{font-size:0 !important;color:transparent !important;-webkit-text-fill-color:transparent !important;text-shadow:none !important;letter-spacing:0 !important;}html body #scanTimerDisplay{border-radius:12px !important;height:24px !important;line-height:24px !important;padding:0 10px !important;box-sizing:border-box !important;display:inline-block !important;min-width:44px !important;text-align:center !important;}</style><style>html body #wall-finder-pane .ctrl-row{align-items:center !important;gap:4px !important;}html body #wall-finder-pane .ctrl-row .ctrl-input{height:24px !important;min-height:0 !important;line-height:24px !important;border-radius:12px !important;padding-top:0 !important;padding-bottom:0 !important;box-sizing:border-box !important;}html body #wall-finder-pane #minPctInput{width:100% !important;}html body #wall-finder-pane #r0OnlyBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:34px !important;padding:0 8px !important;border-radius:12px !important;line-height:1 !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #wall-finder-pane #scanTimerDisplay{height:24px !important;line-height:24px !important;border-radius:12px !important;padding:0 10px !important;min-width:44px !important;text-align:center !important;box-sizing:border-box !important;}html body #trade-console #tcToggleBtn,html body #trade-console #pairHubBtn,html body #trade-console #logBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:30px !important;width:auto !important;flex:0 0 auto !important;padding:0 6px !important;margin:0 !important;border-radius:12px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #trade-console #pairHubBtn svg,html body #trade-console #tradeHistBtn svg{width:14px !important;height:14px !important;}html body #trade-console .pairIconBtn::before{width:14px !important;height:14px !important;flex:0 0 14px !important;}html body #trade-console #accountBalance{border-radius:12px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax),html body #trade-console #buyBtn,html body #trade-console #sellBtn{border-radius:12px !important;height:24px !important;}html body #trade-console > div{align-items:center !important;}</style><style>html body #masterSysBtn{display:none !important;visibility:hidden !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;overflow:hidden !important;}</style><button id="masterSysBtn" onclick="toggleMasterEngines()" style="display:none;">SYS: MANUAL</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <style>html body #trade-console #buyBtn,html body #trade-console #sellBtn{font-size:0 !important;color:transparent !important;-webkit-text-fill-color:transparent !important;text-shadow:none !important;letter-spacing:0 !important;}html body #scanTimerDisplay{border-radius:12px !important;height:24px !important;line-height:24px !important;padding:0 10px !important;box-sizing:border-box !important;display:inline-block !important;min-width:44px !important;text-align:center !important;}</style><style>html body #wall-finder-pane .ctrl-row{align-items:center !important;gap:4px !important;}html body #wall-finder-pane .ctrl-row .ctrl-input{height:24px !important;min-height:0 !important;line-height:24px !important;border-radius:12px !important;padding-top:0 !important;padding-bottom:0 !important;box-sizing:border-box !important;}html body #wall-finder-pane #minPctInput{width:100% !important;}html body #wall-finder-pane #r0OnlyBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:34px !important;padding:0 8px !important;border-radius:12px !important;line-height:1 !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #wall-finder-pane #scanTimerDisplay{height:24px !important;line-height:24px !important;border-radius:12px !important;padding:0 10px !important;min-width:44px !important;text-align:center !important;box-sizing:border-box !important;}html body #trade-console #tcToggleBtn,html body #trade-console #pairHubBtn,html body #trade-console #logBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:0 !important;width:0 !important;flex:1 1 0 !important;padding:0 2px !important;margin:0 !important;border-radius:12px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;overflow:hidden !important;}html body #trade-console #pairHubBtn svg,html body #trade-console #tradeHistBtn svg{width:14px !important;height:14px !important;}html body #trade-console .pairIconBtn::before{width:14px !important;height:14px !important;flex:0 0 14px !important;}html body #trade-console #accountBalance{flex:0 0 calc((100% - 3px) / 2) !important;width:calc((100% - 3px) / 2) !important;max-width:calc((100% - 3px) / 2) !important;min-width:0 !important;border-radius:12px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;background:var(--pair-color, #E2E8F0) !important;background-color:var(--pair-color, #E2E8F0) !important;border-color:var(--pair-color, #E2E8F0) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax),html body #trade-console #buyBtn,html body #trade-console #sellBtn{border-radius:12px !important;height:24px !important;}html body #trade-console > div{align-items:center !important;flex-wrap:nowrap !important;}</style><style>html body #masterSysBtn{display:none !important;visibility:hidden !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;overflow:hidden !important;}</style><button id="masterSysBtn" onclick="toggleMasterEngines()" style="display:none;">SYS: MANUAL</button>
 
                                                     
 
@@ -1007,7 +1009,7 @@
 
             <button onclick="pairPickerSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>
 
-            <button onclick="pairPickerApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>
+            <!-- live apply: no APPLY button -->
 
         </div>
         
@@ -3524,15 +3526,17 @@
 
 
         function _pairUniqueColor(pair) {
-            if (pair === 'cryBTCUSD') return '#F7931A';
-            var ix = (typeof SPECIAL_ALL_PAIRS !== 'undefined' && SPECIAL_ALL_PAIRS) ? SPECIAL_ALL_PAIRS.indexOf(pair) : -1;
-            if (ix < 0) ix = ALL_PAIRS.indexOf(pair);
-            if (ix < 0) ix = 0;
-            var hue = 180 + Math.round(((ix * 0.618034) % 1) * 140);
-            var sat = (ix % 2 === 0) ? 90 : 75;
-            var lit = (ix % 3 === 0) ? 62 : ((ix % 3 === 1) ? 55 : 68);
-            return 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
-        }
+                    if (pair === 'cryBTCUSD') return '#F7931A';
+                    var ix = (typeof SPECIAL_ALL_PAIRS !== 'undefined' && SPECIAL_ALL_PAIRS) ? SPECIAL_ALL_PAIRS.indexOf(pair) : -1;
+                    if (ix < 0) ix = ALL_PAIRS.indexOf(pair);
+                    if (ix < 0) ix = 0;
+                    var hue = Math.round((ix * 137.508 + 200) % 360);
+                    var _satL = [95, 85, 90, 80];
+                    var _litL = [54, 68, 78, 60];
+                    var sat = _satL[ix % 4];
+                    var lit = _litL[Math.floor(ix / 4 + ix) % 4];
+                    return 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
+                }
         
         function bootPairUpdate() {
 
@@ -7280,6 +7284,7 @@ let dataList = currentMode === 'REV'
                                                                 };
         
                                 function pairPickerToggleGroup(groupKey) {
+                                                                    _ppLiveApplySoon();
         
                                     var groupPairs = PAIR_PICKER_GROUPS[groupKey] || [];
         
@@ -7686,6 +7691,8 @@ let dataList = currentMode === 'REV'
             _renderPairGrid('');
 
             document.getElementById('pairPickerSearch').value = '';
+                        var _ppFt = document.querySelector('#pairPickerModal span[style*="color:#555"]');
+                        if (_ppFt) _ppFt.textContent = 'tap to toggle \u00b7 applies when you close';
 
             document.getElementById('pairPickerModal').style.display = 'flex';
 
@@ -7700,8 +7707,12 @@ let dataList = currentMode === 'REV'
 
 
         function closePairPicker() {
-            _closeModalPair('pairPickerModal', 'pairPickerOverlay');
-        }
+                    var _ppM = document.getElementById('pairPickerModal');
+                    var _ppWasOpen = !!(_ppM && _ppM.style.display !== 'none');
+                    if (_ppApplyTimer) { clearTimeout(_ppApplyTimer); _ppApplyTimer = null; }
+                    _closeModalPair('pairPickerModal', 'pairPickerOverlay');
+                    if (_ppWasOpen) pairPickerApply();
+                }
 
 
 
@@ -7797,6 +7808,7 @@ let dataList = currentMode === 'REV'
 
 
         function pairPickerToggle(pair, btn) {
+                    _ppLiveApplySoon();
             var pc = _ppPairCol(pair);
                         btn.style.setProperty('--pcol', pc);
                         if (_ppTempSelected.has(pair)) btn.removeAttribute('data-sel');
@@ -7849,6 +7861,7 @@ let dataList = currentMode === 'REV'
         
         
                 function pairPickerSelectAll() {
+                                    _ppLiveApplySoon();
         
                     ALL_PAIRS.forEach(p => _ppTempSelected.add(p));
         
@@ -7865,6 +7878,7 @@ let dataList = currentMode === 'REV'
         
         
                 function pairPickerSelectNone() {
+                                    _ppLiveApplySoon();
         
                     _ppTempSelected.clear();
         
@@ -7888,7 +7902,13 @@ let dataList = currentMode === 'REV'
 
 
 
-        function _updatePairPickerCount() {
+        var _ppApplyTimer = null;
+        
+                function _ppLiveApplySoon() {
+                                    /* selection is applied when the picker closes */
+                                }
+        
+                function _updatePairPickerCount() {
 
             const n = _ppTempSelected.size;
 
@@ -8041,7 +8061,7 @@ let dataList = currentMode === 'REV'
                             var _pickerTargetPairs = activePairs !== null ? activePairs : ALL_PAIRS;
                             _pickerTargetPairs.forEach(function(p) { ensurePairFetched(p); });
                 
-                            closePairPicker();
+                            /* live apply: modal stays open */
         
                     if (activeCat === 'CRY' && typeof window.mmtSetPairs === 'function') {
                         const fullCryList = [
@@ -8752,15 +8772,17 @@ let dataList = currentMode === 'REV'
         
             window._tcPairColorFn = function(p) { return tcPairColor(p); };
             function tcPairColor(pair) {
-            if (pair === 'cryBTCUSD') return '#F7931A';
-                var ix = SPECIAL_ALL_PAIRS.indexOf(pair);
-                if (ix < 0) ix = ALL_PAIRS.indexOf(pair);
-                if (ix < 0) ix = 0;
-                var hue = 180 + Math.round(((ix * 0.618034) % 1) * 140);
-                var sat = (ix % 2 === 0) ? 90 : 75;
-                var lit = (ix % 3 === 0) ? 62 : ((ix % 3 === 1) ? 55 : 68);
-                return 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
-            }
+                        if (pair === 'cryBTCUSD') return '#F7931A';
+                            var ix = SPECIAL_ALL_PAIRS.indexOf(pair);
+                            if (ix < 0) ix = ALL_PAIRS.indexOf(pair);
+                            if (ix < 0) ix = 0;
+                            var hue = Math.round((ix * 137.508 + 200) % 360);
+                            var _satL = [95, 85, 90, 80];
+                            var _litL = [54, 68, 78, 60];
+                            var sat = _satL[ix % 4];
+                            var lit = _litL[Math.floor(ix / 4 + ix) % 4];
+                            return 'hsl(' + hue + ',' + sat + '%,' + lit + '%)';
+                        }
             
             window._tcPairColorFn = tcPairColor;
             
@@ -12058,6 +12080,7 @@ let dataList = currentMode === 'REV'
                 (function() {
                 var _selTmp = new Set();
                 var _OV = 'pairSelOverlay';
+                                var _selInit = '';
                 var _MD = 'pairSelPopup';
                 
                 function _nm(p) {
@@ -12126,7 +12149,6 @@ let dataList = currentMode === 'REV'
                 '<div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">' +
                 '<button onclick="pairSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>' +
                 '<button onclick="pairSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>' +
-                '<button onclick="pairSelectApply()" style="flex:2; background:var(--accent-green); color:#000432; border:1px solid var(--accent-green); padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">APPLY ✓</button>' +
                 '</div>' +
                 '<div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">' +
                 '<input id="pairSelSearch" type="text" placeholder="Search pair..." oninput="pairSelectFilter()" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">' +
@@ -12134,7 +12156,7 @@ let dataList = currentMode === 'REV'
                 '<div id="pairSelGrid" style="flex:1; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>' +
                 '<div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">' +
                 '<span id="pairSelCount"></span>' +
-                '<span style="color:#555;">tap to select / deselect</span>' +
+                '<span style="color:#555;">tap to select / deselect · applies on close</span>' +
                 '</div>';
                 md.addEventListener('click', function(e) {
                 var t = (e.target && e.target.closest) ? e.target.closest('button[data-pair]') : null;
@@ -12153,6 +12175,7 @@ let dataList = currentMode === 'REV'
                 _build();
                 var base = (activePairs !== null && activePairs !== undefined) ? activePairs : ALL_PAIRS;
                 _selTmp = new Set(base.filter(function(p) { return ALL_PAIRS.indexOf(p) !== -1; }));
+                                _selInit = ALL_PAIRS.filter(function(p) { return _selTmp.has(p); }).join(',');
                 var inp = document.getElementById('pairSelSearch');
                 if (inp) inp.value = '';
                 _renderGrid();
@@ -12161,11 +12184,16 @@ let dataList = currentMode === 'REV'
                 };
                 
                 window.closePairSelectPopup = function() {
-                var md = document.getElementById(_MD);
-                var ov = document.getElementById(_OV);
-                if (md) md.style.display = 'none';
-                if (ov) ov.style.display = 'none';
-                };
+                                var md = document.getElementById(_MD);
+                                var ov = document.getElementById(_OV);
+                                var wasOpen = !!(md && md.style.display === 'flex');
+                                if (md) md.style.display = 'none';
+                                if (ov) ov.style.display = 'none';
+                                if (wasOpen) {
+                                var nowSel = ALL_PAIRS.filter(function(p) { return _selTmp.has(p); }).join(',');
+                                if (nowSel !== _selInit) { _selInit = nowSel; window.pairSelectApply(); }
+                                }
+                                };
                 
                 window.pairSelectFilter = function() {
                 _renderGrid();
