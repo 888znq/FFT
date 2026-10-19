@@ -271,7 +271,7 @@
                         .row-red td,.row-green td{border-right:1px solid #000432 !important;box-shadow:inset -1px 0 0 #000432;}
                         .row-red td:last-child,.row-green td:last-child{border-right:none !important;box-shadow:none;}
                         #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-top-color:#000432 !important;border-bottom-color:#000432 !important;}
-                        #streakPanel{border-left-color:#000432 !important;border-right-color:#000432 !important;}
+                        #streakPanel{border-left-color:#E2E8F0 !important;border-right-color:#000432 !important;}
                         #row-index-panel{border-left-color:#000432 !important;}
                         
                         /* ===== PILL SHAPE EVERYWHERE ===== */
@@ -9085,7 +9085,17 @@ let dataList = currentMode === 'REV'
                 var left = TC.left, right = left + plotW * spp;
                 var i0 = Math.max(0, Math.floor(left));
                 var st = Math.max(1, Math.floor(spp / 2));
-                var xOf = function(ix2) { return PADL + (ix2 - left) / spp; };
+                ctx.save();
+                                ctx.strokeStyle = '#E2E8F0';
+                                ctx.lineWidth = 1;
+                                ctx.setLineDash([]);
+                                ctx.globalAlpha = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(Math.round(W - PADR) + 0.5, 0);
+                                ctx.lineTo(Math.round(W - PADR) + 0.5, Math.round(pbot) + 0.5);
+                                                                ctx.stroke();
+                                                                ctx.restore();
+                                var xOf = function(ix2) { return PADL + (ix2 - left) / spp; };
                 var yOfPair = function(itx, v2) { return ptop + (1 - (v2 - itx.lo) / (itx.hi - itx.lo)) * (pbot - ptop); };
             
                 for (pi = 0; pi < info.length; pi++) {
@@ -9179,7 +9189,7 @@ let dataList = currentMode === 'REV'
                             pxTicks.push({ v: gxV, y: gxY });
                             ctx.strokeStyle = 'rgba(255,255,255,0.08)';
                             ctx.lineWidth = 1;
-                            ctx.beginPath(); ctx.moveTo(PADL, gxY); ctx.lineTo(W - PADR, gxY); ctx.stroke();
+                            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.beginPath(); ctx.moveTo(PADL, gxY - 0.5); ctx.lineTo(W, gxY - 0.5); ctx.stroke();
                         }
                     }
                     continue;
@@ -10558,8 +10568,14 @@ let dataList = currentMode === 'REV'
                                                 ctx.beginPath();
                                                 ctx.moveTo(W - PADR + 0.5, ptop);
                                                 ctx.lineTo(W - PADR + 0.5, pbot + 0.5);
-                                                ctx.lineTo(PADL, pbot + 0.5);
-                                                ctx.stroke();
+                                                                                                ctx.stroke();
+                                                                                                                                                ctx.save();
+                                                                                                                                                ctx.setLineDash([]);
+                                                                                                                                                ctx.globalAlpha = 1;
+                                                                                                                                                ctx.fillStyle = '#E2E8F0';
+                                                                                                                                                var mgY = Math.round(pbot);
+                                                                                                                                                                                                ctx.fillRect(0, mgY - 1, W, 2);
+                                                                                                                                                ctx.restore();
                                                 var axLast = null, axLastY = -1000, axNeedMax = 0;
                                                 if (axIt && axIt.last >= 0) {
                                                     axLast = axIt.prices[axIt.last];
@@ -11629,11 +11645,11 @@ let dataList = currentMode === 'REV'
                 ctx.textAlign = 'left';
         
                 // Price line
-                if (hasData) {
-                    ctx.strokeStyle = '#d8e4f7';
-                    ctx.lineWidth = 1.2;
-                    ctx.lineJoin = 'round';
-                    ctx.beginPath();
+                                if (hasData) {
+                                    ctx.strokeStyle = '#d8e4f7';
+                                    ctx.lineWidth = 1;
+                                    ctx.lineJoin = 'round';
+                                    ctx.beginPath();
                     var lastI = -99999;
                     for (i = i0; i <= i1; i += st) {
                         p = prices[i];
