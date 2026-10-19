@@ -86,17 +86,43 @@
 
 
 
-        #streakPanel { grid-column: 2; grid-row: 1; background: var(--bg-panel); border-left: 1px solid var(--border); border-right: 1px solid var(--border); overflow: hidden; height: 100%; position: relative; display: flex; flex-direction: column; }
+        #streakPanel { grid-column: 2; grid-row: 1; background: var(--bg-panel); border-left: 1px solid var(--border); border-right: none; overflow: hidden; height: 100%; position: relative; display: flex; flex-direction: column; }
 
         #app3-mainContainer { flex: 1; position: relative; overflow: hidden; }
 
 
 
-        #row-index-panel { grid-column: 3; grid-row: 1; background: var(--bg-panel); border-left: 1px solid var(--border); overflow: hidden; height: 100%; }
+        #row-index-panel { grid-column: 3; grid-row: 1; background: var(--bg-panel); border-left: none; overflow: hidden; height: 100%; position: relative; }
+        
+                #row-index-panel::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: #E2E8F0; z-index: 50; pointer-events: none; }
+        
+                #app3-mainContainer .app3-list-row:last-child { border-bottom: 1px solid #E2E8F0; }
+        
+                #row-index-panel .idx-cell:last-child { border-bottom: 1px solid #E2E8F0 !important; }
+        
+                html.pc-on body:not(#pcx) #row-index-panel .idx-cell:last-child { border-bottom: 1px solid #E2E8F0 !important; }
 
 
 
-        .idx-cell { display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--bg-base); background: #E2E8F0; color: var(--bg-base); font-weight: 700; }
+        #streakPanel, #row-index-panel { align-self: start; height: calc(100% - var(--tc-padb, 0px)) !important; border-bottom: 1px solid #E2E8F0; box-sizing: border-box; }
+        
+                #main-container::after { content: ''; position: absolute; left: calc(100% - 455px); bottom: 0; width: 1px; height: var(--tc-padb, 0px); background: #E2E8F0; z-index: 60; pointer-events: none; }
+                
+                        #app3-mainContainer { display: flex; flex-direction: column; }
+        
+                #app3-mainContainer .app3-list-row { height: auto !important; flex: 1 1 0; min-height: 0; border-bottom: 1px solid var(--bg-base); }
+        
+                #app3-mainContainer .app3-list-row:last-child { border-bottom: none !important; }
+        
+                #app3-mainContainer .app3-list-col { font-size: var(--sp-fs, 10px) !important; line-height: 1; overflow: hidden; }
+        
+                #row-index-panel { display: flex; flex-direction: column; }
+        
+                #row-index-panel .idx-cell { height: auto !important; flex: 1 1 0; min-height: 0; font-size: var(--sp-fs, 10px) !important; line-height: 1; overflow: hidden; }
+        
+                html.pc-on body:not(#pcx) #row-index-panel .idx-cell:last-child { border-bottom: none !important; }
+        
+                .idx-cell { display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--bg-base); background: #E2E8F0; color: var(--bg-base); font-weight: 700; }
 
                 .app3-list-row { display: flex; width: 100%; border-bottom: 1px solid var(--bg-base); cursor: pointer; transition: background 0.1s ease; }
 
@@ -5851,8 +5877,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
-            ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
-                        ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
+            try { var _spE2 = document.getElementById('streakPanel'); var _spH2 = _spE2 ? _spE2.clientHeight : 0; if (_spH2 > 0) { var _spF2 = Math.max(6, Math.min(14, Math.floor((_spH2 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF2) { window._spFsLast = _spF2; document.documentElement.style.setProperty('--sp-fs', _spF2); } } } catch (e) {}
+                        ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
+                                    ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
                         currentInstances.forEach((inst, idx) => {
                         
                                         const xPos = Math.round((inst.col * CELL_W) - scrollL);
@@ -9047,7 +9074,8 @@ let dataList = currentMode === 'REV'
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
                 var live = _isWithinMappedWindow() && nowSec >= 0 && nowSec < sEnd;
                 var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
-                if (TC.boxesOnly) { tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM); return; }
+                try { document.documentElement.style.setProperty('--tc-padb', Math.max(0, H - Math.round(pbot) - 1) + 'px'); var _spE1 = document.getElementById('streakPanel'); var _spH1 = _spE1 ? _spE1.clientHeight : 0; if (_spH1 > 0) { var _spF1 = Math.max(6, Math.min(14, Math.floor((_spH1 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF1) { window._spFsLast = _spF1; document.documentElement.style.setProperty('--sp-fs', _spF1); } } } catch (e) {}
+                                if (TC.boxesOnly) { tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM); return; }
                 var pwD = allPairData[activePair], pwC = 8, pwI;
                 if (pwD && pwD.prices) {
                     for (pwI = Math.min(pwD.prices.length - 1, Math.max(0, nowSec)); pwI >= 0; pwI--) {
@@ -10572,7 +10600,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                 ctx.globalAlpha = 1;
                                                                                                                                                 ctx.fillStyle = '#E2E8F0';
                                                                                                                                                 var mgY = Math.round(pbot);
-                                                                                                                                                                                                ctx.fillRect(0, mgY - 1, W, 2);
+                                                                                                                                                                                                ctx.fillRect(0, mgY, W, 1);
                                                                                                                                                 ctx.restore();
                                                 var axLast = null, axLastY = -1000, axNeedMax = 0;
                                                 if (axIt && axIt.last >= 0) {
