@@ -339,6 +339,60 @@
                                                 #hidePairsModal button,#swModal button,#pairPickerModal button,#specialBtnModal button,#evtLogModal button,#personalize-modal button,#history-modal button,#pairHubPanel button{border-radius:6px !important;}
                                                 #hidePairsModal input,#swModal input,#pairPickerModal input,#specialBtnModal input,#hidePairsModal select,#specialBtnModal select{border-radius:6px !important;}
                                                 #hidePairsGrid > *,#pairPickerGrid > *,#sbPairsGrid > *,#swPairsGrid > *{border-radius:6px !important;}
+                                                /* ===== PAIR PICKER: only ALL + pair buttons, boot-tile look, 6 columns ===== */
+                                                html body div:has(> #pairSelGrid){width:94vw !important;max-width:580px !important;}
+                                                html body div:has(> #pairSelGrid) > div:nth-child(1),html body div:has(> #pairSelGrid) > div:nth-child(3),html body div:has(> #pairSelGrid) > div:nth-child(5){display:none !important;}
+                                                html body div:has(> #pairSelGrid) button[onclick*="pairSelectNone"]{display:none !important;}
+                                                html body div:has(> #pairSelGrid) > div:nth-child(2){border-bottom:none !important;padding:8px 8px 0 !important;}
+                                                html body div:has(> #pairSelGrid) > div:nth-child(2) > button[onclick*="pairSelectAll"]{flex:1 1 100% !important;background:#FFD700 !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border:1px solid #FFD700 !important;border-radius:999px !important;font-size:9px !important;font-weight:800 !important;letter-spacing:0.05em !important;}
+                                                html body div:has(> #pairSelGrid) #pairSelGrid{grid-template-columns:repeat(6,1fr) !important;gap:4px !important;padding:8px !important;}
+                                                html body div:has(> #pairSelGrid) #pairSelGrid > div{display:none !important;}
+                                                html body div:has(> #pairSelGrid) #pairSelGrid > button{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border:1px solid var(--pcol) !important;border-radius:999px !important;padding:3px 4px !important;font-size:9px !important;font-weight:800 !important;letter-spacing:0.05em !important;font-family:inherit !important;text-align:center !important;white-space:nowrap !important;overflow:hidden !important;}
+                                                html body #pairPickerModal{width:94vw !important;max-width:580px !important;}
+                                                html body #pairPickerModal > div:nth-child(1),html body #pairPickerModal > div:nth-child(3),html body #pairPickerModal > div:nth-child(4),html body #pairPickerModal > div:nth-child(6){display:none !important;}
+                                                html body #pairPickerModal button[onclick*="pairPickerSelectNone"]{display:none !important;}
+                                                html body #pairPickerModal > div:nth-child(2){border-bottom:none !important;padding:8px 8px 0 !important;}
+                                                html body #pairPickerModal > div:nth-child(2) > button{flex:1 1 100% !important;}
+                                                html body #pairPickerGrid{grid-template-columns:repeat(6,1fr) !important;gap:4px !important;padding:8px !important;font-size:9px !important;font-weight:800 !important;letter-spacing:0.05em !important;}
+                                                html body #pairPickerGrid > button{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border:1px solid var(--pcol) !important;border-radius:999px !important;padding:3px 4px !important;font-size:9px !important;font-weight:800 !important;letter-spacing:0.05em !important;font-family:inherit !important;text-align:center !important;white-space:nowrap !important;overflow:hidden !important;opacity:0.6;}
+                                                html body #pairPickerGrid > button[data-sel="1"]{opacity:1;}
+                                                html body #pairPickerGrid > button::before{content:'○ ';}
+                                                html body #pairPickerGrid > button[data-sel="1"]::before{content:'● ';}
+                                                /* ===== BOOT SEQUENCE: only pair tiles + boot log ===== */
+                                                body #bootOverlay > div > div:first-child{display:none !important;}
+                                                body #bootOverlay > div > div:nth-child(2){display:none !important;}
+                                                body #bootOverlay #bootStatusLine{display:none !important;}
+                                                /* ===== MERGED BIG PILL: boot tiles + pair popup tiles ===== */
+                                                html body #bootOverlay #bootPairGrid,html body div:has(> #pairSelGrid) #pairSelGrid{display:flex !important;flex-wrap:wrap !important;gap:0 !important;border-radius:26px !important;overflow:hidden !important;}
+                                                html body div:has(> #pairSelGrid) #pairSelGrid{padding:0 !important;margin:8px !important;flex:0 0 auto !important;}
+                                                html body #bootOverlay #bootPairGrid > div[data-pc],html body div:has(> #pairSelGrid) #pairSelGrid > button,html body #pairPickerGrid > button{flex:1 1 15% !important;min-width:0 !important;margin:0 !important;padding:7px 4px !important;border:none !important;border-radius:0 !important;opacity:1 !important;box-shadow:inset 0 0 0 0.5px rgba(0,4,50,0.55) !important;}
+                                                html body #bootOverlay #bootPairGrid > div[data-st="done"],html body div:has(> #pairSelGrid) #pairSelGrid > button[data-sel="1"],html body #pairPickerGrid > button[data-sel="1"]{box-shadow:inset 0 0 0 2px #FFFFFF !important;}
+                                                /* ===== BOOT: tiles + log merged into ONE big pill ===== */
+                                                html body #bootOverlay #bootPairGrid{margin-bottom:0 !important;border-radius:26px 26px 0 0 !important;}
+                                                html body #bootOverlay #bootLogBox{margin:0 !important;border:none !important;border-top:1px solid rgba(0,4,50,0.55) !important;border-radius:0 0 26px 26px !important;width:100% !important;box-sizing:border-box !important;padding:10px 18px !important;}
+                                                /* ===== HIDE GREEN SCROLLBARS (boot log + pair grids) ===== */
+                                                html body #bootOverlay #bootLogBox,html body #pairSelGrid,html body #pairPickerGrid{scrollbar-width:none !important;-ms-overflow-style:none !important;}
+                                                html body #bootOverlay #bootLogBox::-webkit-scrollbar,html body #pairSelGrid::-webkit-scrollbar,html body #pairPickerGrid::-webkit-scrollbar{width:0 !important;height:0 !important;display:none !important;}
+                                                /* ===== POPUPS LOOK SAME AS BOOT: no outer box, ALL = top of the pill, tiles = bottom ===== */
+                                                html body #pairPickerModal,html body div:has(> #pairSelGrid){background:transparent !important;border:none !important;box-shadow:none !important;width:94vw !important;max-width:580px !important;}
+                                                html body #pairPickerModal > div:nth-child(2),html body div:has(> #pairSelGrid) > div:nth-child(2){padding:0 !important;margin:8px 8px 0 !important;border:none !important;background:transparent !important;}
+                                                html body #pairPickerModal > div:nth-child(2) > button[onclick*="SelectAll"],html body div:has(> #pairSelGrid) > div:nth-child(2) > button[onclick*="SelectAll"],html body #pairPickerModal > div:nth-child(2) > button[onclick*="pairPickerSelectAll"]{flex:1 1 100% !important;padding:9px 4px !important;background:#FFD700 !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border:none !important;border-radius:26px 26px 0 0 !important;box-shadow:inset 0 -1px 0 rgba(0,4,50,0.55) !important;font-size:9px !important;font-weight:800 !important;letter-spacing:0.05em !important;}
+                                                html body #pairPickerModal #pairPickerGrid,html body div:has(> #pairSelGrid) #pairSelGrid{display:flex !important;flex-wrap:wrap !important;gap:0 !important;padding:0 !important;margin:0 8px 8px !important;flex:1 1 auto !important;min-height:0 !important;border-radius:0 0 26px 26px !important;overflow-x:hidden !important;overflow-y:auto !important;}
+                                                html body #pairPickerModal #pairPickerGrid > button{flex:1 1 15% !important;min-width:0 !important;margin:0 !important;padding:7px 4px !important;border:none !important;border-radius:0 !important;opacity:1 !important;}
+                                                /* ===== SEPARATORS: solid #000432 lines between segments ===== */
+                                                html body #bootOverlay #bootPairGrid,html body #pairPickerModal #pairPickerGrid,html body div:has(> #pairSelGrid) #pairSelGrid{gap:1px !important;background:#000432 !important;}
+                                                html body #bootOverlay #bootPairGrid > div[data-pc],html body #pairPickerModal #pairPickerGrid > button,html body div:has(> #pairSelGrid) #pairSelGrid > button{box-shadow:none !important;}
+                                                html body #bootOverlay #bootPairGrid > div[data-st="done"],html body #pairPickerModal #pairPickerGrid > button[data-sel="1"],html body div:has(> #pairSelGrid) #pairSelGrid > button[data-sel="1"]{box-shadow:inset 0 0 0 2px #FFFFFF !important;}
+                                                html body #bootOverlay #bootLogBox{border-top:1px solid #000432 !important;}
+                                                html body #pairPickerModal > div:nth-child(2) > button[onclick*="SelectAll"],html body div:has(> #pairSelGrid) > div:nth-child(2) > button[onclick*="SelectAll"]{box-shadow:inset 0 -1px 0 #000432 !important;}
+                                                /* ===== TRUE PAIR COLOURS + #000432 TEXT (boot tiles + both pair popups) ===== */
+                                                html body #bootOverlay #bootPairGrid > div[data-pc]{background:var(--pbg) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border-color:transparent !important;}
+                                                html body div:has(> #pairSelGrid) #pairSelGrid > button{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}
+                                                html body #pairPickerModal #pairPickerGrid > button{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}
+                                                html body #pairPickerModal #pairPickerGrid > button[data-sel="1"],html body div:has(> #pairSelGrid) #pairSelGrid > button[data-sel="1"]{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border-color:transparent !important;}
+                                                /* ===== DIM / BRIGHT STATE: dim = not fetched / not selected, bright = fetched / selected ===== */
+                                                html body #bootOverlay #bootPairGrid > div[data-pc]:not([data-st="done"]),html body #pairPickerModal #pairPickerGrid > button:not([data-sel="1"]),html body div:has(> #pairSelGrid) #pairSelGrid > button:not([data-sel="1"]){opacity:0.5 !important;box-shadow:none !important;}
+                                                html body #bootOverlay #bootPairGrid > div[data-pc][data-st="done"],html body #pairPickerModal #pairPickerGrid > button[data-sel="1"],html body div:has(> #pairSelGrid) #pairSelGrid > button[data-sel="1"]{opacity:1 !important;box-shadow:none !important;}
                                                                                                 #app3-modal button,#numpadModal button,#selPopupModal button{border-radius:6px !important;}
                                                                                                 #app3-modal input,#app3-modal select,#numpadModal input,#selPopupModal input{border-radius:6px !important;}
                                                                                                 #app3-modal > div:first-child{border-radius:6px 6px 0 0 !important;}
@@ -3680,7 +3734,7 @@
                 }
                 var _bbg = (st === 'err') ? 'transparent' : ((st === 'done') ? _bpc : 'color-mix(in srgb, ' + _bpc + ' ' + (st === 'fetching' ? 60 : (st === 'cache' ? 40 : 18)) + '%, transparent)');
                 var _bfg = (st === 'done') ? '#000432' : ((st === 'wait' || st === 'err') ? _bpc : '#FFFFFF');
-                return `<div data-pc="1" style="--pbg:${_bpc};--pfg:#000432;--pbc:${_bpc};padding:3px 4px;border:1px solid ${_bpc};background:${_bpc};border-radius:2px;color:#000432;opacity:${st==='wait'?0.6:1};text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
+                return `<div data-pc="1" data-st="${st}" style="--pbg:${_bpc};--pfg:#000432;--pbc:${_bpc};padding:3px 4px;border:1px solid ${_bpc};background:${_bpc};border-radius:2px;color:#000432;opacity:1;text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
 
             }).join('');
 
@@ -12388,7 +12442,7 @@ let dataList = currentMode === 'REV'
                                 bg = on ? pcl : 'var(--bg-base)';
                 col = on ? '#000432' : '#FFFFFF';
                 brd = on ? pcl : '#444';
-                return '<button data-pair="' + p + '"' + (on ? ' data-sel="1"' : '') + ' style="--pcol:' + pcl + '; background:' + bg + '; color:' + col + '; border:1px solid ' + brd + '; padding:6px 4px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.3px; font-family:JetBrains Mono,monospace;">' + _nm(p) + '</button>';
+                return '<button data-pair="' + p + '"' + (on ? ' data-sel="1"' : '') + ' style="--pcol:' + pcl + ';opacity:1;cursor:pointer;">' + (on ? '\u25CF ' : '\u25CB ') + _nm(p) + '</button>';
                 }).join('');
                 var gOf = function(p) {
                 if (/^cry/.test(p)) return 'CRYPTO';
@@ -13726,3 +13780,4 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                 </body>
                                                                                                                                                                                 
                                                                                                                                                                                         </html> 
+​​​
