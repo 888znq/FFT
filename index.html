@@ -226,7 +226,7 @@
         :is([style*="translate(-50%,-50%)"],[style*="translate(-50%, -50%)"],#app3-modal,#numpadModal,#selPopupModal) > div:first-child{background:#FFD700 !important;}
         :is([style*="translate(-50%,-50%)"],[style*="translate(-50%, -50%)"],#app3-modal,#numpadModal,#selPopupModal) > div:first-child [style*="color"],:is([style*="translate(-50%,-50%)"],[style*="translate(-50%, -50%)"],#app3-modal,#numpadModal,#selPopupModal) > div:first-child [style*="background"]{background:transparent !important;}
         :is([style*="translate(-50%,-50%)"],[style*="translate(-50%, -50%)"],#app3-modal,#numpadModal,#selPopupModal) ::-webkit-scrollbar-track{background:#CBD5E1 !important;}
-        #accountBalance{background:#FFD700 !important;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}
+        #accountBalance{background:#FFD700 !important;color:var(--bg-base) !important;padding:0 6px !important;border-radius:2px;align-self:stretch;display:flex !important;align-items:center;justify-content:center;border:1px solid transparent;font-family:'JetBrains Mono',monospace;font-size:14px !important;font-weight:800;}
         #accountBalance[style*="14, 203, 129"]{background:#0ecb81 !important;}
         .pair-boot-toast{background:#FFD700 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;}
         .pair-boot-toast[style*="46, 213, 115"]{background:var(--accent-green) !important;}
@@ -249,6 +249,20 @@
         #tcWrap > div[style*="pointer-events"] [style*="color:#2ED573"]{background:var(--accent-green);padding:0 4px;border-radius:2px;}
         #tcWrap > div[style*="pointer-events"] [style*="color:#E63946"]{background:var(--accent-red);padding:0 4px;border-radius:2px;}
         #tcWrap > div[style*="pointer-events"] [style*="color:#FFD700"]{background:#FFD700;padding:0 4px;border-radius:2px;}
+                #wall-finder-pane div[style*="letter-spacing:0.4em"]{background:#E2E8F0 !important;color:var(--bg-base) !important;}
+                #peaksTableBodyRev td[colspan],#peaksTableBodyMom td[colspan]{background:#E2E8F0 !important;color:var(--bg-base) !important;}
+                .row-red *,.row-green *{color:var(--bg-base) !important;}
+                .ctrl-row > span:has(.ctrl-input) > span{color:var(--bg-base) !important;}
+                #r0OnlyBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;}
+                #r0OnlyBtn[style*="255, 215, 0"]{background:#FFD700 !important;}
+                #r0OnlyBtn[style*="46, 213, 115"]{background:var(--accent-green) !important;}
+                .title-area h2,.input-group label,.cycle-box,#stats{background:#E2E8F0 !important;color:var(--bg-base) !important;text-shadow:none !important;padding:2px 6px;border-radius:2px;}
+                .trinity-input,.btn-toggle,.btn-toggle.mode-rev{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;}
+                        .row-red td,.row-green td{border-right:1px solid #000432 !important;box-shadow:inset -1px 0 0 #000432;}
+                        .row-red td:last-child,.row-green td:last-child{border-right:none !important;box-shadow:none;}
+                        #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-top-color:#000432 !important;border-bottom-color:#000432 !important;}
+                        #streakPanel{border-left-color:#000432 !important;border-right-color:#000432 !important;}
+                        #row-index-panel{border-left-color:#000432 !important;}
 
     </style>
 
@@ -271,9 +285,9 @@
                                 #mmt-reset-badge {
                                     position: absolute; top: 50%; left: 50%;
                                     transform: translate(-50%,-50%);
-                                    background: rgba(7,11,18,0.96);
+                                    background: #E2E8F0;
                                     border: 1px solid #2a4a7a;
-                                    color: #4a9eff; font-size: 13px; font-weight: 700;
+                                    color: #000432; font-size: 13px; font-weight: 700;
                                     padding: 10px 28px; border-radius: 4px;
                                     display: none; letter-spacing: 2px; z-index: 10;
                                 }
@@ -503,7 +517,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       <button id="tcToggleBtn" class="pairIconBtn" data-mode="TICK" title="Tick / Grid" aria-label="Tick / Grid" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">TICK</button><button id="pairHubBtn" title="Pairs" aria-label="Pairs" onclick="openPairSelectPopup()" style="flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:28px; padding:0 6px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.3c0 3.4 6 1.6 6 5 0 1.3-1.3 2.2-3 2.2s-3-1.1-3-2.5"/><path d="M12 4.5V7M12 17v2.5"/></svg></button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:2px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='var(--bg-base)';b.style.color='#FFFFFF';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:2px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </div>
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <!-- SYS button hidden — still accessible via JS -->
@@ -516,7 +530,7 @@
                                                                                                                                                             <div style="grid-column: span 2; display:flex; align-items:center; gap:3px;">
                                                                                                                                                             <div style="flex:1.2; display:flex; align-items:center; justify-content:center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; min-width:0;"><input type="number" id="tradeAmount" value="0.50" step="0.10" min="0.01" style="background: transparent; border: none; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; width: 100%; min-width:0; outline: none; text-align: center;"></div>
                                                                                                                                                             <div title="Expiry (s)" style="flex:1; display:flex; align-items:center; justify-content:center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; box-sizing:border-box; min-width:0;"><input type="number" id="tradeExpiryVisible" value="300" min="1" style="background: transparent; border: none; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; width: 100%; min-width:0; outline: none; text-align: center;"></div>
-                                                                                                                                                            <span id="accountBalance" title="Tap to switch DEMO / REAL" onclick="toggleAccountType()" style="flex:2; min-width:0; text-align:center; color:#FFD700; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">$--</span>
+                                                                                                                                                            <span id="accountBalance" title="Tap to switch DEMO / REAL" onclick="toggleAccountType()" style="flex:2; min-width:0; text-align:center; color:#FFD700; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">--</span>
                                                                                                                                                             </div>
                                                                                                                                                             <!-- ROW T2: BUY | SELL | HISTORY -->
                                                                                                                                                             <div style="grid-column: span 2; display:flex; align-items:center; gap:3px;">
@@ -669,11 +683,11 @@
 
     <style>
     #bootOverlay{background:#000432 !important;}
-    #bootOverlay > div > div:first-child{color:#FFD700 !important;}
+    #bootOverlay > div > div:first-child{background:#FFD700 !important;color:#000432 !important;}
     #bootOverlay > div > div:nth-child(2){border-color:#2A3A8F !important;}
     #bootProgressBar{background:#2ED573 !important;}
     #bootLogBox{border-color:#2A3A8F !important;background:transparent !important;}
-    #bootStatusLine{color:#00B0FF !important;}
+    #bootStatusLine{background:#E2E8F0 !important;color:#000432 !important;}
     </style>
     <!-- ══ HIDE PAIRS MODAL ══ -->
     
@@ -5687,7 +5701,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 if (yPos > -CELL_H && yPos < viewH) {
 
-                    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(0, yPos, viewW, CELL_H);
+                    /* yellow row highlight removed */
 
                 }
 
@@ -5724,7 +5738,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                                                                 ctx.textAlign = "center";
                                                                                                                                 ctx.textBaseline = "middle";
                                                                                                                                 ctx.fillStyle = "#FFD700";
-                                                                                                                                ctx.fillText(inst.isFalse ? ("F" + (inst.falseSeq || 1)) : "T", xPos + CELL_W - 7, yPos + 8);
+                                                                                                                                var _tfT = inst.isFalse ? ("F" + (inst.falseSeq || 1)) : "T"; var _tfW = ctx.measureText(_tfT).width + 4; ctx.fillStyle = "#D500F9"; ctx.fillRect(xPos + CELL_W - 7 - _tfW / 2, yPos + 3, _tfW, 10); ctx.fillStyle = "#FFFFFF"; ctx.fillText(_tfT, xPos + CELL_W - 7, yPos + 8);
                                                                                                                                 ctx.restore();
                                                                                         
                                                                                                         }
@@ -5744,7 +5758,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                 ctx.font = `800 ${dynamicFontSize}px 'Inter', 'JetBrains Mono'`;
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                ctx.fillStyle = atCeiling ? (window.accentGreenHex || '#2ED573') : '#FFD700';
+                                ctx.fillStyle = atCeiling ? (window.accentGreenHex || '#2ED573') : '#E2E8F0';
                                 ctx.fillRect(gxPos + 1, gyPos + 1, CELL_W - 2, CELL_H - 1);
                                 ctx.fillStyle = window.systemThemeHex || '#000432';
                                 ctx.fillText((_armed.curGap || 0) + '/' + (_armed.gap || 0), gxPos + centerOff, gyPos + (CELL_H/2) + 1);
@@ -5816,9 +5830,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                             ctx.save();
 
-                            ctx.shadowColor = "#FFD700"; ctx.shadowBlur = 10 + 14 * _pulse;
+                            ctx.shadowColor = "#FFFFFF"; ctx.shadowBlur = 10 + 14 * _pulse;
 
-                            ctx.globalAlpha = 0.6 + 0.4 * _pulse;
+                            ctx.globalAlpha = 0;
 
                             ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2;
 
@@ -5826,7 +5840,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                             ctx.shadowBlur = 0; ctx.globalAlpha = 1;
 
-                            ctx.fillStyle = b.hitFill; ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
+                            ctx.shadowBlur = 0; ctx.globalAlpha = 0.6 + 0.4 * _pulse; ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H); ctx.globalAlpha = 1; ctx.fillStyle = b.hitFill; ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
 
                             ctx.restore();
 
@@ -5848,7 +5862,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
 
-                    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
+                    /* yellow live-edge border removed */
 
                 }
 
@@ -5920,15 +5934,15 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
            const footerY = viewH - HEADER_H;
 
-                       ctx.fillStyle = window.systemThemeHex || "#000432"; ctx.fillRect(0, footerY, viewW, HEADER_H);
+                       ctx.fillStyle = "#E2E8F0"; ctx.fillRect(0, footerY, viewW, HEADER_H);
 
-                       ctx.strokeStyle = "#E2E8F0"; // Changed from #FFFFFF
+                       ctx.strokeStyle = window.systemThemeHex || "#000432";
 
             ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, footerY); ctx.lineTo(viewW, footerY); ctx.stroke();
 
 
 
-            ctx.font = "bold 10px 'Inter', 'JetBrains Mono'"; ctx.fillStyle = "#E2E8F0"; // Decreased from 12px
+            ctx.font = "bold 10px 'Inter', 'JetBrains Mono'"; ctx.fillStyle = window.systemThemeHex || "#000432";
 
             for (let c = startCol; c <= endCol; c++) {
 
@@ -6614,7 +6628,7 @@ let dataList = currentMode === 'REV'
 
                                             btnElement.style.background = "transparent";
 
-                                            btnElement.style.color = type === 'CALL' ? (window.accentGreenHex || "#2ED573") : (window.accentRedHex || "#E63946");
+                                            btnElement.style.color = window.systemThemeHex || "#000432"; btnElement.style.background = type === 'CALL' ? (window.accentGreenHex || "#2ED573") : (window.accentRedHex || "#E63946");
 
                                         }, 800);
 
@@ -8750,10 +8764,10 @@ let dataList = currentMode === 'REV'
                         var gp = 0.5 + 0.5 * Math.sin(Date.now() / 220);
                         ctx.save();
                         ctx.shadowColor = GOLD;
-                        ctx.shadowBlur = 6 + 18 * gp;
+                        ctx.shadowBlur = 0;
                         ctx.strokeStyle = GOLD;
                         ctx.lineWidth = 3 + 2 * gp;
-                        ctx.strokeRect(1.5, 1.5, BW0 - 3, BH0 - 3);
+                        /* gold top-signal border removed */
                         ctx.restore();
                         TC.pulseOn = true;
                         if (nd.kind === 'FIRED') TC.activeAt = Date.now();
@@ -8777,7 +8791,7 @@ let dataList = currentMode === 'REV'
                 var W = TC.W, H = TC.H, dpr = TC.dpr, ctx = TC.ctx;
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 var BG = window.systemThemeHex || '#000432';
-                var TXT = '#E2E8F0', DIM = '#8890b8', GOLD = '#FFD700', CY = (window.accentGreenHex || '#2ED573'), AM = (window.accentRedHex || '#E63946');
+                var TXT = '#E2E8F0', DIM = '#8890b8', GOLD = '#FFFFFF', CY = (window.accentGreenHex || '#2ED573'), AM = (window.accentRedHex || '#E63946');
                 ctx.setLineDash([]);
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = BG;
@@ -8813,7 +8827,7 @@ let dataList = currentMode === 'REV'
                 if (pairs.length === 0) {
                     ctx.fillStyle = GOLD;
                     ctx.font = 'bold 12px ' + MONO;
-                    ctx.fillText((TC.all ? 'ALL PAIRS' : getPairDisplayName(activePair)) + ' - WAITING FOR DATA...', PADL, 20);
+                    var _wdT = (TC.all ? 'ALL PAIRS' : getPairDisplayName(activePair)) + ' - WAITING FOR DATA...'; ctx.fillRect(PADL - 4, 5, ctx.measureText(_wdT).width + 8, 20); ctx.fillStyle = BG; ctx.fillText(_wdT, PADL, 20);
                     return;
                 }
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
@@ -9858,6 +9872,32 @@ let dataList = currentMode === 'REV'
                                                                                 if (nxRows < 1) nxRows = 1;
                                                                                 var nxColsUsed = Math.max(1, Math.ceil(nxN / nxRows));
                                                                                 var nxRowsUsed = Math.max(1, Math.ceil(nxN / nxColsUsed));
+                                                                                var cqRow = (nxN >= 1), cqRLw = 0, cqRRw = 0, cqRMw = 0, cqRFs = 28, cqRWts = [1.2, 1.2, 1.9, 1, 1];
+                                                                                if (cqRow) {
+                                                                                    cqBhD = 48;
+                                                                                    if (nxAW < 360) { nxL = PADL + 2; nxAW = nxR - nxL; }
+                                                                                    nxS = Math.max(0.1, Math.min(1.1, (nxAH - (nxN - 1) * nxG) / nxN / cqBhD));
+                                                                                    cqBwD = nxAW / nxS;
+                                                                                    nxColsUsed = 1;
+                                                                                    nxRowsUsed = nxN;
+                                                                                    cqRLw = Math.round(cqBwD * 0.22);
+                                                                                    cqRRw = cqRLw;
+                                                                                    cqRMw = cqBwD - cqRLw - cqRRw;
+                                                                                    ctx.letterSpacing = '0px';
+                                                                                    for (k = 0; k < nxN; k++) {
+                                                                                        var rfSg = callouts[k].tn.sig;
+                                                                                        var rfIt = [[getPairDisplayName(rfSg.pair), cqRLw - 10], ['000.0s', cqRRw - 12]];
+                                                                                        var rfCl = ['C' + rfSg.c, 'R' + rfSg.r, 'X' + rfSg.s1 + '-X' + rfSg.s2, String(rfSg.c1), String(rfSg.c2)];
+                                                                                        for (var rfQ = 0; rfQ < 5; rfQ++) rfIt.push([rfCl[rfQ], cqRMw * cqRWts[rfQ] / 6.3 - 8]);
+                                                                                        for (rfQ = 0; rfQ < rfIt.length; rfQ++) {
+                                                                                            ctx.font = 'bold ' + cqRFs + 'px ' + MONO;
+                                                                                            while (cqRFs > 8 && ctx.measureText(rfIt[rfQ][0]).width > rfIt[rfQ][1]) {
+                                                                                                cqRFs -= 1;
+                                                                                                ctx.font = 'bold ' + cqRFs + 'px ' + MONO;
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
                                                                                 var nxCw = cqBwD * nxS + nxG, nxCh = cqBhD * nxS + nxG;
                                                                                 for (k = 0; k < nxN; k++) {
                                                                                     callouts[k].bx = nxL + Math.floor(k / nxRowsUsed) * nxCw;
@@ -9962,6 +10002,52 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                     TC.pulseQ.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, s: cqScl, col: '#FFD700', p: 0.5 + 0.5 * Math.sin(Date.now() / 220) });
                                                                                                                                                                                                                                                                                                     TC.pulseOn = true;
                                                                                                                                                                                                                                                                                                 }
+                                                                                                                                                                                                if (cqRow) {
+                                                                                                                                                                                                    var rwSec = cqB.tn.kind === 'FIRED' ? (cqB.tn.idx + cqS2.c - nowSec) : (cqB.tn.idx - nowSec);
+                                                                                                                                                                                                    var rwRem = rwSec - ((Date.now() % 1000) / 1000);
+                                                                                                                                                                                                    var rwTxt = rwRem > 0 ? rwRem.toFixed(1) + 's' : 'NOW';
+                                                                                                                                                                                                    var rwMy = cqY + cqBh / 2 + 1;
+                                                                                                                                                                                                    var rwCells = ['C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2)];
+                                                                                                                                                                                                    var rwCx = cqX + cqRLw, rwQ, rwCw;
+                                                                                                                                                                                                    if (rwRem > 0) TC.pulseOn = true;
+                                                                                                                                                                                                    if (cqB.tn.kind === 'FIRED') TC.activeAt = Date.now();
+                                                                                                                                                                                                    ctx.globalAlpha = 1;
+                                                                                                                                                                                                    ctx.shadowBlur = 0;
+                                                                                                                                                                                                    ctx.letterSpacing = '0px';
+                                                                                                                                                                                                    ctx.fillStyle = cqB.dcol;
+                                                                                                                                                                                                    ctx.fillRect(cqX, cqY, cqBw, cqBh);
+                                                                                                                                                                                                    ctx.textBaseline = 'middle';
+                                                                                                                                                                                                    ctx.textAlign = 'center';
+                                                                                                                                                                                                    ctx.fillStyle = BG;
+                                                                                                                                                                                                    ctx.font = 'bold ' + cqRFs + 'px ' + MONO;
+                                                                                                                                                                                                    ctx.fillText(getPairDisplayName(cqS2.pair), cqX + cqRLw / 2, rwMy);
+                                                                                                                                                                                                    ctx.fillText(rwTxt, cqX + cqBw - cqRRw / 2, rwMy);
+                                                                                                                                                                                                    ctx.strokeStyle = BG;
+                                                                                                                                                                                                    ctx.lineWidth = 1.5;
+                                                                                                                                                                                                    ctx.beginPath();
+                                                                                                                                                                                                    ctx.moveTo(cqX + cqRLw + 0.5, cqY);
+                                                                                                                                                                                                    ctx.lineTo(cqX + cqRLw + 0.5, cqY + cqBh);
+                                                                                                                                                                                                    ctx.moveTo(cqX + cqBw - cqRRw + 0.5, cqY);
+                                                                                                                                                                                                    ctx.lineTo(cqX + cqBw - cqRRw + 0.5, cqY + cqBh);
+                                                                                                                                                                                                    for (rwQ = 0; rwQ < 5; rwQ++) {
+                                                                                                                                                                                                        rwCw = cqRMw * cqRWts[rwQ] / 6.3;
+                                                                                                                                                                                                        ctx.fillText(rwCells[rwQ], rwCx + rwCw / 2, rwMy);
+                                                                                                                                                                                                        rwCx += rwCw;
+                                                                                                                                                                                                        if (rwQ < 4) {
+                                                                                                                                                                                                            ctx.moveTo(Math.round(rwCx) + 0.5, cqY);
+                                                                                                                                                                                                            ctx.lineTo(Math.round(rwCx) + 0.5, cqY + cqBh);
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    ctx.stroke();
+                                                                                                                                                                                                    if (cqRdy) {
+                                                                                                                                                                                                        ctx.strokeStyle = GOLD;
+                                                                                                                                                                                                        ctx.lineWidth = 2.5;
+                                                                                                                                                                                                        /* ready border removed */
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    ctx.textAlign = 'left';
+                                                                                                                                                                                                    TC.hov.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, o: { sig: cqS2, idx: cqB.tn.idx, kind: cqB.tn.kind, need: cqB.tn.need, ref: cqB.tn.ref, dec: cqB.tn.it.dec } });
+                                                                                                                                                                                                    continue;
+                                                                                                                                                                                                }
                                                                                                                                                                                                 var nbTopH = 66, nbLblH = 0, nbRowH = cqBh - nbTopH - nbLblH;
                                                                                                 var nbLeftW = Math.round(cqBw * 0.46), nbRightW = cqBw - nbLeftW;
                                                                                                 var nbSec = cqB.tn.kind === 'FIRED' ? (cqB.tn.idx + cqS2.c - nowSec) : (cqB.tn.idx - nowSec);
@@ -10209,7 +10295,7 @@ let dataList = currentMode === 'REV'
                                                                 ctx.strokeStyle = '#FFFFFF';
                                                                 ctx.strokeStyle = '#FFD700';
                                                                                                                                 ctx.lineWidth = 2 + 2 * pq.p;
-                                                                ctx.strokeRect(pq.x - 1, pq.y - 1, pq.w + 2, pq.h + 2);
+                                                                /* pulse outline removed */
                                                                                                                                 if (pq.lbl) {
                                                                                                                                     ctx.shadowBlur = 0;
                                                                                                                                     ctx.globalAlpha = 1;
@@ -10232,7 +10318,7 @@ let dataList = currentMode === 'REV'
                                                 var axIt = null;
                                                 for (var axI = 0; axI < info.length; axI++) { if (info[axI].pair === activePair) { axIt = info[axI]; break; } }
                                                 if (!axIt && info.length) axIt = info[0];
-                                                var axLine = 'rgba(255,255,255,0.22)';
+                                                var axLine = 'rgba(0,4,50,0.6)';
                                                 var axTicks = (typeof pxTicks !== 'undefined' && pxTicks) ? pxTicks : [];
                                                 var axStepV = (typeof pxStep !== 'undefined' && pxStep) ? pxStep : 1;
                                                 ctx.save();
@@ -10240,6 +10326,7 @@ let dataList = currentMode === 'REV'
                                                 ctx.globalAlpha = 1;
                                                 ctx.shadowBlur = 0;
                                                 ctx.fillStyle = BG;
+                                                ctx.fillStyle = '#E2E8F0';
                                                 ctx.fillRect(W - PADR, 0, PADR, H);
                                                 ctx.fillRect(0, pbot + 1, W, H - pbot - 1);
                                                 ctx.strokeStyle = axLine;
@@ -10273,6 +10360,7 @@ let dataList = currentMode === 'REV'
                                                     ctx.strokeStyle = axLine;
                                                     ctx.beginPath(); ctx.moveTo(W - PADR, axT.y); ctx.lineTo(W - PADR + 4, axT.y); ctx.stroke();
                                                     ctx.fillStyle = DIM;
+                                                    ctx.fillStyle = BG;
                                                     ctx.fillText(axT.v.toFixed(axDec), W - PADR + 8, axT.y + 0.5);
                                                 }
                                                 if (axIt && axLast !== null) {
@@ -10322,7 +10410,7 @@ let dataList = currentMode === 'REV'
                                                     ctx.lineTo(Math.round(axTx) + 0.5, pbot + (axMajor ? 6 : 4));
                                                     ctx.stroke();
                                                     if (axTx - axHw < 2 || axTx + axHw > W - 2) continue;
-                                                    ctx.fillStyle = axMajor ? TXT : DIM;
+                                                    ctx.fillStyle = BG;
                                                     ctx.font = (axMajor ? 'bold ' : '') + '10px ' + MONO;
                                                     ctx.fillText(axTxt, axTx, pbot + 17);
                                                 }
@@ -10496,7 +10584,7 @@ let dataList = currentMode === 'REV'
                         };
                         rows.push('<div style="color:' + cc + ';font-weight:800;margin-bottom:3px;">' + (s.col === 'G' ? '\u2191 ' : '\u2193 ') + getPairDisplayName(s.pair) + ' ' + s.type + ' C' + s.c + ' R' + s.r + '</div>');
                         row('Streak', 'X' + s.s1 + ' \u2192 X' + s.s2 + (s.col === 'G' ? ' (UP run)' : ' (DOWN run)'));
-                        row('Probability', s.pct + '%', '#FFD700');
+                        row('Probability', s.pct + '%', '#FFFFFF');
                         row('C1 / C2', s.c1 + ' / ' + s.c2);
                         row('Score', Math.round(s.pct * s.c1));
                         if (s.type === 'REV') row('Gap', 'F' + (s.gap || 0) + '-' + (s.gapCount || 0) + '  now ' + (s.curGap || 0));
@@ -10510,16 +10598,16 @@ let dataList = currentMode === 'REV'
                             if (o.win === 'win') row('Result', '\u2713 WIN (' + (o.res === 'cont' ? 'continued' : 'reversed') + ')', GREEN);
                             else if (o.win === 'loss') row('Result', '\u2717 LOSS (' + (o.res === 'cont' ? 'continued' : 'reversed') + ')', RED);
                             else if (o.win === 'none') row('Result', 'no tick at next slot', '#8890b8');
-                            else row('Result', 'PENDING \u2014 in ' + tcFmtIn(nextIdx - nowSec), '#FFD700');
+                            else row('Result', 'PENDING \u2014 in ' + tcFmtIn(nextIdx - nowSec), '#FFFFFF');
                         } else if (o.kind === 'FIRED') {
-                            row('Status', '\u25CF HIT', '#FFD700');
+                            row('Status', '\u25CF HIT', '#FFFFFF');
                             row('Triggered', tcFmt(o.idx, true) + ' IST');
-                            row('Result due', tcFmt(nextIdx, true) + ' IST  in ' + tcFmtIn(nextIdx - nowSec), '#FFD700');
+                            row('Result due', tcFmt(nextIdx, true) + ' IST  in ' + tcFmtIn(nextIdx - nowSec), '#FFFFFF');
                         } else {
                             row('Trigger at', tcFmt(o.idx, true) + ' IST');
-                            row('In', tcFmtIn(o.idx - nowSec), '#FFD700');
+                            row('In', tcFmtIn(o.idx - nowSec), '#FFFFFF');
                             row('Ticks needed', o.need + (o.need === 1 ? '  (READY)' : ''), o.need === 1 ? GREEN : '#E2E8F0');
-                            if (o.ref !== null && o.ref !== undefined) row('Price must be', (s.col === 'G' ? '> ' : '< ') + o.ref.toFixed(dec + 1), '#FFD700');
+                            if (o.ref !== null && o.ref !== undefined) row('Price must be', (s.col === 'G' ? '> ' : '< ') + o.ref.toFixed(dec + 1), '#FFFFFF');
                         }
                         return rows.join('');
                     }
@@ -10929,8 +11017,8 @@ let dataList = currentMode === 'REV'
                     function sync2() {
                         if (!autoBtn2) return;
                         var on = ((TC.yZ || 1) !== 1 || (TC.yOff || 0) !== 0);
-                        autoBtn2.style.background = on ? '#FFD700' : 'var(--bg-base)';
-                        autoBtn2.style.color = on ? '#000432' : '#FFFFFF';
+                        autoBtn2.style.background = on ? '#FFD700' : '#E2E8F0';
+                        autoBtn2.style.color = '#000432';
                     }
                     w.addEventListener('pointerdown', function(e) {
                         if (e.target !== cv || !onAxis(e)) return;
@@ -11067,7 +11155,7 @@ let dataList = currentMode === 'REV'
                         var on = ((TC.yZ || 1) !== 1 || (TC.yOff || 0) !== 0);
                         autoBtn.classList.toggle('tcOn', on);
                         autoBtn.style.background = on ? '#FFD700' : '#E2E8F0';
-                        autoBtn.style.color = on ? '#000432' : '#FFFFFF';
+                        autoBtn.style.color = '#000432';
                     }
                     if (autoBtn) {
                         autoBtn.addEventListener('click', function() {
@@ -12168,12 +12256,12 @@ let dataList = currentMode === 'REV'
                             const boxW = tw2 + 7;
                             const boxH = 18;
         
-                            ctx.fillStyle = 'rgba(0,2,30,0.97)';
+                            ctx.fillStyle = p.color;
                             ctx.fillRect(boxX, boxY, boxW, boxH);
                             ctx.fillStyle = 'rgba(0,0,0,0.75)';
-                            ctx.fillText(p.label, lx + 0.7, ly + 1.7);
+                            /* shadow text removed: label text must be #000432 only */
                             ctx.fillStyle = p.color;
-                            ctx.fillText(p.label, lx, ly + 1);
+                            ctx.fillStyle = '#000432'; ctx.fillText(p.label, lx, ly + 1);
         
                             labelBoxes.push({ sym: p.sym, x: boxX, y: boxY, w: boxW, h: boxH });
                         });
@@ -12610,8 +12698,8 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                     var bal = document.getElementById('accountBalance');
                                                                                                                                                                                                     if (!bal) return;
                                                                                                                                                                                                     var isReal = (currentAccountType === 'real');
-                                                                                                                                                                                                    bal.innerText = (isReal ? 'LIVE ' : 'DEMO ') + '$' + Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                                                                                                                                                                                    bal.style.color = isReal ? '#0ecb81' : '#FFD700';
+                                                                                                                                                                                                    bal.innerText = Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                                                                                                                                                                                    bal.style.background = isReal ? '#0ecb81' : '#FFD700'; bal.style.color = '#000432';
                                                                                                                                                                                                 }
                                                                                                                                                                                                 
                                                                                                                                                                                                 async function getRealAccountId(accountType) {
@@ -12690,7 +12778,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                     /* account toggle enabled: DEMO <-> REAL */
                                                                                                                                                                                                     currentAccountType = (currentAccountType === 'demo') ? 'real' : 'demo';
                                                                                                                                                                                                     var bal = document.getElementById('accountBalance');
-                                                                                                                                                                                                    if (bal) { bal.innerText = 'Loading...'; bal.style.color = (currentAccountType === 'real') ? '#0ecb81' : '#FFD700'; }
+                                                                                                                                                                                                    if (bal) { bal.innerText = '...'; bal.style.background = (currentAccountType === 'real') ? '#0ecb81' : '#FFD700'; bal.style.color = '#000432'; }
                                                                                                                                                                                                     _trLog('INFO', 'Account toggle -> ' + currentAccountType);
                                                                                                                                                                                                     if (_acctConnecting) { _acctRedo = true; } else { connectDerivAPI(); }
                                                                                                                                                                                                 }
