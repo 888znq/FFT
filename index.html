@@ -234,10 +234,10 @@
         .pair-boot-toast .pbt-bar-track{background:rgba(0,4,50,0.2) !important;}
         .pair-boot-toast .pbt-bar-track .pbt-bar-fill{background:var(--bg-base) !important;}
         .pair-boot-toast .pbt-spinner{border-color:rgba(0,4,50,0.25) !important;border-top-color:var(--bg-base) !important;}
-        body #bootOverlay > div > div:first-child{background:#FFD700 !important;color:var(--bg-base) !important;padding:6px 10px;}
+        body #bootOverlay > div > div:first-child{background:#FFD700 !important;color:var(--bg-base) !important;padding:6px 10px;border-radius:999px !important;}
         body #bootOverlay #bootLogBox{background:#E2E8F0 !important;border-color:var(--bg-base) !important;}
         body #bootOverlay #bootLogLines div{color:var(--bg-base) !important;}
-        body #bootOverlay #bootStatusLine{background:#E2E8F0 !important;color:var(--bg-base) !important;padding:6px 10px;}
+        body #bootOverlay #bootStatusLine{background:#E2E8F0 !important;color:var(--bg-base) !important;padding:6px 10px;border-radius:999px !important;}
         body #bootOverlay #bootProgressBar{background:var(--accent-green) !important;}
         body #bootPairGrid div{background:#E2E8F0 !important;color:var(--bg-base) !important;}
         body #bootPairGrid div[style*="color:#FFD700"]{background:#FFD700 !important;}
@@ -253,6 +253,13 @@
                 #peaksTableBodyRev td[colspan],#peaksTableBodyMom td[colspan]{background:#E2E8F0 !important;color:var(--bg-base) !important;}
                 .row-red *,.row-green *{color:var(--bg-base) !important;}
                 .ctrl-row > span:has(.ctrl-input) > span{color:var(--bg-base) !important;}
+                                #levelFilterSelect,#sessionLengthSelect,.ctrl-row .ctrl-select{color:#000432 !important;-webkit-text-fill-color:#000432 !important;background-color:#E2E8F0 !important;border-color:#E2E8F0 !important;}
+                                #levelFilterSelect option,#sessionLengthSelect option{color:var(--bg-base) !important;background:#E2E8F0 !important;}
+                                .ctrl-row .custom-select-wrapper,.ctrl-row .custom-select-wrapper *{background:#E2E8F0 !important;background-color:#E2E8F0 !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border-top-color:#000432;text-shadow:none !important;opacity:1 !important;}
+                                                                .ctrl-row .custom-select-wrapper{border-color:#E2E8F0 !important;border-radius:999px !important;}
+                                                                .ctrl-row .custom-select-wrapper > *{border-radius:999px !important;}
+                                .ctrl-row .custom-select-wrapper svg{stroke:#000432 !important;}
+                                .ctrl-row .custom-select-wrapper svg[fill]:not([fill="none"]),.ctrl-row .custom-select-wrapper svg [fill]:not([fill="none"]){fill:var(--bg-base) !important;}
                 #r0OnlyBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;}
                 #r0OnlyBtn[style*="255, 215, 0"]{background:#FFD700 !important;}
                 #r0OnlyBtn[style*="46, 213, 115"]{background:var(--accent-green) !important;}
@@ -263,6 +270,52 @@
                         #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-top-color:#000432 !important;border-bottom-color:#000432 !important;}
                         #streakPanel{border-left-color:#000432 !important;border-right-color:#000432 !important;}
                         #row-index-panel{border-left-color:#000432 !important;}
+                        
+                        /* ===== PILL SHAPE EVERYWHERE ===== */
+                        button,select,input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),.ctrl-input,.trinity-input,.btn-toggle,.pairIconBtn,[style*="border-radius"],#accountBalance,#scanTimerDisplay,#r0OnlyBtn,#personalize-icon-container,#hidePairsGrid > *,#pairPickerGrid > *,#sbPairsGrid > *,#swPairsGrid > *,#pairSelGrid > *,#selPopupGrid > *{border-radius:999px !important;}
+                        input[type="color"]{border-radius:999px !important;overflow:hidden;}
+                        input[type="color"]::-webkit-color-swatch-wrapper{padding:0;}
+                        input[type="color"]::-webkit-color-swatch{border:none;border-radius:999px;}
+                        #hidePairsSearch,#pairPickerSearch,#sbPairsSearch,#swPairsSearch,#pairSelSearch,#swNameInput,#swStartInput,#swEndInput,#sbNameInput,#hpSpecialNameInput{padding-left:14px !important;padding-right:14px !important;}
+                        ::-webkit-scrollbar-thumb{border-radius:999px !important;}
+                        .pbt-bar-track,.pbt-bar-fill{border-radius:999px !important;}
+                        #mmt-reset-badge{border-radius:999px !important;}
+                        [style*="translate(-50%,-50%)"],[style*="translate(-50%, -50%)"],#app3-modal,#numpadModal,#selPopupModal,#pairHubPanel,#hidePairsModal,#swModal,#pairPickerModal,#specialBtnModal,#evtLogModal,#personalize-modal,#history-modal{border-radius:26px !important;}
+                        #personalize-modal{overflow:hidden !important;}
+                        [style*="translate(-50%,-50%)"] span,[style*="translate(-50%, -50%)"] span,#app3-modal span,#numpadModal span,#selPopupModal span,#tcWrap > div[style*="pointer-events"] span{border-radius:999px !important;}
+                        .pair-boot-toast{border-radius:22px !important;}
+                        #tcWrap > div[style*="pointer-events"]{border-radius:14px !important;}
+                        #bootLogBox,#evtLogBody{border-radius:18px !important;}
+                        .app3-list-row,.idx-cell{border:1px solid var(--bg-base) !important;border-radius:999px !important;overflow:hidden;}
+                        #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-radius:999px !important;border:none !important;margin:3px 6px;}
+                        #peaksTableBodyRev td[colspan],#peaksTableBodyMom td[colspan]{border-radius:999px !important;border:none !important;}
+                        table{border-collapse:separate !important;border-spacing:0 3px !important;}
+                        .row-red:not([style*="background"]),.row-green:not([style*="background"]){background:transparent !important;}
+                        .row-red:not([style*="background"]) > td:not([style*="background"]){background-color:var(--accent-red);}
+                        .row-green:not([style*="background"]) > td:not([style*="background"]){background-color:var(--accent-green);}
+                        .row-red > td,.row-green > td{border-bottom:none !important;}
+                        .row-red > td:first-child,.row-green > td:first-child{border-radius:999px 0 0 999px !important;}
+                        .row-red > td:last-child,.row-green > td:last-child{border-radius:0 999px 999px 0 !important;}
+                        
+                                                /* ===== URGENCY SHAPE TIERS ===== */
+                                                /* T1 URGENT: true oval (continuous curvature, fastest to decode) */
+                                                #buyBtn,#sellBtn{border-radius:6px !important;}
+                                                div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax),#accountBalance{border-radius:6px !important;}
+                                                #scanTimerDisplay{border-radius:50% / 50% !important;padding:3px 10px !important;}
+                                                /* T3 CALM: low-radius rectangles aligned to H/V lines (low attention) */
+                                                #hidePairsModal,#swModal,#pairPickerModal,#specialBtnModal,#evtLogModal,#personalize-modal,#history-modal,#pairHubPanel,#app3-modal,#numpadModal,#selPopupModal{border-radius:6px !important;}
+                                                #hidePairsModal button,#swModal button,#pairPickerModal button,#specialBtnModal button,#evtLogModal button,#personalize-modal button,#history-modal button,#pairHubPanel button{border-radius:6px !important;}
+                                                #hidePairsModal input,#swModal input,#pairPickerModal input,#specialBtnModal input,#hidePairsModal select,#specialBtnModal select{border-radius:6px !important;}
+                                                #hidePairsGrid > *,#pairPickerGrid > *,#sbPairsGrid > *,#swPairsGrid > *{border-radius:6px !important;}
+                                                /* primary confirm actions stay pill (medium urgency) */
+                                                #hidePairsModal button[onclick*="Apply"],#pairPickerModal button[onclick*="Apply"],#specialBtnModal button[onclick*="sbSave"],#swModal button[onclick*="swSave"],#hidePairsModal #hpSpecialSaveBtn,#evtLogModal #evtCopyBtn{border-radius:999px !important;}
+                                                #evtLogBody{border-radius:6px !important;}
+                                                #personalize-icon-container{border-radius:6px !important;}
+                                                #themeHexInput,#greenHexInput,#redHexInput{border-radius:6px !important;}
+                                                #themeHexInput::-webkit-color-swatch,#greenHexInput::-webkit-color-swatch,#redHexInput::-webkit-color-swatch{border-radius:4px !important;}
+                                                #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-radius:3px !important;}
+                                                #peaksTableBodyRev td[colspan],#peaksTableBodyMom td[colspan]{border-radius:3px !important;}
+                                                .idx-cell{border-radius:3px !important;}
 
     </style>
 
@@ -272,6 +325,15 @@
 
 
 
+    <script>
+    window._pillPath=function(c,x,y,w,h){var r=Math.max(0,Math.min(Math.abs(w),Math.abs(h))/2);c.beginPath();if(c.roundRect){c.roundRect(x,y,w,h,r);}else{var x2=x+w,y2=y+h;c.moveTo(x+r,y);c.arcTo(x2,y,x2,y2,r);c.arcTo(x2,y2,x,y2,r);c.arcTo(x,y2,x,y,r);c.arcTo(x,y,x2,y,r);c.closePath();}};
+    window._pillFill=function(c,x,y,w,h){window._pillPath(c,x,y,w,h);c.fill();c.beginPath();};
+    window._pillStroke=function(c,x,y,w,h){window._pillPath(c,x,y,w,h);c.stroke();c.beginPath();};
+        window._calmFill=function(c,x,y,w,h){var r=Math.max(0,Math.min(8,Math.min(Math.abs(w),Math.abs(h))/2));c.beginPath();if(c.roundRect){c.roundRect(x,y,w,h,r);}else{c.rect(x,y,w,h);}c.fill();c.beginPath();};
+        window._ovalFill=function(c,x,y,w,h){c.beginPath();c.ellipse(x+w/2,y+h/2,Math.abs(w)/2,Math.abs(h)/2,0,0,6.2832);c.fill();c.beginPath();};
+        window._ovalStroke=function(c,x,y,w,h){c.beginPath();c.ellipse(x+w/2,y+h/2,Math.abs(w)/2,Math.abs(h)/2,0,0,6.2832);c.stroke();c.beginPath();};
+        window._starFill=function(c,cx,cy,ro,ri,n){var i,a,r;c.beginPath();for(i=0;i<n*2;i++){r=(i%2===0)?ro:ri;a=-Math.PI/2+i*Math.PI/n;if(i===0){c.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}else{c.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}}c.closePath();c.fill();c.beginPath();};
+    </script>
     <div id="main-container">
 
         <div id="canvas-viewport"><canvas id="matrixCanvas"></canvas></div>
@@ -517,7 +579,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       <button id="tcToggleBtn" class="pairIconBtn" data-mode="TICK" title="Tick / Grid" aria-label="Tick / Grid" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">TICK</button><button id="pairHubBtn" title="Pairs" aria-label="Pairs" onclick="openPairSelectPopup()" style="flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:28px; padding:0 6px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1-3 2.3c0 3.4 6 1.6 6 5 0 1.3-1.3 2.2-3 2.2s-3-1.1-3-2.5"/><path d="M12 4.5V7M12 17v2.5"/></svg></button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:2px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}html body #buyBtn,html body #sellBtn{border-radius:6px !important;}html body div:has(> #tradeAmount),html body div:has(> #tradeExpiryVisible),html body div:has(> #scanMin),html body div:has(> #scanMax),html body #accountBalance{border-radius:6px !important;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:2px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </div>
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <!-- SYS button hidden — still accessible via JS -->
@@ -5681,7 +5743,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
             
 
-                            ctx.fillRect(x + 1, y + 1, CELL_W - 2, CELL_H - 1);
+                            _pillFill(ctx, x + 1, y + 1, CELL_W - 2, CELL_H - 1);
                             ctx.fillStyle = window.systemThemeHex || "#000432";
                             ctx.fillText(label, x + centerOff, y + (CELL_H/2) + 1);
 
@@ -5709,7 +5771,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
-            currentInstances.forEach((inst, idx) => {
+            ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
+                        ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
+                        currentInstances.forEach((inst, idx) => {
                         
                                         const xPos = Math.round((inst.col * CELL_W) - scrollL);
                         
@@ -5759,7 +5823,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
                                 ctx.fillStyle = atCeiling ? (window.accentGreenHex || '#2ED573') : '#E2E8F0';
-                                ctx.fillRect(gxPos + 1, gyPos + 1, CELL_W - 2, CELL_H - 1);
+                                if (atCeiling) { _ovalFill(ctx, gxPos + 1, gyPos + 1, CELL_W - 2, CELL_H - 1); } else { ctx.fillRect(gxPos + 1, gyPos + 1, CELL_W - 2, CELL_H - 1); }
                                 ctx.fillStyle = window.systemThemeHex || '#000432';
                                 ctx.fillText((_armed.curGap || 0) + '/' + (_armed.gap || 0), gxPos + centerOff, gyPos + (CELL_H/2) + 1);
                                 ctx.restore();
@@ -5904,7 +5968,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                             ctx.lineWidth = 2;
 
-                            ctx.strokeRect(xPos + 2, yPos + 2, CELL_W - 4, CELL_H - 4);
+                            _ovalStroke(ctx, xPos + 2, yPos + 2, CELL_W - 4, CELL_H - 4);
 
                             
 
@@ -5916,7 +5980,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                             ctx.font = "bold 14px 'JetBrains Mono'";
 
-                            ctx.fillRect(xPos + 2, yPos + 2, CELL_W - 4, CELL_H - 4);
+                            _ovalFill(ctx, xPos + 2, yPos + 2, CELL_W - 4, CELL_H - 4);
                             ctx.fillStyle = window.systemThemeHex || "#000432";
                             ctx.fillText(isCall ? "▲" : "▼", xPos + centerOff, yPos + (CELL_H/2));
 
@@ -5934,7 +5998,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
            const footerY = viewH - HEADER_H;
 
-                       ctx.fillStyle = "#E2E8F0"; ctx.fillRect(0, footerY, viewW, HEADER_H);
+                       delete ctx.fillRect; delete ctx.strokeRect;
+                                              ctx.fillStyle = "#E2E8F0"; ctx.fillRect(0, footerY, viewW, HEADER_H);
 
                        ctx.strokeStyle = window.systemThemeHex || "#000432";
 
@@ -8710,7 +8775,7 @@ let dataList = currentMode === 'REV'
                     ctx.shadowBlur = 0;
                     ctx.letterSpacing = '0px';
                     ctx.fillStyle = dcol;
-                    ctx.fillRect(0, 0, BW0, BH0);
+                    if (i === 0 || nd.rem <= 10) { _pillFill(ctx, 0, 0, BW0, BH0); } else { _calmFill(ctx, 0, 0, BW0, BH0); }
                     ctx.textBaseline = 'middle';
                     ctx.textAlign = 'center';
                     ctx.fillStyle = BG;
@@ -8732,6 +8797,7 @@ let dataList = currentMode === 'REV'
                         ctx.font = 'bold ' + tf + 'px ' + MONO;
                     }
                     ctx.fillText(tTxt, BW0 - rightW / 2, topH / 2 + 1);
+                                        if (remF <= 0) { ctx.fillStyle = '#FFD700'; _starFill(ctx, BW0 - 9, 9, 9, 4.5, 8); ctx.fillStyle = BG; }
                     var cells = ['C' + sg.c, 'R' + sg.r, 'X' + sg.s1 + '-X' + sg.s2, String(sg.c1), String(sg.c2)];
                     var cx = leftW;
                     ctx.font = 'bold 14px ' + MONO;
@@ -8827,7 +8893,7 @@ let dataList = currentMode === 'REV'
                 if (pairs.length === 0) {
                     ctx.fillStyle = GOLD;
                     ctx.font = 'bold 12px ' + MONO;
-                    var _wdT = (TC.all ? 'ALL PAIRS' : getPairDisplayName(activePair)) + ' - WAITING FOR DATA...'; ctx.fillRect(PADL - 4, 5, ctx.measureText(_wdT).width + 8, 20); ctx.fillStyle = BG; ctx.fillText(_wdT, PADL, 20);
+                    var _wdT = (TC.all ? 'ALL PAIRS' : getPairDisplayName(activePair)) + ' - WAITING FOR DATA...'; _calmFill(ctx, PADL - 4, 5, ctx.measureText(_wdT).width + 8, 20); ctx.fillStyle = BG; ctx.fillText(_wdT, PADL, 20);
                     return;
                 }
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
@@ -9190,7 +9256,10 @@ let dataList = currentMode === 'REV'
                     ctx.setLineDash([]);
                     var flLw = (mk.it.pair === activePair) ? 1.8 : 1.4;
                     ctx.lineWidth = flLw;
-                    ctx.strokeRect(mx + flLw / 2, flBy1 + flLw / 2, Math.max(0, flXe - mx - flLw), Math.max(0, flBy2 - flBy1 - flLw));
+                    ctx.beginPath();
+                                        var flRw = Math.max(0, flXe - mx - flLw), flRh = Math.max(0, flBy2 - flBy1 - flLw), flRr = Math.min(12, flRw / 2, flRh / 2);
+                                        if (ctx.roundRect) { ctx.roundRect(mx + flLw / 2, flBy1 + flLw / 2, flRw, flRh, flRr); } else { ctx.rect(mx + flLw / 2, flBy1 + flLw / 2, flRw, flRh); }
+                                        ctx.stroke();
                     ctx.restore();
                     }
                     ctx.save();
@@ -9944,6 +10013,10 @@ let dataList = currentMode === 'REV'
                                 for (k = 0; k < callouts.length; k++) {
                                     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                                                                                                     if (cqFix) { for (var cqFi = cqHovFrom; cqFi < TC.hov.length; cqFi++) { TC.hov[cqFi].w = cqFix.w; TC.hov[cqFi].h = cqFix.h; } cqFix = null; }
+                                                                                                    ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
+                                                                                                    ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
+                                                                                                    ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
+                                                                                                    ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
                                                                                                     var cqB = callouts[k], cqY = Math.round(cqB.y), cqS2 = cqB.tn.sig;
                                                         cqX = cqB.bx; cqBw = cqBwD * (cqB.sc || 1); cqBh = cqBhD * (cqB.sc || 1);
                                     var cqRdy = (cqB.tn.need === 1 || cqB.tn.kind === 'FIRED');
@@ -9987,7 +10060,7 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.fillStyle = BG;
                                                                                                 ctx.fillRect(cqX, cqY, cqBw, cqBh);
                                                                                                 ctx.fillStyle = cqB.dcol;
-                                                                                                ctx.fillRect(cqX, cqY, cqBw, Math.min(28, cqBh));
+                                                                                                /* header strip removed so the pill card has no square corners */
                                                                                                 ctx.textBaseline = 'alphabetic';
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 ctx.font = 'bold 15px ' + MONO;
@@ -10284,6 +10357,7 @@ let dataList = currentMode === 'REV'
                                 ctx.restore();
                                 ctx.textAlign = 'left';
                             }
+                            delete ctx.fillRect; delete ctx.strokeRect;
                             if (TC.pulseQ && TC.pulseQ.length) {
                                                             ctx.save();
                                                             for (var pqI = 0; pqI < TC.pulseQ.length; pqI++) {
@@ -10305,7 +10379,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                     var pqLw = ctx.measureText(pq.lbl).width + 12;
                                                                                                                                     var pqLy = pq.y >= 16 ? pq.y - 9 : pq.y + pq.h + 9;
                                                                                                                                     ctx.fillStyle = GOLD;
-                                                                                                                                    ctx.fillRect(pq.x + pq.w / 2 - pqLw / 2, pqLy - 8, pqLw, 16);
+                                                                                                                                    _pillFill(ctx, pq.x + pq.w / 2 - pqLw / 2, pqLy - 8, pqLw, 16);
                                                                                                                                     ctx.fillStyle = BG;
                                                                                                                                     ctx.fillText(pq.lbl, pq.x + pq.w / 2, pqLy + 1);
                                                                                                                                 }
@@ -10327,8 +10401,8 @@ let dataList = currentMode === 'REV'
                                                 ctx.shadowBlur = 0;
                                                 ctx.fillStyle = BG;
                                                 ctx.fillStyle = '#E2E8F0';
-                                                ctx.fillRect(W - PADR, 0, PADR, H);
-                                                ctx.fillRect(0, pbot + 1, W, H - pbot - 1);
+                                                ctx.fillStyle = BG; ctx.fillRect(W - PADR, 0, PADR, H); ctx.fillStyle = '#E2E8F0'; _calmFill(ctx, W - PADR + 2, ptop, PADR - 4, pbot - ptop);
+                                                ctx.fillStyle = BG; ctx.fillRect(0, pbot + 1, W, H - pbot - 1); ctx.fillStyle = '#E2E8F0'; _calmFill(ctx, PADL, pbot + 2, W - PADR - PADL - 4, H - pbot - 3);
                                                 ctx.strokeStyle = axLine;
                                                 ctx.lineWidth = 1;
                                                 ctx.beginPath();
@@ -10355,7 +10429,7 @@ let dataList = currentMode === 'REV'
                                                     if (axK === 0) axNeedMax = 0;
                                                     if (axNeed > axNeedMax) axNeedMax = axNeed;
                                                     if (axK === axTicks.length - 1 && Math.abs(axNeedMax - (TC.axW || 0)) > 2) TC.axW = axNeedMax;
-                                                    if (axT.y < ptop + 6 || axT.y > pbot - 6) continue;
+                                                    if (axT.y < ptop + 6 + PADR * 0.4 || axT.y > pbot - 6 - PADR * 0.4) continue;
                                                     if (Math.abs(axT.y - axLastY) < 10) continue;
                                                     ctx.strokeStyle = axLine;
                                                     ctx.beginPath(); ctx.moveTo(W - PADR, axT.y); ctx.lineTo(W - PADR + 4, axT.y); ctx.stroke();
@@ -10379,25 +10453,25 @@ let dataList = currentMode === 'REV'
                                                         ctx.restore();
                                                     }
                                                     ctx.beginPath();
-                                                    ctx.moveTo(axGx - 4, axLastY);
-                                                    ctx.lineTo(axGx + 2, axLastY - 8);
-                                                    ctx.lineTo(W - 2, axLastY - 8);
-                                                    ctx.lineTo(W - 2, axLastY + 8);
-                                                    ctx.lineTo(axGx + 2, axLastY + 8);
+                                                    ctx.moveTo(axGx + 8, axLastY - 8);
+                                                    ctx.lineTo(W - 10, axLastY - 8);
+                                                    ctx.arcTo(W - 2, axLastY - 8, W - 2, axLastY, 8);
+                                                    ctx.arcTo(W - 2, axLastY + 8, W - 10, axLastY + 8, 8);
+                                                    ctx.lineTo(axGx + 8, axLastY + 8); ctx.arcTo(axGx, axLastY + 8, axGx, axLastY, 8); ctx.arcTo(axGx, axLastY - 8, axGx + 8, axLastY - 8, 8);
                                                     ctx.closePath();
                                                     ctx.fillStyle = axIt.color;
                                                     ctx.fill();
                                                     ctx.fillStyle = BG;
                                                     ctx.font = 'bold 10px ' + MONO;
                                                     ctx.textAlign = 'left';
-                                                    ctx.fillText(axLast.toFixed(axTagDec), axGx + 6, axLastY + 0.5);
+                                                    ctx.fillText(axLast.toFixed(axTagDec), axGx + 8, axLastY + 0.5);
                                                 }
                                                 ctx.textBaseline = 'alphabetic';
                                                 ctx.textAlign = 'center';
                                                 for (var axTm = firstT; axTm <= right; axTm += tstep) {
                                                     if (axTm < 0 || axTm > sEnd) continue;
                                                     var axTx = xOf(axTm);
-                                                    if (axTx < PADL || axTx > W - PADR) continue;
+                                                    if (axTx < PADL + 28 || axTx > W - PADR - 28) continue;
                                                     var axSec = (((Math.floor(axTm) + off) % 86400) + 86400) % 86400;
                                                     var axMajor = (axSec % 3600 === 0);
                                                     var axTxt = tcFmt(axTm, tstep < 60);
@@ -10422,7 +10496,7 @@ let dataList = currentMode === 'REV'
                                                         var axNw = ctx.measureText(axNt).width + 12;
                                                         var axNl = Math.max(2, Math.min(W - PADR - axNw, axNx - axNw / 2));
                                                         ctx.fillStyle = axIt.color;
-                                                        ctx.fillRect(axNl, pbot + 2, axNw, 16);
+                                                        _pillFill(ctx, axNl, pbot + 2, axNw, 16);
                                                         ctx.fillStyle = BG;
                                                         ctx.textAlign = 'center';
                                                         ctx.fillText(axNt, axNl + axNw / 2, pbot + 14);
@@ -12251,13 +12325,13 @@ let dataList = currentMode === 'REV'
         
                             ctx.font = 'bold 11px Courier New';
                             const tw2 = ctx.measureText(p.label).width;
-                            const boxX = lx - 3;
+                            const boxX = lx - 9;
                             const boxY = ly - 12;
-                            const boxW = tw2 + 7;
+                            const boxW = tw2 + 18;
                             const boxH = 18;
         
                             ctx.fillStyle = p.color;
-                            ctx.fillRect(boxX, boxY, boxW, boxH);
+                            _pillFill(ctx, boxX, boxY, boxW, boxH);
                             ctx.fillStyle = 'rgba(0,0,0,0.75)';
                             /* shadow text removed: label text must be #000432 only */
                             ctx.fillStyle = p.color;
@@ -12270,7 +12344,7 @@ let dataList = currentMode === 'REV'
                         ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
                         ctx.strokeStyle = '#ffffff';
                         ctx.lineWidth = 2;
-                        ctx.strokeRect(1.5, 1.5, W - 3, H - 3);
+                        ctx.beginPath(); if (ctx.roundRect) { ctx.roundRect(1.5, 1.5, W - 3, H - 3, 6); } else { ctx.rect(1.5, 1.5, W - 3, H - 3); } ctx.stroke();
                         ctx.restore();
                     }
         
