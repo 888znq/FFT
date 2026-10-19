@@ -4709,7 +4709,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
 
        function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
-                         evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
+                         window._tcFocus = pair; evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
        
                   if (brokerFireEnabled) {
        
@@ -4756,6 +4756,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                 }
        
                   if (brokerFireEnabled) { sigOutStart(pair, c, r, s1, s2, colColor, type); } else { sigOutStop(); }
+                  setTimeout(function() { try { if (typeof window.tcOnTableRendered === 'function') window.tcOnTableRendered(); } catch (e) {} }, 0);
                   selectSignal(pair, c, r, s1, s2, colColor, type, -1, gapVal, curGapVal);
                          
                                 }
@@ -7159,8 +7160,10 @@ let dataList = currentMode === 'REV'
                                 function _wpFocusClear() {
                                     if (!_wpFocusPair) return;
                                     _wpFocusPair = null;
-                                    _hiddenPairs.clear();
-                                    renderFilteredTable();
+                                                                        window._tcFocus = null;
+                                                                        _hiddenPairs.clear();
+                                                                        renderFilteredTable();
+                                                                        try { if (typeof TC !== 'undefined') TC.allMap = null; if (typeof tcDraw === 'function') tcDraw(); } catch (e) {}
                                 }
                                 window.addEventListener('load', function() {
                                     var _wpPane = document.getElementById('wall-finder-pane');
@@ -8563,6 +8566,166 @@ let dataList = currentMode === 'REV'
                                                 return map;
                                             }
             
+            function tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM) {
+                var GREEN = window.accentGreenHex || '#2ED573', RED = window.accentRedHex || '#E63946';
+                var nodes = [], pi, k, i;
+                if (live) {
+                    for (pi = 0; pi < pairs.length; pi++) {
+                        var bgP = pairs[pi];
+                        var bgS = sigMap[bgP];
+                        if (!bgS) continue;
+                        var bgPr = allPairData[bgP].prices;
+                        var bgLen = bgPr.length;
+                        var bgLast = tcLastReal(bgPr, Math.min(nowSec, bgLen - 1));
+                        var bgLim = Math.min(nowSec - 1, bgLen - 1, sEnd - 1);
+                        var bgL = [bgS.rev, bgS.mom];
+                        for (k = 0; k < 2; k++) {
+                            var bgSg = bgL[k];
+                            if (!bgSg) continue;
+                            var bgPl = tcPlan(bgSg, bgPr, bgLim, sEnd, bgLast);
+                            if (!bgPl || bgPl.kind === 'NONE') continue;
+                            var bgRem = bgPl.kind === 'FIRED' ? (bgPl.idx + bgSg.c - nowSec) : (bgPl.idx - nowSec);
+                            var bgUp = (bgSg.type === 'REV') ? (bgSg.col === 'R') : (bgSg.col === 'G');
+                            nodes.push({ sig: bgSg, idx: bgPl.idx, need: bgPl.need, kind: bgPl.kind, ref: bgPl.ref, rem: bgRem, up: bgUp });
+                        }
+                    }
+                }
+                nodes.sort(function(a, b) { return ((b.sig.pct * b.sig.c1) - (a.sig.pct * a.sig.c1)) || (a.rem - b.rem); });
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.textBaseline = 'alphabetic';
+                ctx.textAlign = 'left';
+                ctx.font = 'bold 10px ' + MONO;
+                ctx.fillStyle = DIM;
+                ctx.fillText(nodes.length + ' SIGNALS  |  TAP A BOX = LINE CHART', 8, 16);
+                if (nodes.length === 0) {
+                    ctx.fillStyle = GOLD;
+                    ctx.font = 'bold 12px ' + MONO;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(live ? 'NO UPCOMING TRIGGERS' : 'SESSION CLOSED', W / 2, H / 2);
+                    ctx.textAlign = 'left';
+                    if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+                    return;
+                }
+                var ax = 8, ay = 26, aw = W - 16, ah = H - ay - 74;
+                if (ah < 60) ah = Math.max(40, H - ay - 8);
+                var BW0 = 520, BH0 = 48, n = nodes.length;
+                var G = n > 24 ? 2 : 5;
+                var bestS = 0, bestC = 1;
+                for (var cc = 1; cc <= n; cc++) {
+                    var rws = Math.ceil(n / cc);
+                    var ss = Math.min(((aw - (cc - 1) * G) / cc) / BW0, ((ah - (rws - 1) * G) / rws) / BH0);
+                    if (ss > bestS) { bestS = ss; bestC = cc; }
+                }
+                bestC = 1;
+                var sc = Math.max(0.1, Math.min(1.4, (ah - (n - 1) * G) / n / BH0));
+                BW0 = aw / sc;
+                var bw = BW0 * sc, bh = BH0 * sc;
+                var rowsUsed = Math.ceil(n / bestC);
+                var gw = bestC * bw + (bestC - 1) * G, gh = rowsUsed * bh + (rowsUsed - 1) * G;
+                var gx0 = ax, gy0 = ay;
+                var topH = BH0, leftW = Math.round(BW0 * 0.22), rightW = Math.round(BW0 * 0.22), midW = BW0 - leftW - rightW, rowH = BH0;
+                var wts = [1.2, 1.2, 1.9, 1, 1];
+                var uFs = 28, ui, uq;
+                for (ui = 0; ui < n; ui++) {
+                    var uSg = nodes[ui].sig;
+                    var uIt = [[getPairDisplayName(uSg.pair), leftW - 10], ['000.0s', rightW - 12]];
+                    var uCl = ['C' + uSg.c, 'R' + uSg.r, 'X' + uSg.s1 + '-X' + uSg.s2, String(uSg.c1), String(uSg.c2)];
+                    for (uq = 0; uq < 5; uq++) uIt.push([uCl[uq], midW * wts[uq] / 6.3 - 8]);
+                    for (uq = 0; uq < uIt.length; uq++) {
+                        ctx.font = 'bold ' + uFs + 'px ' + MONO;
+                        while (uFs > 8 && ctx.measureText(uIt[uq][0]).width > uIt[uq][1]) {
+                            uFs -= 1;
+                            ctx.font = 'bold ' + uFs + 'px ' + MONO;
+                        }
+                    }
+                }
+                for (i = 0; i < n; i++) {
+                    var nd = nodes[i], sg = nd.sig;
+                    var bx = gx0 + (i % bestC) * (bw + G), by = gy0 + Math.floor(i / bestC) * (bh + G);
+                    var dcol = nd.up ? GREEN : RED;
+                    var rdy = (i === 0);
+                    ctx.setTransform(dpr * sc, 0, 0, dpr * sc, dpr * bx, dpr * by);
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                    ctx.letterSpacing = '0px';
+                    ctx.fillStyle = dcol;
+                    ctx.fillRect(0, 0, BW0, BH0);
+                    ctx.textBaseline = 'middle';
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = BG;
+                    var nm = getPairDisplayName(sg.pair);
+                    var pf = uFs;
+                    ctx.font = 'bold ' + pf + 'px ' + MONO;
+                    while (false && pf > 10 && ctx.measureText(nm).width > leftW - 10) {
+                        pf -= 1;
+                        ctx.font = 'bold ' + pf + 'px ' + MONO;
+                    }
+                    ctx.fillText(nm, leftW / 2, topH / 2 + 1);
+                    var remF = nd.rem - ((Date.now() % 1000) / 1000);
+                    var tTxt = remF > 0 ? remF.toFixed(1) + 's' : 'NOW';
+                    if (remF > 0) TC.pulseOn = true;
+                    var tf = uFs;
+                    ctx.font = 'bold ' + tf + 'px ' + MONO;
+                    while (false && tf > 14 && ctx.measureText(tTxt).width > rightW - 12) {
+                        tf -= 2;
+                        ctx.font = 'bold ' + tf + 'px ' + MONO;
+                    }
+                    ctx.fillText(tTxt, BW0 - rightW / 2, topH / 2 + 1);
+                    var cells = ['C' + sg.c, 'R' + sg.r, 'X' + sg.s1 + '-X' + sg.s2, String(sg.c1), String(sg.c2)];
+                    var cx = leftW;
+                    ctx.font = 'bold 14px ' + MONO;
+                    ctx.strokeStyle = BG;
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(BW0 - rightW + 0.5, 0);
+                    ctx.lineTo(BW0 - rightW + 0.5, topH);
+                    ctx.moveTo(leftW + 0.5, 0);
+                    ctx.lineTo(leftW + 0.5, topH);
+                    ctx.moveTo(0, topH + 0.5);
+                    ctx.lineTo(BW0, topH + 0.5);
+                    for (var q = 0; q < 5; q++) {
+                        var cw = midW * wts[q] / 6.3;
+                        var cfs = uFs;
+                        ctx.font = 'bold ' + cfs + 'px ' + MONO;
+                        while (false && cfs > 8 && ctx.measureText(cells[q]).width > cw - 8) {
+                            cfs -= 1;
+                            ctx.font = 'bold ' + cfs + 'px ' + MONO;
+                        }
+                        ctx.fillText(cells[q], cx + cw / 2, topH / 2 + 1);
+                        cx += cw;
+                        if (q < 4) {
+                            ctx.moveTo(Math.round(cx) + 0.5, 0);
+                            ctx.lineTo(Math.round(cx) + 0.5, BH0);
+                        }
+                    }
+                    ctx.stroke();
+                    if (rdy) {
+                        var gp = 0.5 + 0.5 * Math.sin(Date.now() / 220);
+                        ctx.save();
+                        ctx.shadowColor = GOLD;
+                        ctx.shadowBlur = 6 + 18 * gp;
+                        ctx.strokeStyle = GOLD;
+                        ctx.lineWidth = 3 + 2 * gp;
+                        ctx.strokeRect(1.5, 1.5, BW0 - 3, BH0 - 3);
+                        ctx.restore();
+                        TC.pulseOn = true;
+                        if (nd.kind === 'FIRED') TC.activeAt = Date.now();
+                    }
+                    var bgDec = 5;
+                    if (typeof nd.ref === 'number' && isFinite(nd.ref)) {
+                        var bgDp = String(nd.ref).split('.')[1];
+                        bgDec = bgDp ? Math.min(6, bgDp.length) : 2;
+                    }
+                    TC.hov.push({ x: bx, y: by, w: bw, h: bh, o: { sig: sg, idx: nd.idx, kind: nd.kind, need: nd.need, ref: nd.ref, dec: bgDec } });
+                }
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.globalAlpha = 1;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.letterSpacing = '0px';
+                if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+            }
+            
             function tcDrawAll() {
                 var W = TC.W, H = TC.H, dpr = TC.dpr, ctx = TC.ctx;
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -8580,7 +8743,17 @@ let dataList = currentMode === 'REV'
                 if (!TC.allMap) TC.allMap = tcCollectAll();
                 var sigMap = TC.allMap;
                 var sEnd = tcSessionEnd();
-                var base = TC.all ? ((activePairs !== null && activePairs) ? activePairs : ALL_PAIRS) : [activePair];
+                var selAll = (activePairs !== null && activePairs) ? activePairs : ALL_PAIRS;
+                var selN = 0, selK;
+                for (selK = 0; selK < selAll.length; selK++) {
+                    var selD = allPairData[selAll[selK]];
+                    if (selD && selD.prices && selD.prices.length > 0 && !_hiddenPairs.has(selAll[selK])) selN++;
+                }
+                var tcFoc = window._tcFocus || null;
+                var tcFocOk = !!(tcFoc && selAll.indexOf(tcFoc) >= 0);
+                TC.multi = selN > 1;
+                TC.boxesOnly = TC.multi && !tcFocOk;
+                var base = TC.multi ? (tcFocOk ? [tcFoc] : selAll) : (TC.all ? selAll : [activePair]);
                 var pairs = [];
                 var pi, i, k;
                 for (pi = 0; pi < base.length; pi++) {
@@ -8599,6 +8772,7 @@ let dataList = currentMode === 'REV'
                 var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
                 var live = _isWithinMappedWindow() && nowSec >= 0 && nowSec < sEnd;
                 var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
+                if (TC.boxesOnly) { tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM); return; }
                 var pwD = allPairData[activePair], pwC = 8, pwI;
                 if (pwD && pwD.prices) {
                     for (pwI = Math.min(pwD.prices.length - 1, Math.max(0, nowSec)); pwI >= 0; pwI--) {
@@ -9741,7 +9915,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                     TC.pulseQ.push({ x: cqX, y: cqY, w: cqBw, h: cqBh, s: cqScl, col: '#FFD700', p: 0.5 + 0.5 * Math.sin(Date.now() / 220) });
                                                                                                                                                                                                                                                                                                     TC.pulseOn = true;
                                                                                                                                                                                                                                                                                                 }
-                                                                                                                                                                                                var nbTopH = 66, nbLblH = 14, nbRowH = cqBh - nbTopH - nbLblH;
+                                                                                                                                                                                                var nbTopH = 66, nbLblH = 0, nbRowH = cqBh - nbTopH - nbLblH;
                                                                                                 var nbLeftW = Math.round(cqBw * 0.46), nbRightW = cqBw - nbLeftW;
                                                                                                 var nbSec = cqB.tn.kind === 'FIRED' ? (cqB.tn.idx + cqS2.c - nowSec) : (cqB.tn.idx - nowSec);
                                                                                                 var nbRowCol = cqS2.col === 'G' ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
@@ -9756,11 +9930,19 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.letterSpacing = '0px';
                                                                                                 ctx.fillStyle = BG;
                                                                                                 ctx.font = 'bold 30px ' + MONO;
-                                                                                                ctx.strokeStyle = BG; ctx.lineWidth = 0.7; ctx.lineJoin = 'round'; ctx.strokeText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + 24);
-                                                                                                                                                                                                ctx.fillText(cqB.up ? 'BUY' : 'SELL', cqX + nbLeftW / 2, cqY + 24);
+                                                                                                ctx.strokeStyle = BG; ctx.lineWidth = 0.7; ctx.lineJoin = 'round'; ;
+                                                                                                                                                                                                ;
                                                                                                                                                                                                 ctx.font = 'bold 17px ' + MONO;
-                                                                                                                                                                                                ctx.fillText(getPairDisplayName(cqS2.pair), cqX + nbLeftW / 2, cqY + 53);
-                                                                                                var nbTxt = nbSec > 0 ? cqMs(nbSec) : 'NOW';
+                                                                                                                                                                                                var nbPf = 24;
+                                                                                                                                                                                                ctx.font = 'bold ' + nbPf + 'px ' + MONO;
+                                                                                                                                                                                                while (nbPf > 10 && ctx.measureText(getPairDisplayName(cqS2.pair)).width > nbLeftW - 10) {
+                                                                                                                                                                                                    nbPf -= 1;
+                                                                                                                                                                                                    ctx.font = 'bold ' + nbPf + 'px ' + MONO;
+                                                                                                                                                                                                }
+                                                                                                                                                                                                ctx.fillText(getPairDisplayName(cqS2.pair), cqX + nbLeftW / 2, cqY + nbTopH / 2 + 1);
+                                                                                                var nbRem = nbSec - ((Date.now() % 1000) / 1000);
+                                                                                                var nbTxt = nbRem > 0 ? nbRem.toFixed(1) + 's' : 'NOW';
+                                                                                                if (nbRem > 0) TC.pulseOn = true;
                                                                                                 var nbFs = 32;
                                                                                                 ctx.font = 'bold ' + nbFs + 'px ' + MONO;
                                                                                                 while (nbFs > 14 && ctx.measureText(nbTxt).width > nbRightW - 12) {
@@ -9768,12 +9950,12 @@ let dataList = currentMode === 'REV'
                                                                                                     ctx.font = 'bold ' + nbFs + 'px ' + MONO;
                                                                                                 }
                                                                                                 ctx.fillStyle = cqB.dcol;
-                                                                                                ctx.fillStyle = BG; ctx.strokeStyle = BG; ctx.lineWidth = 0.5; ctx.lineJoin = 'round'; ctx.strokeText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
-                                                                                                                                                                                                ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + 25);
+                                                                                                ctx.fillStyle = BG; ctx.strokeStyle = BG; ctx.lineWidth = 0.5; ctx.lineJoin = 'round'; ctx.strokeText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + nbTopH / 2 + 1);
+                                                                                                                                                                                                ctx.fillText(nbTxt, cqX + nbLeftW + nbRightW / 2, cqY + nbTopH / 2 + 1);
                                                                                                 ctx.font = 'bold 14px ' + MONO;
                                                                                                 ctx.fillStyle = cqRdy ? GOLD : DIM;
                                                                                                 ctx.fillStyle = BG;
-                                                                                                                                                                                                ctx.fillText(tcFmt(cqB.tn.idx, true), cqX + nbLeftW + nbRightW / 2, cqY + 51);
+                                                                                                                                                                                                ;
                                                                                                                                                                                                                                                                                                 if (cqB.tn.kind === 'FIRED') {
                                                                                                                                                                                                                                                                                                     TC.activeAt = Date.now();
                                                                                                                                                                                                                                                                                                     var nbPulse = 0.5 + 0.5 * Math.sin(Date.now() / 150);
@@ -9798,20 +9980,20 @@ let dataList = currentMode === 'REV'
                                                                                                 ctx.letterSpacing = '4px';
                                                                                                 ctx.fillStyle = '#D500F9';
                                                                                                 ctx.fillStyle = BG;
-                                                                                                                                                                                                ctx.fillText(cqS2.type === 'REV' ? 'REVERSAL' : 'MOMENTUM', cqX + cqBw / 2 + 2, cqY + nbTopH + nbLblH / 2 + 1);
+                                                                                                                                                                                                ;
                                                                                                 ctx.letterSpacing = '0px';
-                                                                                                var nbWts = [1.2, 1.2, 1.9, 1, 1, 1.5];
-                                                                                                var nbCells = ['C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2), cqS2.pct + '%'];
+                                                                                                var nbWts = [1.2, 1.2, 1.9, 1, 1];
+                                                                                                var nbCells = ['C' + cqS2.c, 'R' + cqS2.r, 'X' + cqS2.s1 + '-X' + cqS2.s2, String(cqS2.c1), String(cqS2.c2)];
                                                                                                 var nbCx = cqX, nbRy = cqY + nbTopH + nbLblH, nbCw = 0, nbI = 0;
                                                                                                 ctx.font = 'bold 10px ' + MONO;
                                                                                                 ctx.font = 'bold 14px ' + MONO;
-                                                                                                for (nbI = 0; nbI < 6; nbI++) {
-                                                                                                    nbCw = cqBw * nbWts[nbI] / 7.8;
+                                                                                                for (nbI = 0; nbI < 5; nbI++) {
+                                                                                                    nbCw = cqBw * nbWts[nbI] / 6.3;
                                                                                                     ctx.fillStyle = cqB.dcol;
                                                                                                     ctx.fillStyle = BG;
                                                                                                                                                                                                         ctx.fillText(nbCells[nbI], nbCx + nbCw / 2, nbRy + nbRowH / 2 + 1);
                                                                                                     nbCx += nbCw;
-                                                                                                    if (nbI < 5) {
+                                                                                                    if (nbI < 4) {
                                                                                                         ctx.strokeStyle = '#FFFFFF';
                                                                                                         ctx.lineWidth = 1;
                                                                                                         ctx.beginPath();
@@ -10371,6 +10553,8 @@ let dataList = currentMode === 'REV'
                                     var bxh = TC.hov[bxi];
                                     if (bxh.w && bxh.o && bxh.o.sig && mx >= bxh.x && mx <= bxh.x + bxh.w && my >= bxh.y && my <= bxh.y + bxh.h) {
                                         var bxs = bxh.o.sig;
+                                        if (TC.multi && !TC.boxesOnly && window._tcFocus === bxs.pair) { TC.hitFlag = true; window._tcFocus = null; tcDraw(); return; }
+                                        window._tcFocus = bxs.pair;
                                         if (typeof manualSelectSignal === 'function') {
                                             TC.hitFlag = true; _wpFocusSet(bxs.pair); manualSelectSignal(bxs.pair, bxs.c, bxs.r, bxs.s1, bxs.s2, bxs.col, bxs.type, bxs.gap || 0, bxs.curGap || 0);
                                         }
