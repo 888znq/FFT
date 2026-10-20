@@ -13510,11 +13510,50 @@ let dataList = currentMode === 'REV'
                                                                                                         activeCat: typeof activeCat !== 'undefined' ? activeCat : 'CRY',
                                                                                                         mode: typeof currentMode !== 'undefined' ? currentMode : 'REV',
                                                                                                         fireOn: typeof brokerFireEnabled !== 'undefined' ? brokerFireEnabled : true,
+                                                                                                                                                                                                                minPct: _wpsElVal('minPctInput'),
+                                                                                                                                                                                                                level: _wpsElVal('levelFilterSelect'),
+                                                                                                                                                                                                                scanMin: _wpsElVal('scanMin'),
+                                                                                                                                                                                                                scanMax: _wpsElVal('scanMax'),
+                                                                                                                                                                                                                sessionLen: _wpsElVal('sessionLengthSelect'),
                                                                                                         _updatedAt: Date.now()
                                                                                                     };
                                                                                                 }
                                     
-                                                var _wpsSavePending = false;
+                                                function _wpsElVal(id) {
+                                                                                                    var el = document.getElementById(id);
+                                                                                                    return el ? String(el.value) : null;
+                                                                                                }
+                                                
+                                                                                                function _wpsApplySessionLen(raw) {
+                                                                                                    if (raw === undefined || raw === null || raw === '') return;
+                                                                                                    try {
+                                                                                                        var val = String(raw);
+                                                                                                        var win = _activeCatWindow();
+                                                                                                        var winLen = win.end - win.start;
+                                                                                                        if (val === 'SPECIAL_0530_0530') {
+                                                                                                            if (activeCat !== '24x7') return;
+                                                                                                            sessionWindowStartMin = 0;
+                                                                                                            sessionWindowEndMin = 1440;
+                                                                                                        } else if (val === 'SPECIAL_1030_2230') {
+                                                                                                            sessionWindowStartMin = 300;
+                                                                                                            sessionWindowEndMin = 1020;
+                                                                                                        } else {
+                                                                                                            var lenMin = parseInt(val, 10);
+                                                                                                            if (!lenMin || lenMin <= 0 || winLen % lenMin !== 0) return;
+                                                                                                            var nowMin = _currentUtcMinuteOfDay();
+                                                                                                            var offsetInWin = ((nowMin - win.start) % winLen + winLen) % winLen;
+                                                                                                            var sessionIdx = Math.floor(offsetInWin / lenMin);
+                                                                                                            sessionWindowStartMin = win.start + sessionIdx * lenMin;
+                                                                                                            sessionWindowEndMin = sessionWindowStartMin + lenMin;
+                                                                                                        }
+                                                                                                        window._lastSessionKey = '';
+                                                                                                        _saveSessionWindow();
+                                                                                                        _refreshSessionSliderUI();
+                                                                                                        if (typeof scheduleSessionBoundaryWipe === 'function') scheduleSessionBoundaryWipe();
+                                                                                                    } catch (e) {}
+                                                                                                }
+                                                
+                                                                                                var _wpsSavePending = false;
                                                 
                                                                                                 function wpsSaveNow() {
                                                                                                     if (_wpsIgnoreNextRemote) { _wpsIgnoreNextRemote = false; return; }
@@ -13566,27 +13605,31 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                     // saved from a previous session's toggle so boot always lands on 24x7.
                                                                                                                                                                                                                                                                                                     _wpsForceDefaultCat('24x7');
                                     
-                                                    if (false && state.minPct !== undefined) {
+                                                    if (state.minPct !== undefined && state.minPct !== null) {
                                                                                                             var minPctEl = document.getElementById('minPctInput');
                                                                                                             if (minPctEl) minPctEl.value = state.minPct;
                                                                                                         }
                                                     
-                                                                                                        if (false && state.level !== undefined) {
+                                                                                                        if (state.level !== undefined && state.level !== null) {
                                                                                                             var levelEl = document.getElementById('levelFilterSelect');
-                                                                                                            if (levelEl) levelEl.value = state.level;
+                                                                                                            if (levelEl) {
+                                                                                                                                                                                                                            var _hasLv = levelEl.tagName !== 'SELECT' || Array.from(levelEl.options).some(function(o) { return o.value === String(state.level); });
+                                                                                                                                                                                                                            if (_hasLv) levelEl.value = state.level;
+                                                                                                                                                                                                                        }
                                                                                                         }
                                                     
-                                                                                                        if (false && state.scanMin !== undefined) {
+                                                                                                        if (state.scanMin !== undefined && state.scanMin !== null) {
                                                                                                             var scanMinEl = document.getElementById('scanMin');
-                                                                                                            if (scanMinEl) scanMinEl.value = state.scanMin;
+                                                                                                            if (scanMinEl) { scanMinEl.value = state.scanMin; _userScanRangeLock = true; }
                                                                                                         }
                                                     
-                                                                                                        if (false && state.scanMax !== undefined) {
+                                                                                                        if (state.scanMax !== undefined && state.scanMax !== null) {
                                                                                                             var scanMaxEl = document.getElementById('scanMax');
-                                                                                                            if (scanMaxEl) scanMaxEl.value = state.scanMax;
+                                                                                                            if (scanMaxEl) { scanMaxEl.value = state.scanMax; _userScanRangeLock = true; }
                                                                                                         }
                                                     
-                                                                                                        if (state.r0Only) {
+                                                                                                        _wpsApplySessionLen(state.sessionLen);
+                                                                                                                                                                                                                if (state.r0Only) {
                                                         r0OnlyMode = true;
                                                         var r0Btn = document.getElementById('r0OnlyBtn');
                                                         if (r0Btn) {
