@@ -464,6 +464,11 @@
                                                                                                                                                 html body #wall-finder-pane .row-red > td,html body #wall-finder-pane .row-green > td{padding:7px 3px !important;font-size:11px !important;}
                                                                                                                                                 html body #wall-finder-pane .row-red > td:first-child,html body #wall-finder-pane .row-green > td:first-child{padding-left:14px !important;}
                                                                                                                                                 html body #wall-finder-pane .row-red > td:last-child,html body #wall-finder-pane .row-green > td:last-child{padding-left:2px !important;padding-right:12px !important;}
+                                                                                                                                                                                                html body div:has(> #pairSelGrid) #pairSelGrid#pairSelGrid{border-radius:26px !important;margin:8px !important;overflow-x:hidden !important;overflow-y:auto !important;}
+                                                                                                                                                                                                html body div:has(> #pairSelGrid) #pairSelGrid#pairSelGrid > button:first-of-type{border-top-left-radius:26px !important;}
+                                                                                                                                                                                                                                                html body div:has(> #pairSelGrid):has(> #pairSelGrid){width:96vw !important;max-width:780px !important;}
+                                                                                                                                                                                                                                                html body div:has(> #pairSelGrid) #pairSelGrid#pairSelGrid > button{padding:clamp(9px,1.8vw,16px) 4px !important;font-size:clamp(9px,1.7vw,14px) !important;}
+                                                                                                                                                                                                                                                html body div:has(> #pairSelGrid) > div:nth-child(2) > button[onclick*="pairSelectAll"]{padding:clamp(10px,2vw,16px) 4px !important;font-size:clamp(10px,1.7vw,14px) !important;}
 
     </style>
 
@@ -745,7 +750,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-family:'JetBrains Mono',monospace;">FRX</button>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       <button id="tcToggleBtn" class="pairIconBtn" data-mode="TICK" title="Tick / Grid" aria-label="Tick / Grid" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">TICK</button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}html body #buyBtn,html body #sellBtn{border-radius:6px !important;}html body div:has(> #tradeAmount),html body div:has(> #tradeExpiryVisible),html body div:has(> #scanMin),html body div:has(> #scanMax),html body #accountBalance{border-radius:6px !important;}html body #trade-console{margin-top:auto !important;padding:4px 6px !important;gap:3px !important;grid-auto-rows:min-content !important;align-content:end !important;box-sizing:border-box !important;}html body #trade-console > div{gap:3px !important;width:100% !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax){height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console #tradeAmount,html body #trade-console #tradeExpiryVisible,html body #trade-console #scanMin,html body #trade-console #scanMax{height:100% !important;min-height:0 !important;line-height:1 !important;font-size:12px !important;padding:0 !important;margin:0 !important;text-align:center !important;}html body #trade-console #buyBtn,html body #trade-console #sellBtn{height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;font-size:10px !important;letter-spacing:0.5px !important;flex:1 1 0 !important;min-width:0 !important;display:flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #trade-console .pairIconBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:28px !important;padding:0 4px !important;box-sizing:border-box !important;}html body #trade-console #accountBalance{height:24px !important;min-height:0 !important;max-height:24px !important;line-height:22px !important;font-size:12px !important;padding:0 4px !important;box-sizing:border-box !important;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><button id="tradeHistBtn" onclick="openTradeHistory()" title="History" aria-label="History" style="flex:0 0 auto; height:28px; min-width:36px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px; display:inline-flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg></button><span id="accountBalance" title="Tap to switch DEMO / REAL" onclick="toggleAccountType()" style="flex:1 1 70px; min-width:0; height:28px; box-sizing:border-box; text-align:center; color:#FFD700; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">--</span><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:2px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}html body #buyBtn,html body #sellBtn{border-radius:6px !important;}html body div:has(> #tradeAmount),html body div:has(> #tradeExpiryVisible),html body div:has(> #scanMin),html body div:has(> #scanMax),html body #accountBalance{border-radius:6px !important;}html body #trade-console{margin-top:auto !important;padding:4px 6px !important;gap:3px !important;grid-auto-rows:min-content !important;align-content:end !important;box-sizing:border-box !important;}html body #trade-console > div{gap:3px !important;width:100% !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax){height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console #tradeAmount,html body #trade-console #tradeExpiryVisible,html body #trade-console #scanMin,html body #trade-console #scanMax{height:100% !important;min-height:0 !important;line-height:1 !important;font-size:12px !important;padding:0 !important;margin:0 !important;text-align:center !important;}html body #trade-console #buyBtn,html body #trade-console #sellBtn{height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;font-size:10px !important;letter-spacing:0.5px !important;flex:1 1 0 !important;min-width:0 !important;display:flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #trade-console .pairIconBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:28px !important;padding:0 4px !important;box-sizing:border-box !important;}html body #trade-console #accountBalance{height:24px !important;min-height:0 !important;max-height:24px !important;line-height:22px !important;font-size:12px !important;padding:0 4px !important;box-sizing:border-box !important;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><button id="tradeHistBtn" onclick="openTradeHistory()" title="History" aria-label="History" style="flex:0 0 auto; height:28px; min-width:36px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px; display:inline-flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg></button><span id="accountBalance" title="Tap to switch DEMO / REAL" onclick="toggleAccountType()" style="flex:1 1 70px; min-width:0; height:28px; box-sizing:border-box; text-align:center; color:#FFD700; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">--</span><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><style>html body #pairHubPanel#pairHubPanel#pairHubPanel#pairHubPanel#pairHubPanel{border-radius:20px !important;overflow:hidden !important;}</style><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:20px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   </div>
                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                             <!-- SYS button hidden — still accessible via JS -->
@@ -851,7 +856,7 @@
                                                                                                                                                             <!-- ROW T1: AMOUNT | EXPIRY | BALANCE -->
                                                                                                                                                             <div style="grid-column: span 2; display:flex; align-items:center; gap:3px;">
                                                                                                                                                             <div style="flex:1; display:flex; align-items:center; justify-content:center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; min-width:0;"><input type="number" id="tradeAmount" value="0.50" step="0.10" min="0.01" style="background: transparent; border: none; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; width: 100%; min-width:0; outline: none; text-align: center;"></div>
-                                                                                                                                                            <div title="Expiry (s)" style="flex:1; display:flex; align-items:center; justify-content:center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; box-sizing:border-box; min-width:0;"><input type="number" id="tradeExpiryVisible" value="300" min="1" style="background: transparent; border: none; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; width: 100%; min-width:0; outline: none; text-align: center;"></div>
+                                                                                                                                                            <div title="Expiry (s)" style="flex:1; display:flex; align-items:center; justify-content:center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; box-sizing:border-box; min-width:0;"><input type="number" id="tradeExpiryVisible" value="60" min="1" style="background: transparent; border: none; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; width: 100%; min-width:0; outline: none; text-align: center;"></div>
                                                                                                                                                             <!-- balance moved next to LOG button -->
                                                                                                                                                             </div>
                                                                                                                                                             <!-- ROW T2: BUY | SELL | HISTORY -->
@@ -868,7 +873,7 @@
 
                                                                                                                                                                                                                                                                             <span style="display:none;">MIN</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMin" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -876,7 +881,7 @@
 
                                                                                                                                                                                                                                                                             <span style="display:none;">MAX</span>
 
-                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="180" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                                                                                                                                                                                                                                                                            <input type="number" id="scanMax" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
 
                                                                                                                                                                                                                                                                         </div>
 
@@ -886,7 +891,7 @@
 
                                                                                                                                                                                                                                                                     <!-- SCN input hidden but functional -->
 
-                                                                                                                                                                                                                                                                    <input type="number" id="autoScanIntervalInput" value="120" min="1" onchange="updateAutoScanInterval()" style="display:none;">
+                                                                                                                                                                                                                                                                    <input type="number" id="autoScanIntervalInput" value="60" min="1" onchange="updateAutoScanInterval()" style="display:none;">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
                                                    
@@ -939,7 +944,7 @@
 
                 
 
-                        <input type="text" id="apiPair" value="cryBTCUSD" style="display:none;" readonly />
+                        <input type="text" id="apiPair" value="1HZ10V" style="display:none;" readonly />
 
         
 
@@ -1191,7 +1196,7 @@
         
                     <div id="pairPickerOverlay" onclick="closePairPicker()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3001;"></div>
 
-    <div id="pairPickerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:2px; overflow:hidden;">
+    <div id="pairPickerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3002; flex-direction:column; border-radius:28px !important; overflow:hidden !important;">
 
         <!-- Header -->
 
@@ -1245,7 +1250,7 @@
 
         <div style="padding:6px 14px; border-top:1px solid #333; font-size:9px; font-weight:800; color:#888; letter-spacing:0.1em; flex-shrink:0; display:flex; justify-content:space-between;">
 
-            <span id="pairPickerCount">0 selected</span>
+            <span id="pairPickerCount" style="padding-left:10px;">0 selected</span>
 
             <span style="color:#555;">tap to toggle · hold APPLY to confirm</span>
 
@@ -2720,9 +2725,9 @@
     
 
         var allPairData = {};
-                                                                var activePair = "cryBTCUSD";
+                                                                var activePair = "1HZ10V";
                                 
-                                                var DEFAULT_PAIRS = ["cryBTCUSD"]; // default: BTC only
+                                                var DEFAULT_PAIRS = ["1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"]; // default: BTC, ETH and all 1HZ deriv pairs
                                                 var activePairs = DEFAULT_PAIRS.slice(); // default: BTC and ETH preselected, all other pairs unselected
                                                 window.pairLiveStatus = window.pairLiveStatus || {};
 
@@ -2752,13 +2757,13 @@
 
         
 
-                let scanPending = 0;
+                let scanPending = 0; var _scanStartedAt = 0; var _scanRerunQueued = false;
 
                         let globalTickCount = 0;
 
                         let isAutoScanOn = false;
 
-                        let autoScanIntervalMs = 120000;
+                        let autoScanIntervalMs = 60000;
                         var _scanCountdownSec = 0;
                         var _scanCountdownMax = 40;
                         var _scanCountdownTimer = null;
@@ -3705,11 +3710,68 @@
 
             const line = document.createElement('div');
 
-            line.style.cssText = `font-size:9px;font-weight:700;letter-spacing:0.06em;padding:1px 0;color:${({'#555':'#6C7CB8','#888':'#9AA8DA'})[color] || color || '#C8D2F0'};font-family:'JetBrains Mono',monospace;`;
+            var _blc = ({'#555':'#6C7CB8','#888':'#9AA8DA'})[color] || color;
+                        if (!_blc) {
+                            if (/fail|error|closed|offline/i.test(msg)) { _blc = '#FF6B6B'; }
+                            else if (/retry|empty|warn/i.test(msg)) { _blc = '#FFD166'; }
+                            else if (/\bOK\b|DONE|hits|complete/i.test(msg)) { _blc = '#4ADE80'; }
+                            else { _blc = '#C8D2F0'; }
+                        }
+                        line.style.cssText = `font-size:9px;font-weight:700;letter-spacing:0.06em;padding:1px 0;background:transparent;font-family:'JetBrains Mono',monospace;`;
+                                    line.style.setProperty('color', _blc, 'important');
+                        try {
+                            var _blp = box.parentElement;
+                            if (_blp) {
+                                _blp.style.setProperty('background', '#070B2E', 'important');
+                                _blp.style.setProperty('border', '1px solid #2A3570', 'important');
+                                _blp.style.setProperty('border-radius', '6px 6px 28px 28px', 'important');
+                                _blp.style.setProperty('box-shadow', 'inset 0 0 18px rgba(0,0,0,0.45)', 'important');
+                            }
+                        } catch (e) {}
 
             const ts = new Date().toLocaleTimeString('en-GB',{hour12:false});
 
-            line.textContent = `[${ts}] ${msg}`;
+            line.textContent = '';
+                        var _bts = document.createElement('span');
+                        _bts.textContent = '[' + ts + '] ';
+                        _bts.style.setProperty('color', '#7C8CCF', 'important');
+                        line.appendChild(_bts);
+                        var _bsep = msg.indexOf(' \u2014 ');
+                        var _bhead = _bsep > 0 ? msg.slice(0, _bsep) : '';
+                        var _brest = _bsep > 0 ? msg.slice(_bsep) : msg;
+                        if (_bhead) {
+                            var _bhc = '';
+                            try {
+                                var _bhp = ALL_PAIRS.filter(function(q) { return getPairDisplayName(q) === _bhead; })[0];
+                                if (_bhp) _bhc = _pairUniqueColor(_bhp);
+                            } catch (e) { _bhc = ''; }
+                            if (!_bhc) {
+                                var _bhh = 0, _bhi;
+                                for (_bhi = 0; _bhi < _bhead.length; _bhi++) { _bhh = (_bhh * 31 + _bhead.charCodeAt(_bhi)) % 360; }
+                                _bhc = 'hsl(' + _bhh + ',85%,68%)';
+                            }
+                            var _bhs = document.createElement('span');
+                            _bhs.textContent = _bhead;
+                            _bhs.style.setProperty('color', _bhc, 'important');
+                            _bhs.style.setProperty('font-weight', '800', 'important');
+                            line.appendChild(_bhs);
+                        }
+                        var _bkc = _blc;
+                        if (!color) {
+                            if (/fail|error|closed|offline/i.test(msg)) { _bkc = '#FF6B6B'; }
+                            else if (/retry|empty|warn/i.test(msg)) { _bkc = '#FFD166'; }
+                            else if (/chunk.*OK|DONE|hits|complete/i.test(msg)) { _bkc = '#4ADE80'; }
+                            else if (/found .*gap/i.test(msg)) { _bkc = '#FB923C'; }
+                            else if (/fetching/i.test(msg)) { _bkc = '#22D3EE'; }
+                            else if (/backfill/i.test(msg)) { _bkc = '#F472B6'; }
+                            else if (/SYNC LOCAL/i.test(msg)) { _bkc = '#60A5FA'; }
+                            else if (/FETCH & SAVE/i.test(msg)) { _bkc = '#C084FC'; }
+                            else { _bkc = '#E0E7FF'; }
+                        }
+                        var _brs = document.createElement('span');
+                        _brs.textContent = _brest;
+                        _brs.style.setProperty('color', _bkc, 'important');
+                        line.appendChild(_brs);
 
             box.appendChild(line);
 
@@ -3748,7 +3810,12 @@
 
             const colorMap = { wait:'#5B6AA8', cache:'#FFD700', fetching:'#00B0FF', done:'#2ED573', err:'#E63946' };
 
-            grid.innerHTML = ALL_PAIRS.map(p => {
+            grid.style.gridTemplateColumns = 'repeat(3,1fr)';
+                        grid.style.gap = '5px';
+                        grid.style.maxHeight = '45vh';
+                        grid.style.overflowY = 'auto';
+                        var _bpItems = _ppSortedPairs(ALL_PAIRS);
+                                                grid.innerHTML = _bpItems.map(p => {
 
                 const name = getPairDisplayName(p);
 
@@ -3766,7 +3833,13 @@
                 }
                 var _bbg = (st === 'err') ? 'transparent' : ((st === 'done') ? _bpc : 'color-mix(in srgb, ' + _bpc + ' ' + (st === 'fetching' ? 60 : (st === 'cache' ? 40 : 18)) + '%, transparent)');
                 var _bfg = (st === 'done') ? '#000432' : ((st === 'wait' || st === 'err') ? _bpc : '#FFFFFF');
-                return `<div data-pc="1" data-st="${st}" style="--pbg:${_bpc};--pfg:#000432;--pbc:${_bpc};padding:3px 4px;border:1px solid ${_bpc};background:${_bpc};border-radius:2px;color:#000432;opacity:1;text-align:center;white-space:nowrap;overflow:hidden;">${icon} ${name}</div>`;
+                var _bu = _bpc;
+                                if (st !== 'err') { try { _bu = _pairUniqueColor(p); } catch (e) {} }
+                                var _bon = (activePairs === null || activePairs.indexOf(p) !== -1);
+                                var _bb = (st === 'err') ? 'transparent' : (_bon ? _bu : 'var(--bg-base)');
+                                var _bf = (st === 'err') ? '#E63946' : (_bon ? '#000432' : '#FFFFFF');
+                                var _bd = (st === 'err') ? '#E63946' : (_bon ? _bu : '#444');
+                                return `<div data-pc="1" data-st="${st}" style="--pbg:${_bu};--pfg:#000432;--pbc:${_bu};padding:6px 4px;border:1px solid ${_bd};background:${_bb};border-radius:2px;color:${_bf};opacity:1;text-align:center;white-space:nowrap;overflow:hidden;font-size:10px;font-weight:800;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;">${icon} ${name}</div>`;
 
             }).join('');
 
@@ -4429,7 +4502,7 @@
 
                         if (isNaN(val) || val < 1) { val = 1; document.getElementById('autoScanIntervalInput').value = 1; }
 
-                        autoScanIntervalMs = val * 1000;
+                        autoScanIntervalMs = 60000;
 
                         setupAutoScan();
 
@@ -5647,7 +5720,16 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                                                                 _refreshArmedGapFromScan();
                                                                                                                                                                 evtLog('INFO', 'SCAN', 'Scan complete - ' + globalRevs.length + ' REV / ' + globalMoms.length + ' MOM signals across ' + (activePairs !== null ? activePairs : ALL_PAIRS).length + ' pairs (cycles ' + document.getElementById('scanMin').value + '-' + document.getElementById('scanMax').value + ')');
                                                                                                                                                                 evtLog('INFO', 'SCAN', 'Scan complete - ' + globalRevs.length + ' REV / ' + globalMoms.length + ' MOM signals across ' + (activePairs !== null ? activePairs : ALL_PAIRS).length + ' pairs (cycles ' + document.getElementById('scanMin').value + '-' + document.getElementById('scanMax').value + ')');
-                                                                                                                                if (window._autoSelectAfterScan) {
+                                                                                                                                if (_scanRerunQueued) {
+                                                                                                                                                                                                    _scanRerunQueued = false;
+                                                                                                                                                                                                    setTimeout(function () { dispatchMultiCycleScan(); }, 0);
+                                                                                                                                                                                                } else {
+                                                                                                                                                                                                    var _rjMin = parseInt(document.getElementById('scanMin').value) || 60;
+                                                                                                                                                                                                    var _rjMax = parseInt(document.getElementById('scanMax').value) || 120;
+                                                                                                                                                                                                    if (_rjMin > _rjMax) { var _rjT = _rjMin; _rjMin = _rjMax; _rjMax = _rjT; }
+                                                                                                                                                                                                    if (CYCLE < _rjMin || CYCLE > _rjMax) window._autoSelectAfterScan = true;
+                                                                                                                                                                                                }
+                                                                                                                                                                                                if (window._autoSelectAfterScan) {
                                                                     window._autoSelectAfterScan = false;
                                                                     setTimeout(_autoSelectTopSignal, 200);
                                                                 }
@@ -5679,6 +5761,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
         function dispatchMultiCycleScan() {
+                    if (scanPending > 0 && (Date.now() - _scanStartedAt) < 90000) { _scanRerunQueued = true; return; }
+                    _scanStartedAt = Date.now();
+                    _scanRerunQueued = false;
                                                             _startScanCountdown();
                                                             let minC = parseInt(document.getElementById('scanMin').value) || 60;
                                                                                                                         
@@ -7928,6 +8013,12 @@ let dataList = currentMode === 'REV'
             return c;
         }
         
+        function _ppSortedPairs(list) {
+            return list.slice().sort(function(a, b) {
+                return String(getPairDisplayName(a)).localeCompare(String(getPairDisplayName(b)), undefined, { numeric: true, sensitivity: 'base' });
+            });
+        }
+        
         function _renderPairGrid(filter) {
             var grid = document.getElementById('pairPickerGrid');
             if (!grid) return;
@@ -7935,8 +8026,9 @@ let dataList = currentMode === 'REV'
             var pairs = ALL_PAIRS.filter(function(p) {
                 var nm = p.replace(/^(frx|cry|1HZ)/i, '');
                 return !q || nm.includes(q);
-            });
-            grid.innerHTML = pairs.map(function(p) {
+                            });
+                            pairs = _ppSortedPairs(pairs);
+                            grid.innerHTML = pairs.map(function(p) {
                 var name = getPairDisplayName(p);
                 var sel = _ppTempSelected.has(p);
                 var pc = _ppPairCol(p);
@@ -8818,15 +8910,16 @@ let dataList = currentMode === 'REV'
             }
         
             function payPairs() {
-                var out = [];
-                var seen = {};
-                var tags = document.querySelectorAll('.payTag');
-                for (var i = 0; i < tags.length; i++) {
-                    var p = tags[i].getAttribute('data-pay');
-                    if (p && !seen[p]) { seen[p] = 1; out.push(p); }
-                }
-                return out;
-            }
+                            var out = [];
+                            var seen = {};
+                            var payAllow = /XAU|XAG|VIX|^R_\d+$|^1HZ\d+V$/i;
+                            var tags = document.querySelectorAll('.payTag');
+                            for (var i = 0; i < tags.length; i++) {
+                                var p = tags[i].getAttribute('data-pay');
+                                if (p && !seen[p] && payAllow.test(p)) { seen[p] = 1; out.push(p); }
+                            }
+                            return out;
+                        }
         
             window._payIntercept = function(data) {
                 var ec = data.echo_req || {};
@@ -9048,7 +9141,7 @@ let dataList = currentMode === 'REV'
             
             function tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM) {
                 var GREEN = window.accentGreenHex || '#2ED573', RED = window.accentRedHex || '#E63946';
-                var nodes = [], pi, k, i;
+                var nodes = [], missedNodes = [], pi, k, i;
                 if (live) {
                     for (pi = 0; pi < pairs.length; pi++) {
                         var bgP = pairs[pi];
@@ -9063,7 +9156,11 @@ let dataList = currentMode === 'REV'
                             var bgSg = bgL[k];
                             if (!bgSg) continue;
                             var bgPl = tcPlan(bgSg, bgPr, bgLim, sEnd, bgLast);
-                            if (!bgPl || bgPl.kind === 'NONE') continue;
+                            if (!bgPl) continue;
+                                                        if (bgPl.kind === 'NONE') {
+                                                            if (bgPl.missed) missedNodes.push({ sig: bgSg, idx: -1, need: 0, ref: null, kind: 'MISSED', rem: 0, up: (bgSg.type === 'REV') ? (bgSg.col === 'R') : (bgSg.col === 'G'), streak: bgPl.streak || 0 });
+                                                            continue;
+                                                        }
                             var bgRem = bgPl.kind === 'FIRED' ? (bgPl.idx + bgSg.c - nowSec) : (bgPl.idx - nowSec);
                             var bgUp = (bgSg.type === 'REV') ? (bgSg.col === 'R') : (bgSg.col === 'G');
                             nodes.push({ sig: bgSg, idx: bgPl.idx, need: bgPl.need, kind: bgPl.kind, ref: bgPl.ref, rem: bgRem, up: bgUp });
@@ -9076,7 +9173,115 @@ let dataList = currentMode === 'REV'
                 ctx.textAlign = 'left';
                 ctx.font = 'bold 10px ' + MONO;
                 ctx.fillStyle = DIM;
-                ctx.fillText(nodes.length + ' SIGNALS  |  TAP A BOX = LINE CHART', 8, 16);
+                var lkKey = function(s) { return s.pair + '|' + s.type + '|' + s.c + '|' + s.r + '|' + s.s1 + '|' + s.s2 + '|' + s.col; };
+                                missedNodes.sort(function(a, b) { return (b.sig.pct * b.sig.c1) - (a.sig.pct * a.sig.c1); });
+                                var _lkExpEl = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
+                                var _lkExp = _lkExpEl ? parseInt(_lkExpEl.value, 10) : NaN;
+                                var _lkOpenList = window.simOpenTrades || [];
+                                var _lkRel = !live;
+                                if (TC.liveLock && !_lkRel) {
+                                    if (!TC.liveLock.tr) {
+                                        for (var _lkJ = 0; _lkJ < _lkOpenList.length; _lkJ++) {
+                                            if (_lkOpenList[_lkJ].symbol === TC.liveLock.node.sig.pair && _lkOpenList[_lkJ].open_time >= TC.liveLock.t0 - 5) { TC.liveLock.tr = _lkOpenList[_lkJ]; break; }
+                                        }
+                                    }
+                                    if (TC.liveLock.tr) {
+                                        /* live timer stays on the signal cycle, not the trade expiry box */
+                                        _lkRel = (nowSec >= TC.liveLock.end);
+                                    } else {
+                                        _lkRel = (nowSec >= TC.liveLock.end);
+                                    }
+                                }
+                                if (_lkRel && TC.liveLock && live) {
+                                    var _lkWin = null, _lkT = TC.liveLock.tr;
+                                    try {
+                                        if (_lkT && typeof _lkT.pnl === 'number') {
+                                            _lkWin = _lkT.pnl > 0;
+                                        } else {
+                                            var _lkN = TC.liveLock.node, _lkPr = allPairData[_lkN.sig.pair].prices;
+                                            var _lkLi = tcLastReal(_lkPr, Math.min(TC.liveLock.end, _lkPr.length - 1));
+                                            var _lkP0 = _lkPr[_lkN.idx], _lkP1 = _lkPr[_lkLi];
+                                            _lkWin = (_lkP0 > 0 && _lkP1 > 0) ? (_lkN.up ? _lkP1 > _lkP0 : _lkP1 < _lkP0) : false;
+                                        }
+                                    } catch (_lkE) { _lkWin = false; }
+                                    TC.liveRes = { key: TC.liveLock.key, node: TC.liveLock.node, win: !!_lkWin, t0: Date.now(), done: false, until: Date.now() + 15000 };
+                                }
+                                if (_lkRel) TC.liveLock = null;
+                                var lkNode = null, lkI, nMissed = 0;
+                                if (TC.liveLock) {
+                                    for (lkI = 0; lkI < nodes.length; lkI++) {
+                                        if (nodes[lkI].kind === 'FIRED' && lkKey(nodes[lkI].sig) === TC.liveLock.key) {
+                                            lkNode = nodes[lkI];
+                                            TC.liveLock.node = lkNode;
+                                            lkNode.rem = TC.liveLock.end - nowSec;
+                                            break;
+                                        }
+                                    }
+                                    if (!lkNode) {
+                                        lkNode = TC.liveLock.node;
+                                        lkNode.rem = TC.liveLock.end - nowSec;
+                                    }
+                                }
+                                if (!TC.liveLock) {
+                                    for (lkI = 0; lkI < nodes.length; lkI++) {
+                                        if (nodes[lkI].kind === 'FIRED' && (lkKey(nodes[lkI].sig) + '|' + nodes[lkI].idx) !== TC.lastLockId) {
+                                            lkNode = nodes[lkI];
+                                            TC.liveLock = { key: lkKey(lkNode.sig), end: lkNode.idx + lkNode.sig.c, node: lkNode, t0: Math.floor(Date.now() / 1000), tr: null };
+                                            TC.lastLockId = lkKey(lkNode.sig) + '|' + lkNode.idx;
+                                            lkNode.rem = TC.liveLock.end - nowSec;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (lkNode) {
+                                    nMissed = Math.min(missedNodes.length, 5);
+                                    nodes = nodes.concat(missedNodes.slice(0, nMissed));
+                                } else {
+                                    nMissed = Math.min(missedNodes.length, 5);
+                                    nodes = nodes.concat(missedNodes.slice(0, nMissed));
+                                }
+                                var _pins = [], _pi, _pk, _pf;
+                                if (lkNode) { lkNode.live = true; lkNode.res = null; _pins.push(lkNode); }
+                                if (TC.liveRes) {
+                                    if (Date.now() < TC.liveRes.until) {
+                                        if (!lkNode || lkKey(lkNode.sig) !== TC.liveRes.key) {
+                                            var _rn = TC.liveRes.node;
+                                            _rn.live = false;
+                                            var _tt = window.tcTruth(_rn);
+                                            if (_tt === 'pending' && Date.now() - TC.liveRes.t0 > 6000) _tt = 'none';
+                                            if (_tt === 'pending') {
+                                                _rn.res = 'wait';
+                                            } else {
+                                                _rn.res = _tt;
+                                                if (!TC.liveRes.done) { TC.liveRes.done = true; TC.liveRes.until = Date.now() + 8000; }
+                                            }
+                                            _rn.rem = 0;
+                                            _pins.push(_rn);
+                                        }
+                                    } else {
+                                        TC.liveRes = null;
+                                    }
+                                }
+                                for (_pi = 0; _pi < _pins.length; _pi++) {
+                                    _pk = lkKey(_pins[_pi].sig);
+                                    _pf = -1;
+                                    for (lkI = 0; lkI < nodes.length; lkI++) {
+                                        if (lkKey(nodes[lkI].sig) === _pk) { _pf = lkI; break; }
+                                    }
+                                    if (_pf === -1) nodes.push(_pins[_pi]); else nodes[_pf] = _pins[_pi];
+                                }
+                                if (_pins.length) {
+                                    nodes.sort(function(a, b) {
+                                        var am = (a.kind === 'MISSED') ? 1 : 0, bm = (b.kind === 'MISSED') ? 1 : 0;
+                                        if (am !== bm) return am - bm;
+                                        return ((b.sig.pct * b.sig.c1) - (a.sig.pct * a.sig.c1)) || (a.rem - b.rem);
+                                    });
+                                }
+                                nMissed = 0;
+                                for (lkI = 0; lkI < nodes.length; lkI++) { if (nodes[lkI].kind === 'MISSED') nMissed++; }
+                                window._tcLiveLock = TC.liveLock || null;
+                                var hdrTxt = (lkNode ? '\u25CF TRADE LIVE  |  ' : '') + ((nodes.length - nMissed) + ' SIGNALS' + (nMissed ? '  |  ' + nMissed + ' MISSED' : '') + '  |  TAP A BOX = LINE CHART');
+                                ctx.fillText(hdrTxt, 8, 16);
                                 var _gpEl = document.getElementById('floatTradePill');
                                 if (_gpEl) _gpEl.style.setProperty('display', 'none', 'important');
                                 if (!window._tcGridWatch) {
@@ -9133,13 +9338,14 @@ let dataList = currentMode === 'REV'
                     var nd = nodes[i], sg = nd.sig;
                     var bx = gx0 + (i % bestC) * (bw + G), by = gy0 + Math.floor(i / bestC) * (bh + G);
                     var dcol = nd.up ? GREEN : RED;
-                    var rdy = (i === 0);
+                    var rdy = (i === 0 && nd.kind !== 'MISSED');
                     ctx.setTransform(dpr * sc, 0, 0, dpr * sc, dpr * bx, dpr * by);
                     ctx.globalAlpha = 1;
                     ctx.shadowBlur = 0;
                     ctx.letterSpacing = '0px';
                     ctx.fillStyle = dcol;
                     var mgT = (i === 0) ? BH0 / 2 : 0, mgB = (i === n - 1) ? BH0 / 2 : 0;
+                                        ctx.globalAlpha = (nd.kind === 'MISSED') ? 0.45 : 1;
                                         ctx.beginPath();
                                         ctx.moveTo(mgT, 0);
                                         ctx.lineTo(BW0 - mgT, 0);
@@ -9165,7 +9371,13 @@ let dataList = currentMode === 'REV'
                     }
                     ctx.fillText(nm, leftW / 2, topH / 2 + 1);
                     var remF = nd.rem - ((Date.now() % 1000) / 1000);
+                    if (nd.live && remF > sg.c) remF = sg.c;
                     var tTxt = remF > 0 ? remF.toFixed(1) + 's' : 'NOW';
+                                        if (nd.kind === 'MISSED') tTxt = 'MISSED';
+                                        else if (nd.kind === 'FIRED' && remF <= 0) tTxt = 'DONE';
+                                        if (nd.res) tTxt = (nd.res === 'win') ? 'WIN \u2713' : (nd.res === 'loss' ? 'LOSS \u2717' : (nd.res === 'wait' ? 'WAIT' : 'NO TICK'));
+                                        else if (nd.live) tTxt = Math.max(0, remF).toFixed(1) + 's';
+                                        if (nd.res || nd.live) TC.pulseOn = true;
                     if (remF > 0) TC.pulseOn = true;
                     var tf = uFs;
                     ctx.font = 'bold ' + tf + 'px ' + MONO;
@@ -9173,8 +9385,25 @@ let dataList = currentMode === 'REV'
                         tf -= 2;
                         ctx.font = 'bold ' + tf + 'px ' + MONO;
                     }
-                    ctx.fillText(tTxt, BW0 - rightW / 2, topH / 2 + 1);
-                                        if (remF <= 0) { ctx.fillStyle = '#FFD700'; _starFill(ctx, BW0 - 9, 9, 9, 4.5, 8); ctx.fillStyle = BG; }
+                    if (nd.res || nd.live) {
+                        var _tcP = 0.5 + 0.5 * Math.sin(Date.now() / 180);
+                        ctx.save();
+                        ctx.globalAlpha = nd.res ? 1 : (0.8 + 0.2 * _tcP);
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(BW0 - rightW + 3, 3, rightW - 6, topH - 6);
+                        ctx.restore();
+                        ctx.fillStyle = nd.res ? (nd.res === 'win' ? GREEN : (nd.res === 'loss' ? RED : BG)) : BG;
+                        ctx.font = 'bold ' + (nd.res ? Math.min(tf, 20) : tf) + 'px ' + MONO;
+                        ctx.fillText(tTxt, BW0 - rightW / 2, nd.live ? topH / 2 + 5 : topH / 2 + 1);
+                        if (nd.live) {
+                            ctx.font = 'bold 9px ' + MONO;
+                            ctx.fillText('\u25CF LIVE', BW0 - rightW / 2, 9);
+                        }
+                        ctx.fillStyle = BG;
+                    } else {
+                        ctx.fillText(tTxt, BW0 - rightW / 2, topH / 2 + 1);
+                    }
+                                        if (remF <= 0 && nd.kind === 'FUT') { ctx.fillStyle = '#FFD700'; _starFill(ctx, BW0 - 9, 9, 9, 4.5, 8); ctx.fillStyle = BG; }
                     var cells = ['C' + sg.c, 'R' + sg.r, 'X' + sg.s1 + '-X' + sg.s2, String(sg.c1), String(sg.c2)];
                     var cx = leftW;
                     ctx.font = 'bold 14px ' + MONO;
@@ -9220,7 +9449,51 @@ let dataList = currentMode === 'REV'
                         var bgDp = String(nd.ref).split('.')[1];
                         bgDec = bgDp ? Math.min(6, bgDp.length) : 2;
                     }
-                    TC.hov.push({ x: bx, y: by, w: bw, h: bh, o: { sig: sg, idx: nd.idx, kind: nd.kind, need: nd.need, ref: nd.ref, dec: bgDec } });
+                    TC.hov.push({ x: bx, y: by, w: bw, h: bh, o: { sig: sg, idx: nd.idx, kind: (nd.kind === 'MISSED' ? 'NONE' : nd.kind), need: nd.need, ref: nd.ref, dec: bgDec } });
+                                        if (nd.live || nd.res) {
+                                            var _pgT = (TC.liveLock && nd.live) ? Math.max(1, TC.liveLock.end - nd.idx) : Math.max(1, sg.c);
+                                            var _pg = nd.live ? Math.max(0, Math.min(1, 1 - Math.max(0, remF) / _pgT)) : 1;
+                                            var _pgP = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+                                            ctx.save();
+                                            ctx.globalAlpha = 1;
+                                            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                                            ctx.fillRect(0, BH0 - 6, BW0, 6);
+                                            ctx.fillStyle = (nd.res === 'loss') ? BG : '#FFFFFF';
+                                            ctx.fillRect(0, BH0 - 6, BW0 * _pg, 6);
+                                            ctx.lineWidth = nd.live ? 2 + 2 * _pgP : 3;
+                                            ctx.strokeStyle = (nd.res === 'loss') ? BG : '#FFFFFF';
+                                            ctx.strokeRect(1.5, 1.5, BW0 - 3, BH0 - 3);
+                                            ctx.restore();
+                                        }
+                                        if (false && lkNode && nd === lkNode) {
+                                            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                                            ctx.letterSpacing = '0px';
+                                            var lvY = by + bh + 12;
+                                            var lvLeft = Math.max(0, remF);
+                                            var lvTot = Math.max(1, sg.c);
+                                            var lvPulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+                                            ctx.textAlign = 'center';
+                                            ctx.textBaseline = 'middle';
+                                            ctx.font = 'bold 16px ' + MONO;
+                                            ctx.fillStyle = dcol;
+                                            ctx.globalAlpha = 0.55 + 0.45 * lvPulse;
+                                            ctx.fillText('\u25CF TRADE LIVE  ' + (nd.up ? '\u25B2 BUY ' : '\u25BC SELL ') + getPairDisplayName(sg.pair), W / 2, lvY + 10);
+                                            ctx.globalAlpha = 1;
+                                            ctx.fillStyle = '#FFFFFF';
+                                            ctx.font = 'bold 28px ' + MONO;
+                                            ctx.fillText(lvLeft.toFixed(1) + 's', W / 2, lvY + 46);
+                                            ctx.font = 'bold 10px ' + MONO;
+                                            ctx.fillStyle = DIM;
+                                            ctx.fillText('TRADE ENDS IN  |  NEW SIGNALS HIDDEN UNTIL IT FINISHES', W / 2, lvY + 72);
+                                            var lvBw = Math.min(W - 32, 360), lvBx = (W - lvBw) / 2, lvBy = lvY + 84;
+                                            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                                            ctx.fillRect(lvBx, lvBy, lvBw, 6);
+                                            ctx.fillStyle = dcol;
+                                            ctx.fillRect(lvBx, lvBy, lvBw * Math.max(0, Math.min(1, 1 - lvLeft / lvTot)), 6);
+                                            TC.pulseOn = true;
+                                            ctx.textAlign = 'left';
+                                            ctx.textBaseline = 'alphabetic';
+                                        }
                 }
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 ctx.globalAlpha = 1;
@@ -11204,7 +11477,7 @@ let dataList = currentMode === 'REV'
                 if (color === colCode && streak === sig.s1 && lastI >= 0) {
                     return { kind: 'FIRED', idx: lastI, need: 0, ref: null, hist: hist };
                 }
-                if (color === colCode && streak > sig.s1) return { kind: 'NONE', idx: -1, need: 0, ref: null, hist: hist };
+                if (color === colCode && streak > sig.s1) return { kind: 'NONE', idx: -1, need: 0, ref: null, hist: hist, missed: true, streak: streak };
                 var k = (color === colCode) ? streak : 0;
                 var need = sig.s1 - k;
                 if (need < 1) need = 1;
@@ -12552,8 +12825,11 @@ let dataList = currentMode === 'REV'
                 if (/^frx(XAU|XAG|XPT|XPD)/.test(p)) return 'METALS';
                 return 'FOREX';
                 };
-                var order = ['METALS', 'FOREX', 'CRYPTO', 'VOLATILITY (1s)'];
-                var btns = Array.prototype.slice.call(grid.querySelectorAll('button[data-pair]'));
+                var order = ['ALL'];
+                                gOf = function(p) { return 'ALL'; };
+                var btns = Array.prototype.slice.call(grid.querySelectorAll('button[data-pair]')).sort(function(a, b) {
+                                return String(_nm(a.getAttribute('data-pair'))).localeCompare(String(_nm(b.getAttribute('data-pair'))), undefined, { numeric: true, sensitivity: 'base' });
+                                });
                 grid.innerHTML = '';
                 order.forEach(function(g) {
                 var items = btns.filter(function(b) { return gOf(b.getAttribute('data-pair')) === g; });
@@ -12575,16 +12851,23 @@ let dataList = currentMode === 'REV'
                 ov.id = _OV;
                 ov.setAttribute('style', 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:3201;');
                 ov.addEventListener('click', function() { window.closePairSelectPopup(); });
+                                var _curveStId = 'pairSelCurveStyle';
+                                if (!document.getElementById(_curveStId)) {
+                                    var _curveSt = document.createElement('style');
+                                    _curveSt.id = _curveStId;
+                                    _curveSt.textContent = 'html body #' + _MD + ',html body #pairPickerModal{border-radius:28px !important;overflow:hidden !important;}html body #' + _MD + ' > div:first-child,html body #pairPickerModal > div:first-child{border-radius:28px 28px 0 0 !important;}html body #pairSelGrid > div{display:none !important;}';
+                                    document.head.appendChild(_curveSt);
+                                }
                 var md = document.createElement('div');
                 md.id = _MD;
-                md.setAttribute('style', 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3202; flex-direction:column; border-radius:2px; overflow:hidden;');
+                md.setAttribute('style', 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:3202; flex-direction:column; border-radius:28px !important; overflow:hidden !important;');
                 md.innerHTML =
                 '<div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">' +
                 '<span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">SELECT PAIRS</span>' +
                 '<button onclick="closePairSelectPopup()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button>' +
                 '</div>' +
                 '<div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">' +
-                '<button onclick="pairSelectAll()" style="flex:1; background:var(--bg-base); color:#FFD700; border:1px solid #FFD700; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>' +
+                
                 '<button onclick="pairSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>' +
                 '</div>' +
                 '<div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">' +
@@ -12689,7 +12972,21 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ];
                                                                                                                                                                                                                         
                                                                                                                                                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                                                                                                                                        let PAIRS = activePairs ? CRY_TICK_PAIRS.filter(p => activePairs.includes(p.sym)) : CRY_TICK_PAIRS.slice();
+                                                                                                                                                                                                                                                                                                                                                        let PAIRS = (function() {
+                                                                                                                                                                                                                                                                                                                                                            var _tpAll = CRY_TICK_PAIRS.slice();
+                                                                                                                                                                                                                                                                                                                                                            var _tpExtra = [
+                                                                                                                                                                                                                                                                                                                                                                { label:'V15[1s]',  sym:'1HZ15V',  color:'#ffe033' },
+                                                                                                                                                                                                                                                                                                                                                                { label:'V25[1s]',  sym:'1HZ25V',  color:'#00eeff' },
+                                                                                                                                                                                                                                                                                                                                                                { label:'V30[1s]',  sym:'1HZ30V',  color:'#ff9500' },
+                                                                                                                                                                                                                                                                                                                                                                { label:'V50[1s]',  sym:'1HZ50V',  color:'#cc88ff' },
+                                                                                                                                                                                                                                                                                                                                                                { label:'V90[1s]',  sym:'1HZ90V',  color:'#ff44cc' },
+                                                                                                                                                                                                                                                                                                                                                                { label:'V100[1s]', sym:'1HZ100V', color:'#33ff66' }
+                                                                                                                                                                                                                                                                                                                                                            ];
+                                                                                                                                                                                                                                                                                                                                                            _tpExtra.forEach(function(x) {
+                                                                                                                                                                                                                                                                                                                                                                if (!_tpAll.some(function(y) { return y.sym === x.sym; })) _tpAll.push(x);
+                                                                                                                                                                                                                                                                                                                                                            });
+                                                                                                                                                                                                                                                                                                                                                            return activePairs ? _tpAll.filter(function(p) { return activePairs.includes(p.sym); }) : _tpAll;
+                                                                                                                                                                                                                                                                                                                                                        })();
                             
                                         const DURATION = 180;
                                         const PAD      = { l: 4, r: 90, t: 4, b: 4 };
@@ -13571,7 +13868,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                 executeTrade = function(type, btnElement) {
                                                                                                                                                                                                     var amt = parseFloat(document.getElementById('tradeAmount').value);
                                                                                                                                                                                                     var expEl = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
-                                                                                                                                                                                                    var exp = parseInt(expEl.value, 10);
+                                                                                                                                                                                                    var exp = window.tcExpiryFor(activePair, parseInt(expEl.value, 10));
                                                                                                                                                                                                     if (isNaN(amt) || amt <= 0) { _rtToast('INVALID TRADE AMOUNT', '#FFD700'); return; }
                                                                                                                                                                                                     if (isNaN(exp) || exp < 1) { _rtToast('INVALID EXPIRY', '#FFD700'); return; }
                                                                                                                                                                                                     var sym = activePair;
@@ -13605,7 +13902,71 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                     }
                                                                                                                                                                                                 };
                                                                                                                                                                                                 
+                                                                                                                                                                                                window.tcTruth = function(node) {
+                                                                                                                                                                                                    try {
+                                                                                                                                                                                                        var s = node.sig;
+                                                                                                                                                                                                        var pr = allPairData[s.pair].prices;
+                                                                                                                                                                                                        var nowS = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+                                                                                                                                                                                                        var last = tcLastReal(pr, Math.min(nowS, pr.length - 1));
+                                                                                                                                                                                                        var p = pr[node.idx];
+                                                                                                                                                                                                        if (!(p > 0)) return 'none';
+                                                                                                                                                                                                        return tcWin(s.type, tcRes(pr, node.idx, s.c, p, (s.col === 'G' ? 1 : 2), last));
+                                                                                                                                                                                                    } catch (e) { return 'none'; }
+                                                                                                                                                                                                };
+                                                                                                                                                                                                window.tcExpiryFor = function(sym, fb) {
+                                                                                                                                                                                                    try {
+                                                                                                                                                                                                        var L = window._tcLiveLock;
+                                                                                                                                                                                                        if (L && L.node && L.node.sig && L.node.sig.pair === sym) {
+                                                                                                                                                                                                            var nowS = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+                                                                                                                                                                                                            var left = Math.ceil(L.end - nowS);
+                                                                                                                                                                                                            if (left >= 1) return Math.min(left, L.node.sig.c);
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                    } catch (e) {}
+                                                                                                                                                                                                    return fb;
+                                                                                                                                                                                                };
+                                                                                                                                                                                                setInterval(function() {
+                                                                                                                                                                                                    try {
+                                                                                                                                                                                                        var el = document.getElementById('tradeExpiryVisible');
+                                                                                                                                                                                                        if (!el || document.activeElement === el) return;
+                                                                                                                                                                                                        var L = window._tcLiveLock, want = null;
+                                                                                                                                                                                                        var nowS = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+                                                                                                                                                                                                        if (L && L.node && L.node.sig && nowS < L.end) {
+                                                                                                                                                                                                            want = L.node.sig.c;
+                                                                                                                                                                                                        } else {
+                                                                                                                                                                                                            var a = parseInt(document.getElementById('scanMin').value, 10);
+                                                                                                                                                                                                            var b = parseInt(document.getElementById('scanMax').value, 10);
+                                                                                                                                                                                                            if (a > 0 && a === b) want = a;
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        if (want && String(el.value) !== String(want)) el.value = want;
+                                                                                                                                                                                                    } catch (e) {}
+                                                                                                                                                                                                }, 500);
                                                                                                                                                                                                 setTimeout(connectDerivAPI, 1000);
+                                                                                                                                                                                                (function () {
+                                                                                                                                                                                                    var HARD_SCAN_MS = 60000;
+                                                                                                                                                                                                    var _bootAt = Date.now();
+                                                                                                                                                                                                    function _rk() {
+                                                                                                                                                                                                        var a = document.getElementById('scanMin'), b = document.getElementById('scanMax');
+                                                                                                                                                                                                        return (a && b) ? a.value + '-' + b.value : '';
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    var _lastRange = _rk();
+                                                                                                                                                                                                    setInterval(function () {
+                                                                                                                                                                                                        try {
+                                                                                                                                                                                                            var k = _rk();
+                                                                                                                                                                                                            if (k !== _lastRange) {
+                                                                                                                                                                                                                _lastRange = k;
+                                                                                                                                                                                                                var _wa = parseInt(document.getElementById('scanMin').value, 10);
+                                                                                                                                                                                                                var _wb = parseInt(document.getElementById('scanMax').value, 10);
+                                                                                                                                                                                                                if (!_userScanRangeLock && _wa === _wb && _wa === CYCLE) return;
+                                                                                                                                                                                                                _userScanRangeLock = true;
+                                                                                                                                                                                                                dispatchMultiCycleScan();
+                                                                                                                                                                                                                return;
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                            if (Date.now() - Math.max(_scanStartedAt || 0, _bootAt) >= HARD_SCAN_MS) {
+                                                                                                                                                                                                                dispatchMultiCycleScan();
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                        } catch (e) {}
+                                                                                                                                                                                                    }, 1000);
+                                                                                                                                                                                                })();
                                                                                                                                                                                                 </script>
                                                                                                                                                                                                 <script>
                                                                                                                                                                                                 (function() {
@@ -13882,3 +14243,4 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                 </body>
                                                                                                                                                                                 
                                                                                                                                                                                         </html> 
+​​​
