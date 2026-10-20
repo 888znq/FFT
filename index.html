@@ -2600,7 +2600,7 @@
                                                                                                                                                                                         'DRV': [
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ],
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         '24x7': [
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD", "cryBTCUSD", "cryETHUSD", "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY", "frxNZDUSD", "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN", "frxUSDPLN", "frxXAGUSD", "frxXAUUSD", "frxXPDUSD", "frxXPTUSD", "1HZ10V", "1HZ100V"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD", "cryBTCUSD", "cryETHUSD", "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD", "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD", "frxNZDJPY", "frxNZDUSD", "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN", "frxUSDPLN", "frxXAGUSD", "frxXAUUSD", "frxXPDUSD", "frxXPTUSD", "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ],
                                                                                                                                                                                                                                                                                     'MTL': [
                                                                                                 "frxXAUUSD", "frxXAGUSD"
@@ -2796,7 +2796,7 @@
         var allPairData = {};
                                                                 var activePair = "1HZ10V";
                                 
-                                                var DEFAULT_PAIRS = ["1HZ10V", "1HZ100V"]; // default: only two 1HZ deriv pairs
+                                                var DEFAULT_PAIRS = ["1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"]; // default: all 1HZ deriv pairs
                                                 var activePairs = DEFAULT_PAIRS.slice(); // default: BTC and ETH preselected, all other pairs unselected
                                                 window.pairLiveStatus = window.pairLiveStatus || {};
 
@@ -6344,7 +6344,24 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                             ctx.shadowBlur = 0; ctx.globalAlpha = 1;
 
-                            ctx.shadowBlur = 0; ctx.globalAlpha = 0.6 + 0.4 * _pulse; ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 2; ctx.strokeRect(xPos, yPos, CELL_W, CELL_H); ctx.globalAlpha = 1; ctx.fillStyle = b.hitFill; ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
+                            {
+                                                            var _tEl = ((Date.now() / 1000) - currentStartTsUtc + _cycleOff()) - b.hitCol * CYCLE;
+                                                            var _tFr = Math.max(0, Math.min(1, _tEl / CYCLE));
+                                                            var _tW = Math.round(CELL_W * _tFr);
+                                                            var _tC = String(b.hitFill).slice(0, 7);
+                                                            ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+                                                            ctx.fillStyle = b.dimFill; ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
+                                                            if (_tW > 0) {
+                                                                ctx.save();
+                                                                ctx.beginPath(); ctx.rect(xPos, yPos, _tW, CELL_H); ctx.clip();
+                                                                var _tG = ctx.createLinearGradient(xPos, 0, xPos + Math.max(_tW, 1), 0);
+                                                                _tG.addColorStop(0, _tC + '1A');
+                                                                _tG.addColorStop(1, b.hitFill);
+                                                                ctx.fillStyle = _tG;
+                                                                ctx.fillRect(xPos, yPos, CELL_W, CELL_H);
+                                                                ctx.restore();
+                                                            }
+                                                        }
 
                             ctx.restore();
 
@@ -9428,6 +9445,29 @@ let dataList = currentMode === 'REV'
                                         if (mgB) { ctx.arcTo(0, BH0, 0, BH0 - mgB, mgB); } else { ctx.lineTo(0, BH0); }
                                         ctx.lineTo(0, mgTL);
                                         if (mgTL) { ctx.arcTo(0, 0, mgTL, 0, mgTL); } else { ctx.lineTo(0, 0); }
+                                                                                ctx.closePath();
+                                                                                ctx.fill();
+                                                                                if (nd.live) {
+                                                                                    var _sRf = nd.rem - ((Date.now() % 1000) / 1000);
+                                                                                    if (_sRf > sg.c) _sRf = sg.c;
+                                                                                    var _sT = TC.liveLock ? Math.max(1, TC.liveLock.end - nd.idx) : Math.max(1, sg.c);
+                                                                                    var _sPg = Math.max(0, Math.min(1, 1 - Math.max(0, _sRf) / _sT));
+                                                                                    var _sEx = BW0 * _sPg;
+                                                                                    ctx.save();
+                                                                                    ctx.clip();
+                                                                                    ctx.globalAlpha = 1;
+                                                                                    var _sA = 0.12 + 0.6 * _sPg;
+                                                                                    /* dark shade removed */
+                                                                                    var _sGr = ctx.createLinearGradient(0, 0, Math.max(_sEx, 1), 0);
+                                                                                    _sGr.addColorStop(0, 'rgba(255,255,255,0)');
+                                                                                    _sGr.addColorStop(1, 'rgba(255,255,255,' + _sA.toFixed(3) + ')');
+                                                                                    ctx.fillStyle = _sGr;
+                                                                                    ctx.fillRect(0, 0, _sEx, BH0);
+                                                                                    ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.9, _sA + 0.2).toFixed(3) + ')';
+                                                                                    ctx.fillRect(Math.max(0, _sEx - 3), 0, 3, BH0);
+                                                                                    ctx.restore();
+                                                                                }
+                                                                                ctx.beginPath();
                                         ctx.closePath();
                                         ctx.fill();
                                         ctx.beginPath();
@@ -9462,7 +9502,7 @@ let dataList = currentMode === 'REV'
                         ctx.save();
                         ctx.globalAlpha = nd.res ? 1 : (0.8 + 0.2 * _tcP);
                         ctx.fillStyle = '#FFFFFF';
-                        ctx.fillStyle = '#FFD700'; var _yr = Math.max(0, mgTL - 3), _yx = BW0 - rightW + 3, _yy = 3, _yw = rightW - 6, _yh = topH - 6;
+                        ctx.fillStyle = 'rgba(0,0,0,0)'; var _yr = Math.max(0, mgTL - 3), _yx = BW0 - rightW + 3, _yy = 3, _yw = rightW - 6, _yh = topH - 6;
                                                 ctx.beginPath(); ctx.moveTo(_yx, _yy); ctx.lineTo(_yx + _yw - _yr, _yy); if (_yr) { ctx.arcTo(_yx + _yw, _yy, _yx + _yw, _yy + _yr, _yr); } else { ctx.lineTo(_yx + _yw, _yy); } ctx.lineTo(_yx + _yw, _yy + _yh); ctx.lineTo(_yx, _yy + _yh); ctx.closePath(); ctx.fill(); ctx.beginPath();
                         ctx.restore();
                         ctx.fillStyle = BG;
@@ -9530,12 +9570,12 @@ let dataList = currentMode === 'REV'
                                             ctx.save();
                                             ctx.globalAlpha = 1;
                                             ctx.fillStyle = 'rgba(0,0,0,0.35)';
-                                            ctx.fillRect(0, BH0 - 6, BW0, 6);
+                                            /* progress bar track removed */
                                             ctx.fillStyle = (nd.res === 'loss') ? BG : '#FFFFFF';
-                                            ctx.fillStyle = (nd.res === 'loss') ? BG : '#FFD700'; ctx.fillRect(0, BH0 - 6, BW0 * _pg, 6);
+                                            /* yellow progress bar removed */
                                             ctx.lineWidth = nd.live ? 2 + 2 * _pgP : 3;
                                             ctx.strokeStyle = (nd.res === 'loss') ? BG : '#FFFFFF';
-                                            ctx.strokeStyle = (nd.res === 'loss') ? BG : '#FFD700'; var _sa = Math.max(0, mgTL - 1.5), _sb = Math.max(0, mgB - 1.5);
+                                            ctx.strokeStyle = 'rgba(0,0,0,0)'; var _sa = Math.max(0, mgTL - 1.5), _sb = Math.max(0, mgB - 1.5);
                                                                                         ctx.beginPath(); ctx.moveTo(1.5 + _sa, 1.5); ctx.lineTo(BW0 - 1.5 - _sa, 1.5);
                                                                                         if (_sa) { ctx.arcTo(BW0 - 1.5, 1.5, BW0 - 1.5, 1.5 + _sa, _sa); } else { ctx.lineTo(BW0 - 1.5, 1.5); }
                                                                                         ctx.lineTo(BW0 - 1.5, BH0 - 1.5 - _sb);
