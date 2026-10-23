@@ -6052,15 +6052,17 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                       .filter(x => _levelVal === 0 || x.s1 === _levelVal)
                       .filter(x => !r0OnlyMode || x.r === 0)
                       .sort((a, b) => (b.pct * b.c1) - (a.pct * a.c1));
-                  var seen = new Set();
-                  var unique = [];
-                  for (var i = 0; i < sorted.length; i++) {
-                      if (!seen.has(sorted[i].pair)) {
-                          seen.add(sorted[i].pair);
-                          unique.push(sorted[i]);
-                      }
-                  }
-                  return unique;
+                  var seen = {};
+                                    var unique = [];
+                                    for (var i = 0; i < sorted.length; i++) {
+                                        var _pk = sorted[i].pair;
+                                        var _cnt = seen[_pk] || 0;
+                                        if (_cnt < 10) {
+                                            seen[_pk] = _cnt + 1;
+                                            unique.push(sorted[i]);
+                                        }
+                                    }
+                                    return unique;
               }
               
               var revTop10 = _buildTop10([...globalRevs]);
