@@ -2514,9 +2514,9 @@
                                                                                                                                                                                         
                                                                                                                                                                                                                     const gapFreq = (gapFreqMapAll && gapFreqMapAll[s]) || {};
                                                                                                                                                                                         
-                                                                                                                                                                                                                    revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap, gapCount, gapFreq });
+                                                                                                                                                                                                                    if (c1 >= 2) revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: 'REV', gap, curGap, gapCount, gapFreq });
                                                                                                     
-                                                                                                                                if (c1 > 1) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM' });
+                                                                                                                                if (c1 >= 2) moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: 'MOM', gap, curGap, gapCount, gapFreq });
                 
                                         }
                 
