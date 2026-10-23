@@ -5763,7 +5763,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                         .filter(function(x) { return x.pct >= _minPct; })
                         .filter(function(x) { return _levelVal === 0 || x.s1 === _levelVal; })
                         .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
-            if (topList.length === 0) return;
+            topList = topList.filter(function(x) { return currentMode !== 'REV' || x.c2 === 0; });
+                        if (topList.length === 0) return;
             var top = topList[0];
             if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
             if (activePair !== top.pair) {
@@ -6065,7 +6066,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                     return unique;
               }
               
-              var revTop10 = _buildTop10([...globalRevs]);
+              var revTop10 = _buildTop10([...globalRevs].filter(x => x.c2 === 0));
               var momTop10 = _buildTop10([...globalMoms]);
               if (false && window._tcSigMode === 'MIX') {
                   var bestByPair = {};
@@ -9257,6 +9258,7 @@ let dataList = currentMode === 'REV'
                                     for (var tpi = 0; tpi < list.length; tpi++) {
                                         var tx = list[tpi];
                                         if (tx.pct < minPct) continue;
+                                                                                if (key === 'rev' && tx.c2 !== 0) continue;
                                         if (lv !== 0 && tx.s1 !== lv) continue;
                                         if (r0 && tx.r !== 0) continue;
                                         if (_hiddenPairs.has(tx.pair)) continue;
