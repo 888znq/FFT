@@ -506,10 +506,8 @@ async def api_scan(request):
 
 
 def can_admin(request):
-    key = os.environ.get("ADMIN_KEY", "")
-    if key:
-        return hmac.compare_digest(request.headers.get("X-Admin-Key", ""), key)
-    return (not IS_HOSTED) and request.remote in ("127.0.0.1", "::1")
+    # Security disabled: anyone who can reach the server may change its config.
+    return True
 
 
 async def api_config(request):
