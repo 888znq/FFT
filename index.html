@@ -11002,6 +11002,7 @@ let dataList = currentMode === 'REV'
                                                                 var cqTblW = 16 + 5 * 6;
                                                                 for (var cqZj = 0; cqZj < 7; cqZj++) cqTblW += cqCols[cqZj];
                                                                 cqBw = Math.ceil(Math.max(cqTblW, cqHdrW)) + 2;
+                                                                                /* dock gap now fixed at source in the pill dock code */
                                                                                 var cqMs = function(sec) {
                                                                                     var m = Math.floor(sec / 60), s = sec % 60, h = Math.floor(m / 60);
                                                                                     if (h > 0) m = m % 60;
@@ -11999,7 +12000,7 @@ let dataList = currentMode === 'REV'
                                                         var _pbTop = _pbT2 + 4;
                                                                                 if (_pbCa && (_pbTop + (_pbEl2.offsetHeight || 30) > pbot - 2)) _pbTop = _pbCa.y - 4 - (_pbEl2.offsetHeight || 30);
                                                                                 if (_dkR && _dkR.width) {
-                                                                                    _dkTop = _dkR.top - (_pbEl2.offsetHeight || 30);
+                                                                                    _dkTop = _dkR.top - (getComputedStyle(_pbEl2).display === 'none' ? 0 : (_pbEl2.offsetHeight || 30));
                                                                                     _pbEl2.style.top = Math.round(_dkTop) + 'px';
                                                                                     window._tcPillDock = { x: _dkL - _pbRc2.left, w: _dkW, tradeTop: _dkTop - _pbRc2.top };
                                                                                 } else {
