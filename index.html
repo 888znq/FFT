@@ -6123,6 +6123,22 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 window._autoBestOn = true;
                         window._allLvlOn = true;
                                 window._allLvlOrd = true;
+                                        window._firstPickDone = false;
+                                        function _firstPickTry() {
+                                            if (window._firstPickDone) return;
+                                            var bo = document.getElementById('bootOverlay');
+                                            if (bo && window.getComputedStyle(bo).display !== 'none') return;
+                                            if (typeof scanPending !== 'undefined' && scanPending > 0) return;
+                                            if (typeof lastClickedSigId !== 'undefined' && lastClickedSigId) { window._firstPickDone = true; return; }
+                                            var fpRow = document.querySelector('#peaksTableBodyRev tr.highlight-gem') || document.querySelector('#peaksTableBodyMom tr.highlight-gem');
+                                            if (!fpRow) return;
+                                            window._firstPickDone = true;
+                                            fpRow.click();
+                                        }
+                                        window._firstPickTimer = setInterval(function () {
+                                            _firstPickTry();
+                                            if (window._firstPickDone) clearInterval(window._firstPickTimer);
+                                        }, 500);
                                         function _wpTmrKey(d) {
                                             return d.pair + '|' + d.c + '|' + d.r + '|' + d.s1 + '|' + d.s2 + '|' + d.col + '|' + d.type;
                                         }
@@ -8457,6 +8473,7 @@ let dataList = currentMode === 'REV'
                                         if (!_wpFocusPair) return;
                                         var t = e.target;
                                         if (t && t.closest && t.closest('tr.highlight-gem, button, input, select, .custom-select-wrapper')) return;
+                                                                                if (!window._tcBoxesOn) return;
                                         _wpFocusClear();
                                     });
                                 });
@@ -11808,6 +11825,7 @@ let dataList = currentMode === 'REV'
                                                                                                     ctx.fillRect = function(x, y, w, h) { window._pillFill(this, x, y, w, h); };
                                                                                                     ctx.strokeRect = function(x, y, w, h) { window._pillStroke(this, x, y, w, h); };
                                                                                                     var cqB = callouts[k], cqY = Math.round(cqB.y), cqS2 = cqB.tn.sig;
+                                                                                                                                        if (!window._tcPillsOn) continue;
                                                         cqX = cqB.bx; cqBw = cqBwD * (cqB.sc || 1); cqBh = cqBhD * (cqB.sc || 1);
                                     var cqRdy = (cqB.tn.need === 1 || cqB.tn.kind === 'FIRED');
                                     var cqEx, cqEy;
