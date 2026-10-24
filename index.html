@@ -10600,11 +10600,12 @@ let dataList = currentMode === 'REV'
                     }
                     var flEj = mk.i + mk.sig.c;
                     var flEx = xOf(flEj);
-                    if (mk.res !== 'none' && flEx >= PADL) {
+                    if (mk.res !== 'none' && flEx >= PADL && !(TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair)) {
                     var flXe = Math.min(flEx, W - PADR);
                     var flAct = (mk.res === 'pending');
                     var flCol = mk.it.color;
-                    var flLo = mk.p, flHi = mk.p;
+                    var flSh = (mk.sig.type === 'MOM') ? mk.sig.c : 0;
+                                        var flLo = mk.p, flHi = mk.p;
                     var flKe = Math.min(flEj, (mk.it.last >= 0 ? mk.it.last : flEj), mk.it.len - 1);
                     var flKs = Math.max(1, Math.ceil(mk.sig.c / 300));
                     for (var flK = mk.i; flK <= flKe; flK += flKs) {
@@ -10644,7 +10645,7 @@ let dataList = currentMode === 'REV'
                                         if (TC.candle && TC.cdlHits && TC.cdlHits.length) {
                                             for (var cbI = 0; cbI < TC.cdlHits.length; cbI++) {
                                                 var cbH = TC.cdlHits[cbI], cbO = cbH.o;
-                                                if (!cbO || cbO.pair !== mk.it.pair || cbO.s < mk.i || cbO.s >= flEj) continue;
+                                                if (!cbO || cbO.pair !== mk.it.pair || cbO.s < mk.i - flSh || cbO.s >= flEj - flSh) continue;
                                                 if (cbH.bx < cbX0) cbX0 = cbH.bx;
                                                 if (cbH.bx + cbH.bw > cbX1) cbX1 = cbH.bx + cbH.bw;
                                                 if (cbH.by < cbY0) cbY0 = cbH.by;
@@ -10700,7 +10701,7 @@ let dataList = currentMode === 'REV'
                                             ctx.strokeStyle = mk.it.color;
                                             for (var cbJ = 0; cbJ < TC.cdlHits.length; cbJ++) {
                                                 var cbG = TC.cdlHits[cbJ], cbP = cbG.o;
-                                                if (!cbP || cbP.pair !== mk.it.pair || cbP.s < mk.i || cbP.s >= flEj) continue;
+                                                if (!cbP || cbP.pair !== mk.it.pair || cbP.s < mk.i - flSh || cbP.s >= flEj - flSh) continue;
                                                 window._tcSil(ctx, cbG.bx, cbG.by, cbG.bw, cbG.bh, cbG.mx, cbG.yh, cbG.yl);
                                             }
                                         } else {
@@ -10791,10 +10792,13 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                     ctx.font = 'bold 44px ' + MONO;
                                                                                                                                                                                     ctx.textAlign = 'center';
                                                                                                                                                                                     ctx.textBaseline = 'middle';
-                                                                                                                                                                                    if (TC.candle && mk.tkNX !== undefined) { tkX = (cbX0 + cbX1) / 2; tkY = Math.max(ptop + 24, cbY0 - 26); }
+                                                                                                                                                                                    if (TC.candle && mk.tkNX !== undefined) { var dcH = null, dcI, dcO;
+                                                                                                                                                                                                                                                                        if (TC.cdlHits) { for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.s >= mk.i - (mk.sig.type === 'MOM' ? mk.sig.c : 0) && dcO.s < mk.i + mk.sig.c - (mk.sig.type === 'MOM' ? mk.sig.c : 0) && (!dcH || dcO.s > dcH.o.s)) { dcH = TC.cdlHits[dcI]; } } }
+                                                                                                                                                                                                                                                                                                                                                            if (false && dcH && mk.sig.type === 'MOM') { for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.e === dcH.o.s - 1) { dcH = TC.cdlHits[dcI]; break; } } }
+                                                                                                                                                                                                                                                                        if (dcH) { tkX = dcH.mx; tkY = Math.max(ptop + 24, Math.min(dcH.yh, dcH.by) - 26); } else { tkX = mk.tkNX; tkY = mk.tkNY; } }
                                                                                                                                                                                     ctx.globalAlpha = 1;
                                                                                                                                                                                     var tkCol = mk.win === 'win' ? CY : AM;
-                                                                                                                                                                                    var tkSym = mk.win === 'win' ? '\u2713' : '\u2717';
+                                                                                                                                                                                    var tkSym = (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair) ? '' : (mk.win === 'win' ? '\u2713' : '\u2717');
                                                                                                                                                                                     ctx.fillStyle = tkCol;
                                                                                                                                                                                     ctx.shadowColor = tkCol;
                                                                                                                                                                                     if (TC.candle && TC.cdlHits) {
@@ -10804,7 +10808,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                             if (!ckP || ckP.pair !== mk.it.pair || ckG.yh === undefined || ckP.s > mk.i - 1 || ckP.e < mk.i - 1) continue;
                                                                                                                                                                                             if (!ckBest || ckP.e > ckBest.o.e) ckBest = ckG;
                                                                                                                                                                                         }
-                                                                                                                                                                                        if (ckBest) {
+                                                                                                                                                                                        if (false && ckBest) {
                                                                                                                                                                                             tkX = ckBest.bx + ckBest.bw / 2;
                                                                                                                                                                                             tkY = Math.max(14, Math.min(ckBest.yh, ckBest.by) - 34);
                                                                                                                                                                                         }
@@ -11096,7 +11100,9 @@ let dataList = currentMode === 'REV'
                                     ctx.fillStyle = mtRes;
                                     ctx.globalAlpha = 0.65 + 0.35 * mtP;
                                     if (TC.candle) {
-                                        ctx.fillText(mtWin ? '\u2713' : '\u2717', (mtXa + mtXb) / 2, Math.max(ptop + 24, mtY1 - 26));
+                                        var mtNx = null, mtNi, mtNh;
+                                                                            if (TC.cdlHits) { for (mtNi = 0; mtNi < TC.cdlHits.length; mtNi++) { mtNh = TC.cdlHits[mtNi]; if (mtNh.o && mtNh.o.pair === mtIt.pair && mtNh.x >= mtXb - 1 && (!mtNx || mtNh.x < mtNx.x)) mtNx = mtNh; } }
+                                                                                ctx.fillText(mtWin ? '\u2713' : '\u2717', mtNx ? (mtNx.x + mtNx.w / 2) : (mtXa + mtXb) / 2, mtNx ? Math.max(ptop + 24, mtNx.y - 22) : Math.max(ptop + 24, mtY1 - 26));
                                         ctx.globalAlpha = 0;
                                     }
                                     ctx.fillText(mtWin ? '\u2713' : '\u2717', (mtXa + mtXb) / 2, TC.candle ? Math.max(ptop + 24, mtY1 - 26) : (mtY1 + mtY2) / 2);
@@ -11153,6 +11159,41 @@ let dataList = currentMode === 'REV'
                                                             if (!TC.candle) ctx.strokeText(ocLbl, ocX, ocLy);
                                                             ctx.fillStyle = '#FFD700';
                                                             if (!TC.candle) ctx.fillText(ocLbl, ocX, ocLy);
+                                                                                                                        if (TC.candle && ocSg && ocSg.type === 'MOM' && TC.cdlHits) {
+                                                                                                                            var ovxC0 = Math.max(1, Math.round(CYCLE) || 1);
+                                                                                                                            var ovxPi = ocIdx - 1 - ovxC0;
+                                                                                                                            var ovxP = null, ovxB = null, ovxI, ovxO;
+                                                                                                                            for (ovxI = 0; ovxI < TC.cdlHits.length; ovxI++) {
+                                                                                                                                ovxO = TC.cdlHits[ovxI].o;
+                                                                                                                                if (ovxO && ovxO.pair === ocIt.pair && ovxO.ce === ovxC0 && ovxO.s <= ovxPi && ovxO.e >= ovxPi) { ovxP = ovxO; break; }
+                                                                                                                            }
+                                                                                                                            if (ovxP) {
+                                                                                                                                for (ovxI = 0; ovxI < TC.cdlHits.length; ovxI++) {
+                                                                                                                                    ovxO = TC.cdlHits[ovxI].o;
+                                                                                                                                    if (ovxO && ovxO.pair === ocIt.pair && ovxO.s === ovxP.e + 1) { ovxB = TC.cdlHits[ovxI]; break; }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                            if (ovxB && ovxB.mx >= PADL && ovxB.mx <= W - PADR) {
+                                                                                                                                ctx.save();
+                                                                                                                                ctx.globalAlpha = 1;
+                                                                                                                                ctx.shadowBlur = 0;
+                                                                                                                                ctx.setLineDash([]);
+                                                                                                                                ctx.strokeStyle = ocIt.color;
+                                                                                                                                ctx.lineWidth = 1.8;
+                                                                                                                                ctx.beginPath();
+                                                                                                                                window._tcSil(ctx, ovxB.bx, ovxB.by, ovxB.bw, ovxB.bh, ovxB.mx, ovxB.yh, ovxB.yl);
+                                                                                                                                ctx.stroke();
+                                                                                                                                var ovxW = tcWin(ocSg.type, (ocIdx + CYCLE > ocIt.last) ? 'pending' : 'cont');
+                                                                                                                                if (ovxW === 'win' || ovxW === 'loss') {
+                                                                                                                                    ctx.font = 'bold 44px ' + MONO;
+                                                                                                                                    ctx.textAlign = 'center';
+                                                                                                                                    ctx.textBaseline = 'middle';
+                                                                                                                                    ctx.fillStyle = ovxW === 'win' ? CY : AM;
+                                                                                                                                    ctx.fillText(ovxW === 'win' ? '\u2713' : '\u2717', ovxB.mx, Math.max(ptop + 24, Math.min(ovxB.yh, ovxB.by) - 26));
+                                                                                                                                }
+                                                                                                                                ctx.restore();
+                                                                                                                            }
+                                                                                                                        }
                                                             ctx.restore();
                                                             if (ocSg) {
                                                                 var ocRes = (ocIdx + CYCLE > ocIt.last) ? 'pending' : ((ocSg.type === 'REV' && !ocInst.isFalse) ? 'rev' : 'cont');
