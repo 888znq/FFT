@@ -5942,6 +5942,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 b ? b.value : '',
                 (typeof r0OnlyMode !== 'undefined' && r0OnlyMode) ? 1 : 0,
                 (activePairs ? activePairs.join(',') : 'ALL'),
+                                (window._autoBestOn ? 1 : 0),
                 (typeof sessionWindowStartMin !== 'undefined' ? sessionWindowStartMin : 0),
                 (typeof sessionWindowEndMin !== 'undefined' ? sessionWindowEndMin : 1440),
                 (typeof currentStartTsUtc !== 'undefined' ? currentStartTsUtc : 0)
@@ -6108,6 +6109,39 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         }
         
         window._champScore = _champScore;
+                window._autoBestOn = false;
+                function _abPaint() {
+                    var b = document.getElementById('autoBestBtn');
+                    if (!b) return;
+                    b.style.setProperty('background', window._autoBestOn ? (window.accentGreenHex || '#2ED573') : '#E2E8F0', 'important');
+                    b.style.setProperty('color', '#000432', 'important');
+                    b.style.setProperty('-webkit-text-fill-color', '#000432', 'important');
+                }
+                function _abToggle() {
+                    window._autoBestOn = !window._autoBestOn;
+                    _abPaint();
+                    try { renderFilteredTable(); } catch (e) {}
+                }
+                function _abMount() {
+                    if (document.getElementById('autoBestBtn')) return;
+                    var row = document.querySelector('#wall-finder-pane .ctrl-row');
+                    var r0 = document.getElementById('r0OnlyBtn');
+                    if (!row || !r0) return;
+                    var anchor = r0;
+                    while (anchor && anchor.parentNode !== row) anchor = anchor.parentNode;
+                    if (!anchor) return;
+                    var b = document.createElement('button');
+                    b.id = 'autoBestBtn';
+                    b.type = 'button';
+                    b.textContent = 'BEST';
+                    b.title = 'Auto best %: for the selected level, show the highest % that exists';
+                    b.style.cssText = 'flex:0 0 auto;height:28px;min-width:40px;padding:0 6px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+                    b.addEventListener('click', function (e) { e.stopPropagation(); _abToggle(); });
+                    row.insertBefore(b, anchor);
+                    _abPaint();
+                }
+                window.addEventListener('load', _abMount);
+                setInterval(_abMount, 1000);
         window._champIs = function (x) {
             var ch = _champState[x.type];
             return !!(ch && ch.key === _champKey(x));
@@ -6417,6 +6451,21 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
        
        function _buildTop10(list) {
+                         var _minPctSaved = _minPct;
+                         if (window._autoBestOn && _levelVal !== 0) {
+                             var _abBest = -1;
+                             for (var _abi = 0; _abi < list.length; _abi++) {
+                                 var _abx = list[_abi];
+                                 if (_hiddenPairs.has(_abx.pair)) continue;
+                                 if (_abx.s1 !== _levelVal) continue;
+                                 if (r0OnlyMode && _abx.r !== 0) continue;
+                                 if (_abx.pct > _abBest) _abBest = _abx.pct;
+                             }
+                             if (_abBest >= 0) _minPct = _abBest;
+                         }
+                         try { return _buildTop10Core(list); } finally { _minPct = _minPctSaved; }
+                     }
+                     function _buildTop10Core(list) {
                   var sorted = list
                       .filter(x => !_hiddenPairs.has(x.pair))
                       .filter(x => x.pct >= _minPct)
