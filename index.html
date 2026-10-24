@@ -537,6 +537,12 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane::before{background:#000432 !important;}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 html body #tcWrap#tcWrap #tcBar#tcBar{border-top:1px solid #000432 !important;}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 html body #floatTradePill#floatTradePill#floatTradePill#floatTradePill#floatTradePill#floatTradePill{border-top:1px solid #000432 !important;}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                /* ===== WALL PANEL TOP: TWO COMPACT ROWS ===== */
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row{display:flex !important;flex-wrap:wrap !important;align-items:stretch !important;gap:1px !important;padding:0 !important;}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row > *{flex:1 1 24% !important;min-width:0 !important;max-width:none !important;box-sizing:border-box !important;}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row *{font-size:10px !important;}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .ctrl-input,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row select,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #autoBestBtn,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #r0OnlyBtn,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #scanTimerDisplay{height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #autoBestBtn,html
 
     </style>
 
@@ -5943,6 +5949,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 (typeof r0OnlyMode !== 'undefined' && r0OnlyMode) ? 1 : 0,
                 (activePairs ? activePairs.join(',') : 'ALL'),
                                 (window._autoBestOn ? 1 : 0),
+                                                (window._allLvlOn ? 1 : 0),
                 (typeof sessionWindowStartMin !== 'undefined' ? sessionWindowStartMin : 0),
                 (typeof sessionWindowEndMin !== 'undefined' ? sessionWindowEndMin : 1440),
                 (typeof currentStartTsUtc !== 'undefined' ? currentStartTsUtc : 0)
@@ -6109,7 +6116,91 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         }
         
         window._champScore = _champScore;
-                window._autoBestOn = false;
+                window._autoBestOn = true;
+                        window._allLvlOn = false;
+                        var _ALB_PER_LVL = 3;
+                        function _allLvlBuild(list) {
+                            var bestByLvl = {};
+                            var pool = [];
+                            for (var i = 0; i < list.length; i++) {
+                                var x = list[i];
+                                if (_hiddenPairs.has(x.pair)) continue;
+                                if (r0OnlyMode && x.r !== 0) continue;
+                                pool.push(x);
+                                if (bestByLvl[x.s1] === undefined || x.pct > bestByLvl[x.s1]) bestByLvl[x.s1] = x.pct;
+                            }
+                            var byLvl = {};
+                            for (var j = 0; j < pool.length; j++) {
+                                var y = pool[j];
+                                if (y.pct === bestByLvl[y.s1]) {
+                                    if (!byLvl[y.s1]) byLvl[y.s1] = [];
+                                    byLvl[y.s1].push(y);
+                                }
+                            }
+                            var out = [];
+                            Object.keys(byLvl).forEach(function (k) {
+                                var arr = byLvl[k].sort(function (a, b) { return _champScore(b) - _champScore(a); });
+                                for (var n = 0; n < arr.length && n < _ALB_PER_LVL; n++) out.push(arr[n]);
+                            });
+                            out.sort(function (a, b) {
+                                if (b.pct !== a.pct) return b.pct - a.pct;
+                                return _champScore(b) - _champScore(a);
+                            });
+                            return out;
+                        }
+                        function _alPaint() {
+                            var b = document.getElementById('allLvlBtn');
+                            if (!b) return;
+                            b.style.setProperty('background', window._allLvlOn ? (window.accentGreenHex || '#2ED573') : '#E2E8F0', 'important');
+                            b.style.setProperty('color', '#000432', 'important');
+                            b.style.setProperty('-webkit-text-fill-color', '#000432', 'important');
+                        }
+                        function _alLockCss() {
+                                    if (document.getElementById('allLvlLockCss')) return;
+                                    var st = document.createElement('style');
+                                    st.id = 'allLvlLockCss';
+                                    st.textContent = 'html.lvls-on #wall-finder-pane .ctrl-row > :has(#levelFilterSelect),html.lvls-on #wall-finder-pane .ctrl-row > :has(#minPctInput),html.lvls-on #wall-finder-pane .ctrl-row > #autoBestBtn{pointer-events:none !important;opacity:0.45 !important;}';
+                                    document.head.appendChild(st);
+                                }
+                                function _alForceAll() {
+                                    try {
+                                        var el = document.getElementById('levelFilterSelect');
+                                        if (!el || el.tagName !== 'SELECT') return;
+                                        var pick = null;
+                                        for (var oi = 0; oi < el.options.length; oi++) {
+                                            var op = el.options[oi];
+                                            if (op.value === '0' || op.value === '' || /^\s*all/i.test(op.text)) { pick = op; break; }
+                                        }
+                                        if (pick && el.value !== pick.value) {
+                                            el.value = pick.value;
+                                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                                        }
+                                    } catch (e) {}
+                                }
+                                function _alToggle() {
+                                    window._allLvlOn = !window._allLvlOn;
+                                    _alLockCss();
+                                    document.documentElement.classList.toggle('lvls-on', !!window._allLvlOn);
+                                    if (window._allLvlOn) _alForceAll();
+                                    _alPaint();
+                                    try { renderFilteredTable(); } catch (e) {}
+                                }
+                        function _alMount() {
+                            if (document.getElementById('allLvlBtn')) return;
+                            var best = document.getElementById('autoBestBtn');
+                            if (!best || !best.parentNode) return;
+                            var b = document.createElement('button');
+                            b.id = 'allLvlBtn';
+                            b.type = 'button';
+                            b.textContent = 'LVLS';
+                            b.title = 'Level ALL: show the best % rows of every level at once';
+                            b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+                            b.addEventListener('click', function (e) { e.stopPropagation(); _alToggle(); });
+                            best.parentNode.insertBefore(b, best.nextSibling);
+                            _alPaint();
+                        }
+                        window.addEventListener('load', _alMount);
+                        setInterval(_alMount, 1000);
                 function _abPaint() {
                     var b = document.getElementById('autoBestBtn');
                     if (!b) return;
@@ -6452,6 +6543,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        
        function _buildTop10(list) {
                          var _minPctSaved = _minPct;
+                                           if (window._allLvlOn) return _allLvlBuild(list);
                          if (window._autoBestOn && _levelVal !== 0) {
                              var _abBest = -1;
                              for (var _abi = 0; _abi < list.length; _abi++) {
