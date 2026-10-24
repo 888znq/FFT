@@ -6009,7 +6009,10 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
             }
             var last3 = outcomes.slice(-3), losses = 0;
             for (var li = 0; li < last3.length; li++) { if (last3[li] === 'loss') losses++; }
-            return { kind: kind, need: need, n3: last3.length, losses: losses };
+            var _plIdx = -1;
+                        if (kind === 'FIRED') _plIdx = lastI;
+                        else if (kind === 'FUT') _plIdx = (lastI < 0 ? rr : lastI + c) + (need - 1) * c;
+                        return { kind: kind, need: need, n3: last3.length, losses: losses, idx: _plIdx, missed: (kind === 'NONE' && color === colCode && streak > sig.s1), nowSec: nowSec };
         }
         
         function _champCrown(x) {
@@ -6120,6 +6123,76 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                 window._autoBestOn = true;
                         window._allLvlOn = true;
                                 window._allLvlOrd = true;
+                                        function _wpTmrKey(d) {
+                                            return d.pair + '|' + d.c + '|' + d.r + '|' + d.s1 + '|' + d.s2 + '|' + d.col + '|' + d.type;
+                                        }
+                                        function _wpTmrReg(d) {
+                                            if (!window._wpTmrMap) window._wpTmrMap = {};
+                                            if (!window._wpTmrCache) window._wpTmrCache = {};
+                                            var k = _wpTmrKey(d);
+                                            window._wpTmrMap[k] = d;
+                                            delete window._wpTmrCache[k];
+                                            return k;
+                                        }
+                                        function _wpTmrFmt(s) {
+                                            s = Math.max(0, Math.ceil(s));
+                                            if (s < 60) return s + 's';
+                                            var m = Math.floor(s / 60), ss = s % 60;
+                                            if (m < 60) return m + ':' + (ss < 10 ? '0' : '') + ss;
+                                            var h = Math.floor(m / 60), mm = m % 60;
+                                            return h + 'h' + (mm < 10 ? '0' : '') + mm + 'm';
+                                        }
+                                        function _wpTmrCalc(k) {
+                                            if (!window._wpTmrMap) return null;
+                                            if (!window._wpTmrCache) window._wpTmrCache = {};
+                                            var d = window._wpTmrMap[k];
+                                            if (!d) return null;
+                                            var nowMs = Date.now();
+                                            var nowSec = Math.floor(nowMs / 1000) - currentStartTsUtc;
+                                            var ca = window._wpTmrCache[k];
+                                            if (ca) {
+                                                var rem0 = ca.kind === 'FIRED' ? ca.idx + d.c - nowSec : (ca.kind === 'FUT' ? ca.idx - nowSec : 1);
+                                                if (nowMs - ca.at < 10000 && rem0 > 0) return { kind: ca.kind, rem: rem0 };
+                                            }
+                                            var pl = null;
+                                            try { pl = _champPlan(d); } catch (e) { pl = null; }
+                                            if (!pl) return null;
+                                            var kind = pl.kind === 'NONE' ? (pl.missed ? 'MISS' : 'NONE') : pl.kind;
+                                            window._wpTmrCache[k] = { kind: kind, idx: pl.idx, at: nowMs };
+                                            var rem = kind === 'FIRED' ? pl.idx + d.c - pl.nowSec : (kind === 'FUT' ? pl.idx - pl.nowSec : 0);
+                                            return { kind: kind, rem: rem };
+                                        }
+                                        function _wpTmrText(k) {
+                                            var r = _wpTmrCalc(k);
+                                            if (!r) return '--';
+                                            if (r.kind === 'MISS') return 'MISSED';
+                                            if (r.kind === 'NONE') return '--';
+                                            return (r.kind === 'FIRED' ? '\u25CF' : '') + _wpTmrFmt(r.rem);
+                                        }
+                                        function _wpTmrTick() {
+                                            var cells = document.querySelectorAll('#wall-finder-pane td.wpTmr');
+                                            for (var ti = 0; ti < cells.length; ti++) {
+                                                var tt = _wpTmrText(cells[ti].getAttribute('data-k'));
+                                                if (cells[ti].textContent !== tt) cells[ti].textContent = tt;
+                                            }
+                                        }
+                                        (function () {
+                                            if (document.getElementById('wpTmrCss')) return;
+                                            var st = document.createElement('style');
+                                            st.id = 'wpTmrCss';
+                                            var P = 'html body #wall-finder-pane#wall-finder-pane tr.highlight-gem > td';
+                                            st.textContent = P + '{font-size:10px !important;}' +
+                                                P + ':nth-child(1){width:24% !important;padding-left:8px !important;}' +
+                                                P + ':nth-child(2){width:9% !important;}' +
+                                                P + ':nth-child(3){width:9% !important;}' +
+                                                P + ':nth-child(4){width:15% !important;}' +
+                                                P + ':nth-child(5){width:8% !important;}' +
+                                                P + ':nth-child(6){width:8% !important;}' +
+                                                P + ':nth-child(7){width:12% !important;padding-left:2px !important;padding-right:2px !important;}' +
+                                                P + ':nth-child(8){width:15% !important;padding-left:2px !important;padding-right:6px !important;}';
+                                            document.head.appendChild(st);
+                                        })();
+                                        setInterval(_wpTmrTick, 1000);
                                 function _ordPaint() {
                                     var b = document.getElementById('ordLvlBtn');
                                     if (!b) return;
@@ -6691,6 +6764,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                             <td style="width:9%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
                                                                                             
                                                                                             <td style="width:14%; font-size:11px; font-weight:700; padding:8px 2px; text-align:center;">${data.pct}%</td>
+                                                                                            <td class="wpTmr" data-k="${_wpTmrReg(data)}" style="width:15%; font-size:11px; font-weight:700; padding:8px 2px; text-align:center; white-space:nowrap; overflow:hidden;">${_wpTmrText(_wpTmrKey(data))}</td>
                                                                                             </tr>`;
        
                                                });
@@ -10439,7 +10513,7 @@ let dataList = currentMode === 'REV'
                 var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
                 try { document.documentElement.style.setProperty('--tc-padb', Math.max(0, H - Math.round(pbot) - 1) + 'px'); var _spE1 = document.getElementById('streakPanel'); var _spH1 = _spE1 ? _spE1.clientHeight : 0; if (_spH1 > 0) { var _spF1 = Math.max(5, Math.min(13, Math.floor((_spH1 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF1) { window._spFsLast = _spF1; document.documentElement.style.setProperty('--sp-fs', _spF1); } } } catch (e) {}
                                 if (TC.boxesOnly) {
-                                                    tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM);
+                                                    if (window._tcBoxesOn) { tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM); }
                                                     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                                                     ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.setLineDash([]);
                                                     var _bxC = window.pairColorHex || '#E2E8F0';
