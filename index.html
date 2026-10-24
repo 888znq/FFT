@@ -6071,6 +6071,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         }
         
         function _champPin(list, mode) {
+                    if (window._allLvlOn && window._allLvlOrd) return list;
             var ch = _champState[mode];
             if (!ch) return list;
             for (var pi = 0; pi < list.length; pi++) {
@@ -6117,8 +6118,47 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         
         window._champScore = _champScore;
                 window._autoBestOn = true;
-                        window._allLvlOn = false;
-                        var _ALB_PER_LVL = 3;
+                        window._allLvlOn = true;
+                                window._allLvlOrd = true;
+                                function _ordPaint() {
+                                    var b = document.getElementById('ordLvlBtn');
+                                    if (!b) return;
+                                    b.style.setProperty('background', window._allLvlOrd ? (window.accentGreenHex || '#2ED573') : '#E2E8F0', 'important');
+                                    b.style.setProperty('color', '#000432', 'important');
+                                    b.style.setProperty('-webkit-text-fill-color', '#000432', 'important');
+                                }
+                                function _ordToggle() {
+                                    window._allLvlOrd = !window._allLvlOrd;
+                                    _ordPaint();
+                                    try { renderFilteredTable(); } catch (e) {}
+                                }
+                                function _ordMount() {
+                                    if (document.getElementById('ordLvlBtn')) return;
+                                    var lv = document.getElementById('allLvlBtn');
+                                    if (!lv || !lv.parentNode) return;
+                                    var b = document.createElement('button');
+                                    b.id = 'ordLvlBtn';
+                                    b.type = 'button';
+                                    b.textContent = 'ORD';
+                                    b.title = 'With LVLS: list levels in order X1, X2, X3...';
+                                    b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+                                    b.addEventListener('click', function (e) { e.stopPropagation(); _ordToggle(); });
+                                    lv.parentNode.insertBefore(b, lv.nextSibling);
+                                    _ordPaint();
+                                }
+                                window.addEventListener('load', _ordMount);
+                                setInterval(_ordMount, 1000);
+                        var _ALB_PER_LVL = 1;
+                                function _albEta(x) {
+                                    var c = x.c || 60;
+                                    var nowUtc = Math.floor(Date.now() / 1000);
+                                    var d = (((x.r - (nowUtc % c)) % c) + c) % c;
+                                    var pl = null;
+                                    try { pl = _champPlan(x); } catch (e) { pl = null; }
+                                    if (!pl || pl.kind === 'NONE') return 1e9 + d;
+                                    if (pl.kind === 'FUT') return d + Math.max(0, pl.need - 1) * c;
+                                    return d;
+                                }
                         function _allLvlBuild(list) {
                             var bestByLvl = {};
                             var pool = [];
@@ -6139,14 +6179,18 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                             }
                             var out = [];
                             Object.keys(byLvl).forEach(function (k) {
-                                var arr = byLvl[k].sort(function (a, b) { return _champScore(b) - _champScore(a); });
+                                var arr = byLvl[k].map(function (z) { return { z: z, e: _albEta(z) }; }).sort(function (a, b) { return a.e !== b.e ? a.e - b.e : _champScore(b.z) - _champScore(a.z); }).map(function (o) { return o.z; });
                                 for (var n = 0; n < arr.length && n < _ALB_PER_LVL; n++) out.push(arr[n]);
                             });
-                            out.sort(function (a, b) {
-                                if (b.pct !== a.pct) return b.pct - a.pct;
-                                return _champScore(b) - _champScore(a);
-                            });
-                            return out;
+                            if (window._allLvlOrd) {
+                                            out.sort(function (a, b) { return a.s1 - b.s1; });
+                                            return out;
+                                        }
+                                        out.sort(function (a, b) {
+                                            if (b.pct !== a.pct) return b.pct - a.pct;
+                                            return _champScore(b) - _champScore(a);
+                                        });
+                                        return out;
                         }
                         function _alPaint() {
                             var b = document.getElementById('allLvlBtn');
@@ -6197,6 +6241,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                             b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
                             b.addEventListener('click', function (e) { e.stopPropagation(); _alToggle(); });
                             best.parentNode.insertBefore(b, best.nextSibling);
+                                        if (window._allLvlOn) {
+                                            _alLockCss();
+                                            document.documentElement.classList.add('lvls-on');
+                                            _alForceAll();
+                                            try { renderFilteredTable(); } catch (e) {}
+                                        }
                             _alPaint();
                         }
                         window.addEventListener('load', _alMount);
