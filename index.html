@@ -778,7 +778,7 @@
 
                                                     <!-- ROW 0: BROKER FIRE TOGGLE (full width) -->
                                                                                                                                                                                                                                                                     <div style="display:none; grid-column: span 2; display:flex; gap:3px;">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <button id="fireToggleBtn" onclick="toggleBrokerFire()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">🔥 FIRE: ON</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <button id="fireToggleBtn" disabled onclick="toggleBrokerFire()" style="display:none; flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">🔥 FIRE: OFF</button>
                                                                                                                                                                                                                                                                     </div>
                                                     
                                                                                                         <!-- ROW 1: CAT TOGGLE (full width) -->
@@ -918,7 +918,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         setInterval(_sigPaint, 200);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         _sigPaint();
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     })();</script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <script>(function(){function _mvTradePill(){var f=document.getElementById('floatTradePill');if(f&&f.getAttribute('data-ready'))return;var sell=document.getElementById('sellBtn');var buy=document.getElementById('buyBtn');var amt=document.getElementById('tradeAmount');var exp=document.getElementById('tradeExpiryVisible');var bal=document.getElementById('accountBalance');if(!sell||!buy||!amt||!exp||!bal)return;if(!f){f=document.createElement('div');f.id='floatTradePill';document.body.appendChild(f);}var items=[amt.parentNode,exp.parentNode,sell,buy,bal];var parents=[];items.forEach(function(el){if(el.parentNode&&el.parentNode!==f&&parents.indexOf(el.parentNode)<0)parents.push(el.parentNode);f.appendChild(el);});parents.forEach(function(p){if(p.id!=='trade-console'&&p.children.length===0)p.style.display='none';});f.setAttribute('data-ready','1');}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_mvTradePill);else _mvTradePill();window.addEventListener('load',_mvTradePill);})();</script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <script>(function(){var _SHOW_FLOAT_TRADE_PILL=false;function _mvTradePill(){var f=document.getElementById('floatTradePill');if(f&&f.getAttribute('data-ready'))return;var sell=document.getElementById('sellBtn');var buy=document.getElementById('buyBtn');var amt=document.getElementById('tradeAmount');var exp=document.getElementById('tradeExpiryVisible');var bal=document.getElementById('accountBalance');if(!sell||!buy||!amt||!exp||!bal)return;if(!f){f=document.createElement('div');f.id='floatTradePill';document.body.appendChild(f);}if(!_SHOW_FLOAT_TRADE_PILL){f.style.setProperty('display','none','important');}else{f.style.removeProperty('display');}var items=[amt.parentNode,exp.parentNode,sell,buy,bal];var parents=[];items.forEach(function(el){if(el.parentNode&&el.parentNode!==f&&parents.indexOf(el.parentNode)<0)parents.push(el.parentNode);f.appendChild(el);});parents.forEach(function(p){if(p.id!=='trade-console'&&p.children.length===0)p.style.display='none';});f.setAttribute('data-ready','1');}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_mvTradePill);else _mvTradePill();window.addEventListener('load',_mvTradePill);if(!_SHOW_FLOAT_TRADE_PILL){var _stPill=document.createElement('style');_stPill.id='floatTradePillHideCss';_stPill.textContent='#floatTradePill{display:none !important;visibility:hidden !important;pointer-events:none !important;}';document.head.appendChild(_stPill);setInterval(function(){var _ePill=document.getElementById('floatTradePill');if(_ePill&&_ePill.style.display!=='none'){_ePill.style.setProperty('display','none','important');}},200);}})();</script>
 
                                                     
 
@@ -4754,6 +4754,7 @@ window._srvScanRun = _srvScanRun;
             
 
                     function setupAutoScan() {
+                                                if (!isAutoScanOn) { return; }
                             if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
                             if (isAutoScanOn) {
                                 autoScanInterval = setInterval(() => {
@@ -4867,7 +4868,7 @@ window._srvScanRun = _srvScanRun;
                 
                                 if (autoHunterEnabled) {
 
-                    triggerAutoTradeIfValid(pair, col, row, streakCol, streakLen);
+                    /* AUTO TRADE DISABLED */
 
                 }
 
@@ -4902,6 +4903,7 @@ window.autoTradedInstances = {};
 
 
         function triggerAutoTradeIfValid(pair, col, row, currentStreakColor, currentStreakLen) {
+                            return; /* AUTO TRADE DISABLED */
 
                     if (!autoHunterEnabled) return;
 
@@ -5909,6 +5911,216 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
 
+        var _CHAMP_MIN_N = 5;
+        var _CHAMP_FLOOR = 55;
+        var _CHAMP_MARGIN = 4;
+        var _CHAMP_CONFIRM = 3;
+        var _champState = { REV: null, MOM: null };
+        var _champSigLast = { REV: null, MOM: null };
+        var _champSrcLast = { REV: null, MOM: null };
+        
+        function _champKey(x) {
+            return x.pair + '|' + x.c + '|' + x.r + '|' + x.s1 + '|' + x.col + '|' + x.type;
+        }
+        
+        function _champScore(x) {
+            var n = x.c1 || 0;
+            if (n <= 0) return 0;
+            var p = Math.max(0, Math.min(1, (x.pct || 0) / 100));
+            var z = 1.645, z2 = z * z;
+            var dd = 1 + z2 / n;
+            var mm = p + z2 / (2 * n);
+            var ss = z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
+            return Math.max(0, (mm - ss) / dd) * 100;
+        }
+        
+        function _champFiltSig() {
+            var a = document.getElementById('minPctInput');
+            var b = document.getElementById('levelFilterSelect');
+            return [
+                a ? a.value : '',
+                b ? b.value : '',
+                (typeof r0OnlyMode !== 'undefined' && r0OnlyMode) ? 1 : 0,
+                (activePairs ? activePairs.join(',') : 'ALL'),
+                (typeof sessionWindowStartMin !== 'undefined' ? sessionWindowStartMin : 0),
+                (typeof sessionWindowEndMin !== 'undefined' ? sessionWindowEndMin : 1440),
+                (typeof currentStartTsUtc !== 'undefined' ? currentStartTsUtc : 0)
+            ].join('|');
+        }
+        
+        function _champPlan(sig) {
+            var pd = allPairData[sig.pair];
+            if (!pd || !pd.prices || pd.prices.length === 0) return null;
+            var prices = pd.prices, len = prices.length, c = sig.c;
+            var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+            var sEnd = (typeof tcSessionEnd === 'function') ? tcSessionEnd() : (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
+                        var lim = Math.min(nowSec - 1, len - 1, sEnd - 1);
+            if (lim < 0) return null;
+            var lastReal = Math.min(nowSec, len - 1);
+            while (lastReal > 0 && prices[lastReal] === -1) lastReal--;
+            var rr = (((sig.r - ((currentStartTsUtc || 0) % c)) % c) + c) % c;
+            var colCode = sig.col === 'G' ? 1 : 2;
+            var color = 0, streak = 0, lastI = -1, outcomes = [];
+            for (var i = rr; i <= lim; i += c) {
+                var p = prices[i];
+                var q = i >= c ? prices[i - c] : -1;
+                var nc, ns;
+                if (q === -1) {
+                    nc = (p === -1) ? 0 : 1;
+                    ns = (p === -1) ? 0 : 1;
+                } else if (p === -1) {
+                    nc = 0; ns = 0;
+                } else if (p > q) {
+                    nc = 1;
+                    ns = (color === 1 && streak > 0) ? streak + 1 : 1;
+                } else if (p < q) {
+                    nc = 2;
+                    ns = (color === 2 && streak > 0) ? streak + 1 : 1;
+                } else {
+                    nc = color; ns = 0;
+                }
+                color = nc;
+                streak = ns;
+                if (p !== -1 && ns === sig.s1 && nc === colCode) {
+                    var j = i + c;
+                    if (j <= lastReal && prices[j] !== -1) {
+                        var cont = (nc === 1 && prices[j] > p) || (nc === 2 && prices[j] < p);
+                        outcomes.push(((sig.type === 'MOM') === cont) ? 'win' : 'loss');
+                    }
+                }
+                lastI = i;
+            }
+            var kind = 'NONE', need = 0;
+            if (color === colCode && streak === sig.s1 && lastI >= 0) {
+                kind = 'FIRED';
+            } else if (!(color === colCode && streak > sig.s1)) {
+                var kk = (color === colCode) ? streak : 0;
+                need = Math.max(1, sig.s1 - kk);
+                var iNext = lastI < 0 ? rr : lastI + c;
+                if (iNext + (need - 1) * c < sEnd) kind = 'FUT';
+            }
+            var last3 = outcomes.slice(-3), losses = 0;
+            for (var li = 0; li < last3.length; li++) { if (last3[li] === 'loss') losses++; }
+            return { kind: kind, need: need, n3: last3.length, losses: losses };
+        }
+        
+        function _champCrown(x) {
+            var ch = { key: _champKey(x), pair: x.pair, c: x.c, r: x.r, s1: x.s1, type: x.type, col: x.col, strikes: 0, chKey: null, chCount: 0 };
+            _champState[x.type] = ch;
+            try { evtLog('INFO', 'CHAMP', 'Champion locked ' + x.type + ' ' + x.pair + ' C' + x.c + ' R' + x.r + ' X' + x.s1 + ' score ' + Math.round(_champScore(x))); } catch (e) {}
+            return ch;
+        }
+        
+        function _champUpdate(mode, list, ch) {
+            var elig = [];
+            for (var ei = 0; ei < list.length; ei++) { if ((list[ei].c1 || 0) >= _CHAMP_MIN_N) elig.push(list[ei]); }
+            elig.sort(function (a, b) { return _champScore(b) - _champScore(a); });
+            var top = elig.length ? elig[0] : null;
+            if (!ch) return top ? _champCrown(top) : null;
+        
+            var cur = null;
+            for (var ci = 0; ci < list.length; ci++) {
+                if (_champKey(list[ci]) === ch.key) { cur = list[ci]; break; }
+            }
+            var plan = cur ? _champPlan(cur) : null;
+            var inFlight = !!plan && (plan.kind === 'FIRED' || (plan.kind === 'FUT' && plan.need <= 2));
+        
+            var mnEl = document.getElementById('scanMin'), mxEl = document.getElementById('scanMax');
+            var mn = mnEl ? (parseInt(mnEl.value) || 0) : 0, mx = mxEl ? (parseInt(mxEl.value) || 0) : 0;
+            if (mn > mx) { var swp = mn; mn = mx; mx = swp; }
+            var outOfRange = (mx > 0 && (ch.c < mn || ch.c > mx));
+        
+            var bad = false;
+            if (!cur) bad = true;
+            else if ((cur.c1 || 0) < _CHAMP_MIN_N) bad = true;
+            else if (_champScore(cur) < _CHAMP_FLOOR) bad = true;
+            else if (plan && plan.n3 >= 3 && plan.losses >= 2) bad = true;
+            ch.strikes = bad ? (ch.strikes || 0) + 1 : 0;
+        
+            if (ch.strikes >= _CHAMP_CONFIRM || outOfRange) {
+                if (!inFlight || outOfRange) {
+                    for (var ki = 0; ki < elig.length; ki++) {
+                        if (_champKey(elig[ki]) !== ch.key) return _champCrown(elig[ki]);
+                    }
+                    _champState[mode] = null;
+                    return null;
+                }
+                return ch;
+            }
+        
+            if (cur && top && _champKey(top) !== ch.key) {
+                if (_champScore(top) - _champScore(cur) >= _CHAMP_MARGIN) {
+                    var tk = _champKey(top);
+                    if (ch.chKey === tk) { ch.chCount++; } else { ch.chKey = tk; ch.chCount = 1; }
+                } else {
+                    ch.chKey = null; ch.chCount = 0;
+                }
+                if (ch.chCount >= _CHAMP_CONFIRM && !inFlight) return _champCrown(top);
+            } else {
+                ch.chKey = null; ch.chCount = 0;
+            }
+            return ch;
+        }
+        
+        function _champPin(list, mode) {
+            var ch = _champState[mode];
+            if (!ch) return list;
+            for (var pi = 0; pi < list.length; pi++) {
+                if (_champKey(list[pi]) === ch.key) {
+                    if (pi > 0) { var it = list.splice(pi, 1)[0]; list.unshift(it); }
+                    break;
+                }
+            }
+            return list;
+        }
+        
+        function _champApply(list, mode) {
+            try {
+                if (!list || !list.length) return list;
+                if (typeof _wpFocusPair !== 'undefined' && _wpFocusPair) return _champPin(list, mode);
+                var ch = _champState[mode];
+                var fsig = _champFiltSig();
+                if (_champSigLast[mode] !== fsig) {
+                    _champSigLast[mode] = fsig;
+                    _champSrcLast[mode] = null;
+                    _champState[mode] = null;
+                    ch = null;
+                }
+                if (ch && _hiddenPairs.has(ch.pair)) {
+                    _champState[mode] = null;
+                    ch = null;
+                }
+                if (typeof scanPending !== 'undefined' && scanPending === 0) {
+                    var src = (mode === 'REV') ? globalRevs : globalMoms;
+                    if (!ch) {
+                        ch = _champUpdate(mode, list, null);
+                        _champSrcLast[mode] = src;
+                    } else if (_champSrcLast[mode] !== src) {
+                        _champSrcLast[mode] = src;
+                        ch = _champUpdate(mode, list, ch);
+                    }
+                    _champState[mode] = ch;
+                }
+                return _champPin(list, mode);
+            } catch (e) {
+                return list;
+            }
+        }
+        
+        window._champScore = _champScore;
+        window._champIs = function (x) {
+            var ch = _champState[x.type];
+            return !!(ch && ch.key === _champKey(x));
+        };
+        window._champTop = function (mode, list) {
+            var ch = _champState[mode];
+            if (!ch || !list) return null;
+            for (var ti = 0; ti < list.length; ti++) {
+                if (_champKey(list[ti]) === ch.key) return list[ti];
+            }
+            return null;
+        };
+        
         function _autoSelectTopSignal() {
                     var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
                     var _minPctEl = document.getElementById('minPctInput');
@@ -5921,7 +6133,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                         .filter(function(x) { return _levelVal === 0 || x.s1 === _levelVal; })
                         .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
             if (topList.length === 0) return;
-            var top = topList[0];
+            topList.sort(function(a, b) { return _champScore(b) - _champScore(a); });
+                        var top = (window._champTop ? window._champTop(currentMode, topList) : null) || topList[0];
             if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
             if (activePair !== top.pair) {
                 activePair = top.pair;
@@ -6209,20 +6422,21 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                       .filter(x => x.pct >= _minPct)
                       .filter(x => _levelVal === 0 || x.s1 === _levelVal)
                       .filter(x => !r0OnlyMode || x.r === 0)
-                      .sort((a, b) => (b.pct * b.c1) - (a.pct * a.c1));
-                  var seen = new Set();
-                  var unique = [];
-                  for (var i = 0; i < sorted.length; i++) {
-                      if (!seen.has(sorted[i].pair)) {
-                          seen.add(sorted[i].pair);
-                          unique.push(sorted[i]);
-                      }
-                  }
-                  return unique;
+                      .sort((a, b) => _champScore(b) - _champScore(a));
+                  var seen = {};
+                                    var unique = [];
+                                    for (var i = 0; i < sorted.length; i++) {
+                                        var _pk = sorted[i].pair;
+                                        seen[_pk] = (seen[_pk] || 0) + 1;
+                                        if (seen[_pk] <= 10) {
+                                            unique.push(sorted[i]);
+                                        }
+                                    }
+                                    return unique;
               }
               
-              var revTop10 = _buildTop10([...globalRevs]);
-              var momTop10 = _buildTop10([...globalMoms]);
+              var revTop10 = _champApply(_buildTop10([...globalRevs]), 'REV');
+              var momTop10 = _champApply(_buildTop10([...globalMoms]), 'MOM');
               if (false && window._tcSigMode === 'MIX') {
                   var bestByPair = {};
                   revTop10.forEach(x => { bestByPair[x.pair] = x; });
@@ -7123,6 +7337,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
 
           function autoHunterTick() {
+                        return; /* AUTO TRADE DISABLED */
 
               if (!autoHunterEnabled) return;
 
@@ -7177,6 +7392,15 @@ let dataList = currentMode === 'REV'
 
 
           function toggleMasterEngines() {
+                                  /* AUTO TRADE DISABLED */
+                                  autoHunterEnabled = false;
+                                  if (autoHunterIntervalId) { clearInterval(autoHunterIntervalId); autoHunterIntervalId = null; }
+                                  var _mb = document.getElementById('masterSysBtn');
+                                                                    if (_mb) { _mb.innerText = 'SYS: MANUAL'; _mb.style.color = 'var(--accent-red)'; }
+                                  /* scan toggle disabled - scans repeat through the countdown timer */
+                                                                    /* scan timers left untouched */
+                                                                    if (_mb) { _mb.innerText = 'SYS: MANUAL'; _mb.style.color = 'var(--accent-red)'; }
+                                  return;
 
                         autoHunterEnabled = !autoHunterEnabled;
 
@@ -7972,9 +8196,11 @@ let dataList = currentMode === 'REV'
                                     });
                                 });
         
-                        var brokerFireEnabled = true; // when false, clicking a wall panel signal only highlights occurrences and does NOT sync/fire the pair to connected brokers
+                        var brokerFireEnabled = false; /* AUTO TRADE DISABLED */ // when false, clicking a wall panel signal only highlights occurrences and does NOT sync/fire the pair to connected brokers
         
                         function toggleBrokerFire() {
+                                                    brokerFireEnabled = false; /* AUTO TRADE DISABLED */
+                                                    return;
                             brokerFireEnabled = !brokerFireEnabled;
                             var btn = document.getElementById('fireToggleBtn');
                             if (btn) {
@@ -9356,8 +9582,9 @@ let dataList = currentMode === 'REV'
                         if (r0 && x.r !== 0) continue;
                         out.push(x);
                     }
-                    out.sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
-                    out = out.slice(0, 1);
+                    out.sort(function(a, b) { return window._champScore(b) - window._champScore(a); });
+                    var _chPin = window._champTop ? window._champTop(type, out) : null;
+                                        out = _chPin ? [_chPin] : out.slice(0, 1);
                     selHit = null;
                     return out;
                 }
@@ -9405,7 +9632,7 @@ let dataList = currentMode === 'REV'
                         var m = map[x.pair];
                         if (!m) { m = { rev: null, mom: null }; map[x.pair] = m; }
                         var cur = m[key];
-                        if (!cur || (x.pct * x.c1) > (cur.pct * cur.c1)) m[key] = x;
+                        if (window._champIs && window._champIs(x)) { m[key] = x; m['_pin_' + key] = true; } else if (!m['_pin_' + key] && (!cur || window._champScore(x) > window._champScore(cur))) m[key] = x;
                     }
                 };
                 var _topPick = function(list, key) {
@@ -9465,14 +9692,14 @@ let dataList = currentMode === 'REV'
                         }
                     }
                 }
-                nodes.sort(function(a, b) { return ((b.sig.pct * b.sig.c1) - (a.sig.pct * a.sig.c1)) || (a.rem - b.rem); });
+                nodes.sort(function(a, b) { var ca = (window._champIs && window._champIs(a.sig)) ? 1 : 0, cb = (window._champIs && window._champIs(b.sig)) ? 1 : 0; return (cb - ca) || (window._champScore(b.sig) - window._champScore(a.sig)) || (a.rem - b.rem); });
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 ctx.textBaseline = 'alphabetic';
                 ctx.textAlign = 'left';
                 ctx.font = 'bold 10px ' + MONO;
                 ctx.fillStyle = DIM;
                 var lkKey = function(s) { return s.pair + '|' + s.type + '|' + s.c + '|' + s.r + '|' + s.s1 + '|' + s.s2 + '|' + s.col; };
-                                missedNodes.sort(function(a, b) { return (b.sig.pct * b.sig.c1) - (a.sig.pct * a.sig.c1); });
+                                missedNodes.sort(function(a, b) { return window._champScore(b.sig) - window._champScore(a.sig); });
                                 var _lkExpEl = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
                                 var _lkExp = _lkExpEl ? parseInt(_lkExpEl.value, 10) : NaN;
                                 var _lkOpenList = window.simOpenTrades || [];
@@ -9572,7 +9799,8 @@ let dataList = currentMode === 'REV'
                                     nodes.sort(function(a, b) {
                                         var am = (a.kind === 'MISSED') ? 1 : 0, bm = (b.kind === 'MISSED') ? 1 : 0;
                                         if (am !== bm) return am - bm;
-                                        return ((b.sig.pct * b.sig.c1) - (a.sig.pct * a.sig.c1)) || (a.rem - b.rem);
+                                        var ca = (window._champIs && window._champIs(a.sig)) ? 1 : 0, cb = (window._champIs && window._champIs(b.sig)) ? 1 : 0;
+                                                                                return (cb - ca) || (window._champScore(b.sig) - window._champScore(a.sig)) || (a.rem - b.rem);
                                     });
                                 }
                                 nMissed = 0;
