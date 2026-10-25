@@ -9842,7 +9842,7 @@ let dataList = currentMode === 'REV'
                             var wt = Math.min(yh, by) - 4, wb = Math.max(yl, by + bh) + 4;
                             c.moveTo(wl, wt); c.lineTo(wr, wt); c.lineTo(wr, t); c.lineTo(r, t); c.lineTo(r, b);
                             c.lineTo(wr, b); c.lineTo(wr, wb); c.lineTo(wl, wb); c.lineTo(wl, b); c.lineTo(l, b);
-                            c.lineTo(l, t); c.lineTo(wl, t); c.closePath();
+                            c.lineTo(l, t); c.lineTo(wl, t); c.closePath(); c.lineJoin = 'round';
                         };
                         function tcCandleBuild(it, ce, off, iA, iB) {
                             if (!TC.cdlMap) TC.cdlMap = {};
@@ -9882,13 +9882,27 @@ let dataList = currentMode === 'REV'
                             var mul = cw0 >= 3 ? 1 : Math.ceil(3 / cw0);
                             var ce = c0 * mul;
                             var cw = ce / spp;
+                            var cycOff = _cycleOff();
+                            var phase = 0;
+                            if (typeof lastClickedSigId === 'string' && lastClickedSigId) {
+                                var _phSp = lastClickedSigId.split('-');
+                                if (_phSp.length === 7 && _phSp[0] === activePair && (+_phSp[1]) === CYCLE) phase = (((+_phSp[2]) % c0) + c0) % c0;
+                            }
+                            if (!(phase >= 0)) phase = 0;
+                            var phaseSel = (typeof lastClickedSigId === 'string' && lastClickedSigId.split('-')[0] === activePair && (+lastClickedSigId.split('-')[1]) === CYCLE);
+                            if (!phaseSel && TC.allMap && TC.allMap[activePair]) {
+                                var phM = TC.allMap[activePair];
+                                var phG = (phM.rev && phM.rev.c === c0) ? phM.rev : ((phM.mom && phM.mom.c === c0) ? phM.mom : null);
+                                if (phG) phase = ((phG.r % c0) + c0) % c0;
+                            }
+                            off = (((cycOff - phase) % ce) + ce) % ce;
                             var gap = cw >= 6 ? Math.min(3, cw * 0.12) : (cw >= 3 ? 0.5 : 0);
                             var UPC = window.accentGreenHex || '#2ED573', DNC = window.accentRedHex || '#E63946';
                             var selCols = {};
                             if (mul === 1 && typeof lastClickedSigId === 'string' && lastClickedSigId && currentInstances && currentInstances.length) {
                                 var sp = lastClickedSigId.split('-');
                                 if (sp.length === 7 && sp[0] === activePair && (+sp[1]) === CYCLE) {
-                                    for (var n = 0; n < currentInstances.length; n++) selCols[Math.floor((currentInstances[n].col * c0 + currentInstances[n].row - 1 - (sp[6] === 'MOM' ? c0 : 0)) / ce)] = (n === currentInstanceIndex) ? 2 : 1;
+                                    for (var n = 0; n < currentInstances.length; n++) selCols[Math.floor((currentInstances[n].col * c0 + currentInstances[n].row - 1 - (sp[6] === 'MOM' ? c0 : 0) - cycOff + off) / ce)] = (n === currentInstanceIndex) ? 2 : 1;
                                 }
                             }
                             TC.cdlHits = [];
@@ -9909,9 +9923,10 @@ let dataList = currentMode === 'REV'
                                     var up = cd.c >= cd.o;
                                     var col = up ? UPC : DNC;
                                     var yh = yOfPair(it, cd.h), yl = yOfPair(it, cd.l), yo = yOfPair(it, cd.o), yc = yOfPair(it, cd.c);
-                                    var mx = Math.round((x0 + x1) / 2) + 0.5;
-                                    var bx = x0 + gap, bw = Math.max(1, x1 - x0 - gap * 2);
-                                    var by = Math.min(yo, yc), bh = Math.max(1, Math.abs(yc - yo));
+                                    var bx = Math.round(x0 + gap), bw = Math.max(1, Math.round(x1 - gap) - bx);
+                                    var mx = bx + Math.floor(bw / 2) + 0.5;
+                                    /* body edges snapped to whole pixels above */
+                                    var by = Math.round(Math.min(yo, yc)), bh = Math.max(1, Math.round(Math.abs(yc - yo)));
                                     var isLive = (cd.e >= it.last);
                                     ctx.globalAlpha = act ? 1 : 0.75;
                                     ctx.strokeStyle = col;
@@ -9932,7 +9947,7 @@ let dataList = currentMode === 'REV'
                                         ctx.strokeStyle = '#D500F9';
                                         ctx.lineWidth = selCols[cd.k] === 2 ? 2.5 : 1.5;
                                         ctx.beginPath();
-                                        window._tcSil(ctx, bx, by, bw, bh, mx, yh, yl);
+                                        ctx.arc(mx, Math.max(ptop + 10, yh - 9), selCols[cd.k] === 2 ? 9 : 7, 0, 6.2832); ctx.fillStyle = '#D500F9'; ctx.fill(); ctx.strokeStyle = window.systemThemeHex || '#000432'; ctx.lineWidth = 1.5;
                                         ctx.stroke();
                                     }
                                     if (isLive) {
@@ -9956,11 +9971,11 @@ let dataList = currentMode === 'REV'
                                             TC.pulseOn = true;
                                         }
                                     }
-                                    TC.cdlHits.push({ mx: mx, yh: yh, yl: yl, by: by, bh: bh, bx: bx, bw: bw, x: x0, y: yh - 6, w: Math.max(2, x1 - x0), h: (yl - yh) + 12, o: { kind: 'CANDLE', pair: it.pair, k: cd.k, s: cd.s, e: cd.e, o: cd.o, h: cd.h, l: cd.l, c: cd.c, dec: it.dec, ce: ce, live: isLive } });
+                                    TC.cdlHits.push({ mx: mx, yh: yh, yl: yl, by: by, bh: bh, bx: bx, bw: bw, x: x0, y: yh - 6, w: Math.max(2, x1 - x0), h: (yl - yh) + 12, o: { kind: 'CANDLE', ph: phase, pair: it.pair, k: cd.k, s: cd.s, e: cd.e, o: cd.o, h: cd.h, l: cd.l, c: cd.c, dec: it.dec, ce: ce, live: isLive } });
                                 }
                             }
                             ctx.restore();
-                            var cdLbl = 'CANDLE ' + ce + 's' + ((ce >= 60 && ce % 60 === 0) ? ' (' + (ce / 60) + 'm)' : '');
+                            var cdLbl = 'CANDLE ' + ce + 's' + ((ce >= 60 && ce % 60 === 0) ? ' (' + (ce / 60) + 'm)' : '') + (phase ? '  |  EXPIRY ROW ' + phase : '');
                             ctx.save();
                             ctx.globalAlpha = 0.9;
                             ctx.font = 'bold 10px ' + MONO;
@@ -10838,6 +10853,7 @@ let dataList = currentMode === 'REV'
                 for (k = 0; k < marks.length; k++) {
                     var mk = marks[k];
                     if (mk.i < i0 || mk.i > mk.it.i1) continue;
+                    if (TC.candle && mk.sig.c !== (Math.round(CYCLE) || 1)) continue;
                     ctx.globalAlpha = 1;
                     var mx = xOf(mk.i), my = yOfPair(mk.it, mk.p);
                     if (mx < PADL || mx > W - PADR) continue;
@@ -10927,7 +10943,7 @@ let dataList = currentMode === 'REV'
                                         if (TC.candle && TC.cdlHits && TC.cdlHits.length) {
                                             for (var cbI = 0; cbI < TC.cdlHits.length; cbI++) {
                                                 var cbH = TC.cdlHits[cbI], cbO = cbH.o;
-                                                if (!cbO || cbO.pair !== mk.it.pair || cbO.s < mk.i - flSh || cbO.s >= flEj - flSh) continue;
+                                                if (!cbO || cbO.pair !== mk.it.pair || cbO.e < mk.i - flSh || cbO.s >= flEj - flSh) continue;
                                                 if (cbH.bx < cbX0) cbX0 = cbH.bx;
                                                 if (cbH.bx + cbH.bw > cbX1) cbX1 = cbH.bx + cbH.bw;
                                                 if (cbH.by < cbY0) cbY0 = cbH.by;
@@ -10981,9 +10997,9 @@ let dataList = currentMode === 'REV'
                                             ctx.strokeStyle = '#A855F7';
                                             ctx.lineWidth = 2;
                                             ctx.strokeStyle = mk.it.color;
-                                            for (var cbJ = 0; cbJ < TC.cdlHits.length; cbJ++) {
+                                            for (var cbJ = 0; cbJ < 0; cbJ++) {
                                                 var cbG = TC.cdlHits[cbJ], cbP = cbG.o;
-                                                if (!cbP || cbP.pair !== mk.it.pair || cbP.s < mk.i - flSh || cbP.s >= flEj - flSh) continue;
+                                                if (!cbP || cbP.pair !== mk.it.pair || cbP.e < mk.i - flSh || cbP.s >= flEj - flSh) continue;
                                                 window._tcSil(ctx, cbG.bx, cbG.by, cbG.bw, cbG.bh, cbG.mx, cbG.yh, cbG.yl);
                                             }
                                         } else {
@@ -11075,11 +11091,12 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                     ctx.textAlign = 'center';
                                                                                                                                                                                     ctx.textBaseline = 'middle';
                                                                                                                                                                                     if (TC.candle && mk.tkNX !== undefined) { var dcH = null, dcI, dcO;
-                                                                                                                                                                                                                                                                        if (TC.cdlHits) { for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.s >= mk.i - (mk.sig.type === 'MOM' ? mk.sig.c : 0) && dcO.s < mk.i + mk.sig.c - (mk.sig.type === 'MOM' ? mk.sig.c : 0) && (!dcH || dcO.s > dcH.o.s)) { dcH = TC.cdlHits[dcI]; } } }
+                                                                                                                                                                                                                                                                        if (TC.cdlHits) { var dcTgt = mk.i + mk.sig.c - 1 - (mk.sig.type === 'MOM' ? mk.sig.c : 0); for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.s <= dcTgt && dcO.e >= dcTgt) { dcH = TC.cdlHits[dcI]; break; } } }
                                                                                                                                                                                                                                                                                                                                                             if (false && dcH && mk.sig.type === 'MOM') { for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.e === dcH.o.s - 1) { dcH = TC.cdlHits[dcI]; break; } } }
                                                                                                                                                                                                                                                                         if (dcH) { tkX = dcH.mx; tkY = Math.max(ptop + 24, Math.min(dcH.yh, dcH.by) - 26); } else { tkX = mk.tkNX; tkY = mk.tkNY; } }
                                                                                                                                                                                     ctx.globalAlpha = 1;
                                                                                                                                                                                     var tkCol = mk.win === 'win' ? CY : AM;
+                                                                                                                                                                                    if (TC.candle && mk.tkNX !== undefined && dcH && !(typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair)) { ctx.beginPath(); ctx.arc(dcH.mx, Math.max(ptop + 8, Math.min(dcH.yh, dcH.by) - 7), 6, 0, 6.2832); ctx.fillStyle = mk.it.color; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = BG; ctx.stroke(); }
                                                                                                                                                                                     var tkSym = (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair) ? '' : (mk.win === 'win' ? '\u2713' : '\u2717');
                                                                                                                                                                                     ctx.fillStyle = tkCol;
                                                                                                                                                                                     ctx.shadowColor = tkCol;
@@ -11463,7 +11480,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                 ctx.strokeStyle = ocIt.color;
                                                                                                                                 ctx.lineWidth = 1.8;
                                                                                                                                 ctx.beginPath();
-                                                                                                                                window._tcSil(ctx, ovxB.bx, ovxB.by, ovxB.bw, ovxB.bh, ovxB.mx, ovxB.yh, ovxB.yl);
+                                                                                                                                ctx.arc(ovxB.mx, Math.max(ptop + 8, Math.min(ovxB.yh, ovxB.by) - 7), 6, 0, 6.2832); ctx.fillStyle = ocIt.color; ctx.fill(); ctx.strokeStyle = BG; ctx.lineWidth = 1.5;
                                                                                                                                 ctx.stroke();
                                                                                                                                 var ovxW = tcWin(ocSg.type, (ocIdx + CYCLE > ocIt.last) ? 'pending' : 'cont');
                                                                                                                                 if (ovxW === 'win' || ovxW === 'loss') {
@@ -12678,6 +12695,7 @@ let dataList = currentMode === 'REV'
                                                     cdRow('Range', (o.h - o.l).toFixed(cdD));
                                                     cdRow('From', tcFmt(o.s, true) + ' IST');
                                                     cdRow('To', tcFmt(o.e + 1, true) + ' IST');
+                                                    if (o.ph) cdRow('Expiry row', 'R' + o.ph);
                                                     return cdRows.join('');
                                                 }
                                                 var s = o.sig, dec = (o.dec !== undefined ? o.dec : TC.dec);
@@ -14700,7 +14718,7 @@ let dataList = currentMode === 'REV'
                                                             modeBtn.style.background = 'var(--accent-green)';
                                                             modeBtn.style.color = 'var(--bg-base)';
                                                         }
-                                                    } else if (state.mode === 'REV' && currentMode !== 'REV') {
+                                                    } else if (currentMode !== 'REV') {
                                                         currentMode = 'REV';
                                                         var modeBtnR = document.getElementById('uiModeToggleBtn');
                                                         if (modeBtnR) {
