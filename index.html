@@ -6215,6 +6215,120 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                             document.head.appendChild(st);
                                         })();
                                         setInterval(_wpTmrTick, 1000);
+                                                                        function _wpFillInfo(k) {
+                                                                            var r = null, d = window._wpTmrMap ? window._wpTmrMap[k] : null;
+                                                                            try { r = _wpTmrCalc(k); } catch (e) { r = null; }
+                                                                            if (!r || !d) return { kind: 'NONE', pct: 0 };
+                                                                            if (r.kind === 'MISS') return { kind: 'MISS', pct: 100 };
+                                                                            if (r.kind === 'NONE') return { kind: 'NONE', pct: 0 };
+                                                                            if (!window._wpFillBase) window._wpFillBase = {};
+                                                                            var base;
+                                                                            if (r.kind === 'FIRED') {
+                                                                                base = Math.max(1, Number(d.c) || 1);
+                                                                            } else {
+                                                                                base = window._wpFillBase[k];
+                                                                                if (!base || r.rem > base) { base = Math.max(1, r.rem); window._wpFillBase[k] = base; }
+                                                                            }
+                                                                            var p = (1 - r.rem / base) * 100;
+                                                                            return { kind: r.kind, pct: Math.max(0, Math.min(100, Math.round(p * 10) / 10)) };
+                                                                        }
+                                                                        function _wpFillTick() {
+                                                                            var rows = document.querySelectorAll('#wall-finder-pane tr.highlight-gem[data-k]');
+                                                                            for (var fi = 0; fi < rows.length; fi++) {
+                                                                                var f = _wpFillInfo(rows[fi].getAttribute('data-k'));
+                                                                                rows[fi].style.setProperty('--wpf', f.pct + '%');
+                                                                                if (rows[fi].getAttribute('data-wpst') !== f.kind) rows[fi].setAttribute('data-wpst', f.kind);
+                                                                            }
+                                                                        }
+                                                                        (function () {
+                                                                            if (document.getElementById('wpFillCss')) return;
+                                                                            var fs = document.createElement('style');
+                                                                            fs.id = 'wpFillCss';
+                                                                            var Q = 'html body #wall-finder-pane#wall-finder-pane tr.highlight-gem';
+                                                                            fs.textContent = Q + ' > td:nth-child(1){width:28% !important;padding-left:8px !important;}' +
+                                                                                Q + ' > td:nth-child(2){width:10% !important;}' +
+                                                                                Q + ' > td:nth-child(3){width:10% !important;}' +
+                                                                                Q + ' > td:nth-child(4){width:19% !important;}' +
+                                                                                Q + ' > td:nth-child(5){width:10% !important;}' +
+                                                                                Q + ' > td:nth-child(6){width:10% !important;}' +
+                                                                                Q + ' > td:nth-child(7){width:13% !important;padding-left:2px !important;padding-right:10px !important;}' +
+                                                                                Q + '{position:relative !important;}' +
+                                                                                Q + '::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--wpf,0%);background:linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.28));border-radius:999px;pointer-events:none;z-index:2;transition:width 1s linear;box-shadow:inset -4px 0 0 #FFFFFF,0 0 8px 1px rgba(255,255,255,0.6);}' +
+                                                                                                                        Q + '.row-red::after{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--accent-red,#E63946) 40%,#FFFFFF 60%) 8%,transparent),color-mix(in srgb,color-mix(in srgb,var(--accent-red,#E63946) 40%,#FFFFFF 60%) 40%,transparent));}' +
+                                                                                                                        Q + '.row-green::after{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--accent-green,#2ED573) 40%,#FFFFFF 60%) 8%,transparent),color-mix(in srgb,color-mix(in srgb,var(--accent-green,#2ED573) 40%,#FFFFFF 60%) 40%,transparent));}' +
+                                                                                                                        Q + '[data-wpst="FIRED"]::after{animation:wpFillPulse 0.7s ease-in-out infinite;}' +
+                                                                                Q + '[data-wpst="MISS"]::after{opacity:0.15;}' +
+                                                                                Q + '[data-wpst="NONE"]::after{width:0;box-shadow:none;}' +
+                                                                                '@keyframes wpFillPulse{0%,100%{opacity:0.7;filter:brightness(1);}50%{opacity:1;filter:brightness(1.3);}}';
+                                                                            document.head.appendChild(fs);
+                                                                        })();
+                                                                        setInterval(_wpFillTick, 1000);
+                                                                                                        function _wpFixColspan() {
+                                                                                                            try {
+                                                                                                                var pane = document.getElementById('wall-finder-pane');
+                                                                                                                if (!pane) return;
+                                                                                                                var els = pane.querySelectorAll('td[colspan="8"],th[colspan="8"]');
+                                                                                                                for (var ci = 0; ci < els.length; ci++) els[ci].setAttribute('colspan', '7');
+                                                                                                            } catch (e) {}
+                                                                                                        }
+                                                                                                        (function () {
+                                                                                                            if (!document.getElementById('wpColCss')) {
+                                                                                                                var cs = document.createElement('style');
+                                                                                                                cs.id = 'wpColCss';
+                                                                                                                cs.textContent = '#wall-finder-pane thead th:nth-child(8){display:none !important;}';
+                                                                                                                document.head.appendChild(cs);
+                                                                                                            }
+                                                                                                            function _wpColHook() {
+                                                                                                                var pane = document.getElementById('wall-finder-pane');
+                                                                                                                if (!pane) { setTimeout(_wpColHook, 500); return; }
+                                                                                                                if (window._wpColObs) return;
+                                                                                                                window._wpColObs = new MutationObserver(function () { _wpFixColspan(); });
+                                                                                                                window._wpColObs.observe(pane, { childList: true, subtree: true });
+                                                                                                                _wpFixColspan();
+                                                                                                            }
+                                                                                                            _wpColHook();
+                                                                                                        })();
+                                                                                                        setInterval(_wpFixColspan, 1000);
+                                                                                                                                        function _wpFixCols() {
+                                                                                                                                            try {
+                                                                                                                                                var pane = document.getElementById('wall-finder-pane');
+                                                                                                                                                if (!pane) return;
+                                                                                                                                                var W = [28, 10, 10, 19, 10, 10, 13];
+                                                                                                                                                var tbs = pane.querySelectorAll('table');
+                                                                                                                                                for (var ti = 0; ti < tbs.length; ti++) {
+                                                                                                                                                    var t = tbs[ti];
+                                                                                                                                                    if (!t.querySelector('#peaksTableBodyRev, #peaksTableBodyMom')) continue;
+                                                                                                                                                    var cgs = t.querySelectorAll('colgroup');
+                                                                                                                                                    var ok = cgs.length === 1 && cgs[0].getAttribute('data-wpseg') === '1' && cgs[0].children.length === 7;
+                                                                                                                                                    if (!ok) {
+                                                                                                                                                        for (var gi = 0; gi < cgs.length; gi++) cgs[gi].parentNode.removeChild(cgs[gi]);
+                                                                                                                                                        var cg = document.createElement('colgroup');
+                                                                                                                                                        cg.setAttribute('data-wpseg', '1');
+                                                                                                                                                        for (var wi = 0; wi < W.length; wi++) {
+                                                                                                                                                            var cl = document.createElement('col');
+                                                                                                                                                            cl.style.width = W[wi] + '%';
+                                                                                                                                                            cg.appendChild(cl);
+                                                                                                                                                        }
+                                                                                                                                                        t.insertBefore(cg, t.firstChild);
+                                                                                                                                                    }
+                                                                                                                                                    var hrs = t.querySelectorAll('thead tr');
+                                                                                                                                                    for (var hi = 0; hi < hrs.length; hi++) {
+                                                                                                                                                        var kids = hrs[hi].children;
+                                                                                                                                                        for (var ki = kids.length - 1; ki >= 7; ki--) hrs[hi].removeChild(kids[ki]);
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            } catch (eC) {}
+                                                                                                                                        }
+                                                                                                                                        (function () {
+                                                                                                                                            if (!document.getElementById('wpSegCss')) {
+                                                                                                                                                var sg = document.createElement('style');
+                                                                                                                                                sg.id = 'wpSegCss';
+                                                                                                                                                sg.textContent = 'html body #wall-finder-pane#wall-finder-pane table{table-layout:fixed !important;width:100% !important;margin:0 !important;}';
+                                                                                                                                                document.head.appendChild(sg);
+                                                                                                                                            }
+                                                                                                                                            _wpFixCols();
+                                                                                                                                        })();
+                                                                                                                                        setInterval(_wpFixCols, 1000);
                                 function _ordPaint() {
                                     var b = document.getElementById('ordLvlBtn');
                                     if (!b) return;
@@ -6468,7 +6582,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                 while (i < list.length && (list[i].type + '|' + list[i].s1) === k) { grp.push(list[i]); i++; }
                                                                 var isOpen = !!expMap[k];
                                                                 var total = cntMap[k] || grp.length;
-                                                                html += '<tr class="lvlHdr" onclick="window._lvlExpToggle(\'' + k + '\')" style="cursor:pointer; background:var(--bg-base) !important;"><td colspan="8" style="padding:4px 6px; background:var(--bg-base) !important; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:11px; font-weight:800; text-align:left;">X' + grp[0].s1 + '-X' + grp[0].s2 + '<span style="float:right; background:var(--bg-base) !important; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:1px solid #FFFFFF; padding:0 8px; font-size:10px; font-weight:800;">' + (isOpen ? 'COLLAPSE ▲' : 'EXPAND ▼') + '</span></td></tr>';
+                                                                html += '<tr class="lvlHdr" onclick="window._lvlExpToggle(\'' + k + '\')" style="cursor:pointer; background:var(--bg-base) !important;"><td colspan="7" style="padding:4px 6px; background:var(--bg-base) !important; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:11px; font-weight:800; text-align:left;">X' + grp[0].s1 + '-X' + grp[0].s2 + '<span style="float:right; background:var(--bg-base) !important; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:1px solid #FFFFFF; padding:0 8px; font-size:10px; font-weight:800;">' + (isOpen ? 'COLLAPSE ▲' : 'EXPAND ▼') + '</span></td></tr>';
                                                                 html += _bsrBase(grp);
                                                             }
                                                             return html;
@@ -6985,7 +7099,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        
                                                if (!list || list.length === 0) {
        
-                                                   return `<tr><td colspan="8" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
+                                                   return `<tr><td colspan="7" style="padding: 15px 0; font-size: 12px; font-weight: 800; text-align: center; color: #FFFFFF; letter-spacing: 0.1em;">NO TARGETS FOUND</td></tr>`;
        
                                                }
        
@@ -7019,7 +7133,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                           
                                                                                                       
                                                           
-                                                                                                      html += `<tr class="${rowClass} highlight-gem" style="${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
+                                                                                                      html += `<tr class="${rowClass} highlight-gem" ${(function () { var _k = _wpTmrReg(data); var _f = _wpFillInfo(_k); return 'data-k="' + _k + '" data-wpst="' + _f.kind + '" style="--wpf:' + _f.pct + '%;'; })()}${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
                                                                                             <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span></td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
@@ -7028,7 +7142,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                             <td style="width:9%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">${data.c2}</td>
                                                                                             
                                                                                             <td style="width:14%; font-size:11px; font-weight:700; padding:8px 2px; text-align:center;">${data.pct}%</td>
-                                                                                            <td class="wpTmr" data-k="${_wpTmrReg(data)}" style="width:15%; font-size:11px; font-weight:700; padding:8px 2px; text-align:center; white-space:nowrap; overflow:hidden;">${_wpTmrText(_wpTmrKey(data))}</td>
+                                                                                            
                                                                                             </tr>`;
        
                                                });
