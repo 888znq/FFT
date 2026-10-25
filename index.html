@@ -5665,7 +5665,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                         
                                                             if (!_userScanRangeLock) {
                                         
-                                                                var _scanMinSyncEl = document.getElementById('scanMin');
+                                                                var _scanMinSyncEl = null;
                                         
                                                                 var _scanMaxSyncEl = document.getElementById('scanMax');
                                         
@@ -6555,6 +6555,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     keys.forEach(function (k) {
                                                         byLvl[k].sort(cmp);
                                                         window._lvlCnt[k] = Math.min(10, byLvl[k].length);
+                                                                                                                if (!window._lvlInit) window._lvlInit = {};
+                                                                                                                if (!window._lvlInit[k]) { window._lvlInit[k] = true; window._lvlExp[k] = false; }
                                                     });
                                                     keys.sort(function (a, b) {
                                                         var A = byLvl[a][0], B = byLvl[b][0];
@@ -6564,7 +6566,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     var out = [];
                                                     keys.forEach(function (k) {
                                                         var arr = byLvl[k].slice(0, 10);
-                                                        if (!window._lvlExp[k]) arr = arr.slice(0, 1);
+                                                                                                                if (window._lvlExp[k] === undefined) window._lvlExp[k] = true;
+                                                                                                                if (!window._lvlExp[k]) arr = arr.slice(0, 1);
                                                         for (var j = 0; j < arr.length; j++) out.push(arr[j]);
                                                     });
                                                     return out;
@@ -8889,7 +8892,7 @@ let dataList = currentMode === 'REV'
                                     _hiddenPairs.clear();
                                     var _wpAll = (activePairs || []).concat(ALL_PAIRS);
                                     for (var _wi = 0; _wi < _wpAll.length; _wi++) {
-                                        if (_wpAll[_wi] !== pair) _hiddenPairs.add(_wpAll[_wi]);
+                                        /* keep every picked pair visible in the wall panel */
                                     }
                                 }
                                 function _wpFocusClear() {
