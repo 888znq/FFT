@@ -7077,7 +7077,30 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
             }
 
-            // fallback: original green live-edge when no signal armed
+            if (_resBox && _resBox.pair === activePair && (Date.now() - _resBox.t) < 60000) {
+                            var _rY = Math.round((_resBox.r * CELL_H) - scrollT);
+                            var _rCol = _resBox.kind === 'WIN' ? (window.accentGreenHex || '#2ED573') : (_resBox.kind === 'LOSS' ? (window.accentRedHex || '#E63946') : '#FFD700');
+                            var _rLbl = ['X' + (_resBox.s1 - 1), 'X' + _resBox.s1, _resBox.kind === 'WIN' ? 'W' : (_resBox.kind === 'LOSS' ? 'L' : 'M')];
+                            [_resBox.c1, _resBox.c2, _resBox.c3].forEach(function(rc, rix) {
+                                if (rc < 0) return;
+                                var _rX = Math.round((rc * CELL_W) - scrollL);
+                                if (_rX < -CELL_W || _rX > viewW || _rY < -CELL_H || _rY > viewH) return;
+                                ctx.save();
+                                ctx.globalAlpha = 1;
+                                ctx.fillStyle = _rCol;
+                                ctx.fillRect(_rX + 1, _rY + 1, CELL_W - 2, CELL_H - 1);
+                                ctx.strokeStyle = '#FFFFFF';
+                                ctx.lineWidth = 2;
+                                ctx.strokeRect(_rX + 1, _rY + 1, CELL_W - 2, CELL_H - 1);
+                                ctx.fillStyle = window.systemThemeHex || '#000432';
+                                ctx.font = "800 " + dynamicFontSize + "px 'Inter', 'JetBrains Mono'";
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(_rLbl[rix], _rX + centerOff, _rY + (CELL_H / 2) + 1);
+                                ctx.restore();
+                            });
+                        }
+                        // fallback: original green live-edge when no signal armed
 
             if (liveEdgeCol >= 0 && highlightRow >= 0 && !_armed) {
 
@@ -7324,6 +7347,15 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         let _armed = null;
 
         let _beepState = 'IDLE';
+                var _resBox = null;
+                function _snapRes(kind, col, streak) {
+                    if (!_armed) return;
+                    var b1 = _neonBox1Col, b2 = -1, b3 = col;
+                    if (kind === 'LOSS') { b2 = col - (streak - _armed.s1); }
+                    else if (kind === 'WIN') { b2 = _neonBox2Col; }
+                    _resBox = { kind: kind, r: _armed.r, s1: _armed.s1, c1: b1, c2: b2, c3: b3, t: Date.now(), pair: _armed.pair };
+                    if (typeof requestDraw === 'function') requestDraw();
+                }
 
         function _oppCol(col) { return col === 'G' ? 'R' : 'G'; }
 
@@ -7477,7 +7509,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
             _resetAllBoxes();
 
-            _armed = { pair, c, r, s1, s2, col: colColor, gap: gapVal || 0, curGap: curGapVal || 0 };
+            _resBox = null;
+                        _armed = { pair, c, r, s1, s2, col: colColor, gap: gapVal || 0, curGap: curGapVal || 0 };
             
                         _origSelectSignal.apply(this, arguments);
             
@@ -7565,7 +7598,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 } else if (streak >= exitAt && _beepState === 'HIT') {
 
-                    _stopAllBeeps(); _playLossBeep(); evtLog('INFO', 'ARMED', 'LOSS - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' streak continued to X' + _armed.s2);
+                    _snapRes('LOSS', col, streak); _stopAllBeeps(); _playLossBeep(); evtLog('INFO', 'ARMED', 'LOSS - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' streak continued to X' + _armed.s2);
                     
                                         _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
@@ -7579,13 +7612,13 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
                 if (_beepState === 'WARN' && streak >= targetAt) {
 
-                    _stopAllBeeps(); _playMissBeep(); evtLog('INFO', 'ARMED', 'MISS - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' reversed before reaching X' + _armed.s1);
+                    _snapRes('MISS', col, streak); _stopAllBeeps(); _playMissBeep(); evtLog('INFO', 'ARMED', 'MISS - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' reversed before reaching X' + _armed.s1);
                     
                                         _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
                 } else if (_beepState === 'HIT' && streak >= exitAt) {
 
-                    _stopAllBeeps(); _playWinBeep(); evtLog('INFO', 'ARMED', 'WIN - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' reversed after hit');
+                    _snapRes('WIN', col, streak); _stopAllBeeps(); _playWinBeep(); evtLog('INFO', 'ARMED', 'WIN - ' + _armed.pair + ' C' + _armed.c + ' R' + _armed.r + ' X' + _armed.s1 + '-X' + _armed.s2 + ' reversed after hit');
                     
                                         _armed = null; _beepState = 'IDLE'; _stopPulse(); _updateArmedGapBadge(); return;
 
@@ -10041,6 +10074,36 @@ let dataList = currentMode === 'REV'
                         }
             
             window._tcPairColorFn = tcPairColor;
+                        window._tcClkCache = null;
+                        window._tcClicked = function() {
+                            var id = (typeof lastClickedSigId === 'string') ? lastClickedSigId : '';
+                            if (!id) return null;
+                            var p = id.split('-');
+                            if (p.length !== 7) return null;
+                            var f = _sigOutFind(p[0], +p[1], +p[2], +p[3], +p[4], p[5], p[6]);
+                            if (f) { window._tcClkCache = { id: id, sig: f }; return f; }
+                            if (window._tcClkCache && window._tcClkCache.id === id) return window._tcClkCache.sig;
+                            return null;
+                        };
+            window._tcMarkOk = function(mk) {
+                var s = mk.sig, m = TC.allMap, id = (typeof lastClickedSigId === 'string') ? lastClickedSigId : '';
+                if (!m) return true;
+                if (TC._fcMap !== m || TC._fcId !== id) {
+                    TC._fcMap = m;
+                    TC._fcId = id;
+                    var best = null, hit = null, p = id ? id.split('-') : [], q, sg, a, ks = ['rev', 'mom'];
+                    for (q in m) {
+                        for (a = 0; a < 2; a++) {
+                            sg = m[q][ks[a]];
+                            if (!sg) continue;
+                            if (p.length === 7 && p[0] === sg.pair && (+p[1]) === sg.c && (+p[2]) === sg.r && (+p[3]) === sg.s1 && (+p[4]) === sg.s2 && p[5] === sg.col && p[6] === sg.type) hit = sg;
+                            if (!best || window._champScore(sg) > window._champScore(best)) best = sg;
+                        }
+                    }
+                    TC._fcSig = hit || best;
+                }
+                return !TC._fcSig || s === TC._fcSig;
+            };
             
             function tcSyncAllBtn() {
                 var b = document.getElementById('tcAllBtn');
@@ -10200,6 +10263,41 @@ let dataList = currentMode === 'REV'
                                     nodes = nodes.concat(missedNodes.slice(0, nMissed));
                                 }
                                 var _pins = [], _pi, _pk, _pf;
+                                                                var _fmNow = Date.now(), _fmK, _fmN, _fmE, _fmT, _fmR;
+                                                                if (!TC.fireMap) TC.fireMap = {};
+                                                                if (live) {
+                                                                    for (lkI = 0; lkI < nodes.length; lkI++) {
+                                                                        _fmN = nodes[lkI];
+                                                                        if (_fmN.kind !== 'FIRED') continue;
+                                                                        _fmK = lkKey(_fmN.sig);
+                                                                        _fmE = TC.fireMap[_fmK];
+                                                                        if (!_fmE || _fmE.idx !== _fmN.idx || _fmE.st !== currentStartTsUtc) {
+                                                                            TC.fireMap[_fmK] = { st: currentStartTsUtc, idx: _fmN.idx, end: _fmN.idx + _fmN.sig.c, res: null, at: 0, pendAt: 0, node: { sig: _fmN.sig, idx: _fmN.idx, need: 0, ref: _fmN.ref, kind: 'FIRED', up: _fmN.up, rem: 0, live: false, res: null } };
+                                                                        }
+                                                                    }
+                                                                    for (_fmK in TC.fireMap) {
+                                                                        _fmE = TC.fireMap[_fmK];
+                                                                        if (_fmE.st !== currentStartTsUtc) { delete TC.fireMap[_fmK]; continue; }
+                                                                        if (nowSec < _fmE.end) continue;
+                                                                        if (_fmE.res === null) {
+                                                                            _fmT = window.tcTruth(_fmE.node);
+                                                                            if (_fmT === 'pending') {
+                                                                                if (!_fmE.pendAt) _fmE.pendAt = _fmNow;
+                                                                                if (_fmNow - _fmE.pendAt > 6000) _fmT = 'none';
+                                                                            }
+                                                                            if (_fmT !== 'pending') { _fmE.res = _fmT; _fmE.at = _fmNow; }
+                                                                        } else if (_fmNow - _fmE.at > 30000) {
+                                                                            delete TC.fireMap[_fmK];
+                                                                            continue;
+                                                                        }
+                                                                        if (lkNode && lkKey(lkNode.sig) === _fmK) continue;
+                                                                        _fmR = _fmE.node;
+                                                                        _fmR.res = (_fmE.res === null) ? 'wait' : _fmE.res;
+                                                                        _fmR.rem = 0;
+                                                                        _fmR.live = false;
+                                                                        _pins.push(_fmR);
+                                                                    }
+                                                                }
                                 if (lkNode) { lkNode.live = true; lkNode.res = null; _pins.push(lkNode); }
                                 if (TC.liveRes) {
                                     if (Date.now() < TC.liveRes.until) {
@@ -10627,6 +10725,11 @@ let dataList = currentMode === 'REV'
                     it0.lo -= pad0;
                     it0.hi += pad0;
                                         var bqSg = sigMap[it0.pair];
+                                                                                var _bqP = (typeof lastClickedSigId === 'string' && lastClickedSigId) ? lastClickedSigId.split('-') : [];
+                                                                                if (_bqP.length === 7) {
+                                                                                    var _bqF = window._tcClicked();
+                                                                                    if (_bqF) bqSg = (_bqF.pair === it0.pair) ? { rev: (_bqF.type === 'REV' ? _bqF : null), mom: (_bqF.type === 'MOM' ? _bqF : null) } : null;
+                                                                                }
                                         if (bqSg) {
                                             var bqMax = 0;
                                             var bqL = [bqSg.rev, bqSg.mom];
@@ -10810,11 +10913,20 @@ let dataList = currentMode === 'REV'
                 for (pi = 0; pi < info.length; pi++) {
                     var pin = info[pi];
                     var sgs = sigMap[pin.pair];
+                                        var _ckS0 = window._tcClicked();
+                                        if (_ckS0) sgs = (pin.pair === _ckS0.pair) ? { rev: (_ckS0.type === 'REV' ? _ckS0 : null), mom: (_ckS0.type === 'MOM' ? _ckS0 : null) } : null;
                     if (!sgs) continue;
                     if (sgs.rev) nRev++;
                     if (sgs.mom) nMom++;
                     var lim = Math.min(live ? nowSec - 1 : pin.len - 1, pin.len - 1, sEnd - 1);
                     var sl = [sgs.rev, sgs.mom];
+                    var _ckP = (typeof lastClickedSigId === 'string' && lastClickedSigId) ? lastClickedSigId.split('-') : [];
+                                        var _ckS = (_ckP.length === 7) ? _sigOutFind(_ckP[0], +_ckP[1], +_ckP[2], +_ckP[3], +_ckP[4], _ckP[5], _ckP[6]) : null;
+                                        if (_ckS) {
+                                            sl = (pin.pair === _ckS.pair) ? [(_ckS.type === 'REV' ? _ckS : null), (_ckS.type === 'MOM' ? _ckS : null)] : [null, null];
+                                        } else {
+                                            sl = sl.map(function(x) { return (x && window._tcMarkOk({ sig: x })) ? x : null; });
+                                        }
                     for (k = 0; k < 2; k++) {
                         var sg0 = sl[k];
                         if (!sg0) continue;
@@ -10854,6 +10966,7 @@ let dataList = currentMode === 'REV'
                     var mk = marks[k];
                     if (mk.i < i0 || mk.i > mk.it.i1) continue;
                     if (TC.candle && mk.sig.c !== (Math.round(CYCLE) || 1)) continue;
+                    if (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-REV' && currentInstances && currentInstances.length && mk.it.pair === activePair) mk.win = 'none';
                     ctx.globalAlpha = 1;
                     var mx = xOf(mk.i), my = yOfPair(mk.it, mk.p);
                     if (mx < PADL || mx > W - PADR) continue;
@@ -10997,7 +11110,7 @@ let dataList = currentMode === 'REV'
                                             ctx.strokeStyle = '#A855F7';
                                             ctx.lineWidth = 2;
                                             ctx.strokeStyle = mk.it.color;
-                                            for (var cbJ = 0; cbJ < 0; cbJ++) {
+                                            for (var cbJ = 0; cbJ < (((mk.res === 'cont' || mk.res === 'rev') && ((mk.sig.type === 'MOM') !== (mk.res === 'cont'))) ? TC.cdlHits.length : 0); cbJ++) {
                                                 var cbG = TC.cdlHits[cbJ], cbP = cbG.o;
                                                 if (!cbP || cbP.pair !== mk.it.pair || cbP.e < mk.i - flSh || cbP.s >= flEj - flSh) continue;
                                                 window._tcSil(ctx, cbG.bx, cbG.by, cbG.bw, cbG.bh, cbG.mx, cbG.yh, cbG.yl);
@@ -11096,7 +11209,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                                                                                         if (dcH) { tkX = dcH.mx; tkY = Math.max(ptop + 24, Math.min(dcH.yh, dcH.by) - 26); } else { tkX = mk.tkNX; tkY = mk.tkNY; } }
                                                                                                                                                                                     ctx.globalAlpha = 1;
                                                                                                                                                                                     var tkCol = mk.win === 'win' ? CY : AM;
-                                                                                                                                                                                    if (TC.candle && mk.tkNX !== undefined && dcH && !(typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair)) { ctx.beginPath(); ctx.arc(dcH.mx, Math.max(ptop + 8, Math.min(dcH.yh, dcH.by) - 7), 6, 0, 6.2832); ctx.fillStyle = mk.it.color; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = BG; ctx.stroke(); }
+                                                                                                                                                                                    if (TC.candle && mk.tkNX !== undefined && dcH && !(typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair)) { ctx.beginPath(); ctx.rect(0, 0, 0, 0); ctx.fillStyle = mk.it.color; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = BG; ctx.stroke(); }
                                                                                                                                                                                     var tkSym = (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair) ? '' : (mk.win === 'win' ? '\u2713' : '\u2717');
                                                                                                                                                                                     ctx.fillStyle = tkCol;
                                                                                                                                                                                     ctx.shadowColor = tkCol;
@@ -11480,7 +11593,7 @@ let dataList = currentMode === 'REV'
                                                                                                                                 ctx.strokeStyle = ocIt.color;
                                                                                                                                 ctx.lineWidth = 1.8;
                                                                                                                                 ctx.beginPath();
-                                                                                                                                ctx.arc(ovxB.mx, Math.max(ptop + 8, Math.min(ovxB.yh, ovxB.by) - 7), 6, 0, 6.2832); ctx.fillStyle = ocIt.color; ctx.fill(); ctx.strokeStyle = BG; ctx.lineWidth = 1.5;
+                                                                                                                                ctx.rect(0, 0, 0, 0); ctx.fillStyle = ocIt.color; ctx.fill(); ctx.strokeStyle = BG; ctx.lineWidth = 1.5;
                                                                                                                                 ctx.stroke();
                                                                                                                                 var ovxW = tcWin(ocSg.type, (ocIdx + CYCLE > ocIt.last) ? 'pending' : 'cont');
                                                                                                                                 if (ovxW === 'win' || ovxW === 'loss') {
@@ -11495,6 +11608,38 @@ let dataList = currentMode === 'REV'
                                                                                                                         }
                                                             ctx.restore();
                                                             if (ocSg) {
+                                                                if (TC.candle && TC.cdlHits && ocSg.type === 'REV') {
+                                                                    var rxT = ocIdx + CYCLE, rxP0 = ocIt.prices[ocIdx], rxP1 = ocIt.prices[rxT];
+                                                                    if (rxT <= ocIt.last && rxP1 !== undefined && rxP1 !== -1 && rxP0 > 0) {
+                                                                        var rxCont = (ocSg.col === 'R') ? (rxP1 < rxP0) : (rxP1 > rxP0);
+                                                                        var rxW = tcWin('REV', rxCont ? 'cont' : 'rev');
+                                                                        var rxH = null, rxI, rxO;
+                                                                        for (rxI = 0; rxI < TC.cdlHits.length; rxI++) {
+                                                                            rxO = TC.cdlHits[rxI].o;
+                                                                            if (rxO && rxO.pair === ocIt.pair && rxO.ce === (Math.round(CYCLE) || 1) && rxO.s <= rxT - 1 && rxO.e >= rxT - 1) { rxH = TC.cdlHits[rxI]; break; }
+                                                                        }
+                                                                        if (rxH && rxH.mx >= PADL && rxH.mx <= W - PADR) {
+                                                                            var rxTop = Math.min(rxH.yh, rxH.by);
+                                                                            ctx.save();
+                                                                            ctx.globalAlpha = 1;
+                                                                            ctx.shadowBlur = 0;
+                                                                            ctx.setLineDash([]);
+                                                                            ctx.beginPath();
+                                                                            ctx.rect(0, 0, 0, 0);
+                                                                            ctx.fillStyle = ocIt.color;
+                                                                            ctx.fill();
+                                                                            ctx.lineWidth = 1.5;
+                                                                            ctx.strokeStyle = BG;
+                                                                            ctx.stroke();
+                                                                            ctx.font = 'bold 44px ' + MONO;
+                                                                            ctx.textAlign = 'center';
+                                                                            ctx.textBaseline = 'middle';
+                                                                            ctx.fillStyle = rxW === 'win' ? CY : AM;
+                                                                            ctx.fillText(rxW === 'win' ? '\u2713' : '\u2717', rxH.mx, Math.max(ptop + 24, rxTop - 26));
+                                                                            ctx.restore();
+                                                                        }
+                                                                    }
+                                                                }
                                                                 var ocRes = (ocIdx + CYCLE > ocIt.last) ? 'pending' : ((ocSg.type === 'REV' && !ocInst.isFalse) ? 'rev' : 'cont');
                                                                 TC.hov.push({ x: ocX, y: ocY, r: 11, o: { sig: ocSg, idx: ocIdx, kind: 'MARK', res: ocRes, win: tcWin(ocSg.type, ocRes), p: ocPv, dec: ocIt.dec } });
                                                             }
@@ -12872,12 +13017,15 @@ let dataList = currentMode === 'REV'
                 TC.sigMode = 'MIX';
                 window._tcSigMode = 'MIX';
                 var _sgBtn0 = bar.querySelector('#tcSigModeBtn');
-                if (_sgBtn0) _sgBtn0.textContent = 'REV/MOM';
+                if (_sgBtn0) _sgBtn0.textContent = 'REV';
+                TC.sigMode = 'REV';
+                window._tcSigMode = 'REV';
+                TC.allMap = null;
                 var _wpR0 = document.getElementById('peaksTableBodyRev');
                 var _wpM0 = document.getElementById('peaksTableBodyMom');
                 if (_wpR0 && _wpM0) {
                     _wpR0.parentElement.parentElement.parentElement.style.display = 'flex';
-                    _wpM0.parentElement.parentElement.parentElement.style.display = 'flex';
+                    _wpM0.parentElement.parentElement.parentElement.style.display = 'none';
                 }
                 var _cdBtn0 = bar.querySelector('#tcCandleBtn');
                 if (_cdBtn0) {
