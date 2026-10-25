@@ -924,10 +924,273 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         setInterval(_sigPaint, 200);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         _sigPaint();
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     })();</script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <script>(function(){var _SHOW_FLOAT_TRADE_PILL=false;function _mvTradePill(){var f=document.getElementById('floatTradePill');if(f&&f.getAttribute('data-ready'))return;var sell=document.getElementById('sellBtn');var buy=document.getElementById('buyBtn');var amt=document.getElementById('tradeAmount');var exp=document.getElementById('tradeExpiryVisible');var bal=document.getElementById('accountBalance');if(!sell||!buy||!amt||!exp||!bal)return;if(!f){f=document.createElement('div');f.id='floatTradePill';document.body.appendChild(f);}if(!_SHOW_FLOAT_TRADE_PILL){f.style.setProperty('display','none','important');}else{f.style.removeProperty('display');}var items=[amt.parentNode,exp.parentNode,sell,buy,bal];var parents=[];items.forEach(function(el){if(el.parentNode&&el.parentNode!==f&&parents.indexOf(el.parentNode)<0)parents.push(el.parentNode);f.appendChild(el);});parents.forEach(function(p){if(p.id!=='trade-console'&&p.children.length===0)p.style.display='none';});f.setAttribute('data-ready','1');}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_mvTradePill);else _mvTradePill();window.addEventListener('load',_mvTradePill);if(!_SHOW_FLOAT_TRADE_PILL){var _stPill=document.createElement('style');_stPill.id='floatTradePillHideCss';_stPill.textContent='#floatTradePill{display:none !important;visibility:hidden !important;pointer-events:none !important;}';document.head.appendChild(_stPill);setInterval(function(){var _ePill=document.getElementById('floatTradePill');if(_ePill&&_ePill.style.display!=='none'){_ePill.style.setProperty('display','none','important');}},200);}})();</script>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <script>(function(){var _SHOW_FLOAT_TRADE_PILL=true;function _mvTradePill(){var f=document.getElementById('floatTradePill');if(f&&f.getAttribute('data-ready'))return;var sell=document.getElementById('sellBtn');var buy=document.getElementById('buyBtn');var amt=document.getElementById('tradeAmount');var exp=document.getElementById('tradeExpiryVisible');var bal=document.getElementById('accountBalance');if(!sell||!buy||!amt||!exp||!bal)return;if(!f){f=document.createElement('div');f.id='floatTradePill';document.body.appendChild(f);}if(!_SHOW_FLOAT_TRADE_PILL){f.style.setProperty('display','none','important');}else{f.style.removeProperty('display');}var items=[amt.parentNode,exp.parentNode,sell,buy,bal];var parents=[];items.forEach(function(el){if(el.parentNode&&el.parentNode!==f&&parents.indexOf(el.parentNode)<0)parents.push(el.parentNode);f.appendChild(el);});parents.forEach(function(p){if(p.id!=='trade-console'&&p.children.length===0)p.style.display='none';});f.setAttribute('data-ready','1');}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_mvTradePill);else _mvTradePill();window.addEventListener('load',_mvTradePill);if(!_SHOW_FLOAT_TRADE_PILL){var _stPill=document.createElement('style');_stPill.id='floatTradePillHideCss';_stPill.textContent='#floatTradePill{display:none !important;visibility:hidden !important;pointer-events:none !important;}';document.head.appendChild(_stPill);setInterval(function(){var _ePill=document.getElementById('floatTradePill');if(_ePill&&_ePill.style.display!=='none'){_ePill.style.setProperty('display','none','important');}},200);}})();</script>
 
                                                     
 
+                                                                                                                                                            <script>
+                                                                                                                                                            (function () {
+                                                                                                                                                                window._tradeCustom = false;
+                                                                                                                                                                window._tradePillOn = false;
+                                                                                                                                                            
+                                                                                                                                                                var _tpCssText = [
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill{display:flex !important;flex-wrap:wrap !important;align-items:stretch !important;position:fixed !important;top:0 !important;left:50% !important;right:auto !important;bottom:auto !important;transform:translateX(-50%) !important;width:min(96vw,520px) !important;box-sizing:border-box !important;z-index:1800 !important;visibility:visible !important;pointer-events:auto !important;gap:1px !important;background:#000432 !important;border-radius:0 0 22px 22px !important;overflow:hidden !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > *{box-sizing:border-box !important;height:36px !important;min-height:36px !important;max-height:36px !important;min-width:0 !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > div{padding:0 4px !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > #tpPairWrap{order:1;flex:1 1 27% !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > #tpModeBtn{order:2;flex:1 1 24% !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > div:has(> #tradeAmount){order:3;flex:1 1 26% !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > div:has(> #tradeExpiryVisible){order:4;flex:1 1 21% !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > #sellBtn{order:5;flex:1 1 33% !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > #buyBtn{order:6;flex:1 1 33% !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > #accountBalance{order:7;flex:1 1 32% !important;width:auto !important;max-width:none !important;font-size:12px !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill > #buyBtn,html body #floatTradePill#floatTradePill > #sellBtn{font-size:13px !important;letter-spacing:1px !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill input{font-size:13px !important;height:34px !important;line-height:34px !important;padding:0 !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill #tradePairInput{font-size:11px !important;}',
+                                                                                                                                                                    'html body #floatTradePill#floatTradePill[data-tp="auto"] #tradeExpiryVisible,html body #floatTradePill#floatTradePill[data-tp="auto"] #tradePairInput{opacity:0.75 !important;cursor:not-allowed !important;}',
+                                                                                                                                                                    'html.pc-on body:not(#pcx) #floatTradePill #tpPairWrap{background:var(--pair-color) !important;}',
+                                                                                                                                                                    'html.pc-on body:not(#pcx) #floatTradePill #tpPairWrap input{color:#000432 !important;-webkit-text-fill-color:#000432 !important;}'
+                                                                                                                                                                ].join('\n');
+                                                                                                                                                            
+                                                                                                                                                                try {
+                                                                                                                                                                    var _tpSt = document.createElement('style');
+                                                                                                                                                                    _tpSt.id = 'tradePillCss';
+                                                                                                                                                                    _tpSt.textContent = _tpCssText;
+                                                                                                                                                                    document.head.appendChild(_tpSt);
+                                                                                                                                                                } catch (e) {}
+                                                                                                                                                            
+                                                                                                                                                                function _tpAutoPair() {
+                                                                                                                                                                    var p = '';
+                                                                                                                                                                    try { p = (typeof activePair !== 'undefined' && activePair) ? String(activePair) : ''; } catch (e) { p = ''; }
+                                                                                                                                                                    if (!p && window._tpSel && window._tpSel.pair) p = String(window._tpSel.pair);
+                                                                                                                                                                    return p;
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpAutoCycle() {
+                                                                                                                                                                    var c = 0;
+                                                                                                                                                                    try {
+                                                                                                                                                                        var L = window._tcLiveLock;
+                                                                                                                                                                        var nowS = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+                                                                                                                                                                        if (L && L.node && L.node.sig && nowS < L.end && L.node.sig.c > 0) c = L.node.sig.c;
+                                                                                                                                                                    } catch (e) { c = 0; }
+                                                                                                                                                                    if (c > 0) return c;
+                                                                                                                                                                    var p = _tpAutoPair();
+                                                                                                                                                                    if (window._tpSel && window._tpSel.c > 0 && (!p || window._tpSel.pair === p)) return window._tpSel.c;
+                                                                                                                                                                    try {
+                                                                                                                                                                        var a = parseInt(document.getElementById('scanMin').value, 10);
+                                                                                                                                                                        var b = parseInt(document.getElementById('scanMax').value, 10);
+                                                                                                                                                                        if (a > 0 && a === b) return a;
+                                                                                                                                                                    } catch (e2) {}
+                                                                                                                                                                    try { if (typeof CYCLE === 'number' && CYCLE > 0) return CYCLE; } catch (e3) {}
+                                                                                                                                                                    return 0;
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpLabel(p) {
+                                                                                                                                                                    return String(p || '').replace(/^(frx|cry)/i, '');
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpNorm(raw) {
+                                                                                                                                                                    var s = String(raw || '').toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                                                                                                                                                                    if (!s) return '';
+                                                                                                                                                                    if (/^(FRX|CRY)/.test(s)) return s.slice(0, 3).toLowerCase() + s.slice(3).replace(/_/g, '');
+                                                                                                                                                                    if (/^R_?\d+$/.test(s)) return 'R_' + s.replace(/^R_?/, '');
+                                                                                                                                                                    s = s.replace(/_/g, '');
+                                                                                                                                                                    if (/^1HZ\d+V$/.test(s)) return s;
+                                                                                                                                                                    if (/^(BTC|ETH|LTC|BCH|XRP|DSH|EOS|IOT|XMR|ZEC|TRX|ADA|DOT|SOL)USD$/.test(s)) return 'cry' + s;
+                                                                                                                                                                    if (/^[A-Z]{6}$/.test(s)) return 'frx' + s;
+                                                                                                                                                                    return s;
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                window.tradePillSymbol = function () {
+                                                                                                                                                                    if (window._tradeCustom) {
+                                                                                                                                                                        var i = document.getElementById('tradePairInput');
+                                                                                                                                                                        var s = _tpNorm(i ? i.value : '');
+                                                                                                                                                                        if (s) return s;
+                                                                                                                                                                    }
+                                                                                                                                                                    return _tpAutoPair();
+                                                                                                                                                                };
+                                                                                                                                                            
+                                                                                                                                                                window.tradePillExpiry = function () {
+                                                                                                                                                                    var el = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
+                                                                                                                                                                    var raw = el ? parseInt(el.value, 10) : NaN;
+                                                                                                                                                                    if (window._tradeCustom || !window._tradePillOn) return raw;
+                                                                                                                                                                    var c = _tpAutoCycle();
+                                                                                                                                                                    return c > 0 ? c : raw;
+                                                                                                                                                                };
+                                                                                                                                                            
+                                                                                                                                                                function _tpSync() {
+                                                                                                                                                                    if (!window._tradePillOn || window._tradeCustom) return;
+                                                                                                                                                                    var inp = document.getElementById('tradePairInput');
+                                                                                                                                                                    var txt = _tpLabel(_tpAutoPair());
+                                                                                                                                                                            try {
+                                                                                                                                                                                        if (!document.getElementById('tpRowCss')) {
+                                                                                                                                                                                            var _rs = document.createElement('style');
+                                                                                                                                                                                            _rs.id = 'tpRowCss';
+                                                                                                                                                                                            _rs.textContent = [
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill > div:has(> #tradeExpiryVisible){display:none !important;}',
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill #tradePairInput{display:none !important;}',
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill > #tpPairWrap{order:1 !important;flex:1 1 100% !important;padding:0 !important;background:transparent !important;}',
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill > div:has(> #tradeAmount){order:2 !important;flex:1 1 26% !important;}',
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill > #sellBtn{order:3 !important;flex:1 1 23% !important;}',
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill > #buyBtn{order:4 !important;flex:1 1 23% !important;}',
+                                                                                                                                                                                                'html body #floatTradePill#floatTradePill#floatTradePill > #accountBalance{order:5 !important;flex:1 1 26% !important;width:auto !important;max-width:none !important;}',
+                                                                                                                                                                                                '#tpSigRow{display:flex;width:100%;height:100%;align-items:stretch;}',
+                                                                                                                                                                                                '#tpSigRow > span{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:800;color:#000432;border-right:1px solid #000432;white-space:nowrap;overflow:hidden;}',
+                                                                                                                                                                                                '#tpSigRow > span:first-child{flex:1.6 1 0;}',
+                                                                                                                                                                                                '#tpSigRow > span:last-child{border-right:none;}',
+                                                                                                                                                                                                '#tpSigRow[data-col="G"]{background:var(--accent-green);}',
+                                                                                                                                                                                                '#tpSigRow[data-col="R"]{background:var(--accent-red);}',
+                                                                                                                                                                                                '#tpSigRow[data-col=""]{background:#FFD700;}',
+                                                                                                                                                                                                                    '#tpSigRow{background:transparent !important;}',
+                                                                                                                                                                                                                    'html{--tpc:#FFD700;}',
+                                                                                                                                                                                                                    'html[data-sig="G"]{--tpc:var(--accent-green);}',
+                                                                                                                                                                                                                    'html[data-sig="R"]{--tpc:var(--accent-red);}',
+                                                                                                                                                                                                                    'html body #tcWrap#tcWrap #tcBar#tcBar{width:min(94%,500px) !important;gap:1px !important;padding:0 !important;background:#000432 !important;border:1px solid #000432 !important;border-radius:18px !important;overflow:hidden !important;box-shadow:0 8px 22px rgba(0,0,0,0.45) !important;}',
+                                                                                                                                                                                                                    'html body #tcWrap#tcWrap #tcBar#tcBar #floatTradePill#floatTradePill#floatTradePill{border-radius:0 !important;margin:0 !important;gap:1px !important;}',
+                                                                                                                                                                                                                    'html body #tcWrap#tcWrap #tcBar#tcBar > button{flex:1 1 0 !important;min-width:0 !important;height:30px !important;padding:0 !important;margin:0 !important;border:none !important;border-radius:0 !important;font-size:10px !important;letter-spacing:1px !important;display:flex !important;align-items:center !important;justify-content:center !important;}',
+                                                                                                                                                                                                                    'html body #tcWrap#tcWrap #tcBar#tcBar > button,html body #floatTradePill#floatTradePill#floatTradePill#floatTradePill#floatTradePill > *{background:var(--tpc) !important;background-color:var(--tpc) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}',
+                                                                                                                                                                                                                    'html body #tcWrap#tcWrap #tcBar#tcBar > button.tcOn{background:#000432 !important;background-color:#000432 !important;color:var(--tpc) !important;-webkit-text-fill-color:var(--tpc) !important;}',
+                                                                                                                                                                                                                    'html body #floatTradePill#floatTradePill#floatTradePill#floatTradePill#floatTradePill *{color:#000432 !important;-webkit-text-fill-color:#000432 !important;}',
+                                                                                                                                                                                                                    'html body #floatTradePill#floatTradePill#floatTradePill#floatTradePill#floatTradePill input{background:transparent !important;font-size:15px !important;letter-spacing:0.5px !important;}',
+                                                                                                                                                                                                                    'html body #tcWrap#tcWrap #tcBar#tcBar > button svg{stroke:#000432 !important;}'
+                                                                                                                                                                                            ].join('\n');
+                                                                                                                                                                                            document.head.appendChild(_rs);
+                                                                                                                                                                                        }
+                                                                                                                                                                                        var _sl = window._tpSel || {};
+                                                                                                                                                                                        var _ap = _tpAutoPair();
+                                                                                                                                                                                        var _pw = document.getElementById('tpPairWrap');
+                                                                                                                                                                                        var _row = document.getElementById('tpSigRow');
+                                                                                                                                                                                        if (!_row && _pw) {
+                                                                                                                                                                                            _row = document.createElement('div');
+                                                                                                                                                                                            _row.id = 'tpSigRow';
+                                                                                                                                                                                            _pw.appendChild(_row);
+                                                                                                                                                                                        }
+                                                                                                                                                                                        if (_row) {
+                                                                                                                                                                                            var _mt = !!(_sl.pair && _sl.pair === _ap);
+                                                                                                                                                                                            var _cy = _tpAutoCycle();
+                                                                                                                                                                                            var _cells = [txt || '-'];
+                                                                                                                                                                                            if (_cy > 0) _cells.push('C' + _cy);
+                                                                                                                                                                                            if (_mt && _sl.r != null) {
+                                                                                                                                                                                                _cells.push('R' + _sl.r);
+                                                                                                                                                                                                _cells.push('X' + _sl.s1 + '-X' + _sl.s2);
+                                                                                                                                                                                                if (_sl.gap != null) _cells.push(String(_sl.gap));
+                                                                                                                                                                                                if (_sl.cur != null) _cells.push(String(_sl.cur));
+                                                                                                                                                                                            }
+                                                                                                                                                                                            var _cl = '';
+                                                                                                                                                                                                            if (_mt && (_sl.col === 'G' || _sl.col === 'R')) {
+                                                                                                                                                                                                                var _up = (_sl.type === 'REV') ? (_sl.col === 'R') : (_sl.col === 'G');
+                                                                                                                                                                                                                _cl = _up ? 'G' : 'R';
+                                                                                                                                                                                                            }
+                                                                                                                                                                                            var _ky = _cl + '|' + _cells.join('|');
+                                                                                                                                                                                            if (_row.getAttribute('data-k') !== _ky) {
+                                                                                                                                                                                                _row.setAttribute('data-k', _ky);
+                                                                                                                                                                                                _row.setAttribute('data-col', _cl);
+                                                                                                                                                                                                while (_row.firstChild) _row.removeChild(_row.firstChild);
+                                                                                                                                                                                                _cells.forEach(function (t) {
+                                                                                                                                                                                                    var sp = document.createElement('span');
+                                                                                                                                                                                                    sp.textContent = t;
+                                                                                                                                                                                                    _row.appendChild(sp);
+                                                                                                                                                                                                });
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
+                                                                                                                                                                                    } catch (e) {}
+                                                                                                                                                                    if (inp && inp.value !== txt) inp.value = txt;
+                                                                                                                                                                    var exp = document.getElementById('tradeExpiryVisible');
+                                                                                                                                                                    var te = document.getElementById('tradeExpiry');
+                                                                                                                                                                    var c = _tpAutoCycle();
+                                                                                                                                                                    if (exp && c > 0 && String(exp.value) !== String(c)) {
+                                                                                                                                                                        exp.value = c;
+                                                                                                                                                                        if (te) te.value = c;
+                                                                                                                                                                    }
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpPaintBtn() {
+                                                                                                                                                                    var b = document.getElementById('tpModeBtn');
+                                                                                                                                                                    if (!b) return;
+                                                                                                                                                                    var c = !!window._tradeCustom;
+                                                                                                                                                                    b.textContent = c ? '\u270E CUSTOM' : '\uD83D\uDD12 AUTO';
+                                                                                                                                                                    b.title = c ? 'Custom: type your own pair + expiry (tap to go back to AUTO)' : 'Auto: pair + expiry locked to the selected signal (tap for CUSTOM)';
+                                                                                                                                                                    b.style.setProperty('background', c ? 'var(--accent-green)' : '#FFD700', 'important');
+                                                                                                                                                                    b.style.setProperty('color', '#000432', 'important');
+                                                                                                                                                                    b.style.setProperty('-webkit-text-fill-color', '#000432', 'important');
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpApply() {
+                                                                                                                                                                    var f = document.getElementById('floatTradePill');
+                                                                                                                                                                    var inp = document.getElementById('tradePairInput');
+                                                                                                                                                                    var exp = document.getElementById('tradeExpiryVisible');
+                                                                                                                                                                    var c = !!window._tradeCustom;
+                                                                                                                                                                    if (f) f.setAttribute('data-tp', c ? 'custom' : 'auto');
+                                                                                                                                                                    if (inp) inp.readOnly = !c;
+                                                                                                                                                                    if (exp) exp.readOnly = !c;
+                                                                                                                                                                    _tpPaintBtn();
+                                                                                                                                                                    if (!c) _tpSync();
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpToggle() {
+                                                                                                                                                                    window._tradeCustom = false;
+                                                                                                                                                                    _tpApply();
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                function _tpBuild() {
+                                                                                                                                                                    var f = document.getElementById('floatTradePill');
+                                                                                                                                                                    if (!f || !f.getAttribute('data-ready')) return false;
+                                                                                                                                                                    if (document.getElementById('tpPairWrap')) return true;
+                                                                                                                                                            
+                                                                                                                                                                    var w = document.createElement('div');
+                                                                                                                                                                    w.id = 'tpPairWrap';
+                                                                                                                                                                    w.title = 'Pair';
+                                                                                                                                                                    w.style.cssText = 'display:flex;align-items:center;justify-content:center;background:var(--bg-base);box-sizing:border-box;min-width:0;';
+                                                                                                                                                            
+                                                                                                                                                                    var inp = document.createElement('input');
+                                                                                                                                                                    inp.type = 'text';
+                                                                                                                                                                    inp.id = 'tradePairInput';
+                                                                                                                                                                    inp.autocomplete = 'off';
+                                                                                                                                                                    inp.setAttribute('autocapitalize', 'characters');
+                                                                                                                                                                    inp.spellcheck = false;
+                                                                                                                                                                    inp.readOnly = true;
+                                                                                                                                                                    inp.placeholder = 'PAIR';
+                                                                                                                                                                    inp.style.cssText = "background:transparent;border:none;color:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;width:100%;min-width:0;outline:none;text-align:center;text-transform:uppercase;";
+                                                                                                                                                                    inp.addEventListener('focus', function () {
+                                                                                                                                                                        if (window._tradeCustom) { try { inp.select(); } catch (e) {} }
+                                                                                                                                                                    });
+                                                                                                                                                                    inp.addEventListener('keydown', function (e) {
+                                                                                                                                                                        if (e.key === 'Enter') { try { inp.blur(); } catch (e2) {} }
+                                                                                                                                                                    });
+                                                                                                                                                                    w.appendChild(inp);
+                                                                                                                                                            
+                                                                                                                                                                    var b = document.createElement('button');
+                                                                                                                                                                    b.id = 'tpModeBtn';
+                                                                                                                                                                    b.type = 'button';
+                                                                                                                                                                    b.style.cssText = "border:none;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;";
+                                                                                                                                                                    b.addEventListener('click', _tpToggle);
+                                                                                                                                                            
+                                                                                                                                                                    f.appendChild(w);
+                                                                                                                                                                    /* mode button removed: pill is always locked to the selected signal */
+                                                                                                                                                                    window._tradePillOn = true;
+                                                                                                                                                                    _tpApply();
+                                                                                                                                                                    return true;
+                                                                                                                                                                }
+                                                                                                                                                            
+                                                                                                                                                                ['click', 'mousedown', 'mouseup', 'touchstart', 'pointerdown', 'focusin'].forEach(function (ev) {
+                                                                                                                                                                    document.addEventListener(ev, function (e) {
+                                                                                                                                                                        if (!window._tradePillOn || window._tradeCustom) return;
+                                                                                                                                                                        var t = e.target;
+                                                                                                                                                                        if (!t || (t.id !== 'tradeExpiryVisible' && t.id !== 'tradePairInput')) return;
+                                                                                                                                                                        e.stopImmediatePropagation();
+                                                                                                                                                                        if (e.cancelable) e.preventDefault();
+                                                                                                                                                                    }, { capture: true, passive: false });
+                                                                                                                                                                });
+                                                                                                                                                            
+                                                                                                                                                                setInterval(_tpSync, 300);
+                                                                                                                                                            
+                                                                                                                                                                var _tpTries = 0;
+                                                                                                                                                                var _tpTimer = setInterval(function () {
+                                                                                                                                                                    _tpTries++;
+                                                                                                                                                                    if (_tpBuild() || _tpTries > 200) clearInterval(_tpTimer);
+                                                                                                                                                                }, 150);
+                                                                                                                                                            })();
+                                                                                                                                                            </script>
                                                                                                                                                             <!-- ROW T1: AMOUNT | EXPIRY | BALANCE -->
                                                                                                                                                             <div style="grid-column: span 2; display:flex; align-items:center; gap:3px;">
                                                                                                                                                             <div style="flex:1; display:flex; align-items:center; justify-content:center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px; min-width:0;"><input type="number" id="tradeAmount" value="0.50" step="0.10" min="0.01" style="background: transparent; border: none; color: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; width: 100%; min-width:0; outline: none; text-align: center;"></div>
@@ -5467,6 +5730,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
 
        function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
+                                window._tpSel = { pair: pair, c: c, r: r, s1: s1, s2: s2, col: colColor, type: type, gap: gapVal, cur: curGapVal };
                          window._tcFocus = pair; evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
                                            try { document.documentElement.setAttribute('data-sig', ((type === 'REV') ? (colColor === 'R') : (colColor === 'G')) ? 'G' : 'R'); } catch (e) {}
        
@@ -8174,7 +8438,7 @@ let dataList = currentMode === 'REV'
 
                     const amt = parseFloat(document.getElementById('tradeAmount').value);
 
-                    const exp = parseInt((document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry')).value);
+                    const exp = (typeof window.tradePillExpiry === 'function') ? window.tradePillExpiry() : parseInt((document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry')).value);
 
         
 
@@ -8238,7 +8502,8 @@ let dataList = currentMode === 'REV'
 
                     
 
-                    window.simOpenTrades.push(mockTrade);
+                    try { if (typeof window.tradePillSymbol === 'function') { var _tpS = window.tradePillSymbol(); if (_tpS) mockTrade.symbol = _tpS; } } catch (e) {}
+                                        window.simOpenTrades.push(mockTrade);
 
         
 
@@ -11271,7 +11536,41 @@ let dataList = currentMode === 'REV'
                                     ctx.beginPath(); ctx.moveTo(Math.round(_gvX) + 0.5, ptop); ctx.lineTo(Math.round(_gvX) + 0.5, pbot); ctx.stroke();
                                 }
                                 ctx.restore();
-                                for (var pass = 0; pass < 2; pass++) {
+                                (function () {
+                                                    window._tmState = null;
+                                                    try {
+                                                        if (!live) return;
+                                                        var tmM = sigMap[activePair], tmSg = null, tmIt = null, tmJ;
+                                                        try { tmSg = (typeof window._tcClicked === 'function') ? window._tcClicked() : null; } catch (e0) { tmSg = null; }
+                                                        if (!tmSg || tmSg.pair !== activePair) tmSg = tmM ? (tmM.rev || tmM.mom) : null;
+                                                        for (tmJ = 0; tmJ < info.length; tmJ++) { if (info[tmJ].pair === activePair) { tmIt = info[tmJ]; break; } }
+                                                        var tmD = allPairData[activePair];
+                                                        if (!tmSg || !tmIt || !tmD || !tmD.prices) return;
+                                                        var tmP = tmD.prices, tmLen = tmP.length;
+                                                        var tmLim = Math.min(nowSec - 1, tmLen - 1, sEnd - 1);
+                                                        var tmLast = tcLastReal(tmP, Math.min(nowSec, tmLen - 1));
+                                                        var tmPl = tcPlan(tmSg, tmP, tmLim, sEnd, tmLast);
+                                                        if (tmPl.kind !== 'FUT' && tmPl.kind !== 'FIRED') return;
+                                                        var tmFut = (tmPl.kind === 'FUT');
+                                                        var tmNow = Date.now(), tmFrac = (tmNow % 1000) / 1000;
+                                                        var tmSec = tmFut ? (tmPl.idx - nowSec) - tmFrac : (tmPl.idx + tmSg.c - nowSec) - tmFrac;
+                                                        var tmTxt = tmSec > 0 ? (tmSec >= 100 ? tcFmtIn(Math.ceil(tmSec)) : tmSec.toFixed(1) + 's') : 'NOW';
+                                                        var tmCol = tmIt.color || window.pairColorHex || '#E2E8F0';
+                                                        if (tmSec > 0) TC.pulseOn = true;
+                                                        window._tmState = { fut: tmFut, idx: tmPl.idx, sec: tmSec, txt: tmTxt, col: tmCol, it: tmIt, prices: tmP, last: tmLast, now: tmNow };
+                                                        var tmFs = Math.max(24, Math.min(140, Math.round(Math.min(plotW / (Math.max(tmTxt.length, 6) * 0.66), (pbot - ptop) * 0.45))));
+                                                        ctx.save();
+                                                        ctx.beginPath(); ctx.rect(PADL, ptop, plotW, pbot - ptop); ctx.clip();
+                                                        ctx.globalAlpha = 0.2; ctx.fillStyle = tmCol;
+                                                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                                                        ctx.font = 'bold ' + tmFs + 'px ' + MONO;
+                                                        ctx.fillText(tmTxt, PADL + plotW / 2, (ptop + pbot) / 2);
+                                                        ctx.font = 'bold ' + Math.max(12, Math.round(tmFs * 0.3)) + 'px ' + MONO;
+                                                        ctx.fillText(tmFut ? 'SIGNAL HITS IN' : 'RESULT IN', PADL + plotW / 2, (ptop + pbot) / 2 - tmFs * 0.72);
+                                                        ctx.restore();
+                                                    } catch (eTm) { window._tmState = null; }
+                                                })();
+                                                for (var pass = 0; pass < 2; pass++) {
                     for (pi = 0; pi < info.length; pi++) {
                         var ln0 = info[pi];
                                                 if (TC.candle) { if (pass === 0 && pi === 0) tcDrawCandles(ctx, info, xOf, yOfPair, i0, spp, W, ptop, pbot); continue; }
@@ -11323,7 +11622,45 @@ let dataList = currentMode === 'REV'
                     }
                 }
             
-                var marks = [], items = [], callouts = [];
+                (function () {
+                                    try {
+                                        var ts = window._tmState;
+                                        if (!ts || !ts.fut || ts.last < 0) return;
+                                        var tmFx = xOf(ts.idx), tmLx = xOf(ts.last), tmFy = yOfPair(ts.it, ts.prices[ts.last]);
+                                        ctx.save();
+                                        ctx.beginPath(); ctx.rect(PADL, ptop, plotW, pbot - ptop); ctx.clip();
+                                        ctx.strokeStyle = ts.col; ctx.lineWidth = 1.4; ctx.globalAlpha = 0.85; ctx.setLineDash([5, 4]);
+                                        ctx.beginPath(); ctx.moveTo(Math.max(PADL, tmLx), tmFy); ctx.lineTo(tmFx, tmFy); ctx.stroke();
+                                        ctx.globalAlpha = 0.35; ctx.setLineDash([2, 4]);
+                                        ctx.beginPath(); ctx.moveTo(Math.round(tmFx) + 0.5, ptop); ctx.lineTo(Math.round(tmFx) + 0.5, pbot); ctx.stroke();
+                                        ctx.setLineDash([]);
+                                        ctx.restore();
+                                        ts.cx = tmFx; ts.cy = tmFy; ts.ok = (tmFx >= PADL && tmFx <= W - PADR);
+                                                                return;
+                                        ctx.save();
+                                        ctx.font = 'bold 16px ' + MONO;
+                                        var tmW16 = ctx.measureText(ts.txt).width;
+                                        var tmFull = Math.max(28, Math.ceil(tmW16 / 2) + 10);
+                                        var tmT = Math.max(0, Math.min(1, ts.sec / 10));
+                                        var tmRad = 5 + (tmFull - 5) * tmT;
+                                        if (ts.sec > 0 && ts.sec <= 3) {
+                                            var tmPh = (ts.now % 600) / 600;
+                                            ctx.globalAlpha = 1 - tmPh; ctx.lineWidth = 2; ctx.strokeStyle = ts.col;
+                                            ctx.beginPath(); ctx.arc(tmFx, tmFy, tmRad + 4 + tmPh * 14, 0, 6.2832); ctx.stroke();
+                                        }
+                                        ctx.globalAlpha = 1;
+                                        ctx.beginPath(); ctx.arc(tmFx, tmFy, tmRad, 0, 6.2832);
+                                        ctx.fillStyle = ts.col; ctx.fill();
+                                        var tmCf = Math.floor(16 * Math.min(1, (tmRad * 1.7) / tmW16));
+                                        if (tmCf >= 8 && ts.sec > 0) {
+                                            ctx.font = 'bold ' + tmCf + 'px ' + MONO;
+                                            ctx.fillStyle = BG; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                                            ctx.fillText(ts.txt, tmFx, tmFy + 1);
+                                        }
+                                        ctx.restore();
+                                    } catch (eTc) {}
+                                })();
+                                var marks = [], items = [], callouts = [];
                 var tally = { REV: { w: 0, l: 0, p: 0 }, MOM: { w: 0, l: 0, p: 0 } };
                 var nReady = 0, nFired = 0, nextIt = null, nRev = 0, nMom = 0;
                 for (pi = 0; pi < info.length; pi++) {
@@ -13424,7 +13761,45 @@ let dataList = currentMode === 'REV'
                                                                                                 '<button type="button" id="tcSoloBtn" title="Fullscreen" aria-label="Fullscreen" style="' + BTN_CSS + ' display:inline-flex; align-items:center; justify-content:center;">' + SOLO_ICO_EXPAND + '</button>';
                 w.appendChild(bar);
                 vp.appendChild(w);
-                TC.wrap = w;
+                                (function() {
+                                    if (!document.getElementById('tpDockCss')) {
+                                        var _dSt = document.createElement('style');
+                                        _dSt.id = 'tpDockCss';
+                                        _dSt.textContent = [
+                                            'html body #tcBar:has(#floatTradePill){width:min(96%,520px) !important;flex-wrap:wrap !important;justify-content:center !important;align-items:stretch !important;}',
+                                            'html body #tcBar #floatTradePill#floatTradePill{position:static !important;top:auto !important;left:auto !important;right:auto !important;bottom:auto !important;transform:none !important;width:100% !important;max-width:none !important;flex:0 0 100% !important;order:-1 !important;z-index:auto !important;border-radius:14px 14px 0 0 !important;margin:0 !important;}',
+                                            'html body #tcBar #floatTradePill#floatTradePill > *{height:34px !important;min-height:34px !important;max-height:34px !important;}',
+                                            'html.pc-on body:not(#pcx) #tcWrap #floatTradePill #buyBtn{background:var(--accent-green) !important;background-color:var(--accent-green) !important;border-color:var(--accent-green) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}',
+                                            'html.pc-on body:not(#pcx) #tcWrap #floatTradePill #sellBtn{background:var(--accent-red) !important;background-color:var(--accent-red) !important;border-color:var(--accent-red) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}',
+                                            'html.pc-on body:not(#pcx) #tcWrap #floatTradePill #accountBalance{background:#FFD700 !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}'
+                                        ].join('\n');
+                                        _dSt.textContent += '\n' + [
+                                                                    'html body #floatTradePill#floatTradePill > #tpPairWrap{order:1 !important;flex:1 1 100% !important;}',
+                                                                    'html body #floatTradePill#floatTradePill #tradePairInput{font-size:13px !important;letter-spacing:0.5px !important;}',
+                                                                    'html body #floatTradePill#floatTradePill > div:has(> #tradeAmount){order:2 !important;flex:1 1 20% !important;}',
+                                                                    'html body #floatTradePill#floatTradePill > div:has(> #tradeExpiryVisible){order:3 !important;flex:1 1 14% !important;}',
+                                                                    'html body #floatTradePill#floatTradePill > #sellBtn{order:4 !important;flex:1 1 19% !important;}',
+                                                                    'html body #floatTradePill#floatTradePill > #buyBtn{order:5 !important;flex:1 1 19% !important;}',
+                                                                    'html body #floatTradePill#floatTradePill > #accountBalance{order:6 !important;flex:1 1 24% !important;width:auto !important;max-width:none !important;}'
+                                                                ].join('\n');
+                                                                document.head.appendChild(_dSt);
+                                    }
+                                    function _tpDock() {
+                                        try {
+                                            var f = document.getElementById('floatTradePill');
+                                            if (!f) return;
+                                            var shown = (w.style.display !== 'none');
+                                            if (shown) {
+                                                if (f.parentNode !== bar) bar.appendChild(f);
+                                            } else if (f.parentNode === bar) {
+                                                document.body.appendChild(f);
+                                            }
+                                        } catch (e) {}
+                                    }
+                                    setInterval(_tpDock, 250);
+                                    _tpDock();
+                                })();
+                                TC.wrap = w;
                 TC.cv = cv;
                 TC.ctx = cv.getContext('2d');
                 TC.candle = true;
@@ -14038,7 +14413,39 @@ let dataList = currentMode === 'REV'
                     TC.cv.style.width = W + 'px';
                     TC.cv.style.height = H + 'px';
                 }
-                tcDrawAll(); return;
+                tcDrawAll();
+                                try {
+                                    var _tz = window._tmState;
+                                    if (_tz && _tz.fut && _tz.ok && (Date.now() - _tz.now) < 200) {
+                                        var _tzc = TC.ctx;
+                                        _tzc.setTransform(dpr, 0, 0, dpr, 0, 0);
+                                        _tzc.save();
+                                        _tzc.setLineDash([]);
+                                        _tzc.shadowBlur = 0;
+                                        _tzc.font = 'bold 16px ' + MONO;
+                                        var _tzW = _tzc.measureText(_tz.txt).width;
+                                        var _tzFull = Math.max(28, Math.ceil(_tzW / 2) + 10);
+                                        var _tzT = Math.max(0, Math.min(1, _tz.sec / 10));
+                                        var _tzR = 5 + (_tzFull - 5) * _tzT;
+                                        if (_tz.sec > 0 && _tz.sec <= 3) {
+                                            var _tzPh = (_tz.now % 600) / 600;
+                                            _tzc.globalAlpha = 1 - _tzPh; _tzc.lineWidth = 2; _tzc.strokeStyle = _tz.col;
+                                            _tzc.beginPath(); _tzc.arc(_tz.cx, _tz.cy, _tzR + 4 + _tzPh * 14, 0, 6.2832); _tzc.stroke();
+                                        }
+                                        _tzc.globalAlpha = 1;
+                                        _tzc.beginPath(); _tzc.arc(_tz.cx, _tz.cy, _tzR, 0, 6.2832);
+                                        _tzc.fillStyle = _tz.col; _tzc.fill();
+                                        var _tzF = Math.floor(16 * Math.min(1, (_tzR * 1.7) / _tzW));
+                                        if (_tzF >= 8 && _tz.sec > 0) {
+                                            _tzc.font = 'bold ' + _tzF + 'px ' + MONO;
+                                            _tzc.fillStyle = window.systemThemeHex || '#000432';
+                                            _tzc.textAlign = 'center'; _tzc.textBaseline = 'middle';
+                                            _tzc.fillText(_tz.txt, _tz.cx, _tz.cy + 1);
+                                        }
+                                        _tzc.restore();
+                                    }
+                                } catch (eTz) {}
+                                return;
                 if (TC.sigPair !== activePair) tcCollect();
         
                 var ctx = TC.ctx;
@@ -15782,7 +16189,8 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                                     try {
                                                                                                                                                                                                         var el = document.getElementById('tradeExpiryVisible');
                                                                                                                                                                                                         if (!el || document.activeElement === el) return;
-                                                                                                                                                                                                        var L = window._tcLiveLock, want = null;
+                                                                                                                                                                                                        if (window._tradePillOn) return;
+                                                                                                                                                                                                                                                                                                                var L = window._tcLiveLock, want = null;
                                                                                                                                                                                                         var nowS = Math.floor(Date.now() / 1000) - currentStartTsUtc;
                                                                                                                                                                                                         if (L && L.node && L.node.sig && nowS < L.end) {
                                                                                                                                                                                                             want = L.node.sig.c;
