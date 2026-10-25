@@ -6437,7 +6437,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                         if (!byLvl[lk]) { byLvl[lk] = []; keys.push(lk); }
                                                         byLvl[lk].push(x);
                                                     }
-                                                    var cmp = function (a, b) { return ((b.pct || 0) - (a.pct || 0)) || ((b.c1 || 0) - (a.c1 || 0)) || (a.r - b.r); };
+                                                    var cmp = function (a, b) { return (((b.pct || 0) * (b.c1 || 0)) - ((a.pct || 0) * (a.c1 || 0))) || ((a.c || 0) - (b.c || 0)) || (a.r - b.r); };
                                                     keys.forEach(function (k) {
                                                         byLvl[k].sort(cmp);
                                                         window._lvlCnt[k] = Math.min(10, byLvl[k].length);
@@ -6468,7 +6468,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                 while (i < list.length && (list[i].type + '|' + list[i].s1) === k) { grp.push(list[i]); i++; }
                                                                 var isOpen = !!expMap[k];
                                                                 var total = cntMap[k] || grp.length;
-                                                                html += '<tr class="lvlHdr" onclick="window._lvlExpToggle(\'' + k + '\')" style="cursor:pointer;"><td colspan="8" style="padding:4px 6px; background:#E2E8F0; color:#000432; font-size:11px; font-weight:800; text-align:left; border-top:1px solid #000432;">X' + grp[0].s1 + ' &nbsp;TOP ' + total + '<span style="float:right; border:1px solid #000432; padding:0 8px; font-size:10px; font-weight:800;">' + (isOpen ? 'COLLAPSE ▲' : 'EXPAND ▼') + '</span></td></tr>';
+                                                                html += '<tr class="lvlHdr" onclick="window._lvlExpToggle(\'' + k + '\')" style="cursor:pointer; background:var(--bg-base) !important;"><td colspan="8" style="padding:4px 6px; background:var(--bg-base) !important; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; font-size:11px; font-weight:800; text-align:left;">X' + grp[0].s1 + '-X' + grp[0].s2 + '<span style="float:right; background:var(--bg-base) !important; color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; border:1px solid #FFFFFF; padding:0 8px; font-size:10px; font-weight:800;">' + (isOpen ? 'COLLAPSE ▲' : 'EXPAND ▼') + '</span></td></tr>';
                                                                 html += _bsrBase(grp);
                                                             }
                                                             return html;
