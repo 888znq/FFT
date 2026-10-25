@@ -5729,11 +5729,17 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                     } else if (type === 'MOM') {
                                                 Object.keys(targetHist).forEach(lenStr => {
                                                     let L = parseInt(lenStr);
-                                                    if (L >= s2) {
+                                                                                                        if (L === s1 && s1 >= 1) {
+                                                                                                            targetHist[L].forEach(endCol => {
+                                                                                                                if (endCol >= 0 && endCol <= _sessionMaxCol) {
+                                                                                                                    { var _mnx = matrixData[endCol + 1] ? matrixData[endCol + 1][r] : null; if (_mnx && _mnx.p !== -1) currentInstances.push({ col: endCol, row: r, isFalse: true }); }
+                                                                                                                }
+                                                                                                            });
+                                                                                                        } else if (L > s1 && s1 >= 1) {
                                                         targetHist[L].forEach(endCol => {
-                                                            var instCol = endCol - (L - s2);
+                                                            var instCol = endCol - (L - s1);
                                                             if (instCol >= 0 && instCol <= _sessionMaxCol) {
-                                                                currentInstances.push({ col: instCol, row: r });
+                                                                currentInstances.push({ col: instCol, row: r, isFalse: false });
                                                             }
                                                         });
                                                     }
@@ -6386,7 +6392,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
         };
         
         function _autoSelectTopSignal() {
-                    var _allSigs = currentMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
+                    var _amMode = (window._tcSigMode === 'MOM') ? 'MOM' : 'REV';
+                                        var _allSigs = _amMode === 'REV' ? globalRevs.slice() : globalMoms.slice();
                     var _minPctEl = document.getElementById('minPctInput');
                     var _minPct = _minPctEl ? (parseFloat(_minPctEl.value) || 85) : 85;
                     var _levelEl = document.getElementById('levelFilterSelect');
@@ -6398,7 +6405,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                         .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
             if (topList.length === 0) return;
             topList.sort(function(a, b) { return _champScore(b) - _champScore(a); });
-                        var top = (window._champTop ? window._champTop(currentMode, topList) : null) || topList[0];
+                        var top = (window._champTop ? window._champTop(_amMode, topList) : null) || topList[0];
             if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
             if (activePair !== top.pair) {
                 activePair = top.pair;
@@ -6958,11 +6965,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                                                                                                 var _tfT = (inst.isFalse || _lvF) ? ("F" + (inst.falseSeq || (_lvF ? "" : 1))) : "T"; var _tfW = ctx.measureText(_tfT).width + 4; ctx.fillStyle = "#D500F9"; ctx.fillRect(xPos + CELL_W - 7 - _tfW / 2, yPos + 3, _tfW, 10); ctx.fillStyle = "#FFFFFF"; ctx.fillText(_tfT, xPos + CELL_W - 7, yPos + 8);
                                                                                                                                                                                                                                                                 try {
                                                                                                                                                                                                                                                                     var _rkP = (typeof lastClickedSigId === 'string' ? lastClickedSigId : '').split('-');
-                                                                                                                                                                                                                                                                    if (_rkP.length === 7 && _rkP[6] === 'REV') {
+                                                                                                                                                                                                                                                                    if (_rkP.length === 7 && (_rkP[6] === 'REV' || _rkP[6] === 'MOM')) {
                                                                                                                                                                                                                                                                         var _rkN = matrixData[inst.col + 1] ? matrixData[inst.col + 1][inst.row] : null;
                                                                                                                                                                                                                                                                         if (_rkN && _rkN.p !== -1 && _rkN.c !== 'N') {
                                                                                                                                                                                                                                                                             var _rkC0 = matrixData[inst.col] ? matrixData[inst.col][inst.row] : null;
-                                                                                                                                                                                                                                                                            var _rkWin = (_rkC0 && _rkC0.p > 0) ? !((_rkP[5] === 'G' && _rkN.p > _rkC0.p) || (_rkP[5] === 'R' && _rkN.p < _rkC0.p)) : (_rkN.c !== _rkP[5]);
+                                                                                                                                                                                                                                                                            var _rkCont = (_rkC0 && _rkC0.p > 0) ? ((_rkP[5] === 'G' && _rkN.p > _rkC0.p) || (_rkP[5] === 'R' && _rkN.p < _rkC0.p)) : (_rkN.c === _rkP[5]);
+                                                                                                                                                                                                                                                                            var _rkWin = (_rkP[6] === 'MOM') ? _rkCont : !_rkCont;
                                                                                                                                                                                                                                                                             var _rkCur = (idx === currentInstanceIndex);
                                                                                                                                                                                                                                                                             var _rkX = xPos + CELL_W;
                                                                                                                                                                                                                                                                             if (_rkX >= -CELL_W && _rkX <= viewW) {
@@ -9973,7 +9981,7 @@ let dataList = currentMode === 'REV'
                             if (mul === 1 && typeof lastClickedSigId === 'string' && lastClickedSigId && currentInstances && currentInstances.length) {
                                 var sp = lastClickedSigId.split('-');
                                 if (sp.length === 7 && sp[0] === activePair && (+sp[1]) === CYCLE) {
-                                    for (var n = 0; n < currentInstances.length; n++) selCols[Math.floor((currentInstances[n].col * c0 + currentInstances[n].row - 1 - (sp[6] === 'MOM' ? c0 : 0) - cycOff + off) / ce)] = (n === currentInstanceIndex) ? 2 : 1;
+                                    for (var n = 0; n < currentInstances.length; n++) selCols[Math.floor((currentInstances[n].col * c0 + currentInstances[n].row - 1 - cycOff + off) / ce)] = (n === currentInstanceIndex) ? 2 : 1;
                                 }
                             }
                             TC.cdlHits = [];
@@ -10090,6 +10098,7 @@ let dataList = currentMode === 'REV'
                     out.sort(function(a, b) { return window._champScore(b) - window._champScore(a); });
                     var _chPin = window._champTop ? window._champTop(type, out) : null;
                                         out = _chPin ? [_chPin] : out.slice(0, 1);
+                                                            if (sel && sel.type === 'MOM' && type === 'MOM' && selHit) return [selHit];
                     selHit = null;
                     return out;
                 }
@@ -10187,6 +10196,17 @@ let dataList = currentMode === 'REV'
                                 };
                                 if (TC.sigMode !== 'MOM') bucket(globalRevs, 'rev');
                                                 if (TC.sigMode !== 'REV') bucket(globalMoms, 'mom');
+                                                                                                var _clP = (typeof lastClickedSigId === 'string' && lastClickedSigId) ? lastClickedSigId.split('-') : [];
+                                                                                                if (_clP.length === 7) {
+                                                                                                    var _clL = (_clP[6] === 'MOM') ? globalMoms : globalRevs, _clH = null, _cli;
+                                                                                                    for (_cli = 0; _cli < _clL.length; _cli++) {
+                                                                                                        var _clx = _clL[_cli];
+                                                                                                        if (_clx.pair === _clP[0] && _clx.c === +_clP[1] && _clx.r === +_clP[2] && _clx.s1 === +_clP[3] && _clx.s2 === +_clP[4] && _clx.col === _clP[5]) { _clH = _clx; break; }
+                                                                                                    }
+                                                                                                    if (_clH && _clP[6] === 'MOM' && TC.sigMode !== 'REV' && !_hiddenPairs.has(_clH.pair)) {
+                                                                                                        map[_clH.pair] = { rev: (_clP[6] === 'REV') ? _clH : null, mom: (_clP[6] === 'MOM') ? _clH : null };
+                                                                                                    }
+                                                                                                }
                                                 if (TC.sigMode === 'MIX') {
                                                     for (var mp in map) {
                                                         var mm = map[mp];
@@ -11004,7 +11024,7 @@ let dataList = currentMode === 'REV'
                     var mk = marks[k];
                     if (mk.i < i0 || mk.i > mk.it.i1) continue;
                     if (TC.candle && mk.sig.c !== (Math.round(CYCLE) || 1)) continue;
-                    if (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-REV' && currentInstances && currentInstances.length && mk.it.pair === activePair) mk.win = 'none';
+                    if (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-' + mk.sig.type && currentInstances && currentInstances.length && mk.it.pair === activePair) mk.win = 'none';
                     ctx.globalAlpha = 1;
                     var mx = xOf(mk.i), my = yOfPair(mk.it, mk.p);
                     if (mx < PADL || mx > W - PADR) continue;
@@ -11049,11 +11069,11 @@ let dataList = currentMode === 'REV'
                     }
                     var flEj = mk.i + mk.sig.c;
                     var flEx = xOf(flEj);
-                    if (mk.res !== 'none' && flEx >= PADL && !(TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair)) {
+                    if (mk.res !== 'none' && flEx >= PADL) {
                     var flXe = Math.min(flEx, W - PADR);
                     var flAct = (mk.res === 'pending');
                     var flCol = mk.it.color;
-                    var flSh = (mk.sig.type === 'MOM') ? mk.sig.c : 0;
+                    var flSh = 0;
                                         var flLo = mk.p, flHi = mk.p;
                     var flKe = Math.min(flEj, (mk.it.last >= 0 ? mk.it.last : flEj), mk.it.len - 1);
                     var flKs = Math.max(1, Math.ceil(mk.sig.c / 300));
@@ -11242,13 +11262,13 @@ let dataList = currentMode === 'REV'
                                                                                                                                                                                     ctx.textAlign = 'center';
                                                                                                                                                                                     ctx.textBaseline = 'middle';
                                                                                                                                                                                     if (TC.candle && mk.tkNX !== undefined) { var dcH = null, dcI, dcO;
-                                                                                                                                                                                                                                                                        if (TC.cdlHits) { var dcTgt = mk.i + mk.sig.c - 1 - (mk.sig.type === 'MOM' ? mk.sig.c : 0); for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.s <= dcTgt && dcO.e >= dcTgt) { dcH = TC.cdlHits[dcI]; break; } } }
+                                                                                                                                                                                                                                                                        if (TC.cdlHits) { var dcTgt = mk.i + mk.sig.c - 1; for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.s <= dcTgt && dcO.e >= dcTgt) { dcH = TC.cdlHits[dcI]; break; } } }
                                                                                                                                                                                                                                                                                                                                                             if (false && dcH && mk.sig.type === 'MOM') { for (dcI = 0; dcI < TC.cdlHits.length; dcI++) { dcO = TC.cdlHits[dcI].o; if (dcO && dcO.pair === mk.it.pair && dcO.e === dcH.o.s - 1) { dcH = TC.cdlHits[dcI]; break; } } }
                                                                                                                                                                                                                                                                         if (dcH) { tkX = dcH.mx; tkY = Math.max(ptop + 24, Math.min(dcH.yh, dcH.by) - 26); } else { tkX = mk.tkNX; tkY = mk.tkNY; } }
                                                                                                                                                                                     ctx.globalAlpha = 1;
                                                                                                                                                                                     var tkCol = mk.win === 'win' ? CY : AM;
                                                                                                                                                                                     if (TC.candle && mk.tkNX !== undefined && dcH && !(typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair)) { ctx.beginPath(); ctx.rect(0, 0, 0, 0); ctx.fillStyle = mk.it.color; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = BG; ctx.stroke(); }
-                                                                                                                                                                                    var tkSym = (TC.candle && typeof lastClickedSigId === 'string' && lastClickedSigId.slice(-4) === '-MOM' && mk.it.pair === activePair) ? '' : (mk.win === 'win' ? '\u2713' : '\u2717');
+                                                                                                                                                                                    var tkSym = (mk.win === 'win' ? '\u2713' : '\u2717');
                                                                                                                                                                                     ctx.fillStyle = tkCol;
                                                                                                                                                                                     ctx.shadowColor = tkCol;
                                                                                                                                                                                     if (TC.candle && TC.cdlHits) {
@@ -11609,7 +11629,7 @@ let dataList = currentMode === 'REV'
                                                             if (!TC.candle) ctx.strokeText(ocLbl, ocX, ocLy);
                                                             ctx.fillStyle = '#FFD700';
                                                             if (!TC.candle) ctx.fillText(ocLbl, ocX, ocLy);
-                                                                                                                        if (TC.candle && ocSg && ocSg.type === 'MOM' && TC.cdlHits) {
+                                                                                                                        if (false && TC.candle && ocSg && ocSg.type === 'MOM' && TC.cdlHits) {
                                                                                                                             var ovxC0 = Math.max(1, Math.round(CYCLE) || 1);
                                                                                                                             var ovxPi = ocIdx - 1 - ovxC0;
                                                                                                                             var ovxP = null, ovxB = null, ovxI, ovxO;
@@ -11646,11 +11666,11 @@ let dataList = currentMode === 'REV'
                                                                                                                         }
                                                             ctx.restore();
                                                             if (ocSg) {
-                                                                if (TC.candle && TC.cdlHits && ocSg.type === 'REV') {
+                                                                if (TC.candle && TC.cdlHits && (ocSg.type === 'REV' || ocSg.type === 'MOM')) {
                                                                     var rxT = ocIdx + CYCLE, rxP0 = ocIt.prices[ocIdx], rxP1 = ocIt.prices[rxT];
                                                                     if (rxT <= ocIt.last && rxP1 !== undefined && rxP1 !== -1 && rxP0 > 0) {
                                                                         var rxCont = (ocSg.col === 'R') ? (rxP1 < rxP0) : (rxP1 > rxP0);
-                                                                        var rxW = tcWin('REV', rxCont ? 'cont' : 'rev');
+                                                                        var rxW = tcWin(ocSg.type, rxCont ? 'cont' : 'rev');
                                                                         var rxH = null, rxI, rxO;
                                                                         for (rxI = 0; rxI < TC.cdlHits.length; rxI++) {
                                                                             rxO = TC.cdlHits[rxI].o;
@@ -11678,7 +11698,7 @@ let dataList = currentMode === 'REV'
                                                                         }
                                                                     }
                                                                 }
-                                                                var ocRes = (ocIdx + CYCLE > ocIt.last) ? 'pending' : ((ocSg.type === 'REV' && !ocInst.isFalse) ? 'rev' : 'cont');
+                                                                var ocRes = (ocIdx + CYCLE > ocIt.last) ? 'pending' : (((ocSg.type === 'REV') !== !!ocInst.isFalse) ? 'rev' : 'cont');
                                                                 TC.hov.push({ x: ocX, y: ocY, r: 11, o: { sig: ocSg, idx: ocIdx, kind: 'MARK', res: ocRes, win: tcWin(ocSg.type, ocRes), p: ocPv, dec: ocIt.dec } });
                                                             }
                                                         }
@@ -13264,6 +13284,29 @@ let dataList = currentMode === 'REV'
                                                     TC.sigMode = TC.sigMode === 'MIX' ? 'REV' : (TC.sigMode === 'REV' ? 'MOM' : 'MIX');
                                                     window._tcSigMode = TC.sigMode;
                                                     this.textContent = TC.sigMode === 'MIX' ? 'REV/MOM' : TC.sigMode;
+                                                                                                        try {
+                                                                                                            var _smId = (typeof lastClickedSigId === 'string') ? lastClickedSigId : '';
+                                                                                                            var _smTy = _smId ? _smId.split('-')[6] : '';
+                                                                                                            if (_smId && TC.sigMode !== 'MIX' && _smTy !== TC.sigMode) {
+                                                                                                                var _smPair = activePair, _smRows, _smPick = null, _smI, _smM;
+                                                                                                                lastClickedSigId = '';
+                                                                                                                window._tcClkCache = null;
+                                                                                                                clickCycleIndex = -1;
+                                                                                                                currentInstances = [];
+                                                                                                                currentInstanceIndex = -1;
+                                                                                                                highlightRow = -1;
+                                                                                                                TC.ocSig = null;
+                                                                                                                try { _stopAllBeeps(); _beepState = 'IDLE'; _resetAllBoxes(); _resBox = null; _armed = null; } catch (_smE2) {}
+                                                                                                                _smRows = document.querySelectorAll(TC.sigMode === 'MOM' ? '#peaksTableBodyMom tr.highlight-gem' : '#peaksTableBodyRev tr.highlight-gem');
+                                                                                                                for (_smI = 0; _smI < _smRows.length; _smI++) {
+                                                                                                                    _smM = /manualSelectSignal\('([^']+)'/.exec(_smRows[_smI].getAttribute('onclick') || '');
+                                                                                                                    if (_smM && _smM[1] === _smPair) { _smPick = _smRows[_smI]; break; }
+                                                                                                                }
+                                                                                                                if (!_smPick && _smRows.length) _smPick = _smRows[0];
+                                                                                                                if (_smPick && (!TC.multi || window._tcFocus)) { _smPick.click(); }
+                                                                                                                else if (typeof requestDraw === 'function') { requestDraw(); }
+                                                                                                            }
+                                                                                                        } catch (_smE) {}
                                                     this.style.background = 'var(--bg-base)';
                                                                                                         this.style.color = '#FFFFFF';
                                                                         var _wpRev = document.getElementById('peaksTableBodyRev');
