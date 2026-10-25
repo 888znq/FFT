@@ -6243,50 +6243,226 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                 }
                                 window.addEventListener('load', _ordMount);
                                 setInterval(_ordMount, 1000);
-                        var _ALB_PER_LVL = 1;
-                                function _albEta(x) {
-                                    var c = x.c || 60;
-                                    var nowUtc = Math.floor(Date.now() / 1000);
-                                    var d = (((x.r - (nowUtc % c)) % c) + c) % c;
-                                    var pl = null;
-                                    try { pl = _champPlan(x); } catch (e) { pl = null; }
-                                    if (!pl || pl.kind === 'NONE') return 1e9 + d;
-                                    if (pl.kind === 'FUT') return d + Math.max(0, pl.need - 1) * c;
-                                    return d;
-                                }
-                        function _allLvlBuild(list) {
-                            var bestByLvl = {};
-                            var pool = [];
-                            for (var i = 0; i < list.length; i++) {
-                                var x = list[i];
-                                if (_hiddenPairs.has(x.pair)) continue;
-                                if (r0OnlyMode && x.r !== 0) continue;
-                                pool.push(x);
-                                if (bestByLvl[x.s1] === undefined || x.pct > bestByLvl[x.s1]) bestByLvl[x.s1] = x.pct;
-                            }
-                            var byLvl = {};
-                            for (var j = 0; j < pool.length; j++) {
-                                var y = pool[j];
-                                if (y.pct === bestByLvl[y.s1]) {
-                                    if (!byLvl[y.s1]) byLvl[y.s1] = [];
-                                    byLvl[y.s1].push(y);
-                                }
-                            }
-                            var out = [];
-                            Object.keys(byLvl).forEach(function (k) {
-                                var arr = byLvl[k].map(function (z) { return { z: z, e: _albEta(z) }; }).sort(function (a, b) { return a.e !== b.e ? a.e - b.e : _champScore(b.z) - _champScore(a.z); }).map(function (o) { return o.z; });
-                                for (var n = 0; n < arr.length && n < _ALB_PER_LVL; n++) out.push(arr[n]);
-                            });
-                            if (window._allLvlOrd) {
-                                            out.sort(function (a, b) { return a.s1 - b.s1; });
-                                            return out;
-                                        }
-                                        out.sort(function (a, b) {
-                                            if (b.pct !== a.pct) return b.pct - a.pct;
-                                            return _champScore(b) - _champScore(a);
-                                        });
-                                        return out;
-                        }
+                        var _LS = {
+                                                    W_BASE: 0.68, W_REC: 0.15, W_GAP: 0.10, W_TIME: 0.07,
+                                                    PRIOR_P: 0.75, PRIOR_K: 4, Z: 1.28,
+                                                    LV_FULL: 2, LV_DECAY: 0.06, LV_MIN: 0.70,
+                                                    TIME_BUCKETS: 6, MISS_PEN: 12,
+                                                    MARGIN: 4, MARGIN_BADRUN: 1, CONFIRM: 3, NEAR_NEED: 2,
+                                                    PERSIST_STEP: 0.4, PERSIST_CAP: 3,
+                                                    PIN_CLICKED: true,
+                                                    MIN_C1: 1, TOPK: 12, DEBUG: true
+                                                };
+                                                window._LS = _LS;
+                                                function _lsClamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+                                                function _lsLvlW(s1) {
+                                                    if (s1 <= _LS.LV_FULL) return 1;
+                                                    return Math.max(_LS.LV_MIN, 1 - _LS.LV_DECAY * (s1 - _LS.LV_FULL));
+                                                }
+                                                function _lsBase(x) {
+                                                    var n = x.c1 || 0;
+                                                    if (n <= 0) return 0;
+                                                    var p = _lsClamp((x.pct || 0) / 100, 0, 1);
+                                                    var ps = (p * n + _LS.PRIOR_P * _LS.PRIOR_K) / (n + _LS.PRIOR_K);
+                                                    var ns = n + _LS.PRIOR_K;
+                                                    var z2 = _LS.Z * _LS.Z;
+                                                    var dd = 1 + z2 / ns;
+                                                    var mm = ps + z2 / (2 * ns);
+                                                    var ss = _LS.Z * Math.sqrt((ps * (1 - ps) + z2 / (4 * ns)) / ns);
+                                                    return _lsClamp((mm - ss) / dd, 0, 1);
+                                                }
+                                                function _lsGap(x) {
+                                                    var parts = [], t = 0, q;
+                                                    if (x.gap != null && x.curGap != null) {
+                                                        var gp = Number(x.gap), cg = Number(x.curGap);
+                                                        if (isFinite(gp) && isFinite(cg) && gp > 0 && cg >= 0) parts.push(1 - _lsClamp(cg / gp, 0, 1));
+                                                    }
+                                                    if (x.gapFreq != null) {
+                                                        var gf = Number(x.gapFreq);
+                                                        if (isFinite(gf)) { if (gf > 1) gf = gf / 100; parts.push(1 - _lsClamp(gf, 0, 1)); }
+                                                    }
+                                                    if (!parts.length) return 0.5;
+                                                    for (q = 0; q < parts.length; q++) t += parts[q];
+                                                    var g = t / parts.length;
+                                                    if (x.gapCount != null) {
+                                                        var gcn = Number(x.gapCount);
+                                                        if (isFinite(gcn) && gcn >= 0) g = 0.5 + (g - 0.5) * (gcn / (gcn + 3));
+                                                    }
+                                                    return _lsClamp(g, 0, 1);
+                                                }
+                                                function _lsRecent(pl) {
+                                                    if (!pl) return 0.5;
+                                                    return (pl.n3 - pl.losses + 1) / (pl.n3 + 2);
+                                                }
+                                                function _lvlEta(x, pl) {
+                                                    var c = x.c || 60;
+                                                    var nowUtc = Math.floor(Date.now() / 1000);
+                                                    var d = (((x.r - (nowUtc % c)) % c) + c) % c;
+                                                    if (!pl || pl.kind === 'NONE') return 1e9 + d;
+                                                    if (pl.kind === 'FUT') return d + Math.max(0, pl.need - 1) * c;
+                                                    return d;
+                                                }
+                                                function _albEta(x) {
+                                                    var pl = null;
+                                                    try { pl = _champPlan(x); } catch (e) { pl = null; }
+                                                    return _lvlEta(x, pl);
+                                                }
+                                                function _lsTime(x, pl) {
+                                                    if (!pl || pl.kind === 'NONE') return 0;
+                                                    var eta = _lvlEta(x, pl);
+                                                    if (eta >= 1e9) return 0;
+                                                    var b = Math.floor(eta / Math.max(60, x.c || 60));
+                                                    return _lsClamp(1 - b / _LS.TIME_BUCKETS, 0, 1);
+                                                }
+                                                function _lsCore(x, pl, cheap) {
+                                                    var L = _LS;
+                                                    var rec = cheap ? 0.5 : _lsRecent(pl);
+                                                    var tim = cheap ? 0.5 : _lsTime(x, pl);
+                                                    var s = L.W_BASE * _lsBase(x) + L.W_REC * rec + L.W_GAP * _lsGap(x) + L.W_TIME * tim;
+                                                    s = 100 * s / (L.W_BASE + L.W_REC + L.W_GAP + L.W_TIME) * _lsLvlW(x.s1);
+                                                    if (!cheap && pl && pl.missed) s -= L.MISS_PEN;
+                                                    return _lsClamp(s, 0, 100);
+                                                }
+                                                window._lvlScore = function (x) {
+                                                    var pl = null;
+                                                    try { pl = _champPlan(x); } catch (e) { pl = null; }
+                                                    return _lsCore(x, pl, false);
+                                                };
+                                                function _lsCmp(a, b) {
+                                                    if (Math.abs(b.sc - a.sc) > 1e-6) return b.sc - a.sc;
+                                                    var ca = a.x.c1 || 0, cb = b.x.c1 || 0;
+                                                    if (cb !== ca) return cb - ca;
+                                                    if (a.x.pair !== b.x.pair) return a.x.pair < b.x.pair ? -1 : 1;
+                                                    if (a.x.c !== b.x.c) return a.x.c - b.x.c;
+                                                    if (a.x.r !== b.x.r) return a.x.r - b.x.r;
+                                                    return a.k < b.k ? -1 : (a.k > b.k ? 1 : 0);
+                                                }
+                                                function _lsPinned(x) {
+                                                    try {
+                                                        if (typeof _armed !== 'undefined' && _armed && _armed.pair === x.pair && Number(_armed.c) === Number(x.c) && Number(_armed.r) === Number(x.r) && (_armed.s1 == null || Number(_armed.s1) === Number(x.s1))) return true;
+                                                    } catch (e1) {}
+                                                    try {
+                                                        if (_LS.PIN_CLICKED && typeof lastClickedSigId !== 'undefined' && lastClickedSigId) {
+                                                            var t = String(lastClickedSigId).split(/[^A-Za-z0-9_.]+/);
+                                                            if (t.indexOf(String(x.pair)) >= 0 && t.indexOf(String(x.c)) >= 0 && t.indexOf(String(x.r)) >= 0 && t.indexOf(String(x.s1)) >= 0) return true;
+                                                        }
+                                                    } catch (e2) {}
+                                                    return false;
+                                                }
+                                                function _lvlSig() {
+                                                    var a = document.getElementById('scanMin'), b = document.getElementById('scanMax');
+                                                    return _champFiltSig() + '|' + (a ? a.value : '') + '-' + (b ? b.value : '');
+                                                }
+                                                function _lvlEngState(sig) {
+                                                    var E = window._lvlEng;
+                                                    if (!E || E.sig !== sig) { E = { sig: sig, lv: {} }; window._lvlEng = E; }
+                                                    return E;
+                                                }
+                                                function _lsLbl(r) {
+                                                    return r.x.pair + ' C' + r.x.c + ' R' + r.x.r + ' ' + r.x.pct + '%/' + (r.x.c1 || 0) + ' s' + r.sc.toFixed(1);
+                                                }
+                                                function _lvlDecide(E, lk, rows, mark, frozen, logs, s1) {
+                                                    var L = _LS, st = E.lv[lk] || null, top = rows[0], incRow = null, j;
+                                                    if (st) {
+                                                        for (j = 0; j < rows.length; j++) { if (rows[j].k === st.key) { incRow = rows[j]; break; } }
+                                                    }
+                                                    var cur = null, why = '';
+                                                    if (st && incRow) {
+                                                        if (incRow.pl && incRow.pl.missed && top.k !== incRow.k) why = 'missed'; else cur = incRow;
+                                                    } else if (st) {
+                                                        why = 'gone';
+                                                    }
+                                                    if (frozen) return cur || top;
+                                                    var tag = 'X' + s1;
+                                                    if (!cur) {
+                                                        E.lv[lk] = { key: top.k, streak: 1, chalKey: null, chalN: 0, mark: mark };
+                                                        logs.push(tag + ' ' + (st ? 'DROP(' + why + ') -> ' : 'NEW ') + _lsLbl(top));
+                                                        return top;
+                                                    }
+                                                    var newScan = (st.mark !== mark);
+                                                    if (newScan) { st.mark = mark; st.streak++; }
+                                                    var pl = cur.pl;
+                                                    var near = !!pl && (pl.kind === 'FIRED' || (pl.kind === 'FUT' && pl.need <= L.NEAR_NEED));
+                                                    var hold = near || _lsPinned(cur.x);
+                                                    var bonus = Math.min(L.PERSIST_CAP, L.PERSIST_STEP * st.streak);
+                                                    var curEff = cur.sc + bonus;
+                                                    var chal = null;
+                                                    for (j = 0; j < rows.length; j++) { if (rows[j].k !== cur.k) { chal = rows[j]; break; } }
+                                                    var badRun = !!pl && pl.n3 >= 3 && pl.losses >= 2;
+                                                    var need = badRun ? L.MARGIN_BADRUN : L.MARGIN;
+                                                    var diff = chal ? chal.sc - curEff : -999;
+                                                    var better = !!chal && diff >= need && diff > 0;
+                                                    if (newScan) {
+                                                        if (better) {
+                                                            if (st.chalKey === chal.k) st.chalN++; else { st.chalKey = chal.k; st.chalN = 1; }
+                                                        } else {
+                                                            st.chalKey = null; st.chalN = 0;
+                                                        }
+                                                    }
+                                                    var note = '';
+                                                    if (better && st.chalKey === chal.k && st.chalN >= L.CONFIRM) {
+                                                        if (hold) {
+                                                            note = 'HOLD(' + (near ? 'fire' : 'pin') + ') chal ' + st.chalN + '/' + L.CONFIRM + ' gap ' + diff.toFixed(1);
+                                                        } else {
+                                                            E.lv[lk] = { key: chal.k, streak: 1, chalKey: null, chalN: 0, mark: mark };
+                                                            logs.push(tag + ' SWAP ' + _lsLbl(cur) + '(+' + bonus.toFixed(1) + ') -> ' + _lsLbl(chal) + ' gap ' + diff.toFixed(1) + ' after ' + L.CONFIRM + ' scans');
+                                                            return chal;
+                                                        }
+                                                    } else if (better) {
+                                                        note = 'CHAL ' + (st.chalKey === chal.k ? st.chalN : 0) + '/' + L.CONFIRM + ' gap ' + diff.toFixed(1);
+                                                    } else {
+                                                        note = chal ? ('KEEP gap ' + diff.toFixed(1) + ' < ' + need) : 'KEEP no rival';
+                                                    }
+                                                    if (newScan) {
+                                                        logs.push(tag + ' cur=' + _lsLbl(cur) + '(+' + bonus.toFixed(1) + ',n' + st.streak + ')' + (chal ? ' chal=' + _lsLbl(chal) : '') + ' ' + note);
+                                                    }
+                                                    return cur;
+                                                }
+                                                function _allLvlBuild(list) {
+                                                    var L = _LS;
+                                                    var frozen = (typeof scanPending !== 'undefined' && scanPending > 0);
+                                                    var E = _lvlEngState(_lvlSig());
+                                                    var mark = list.length ? list[0] : null;
+                                                    var tp = list.length ? list[0].type : '?';
+                                                    var byLvl = {}, winners = [], logs = [];
+                                                    for (var i = 0; i < list.length; i++) {
+                                                        var x = list[i];
+                                                        if (_hiddenPairs.has(x.pair)) continue;
+                                                        if (r0OnlyMode && x.r !== 0) continue;
+                                                        if ((x.c1 || 0) < L.MIN_C1) continue;
+                                                        var lk = x.type + '|' + x.s1;
+                                                        if (!byLvl[lk]) byLvl[lk] = [];
+                                                        byLvl[lk].push(x);
+                                                    }
+                                                    Object.keys(byLvl).forEach(function (lk2) {
+                                                        var all = byLvl[lk2], st = E.lv[lk2], pre = [], sel = [], j, rw;
+                                                        for (j = 0; j < all.length; j++) pre.push({ x: all[j], k: _champKey(all[j]), sc: _lsCore(all[j], null, true), pl: null });
+                                                        pre.sort(_lsCmp);
+                                                        for (j = 0; j < pre.length; j++) {
+                                                            if (j < L.TOPK || (st && pre[j].k === st.key)) sel.push(pre[j]);
+                                                        }
+                                                        for (j = 0; j < sel.length; j++) {
+                                                            rw = sel[j];
+                                                            try { rw.pl = _champPlan(rw.x); } catch (eP) { rw.pl = null; }
+                                                            rw.sc = _lsCore(rw.x, rw.pl, false);
+                                                        }
+                                                        sel.sort(_lsCmp);
+                                                        winners.push(_lvlDecide(E, lk2, sel, mark, frozen, logs, sel[0].x.s1));
+                                                    });
+                                                    if (!frozen && list.length) {
+                                                        Object.keys(E.lv).forEach(function (kk) {
+                                                            if (kk.indexOf(tp + '|') === 0 && !byLvl[kk]) delete E.lv[kk];
+                                                        });
+                                                    }
+                                                    winners.sort(function (a, b) {
+                                                        if (window._allLvlOrd && a.x.s1 !== b.x.s1) return a.x.s1 - b.x.s1;
+                                                        return _lsCmp(a, b);
+                                                    });
+                                                    if (L.DEBUG && !frozen && logs.length) {
+                                                        try { evtLog('INFO', 'LVLS', tp + ' ' + logs.join(' | ')); } catch (eL) {}
+                                                    }
+                                                    return winners.map(function (w) { return w.x; });
+                                                }
                         function _alPaint() {
                             var b = document.getElementById('allLvlBtn');
                             if (!b) return;
