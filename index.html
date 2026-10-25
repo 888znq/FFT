@@ -6251,7 +6251,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     MARGIN: 4, MARGIN_BADRUN: 1, CONFIRM: 3, NEAR_NEED: 2,
                                                     PERSIST_STEP: 0.4, PERSIST_CAP: 3,
                                                     PIN_CLICKED: true,
-                                                    MIN_C1: 1, TOPK: 12, DEBUG: true
+                                                    MIN_C1: 1, TOPK: 12, DEBUG: true, DEBUG_MAXLVL: 4, GAP_DUE: 1
                                                 };
                                                 window._LS = _LS;
                                                 function _lsClamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
@@ -6275,9 +6275,9 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     var parts = [], t = 0, q;
                                                     if (x.gap != null && x.curGap != null) {
                                                         var gp = Number(x.gap), cg = Number(x.curGap);
-                                                        if (isFinite(gp) && isFinite(cg) && gp > 0 && cg >= 0) parts.push(1 - _lsClamp(cg / gp, 0, 1));
+                                                        if (isFinite(gp) && isFinite(cg) && gp > 0 && cg >= 0) parts.push(_LS.GAP_DUE ? _lsClamp(cg / gp, 0, 1) : 1 - _lsClamp(cg / gp, 0, 1));
                                                     }
-                                                    if (x.gapFreq != null) {
+                                                    if (false && x.gapFreq != null) {
                                                         var gf = Number(x.gapFreq);
                                                         if (isFinite(gf)) { if (gf > 1) gf = gf / 100; parts.push(1 - _lsClamp(gf, 0, 1)); }
                                                     }
@@ -6339,12 +6339,12 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                 }
                                                 function _lsPinned(x) {
                                                     try {
-                                                        if (typeof _armed !== 'undefined' && _armed && _armed.pair === x.pair && Number(_armed.c) === Number(x.c) && Number(_armed.r) === Number(x.r) && (_armed.s1 == null || Number(_armed.s1) === Number(x.s1))) return true;
+                                                        if (typeof _armed !== 'undefined' && _armed && _armed.pair === x.pair && Number(_armed.c) === Number(x.c) && Number(_armed.r) === Number(x.r) && (_armed.s1 == null || Number(_armed.s1) === Number(x.s1)) && (_armed.s2 == null || Number(_armed.s2) === Number(x.s2)) && (_armed.col == null || _armed.col === x.col) && (_armed.type == null || _armed.type === x.type)) return true;
                                                     } catch (e1) {}
                                                     try {
                                                         if (_LS.PIN_CLICKED && typeof lastClickedSigId !== 'undefined' && lastClickedSigId) {
                                                             var t = String(lastClickedSigId).split(/[^A-Za-z0-9_.]+/);
-                                                            if (t.indexOf(String(x.pair)) >= 0 && t.indexOf(String(x.c)) >= 0 && t.indexOf(String(x.r)) >= 0 && t.indexOf(String(x.s1)) >= 0) return true;
+                                                            if (String(lastClickedSigId) === (x.pair + '-' + x.c + '-' + x.r + '-' + x.s1 + '-' + x.s2 + '-' + x.col + '-' + x.type)) return true;
                                                         }
                                                     } catch (e2) {}
                                                     return false;
@@ -6374,6 +6374,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                     }
                                                     if (frozen) return cur || top;
                                                     var tag = 'X' + s1;
+                                                                                if (!cur) { for (j = 0; j < rows.length; j++) { if (_lsPinned(rows[j].x) && !(rows[j].pl && rows[j].pl.missed)) { top = rows[j]; break; } } }
                                                     if (!cur) {
                                                         E.lv[lk] = { key: top.k, streak: 1, chalKey: null, chalN: 0, mark: mark };
                                                         logs.push(tag + ' ' + (st ? 'DROP(' + why + ') -> ' : 'NEW ') + _lsLbl(top));
@@ -6414,7 +6415,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                         note = chal ? ('KEEP gap ' + diff.toFixed(1) + ' < ' + need) : 'KEEP no rival';
                                                     }
                                                     if (newScan) {
-                                                        logs.push(tag + ' cur=' + _lsLbl(cur) + '(+' + bonus.toFixed(1) + ',n' + st.streak + ')' + (chal ? ' chal=' + _lsLbl(chal) : '') + ' ' + note);
+                                                        if (s1 <= L.DEBUG_MAXLVL) logs.push(tag + ' cur=' + _lsLbl(cur) + '(+' + bonus.toFixed(1) + ',n' + st.streak + ')' + (chal ? ' chal=' + _lsLbl(chal) : '') + ' ' + note);
                                                     }
                                                     return cur;
                                                 }
@@ -6439,7 +6440,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                         for (j = 0; j < all.length; j++) pre.push({ x: all[j], k: _champKey(all[j]), sc: _lsCore(all[j], null, true), pl: null });
                                                         pre.sort(_lsCmp);
                                                         for (j = 0; j < pre.length; j++) {
-                                                            if (j < L.TOPK || (st && pre[j].k === st.key)) sel.push(pre[j]);
+                                                            if (j < L.TOPK || (st && pre[j].k === st.key) || _lsPinned(pre[j].x)) sel.push(pre[j]);
                                                         }
                                                         for (j = 0; j < sel.length; j++) {
                                                             rw = sel[j];
