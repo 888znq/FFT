@@ -2884,7 +2884,13 @@
                                                                                                                                                                                                                                                                                                                                                                                     ]
                                                         };
                                         
-                                                var CAT_SESSION_WINDOWS = {
+                                                (function() {
+                                                                    var _rmRe = /NZD|MXN|PLN|XPD/;
+                                                                    Object.keys(PAIRS_BY_CAT).forEach(function(k) {
+                                                                        PAIRS_BY_CAT[k] = PAIRS_BY_CAT[k].filter(function(p) { return !_rmRe.test(p); });
+                                                                    });
+                                                                })();
+                                                                var CAT_SESSION_WINDOWS = {
                                                                                                                                                                                                                                                     'FRX': { start: 300, end: 1020 },
                                                                                                                                                                                                                                                     '$$$': { start: 300, end: 1020 },
                                                                                                                                                                                                                                                     'CRY': { start: 300, end: 1020 },
@@ -3027,23 +3033,23 @@
                                                                                                                         { label:'AUD/CAD', sym:'frxAUDCAD', color:'#00ff88' },
                                                                                                                         { label:'AUD/CHF', sym:'frxAUDCHF', color:'#ffe033' },
                                                                                                                         { label:'AUD/JPY', sym:'frxAUDJPY', color:'#00eeff' },
-                                                                                                                        { label:'AUD/NZD', sym:'frxAUDNZD', color:'#ff9500' },
+                                                                                                                        /* removed AUD/NZD */
                                                                                                                         { label:'AUD/USD', sym:'frxAUDUSD', color:'#cc88ff' },
                                                                                                                         { label:'EUR/AUD', sym:'frxEURAUD', color:'#ffcc00' },
                                                                                                                         { label:'EUR/CAD', sym:'frxEURCAD', color:'#8899ff' },
                                                                                                                         { label:'EUR/CHF', sym:'frxEURCHF', color:'#00ffcc' },
                                                                                                                         { label:'EUR/GBP', sym:'frxEURGBP', color:'#44bbff' },
                                                                                                                         { label:'EUR/JPY', sym:'frxEURJPY', color:'#ff44cc' },
-                                                                                                                        { label:'EUR/NZD', sym:'frxEURNZD', color:'#33ff66' },
+                                                                                                                        /* removed EUR/NZD */
                                                                                                                         { label:'EUR/USD', sym:'frxEURUSD', color:'#3399ff' },
                                                                                                                         { label:'GBP/AUD', sym:'frxGBPAUD', color:'#dd66ff' },
                                                                                                                         { label:'GBP/CAD', sym:'frxGBPCAD', color:'#ccff00' },
                                                                                                                         { label:'GBP/CHF', sym:'frxGBPCHF', color:'#00ccff' },
                                                                                                                         { label:'GBP/JPY', sym:'frxGBPJPY', color:'#ff4444' },
-                                                                                                                        { label:'GBP/NZD', sym:'frxGBPNZD', color:'#ff6688' },
+                                                                                                                        /* removed GBP/NZD */
                                                                                                                         { label:'GBP/USD', sym:'frxGBPUSD', color:'#00ff99' },
-                                                                                                                        { label:'NZD/JPY', sym:'frxNZDJPY', color:'#44ffbb' },
-                                                                                                                        { label:'NZD/USD', sym:'frxNZDUSD', color:'#ff7722' },
+                                                                                                                        /* removed NZD/JPY */
+                                                                                                                        /* removed NZD/USD */
                                                                                                                         { label:'USD/CAD', sym:'frxUSDCAD', color:'#00ffaa' },
                                                                                                                         { label:'USD/CHF', sym:'frxUSDCHF', color:'#ff2244' },
                                                                                                                         { label:'USD/JPY', sym:'frxUSDJPY', color:'#ffaa00' },
@@ -15009,6 +15015,14 @@ let dataList = currentMode === 'REV'
                 (function() {
                 var _selTmp = new Set();
                 var _OV = 'pairSelOverlay';
+                                var _selPop = ['frxAUDCAD','frxAUDCHF','frxAUDJPY','frxAUDUSD','frxEURAUD','frxEURCAD','frxEURCHF','frxEURGBP','frxEURJPY','frxEURUSD','frxGBPAUD','frxGBPCAD','frxGBPCHF','frxGBPJPY','frxGBPUSD','frxUSDCAD','frxUSDCHF','frxUSDJPY','frxXAGUSD','frxXAUUSD','frxXPTUSD','cryBTCUSD','cryETHUSD','1HZ10V','1HZ15V','1HZ25V','1HZ30V','1HZ50V','1HZ75V','1HZ90V','1HZ100V'];
+                                function _popPairs() {
+                                return _selPop.filter(function(p) { return ALL_PAIRS.indexOf(p) !== -1; });
+                                }
+                                function _isAllOn() {
+                                var l = _popPairs();
+                                return l.length > 0 && l.every(function(p) { return _selTmp.has(p); });
+                                }
                                 var _selInit = '';
                 var _MD = 'pairSelPopup';
                 
@@ -15021,7 +15035,7 @@ let dataList = currentMode === 'REV'
                 if (!grid) return;
                 var inp = document.getElementById('pairSelSearch');
                 var q = inp ? inp.value.trim().toUpperCase() : '';
-                var list = ALL_PAIRS.filter(function(p) {
+                                var list = _popPairs().filter(function(p) {
                 return !q || _nm(p).toUpperCase().indexOf(q) !== -1 || p.toUpperCase().indexOf(q) !== -1;
                 });
                 grid.innerHTML = list.map(function(p) {
@@ -15061,7 +15075,14 @@ let dataList = currentMode === 'REV'
                 items.forEach(function(b) { grid.appendChild(b); });
                 });
                 var cnt = document.getElementById('pairSelCount');
-                if (cnt) cnt.textContent = _selTmp.size + ' / ' + ALL_PAIRS.length + ' selected';
+                if (cnt) cnt.textContent = _selTmp.size + ' / ' + _popPairs().length + ' selected';
+                                var _allB = document.getElementById('pairSelAllBtn');
+                                if (_allB) {
+                                var _allOn = _isAllOn();
+                                _allB.style.color = _allOn ? 'var(--accent-green)' : '#FFFFFF';
+                                _allB.style.borderColor = _allOn ? 'var(--accent-green)' : '#FFFFFF';
+                                _allB.style.background = _allOn ? 'rgba(46,213,115,0.15)' : 'var(--bg-base)';
+                                }
                 }
                 
                 function _build() {
@@ -15087,7 +15108,8 @@ let dataList = currentMode === 'REV'
                 '</div>' +
                 '<div style="display:flex; gap:6px; padding:8px; border-bottom:1px solid #FFFFFF; flex-shrink:0;">' +
                 
-                '<button onclick="pairSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>' +
+                '<button id="pairSelAllBtn" onclick="pairSelectAll()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">ALL</button>' +
+                                '<button onclick="pairSelectNone()" style="flex:1; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:5px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px;">NONE</button>' +
                 '</div>' +
                 '<div style="padding:6px 8px; border-bottom:1px solid #333; flex-shrink:0;">' +
                 '<input id="pairSelSearch" type="text" placeholder="Search pair..." oninput="pairSelectFilter()" style="width:100%; background:var(--bg-base); border:1px solid #555; color:#FFFFFF; padding:5px 8px; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:700; border-radius:2px; outline:none; box-sizing:border-box;">' +
@@ -15101,7 +15123,7 @@ let dataList = currentMode === 'REV'
                 var t = (e.target && e.target.closest) ? e.target.closest('button[data-pair]') : null;
                 if (!t) return;
                 var p = t.getAttribute('data-pair');
-                if (_selTmp.has(p)) { _selTmp.delete(p); } else { _selTmp.add(p); }
+                if (_isAllOn()) { _selTmp = new Set([p]); } else if (_selTmp.has(p)) { _selTmp.delete(p); } else { _selTmp.add(p); }
                 _renderGrid();
                 });
                 document.body.appendChild(ov);
@@ -15113,8 +15135,8 @@ let dataList = currentMode === 'REV'
                 if (existing && existing.style.display === 'flex') { window.closePairSelectPopup(); return; }
                 _build();
                 var base = (activePairs !== null && activePairs !== undefined) ? activePairs : ALL_PAIRS;
-                _selTmp = new Set(base.filter(function(p) { return ALL_PAIRS.indexOf(p) !== -1; }));
-                                _selInit = ALL_PAIRS.filter(function(p) { return _selTmp.has(p); }).join(',');
+                _selTmp = new Set(base.filter(function(p) { return _popPairs().indexOf(p) !== -1; }));
+                                _selInit = _popPairs().filter(function(p) { return _selTmp.has(p); }).join(',');
                 var inp = document.getElementById('pairSelSearch');
                 if (inp) inp.value = '';
                 _renderGrid();
@@ -15129,7 +15151,7 @@ let dataList = currentMode === 'REV'
                                 if (md) md.style.display = 'none';
                                 if (ov) ov.style.display = 'none';
                                 if (wasOpen) {
-                                var nowSel = ALL_PAIRS.filter(function(p) { return _selTmp.has(p); }).join(',');
+                                var nowSel = _popPairs().filter(function(p) { return _selTmp.has(p); }).join(',');
                                 if (nowSel !== _selInit) { _selInit = nowSel; window.pairSelectApply(); }
                                 }
                                 };
@@ -15139,7 +15161,7 @@ let dataList = currentMode === 'REV'
                 };
                 
                 window.pairSelectAll = function() {
-                ALL_PAIRS.forEach(function(p) { _selTmp.add(p); });
+                if (_isAllOn()) { _selTmp.clear(); } else { _popPairs().forEach(function(p) { _selTmp.add(p); }); }
                 _renderGrid();
                 };
                 
@@ -15149,7 +15171,7 @@ let dataList = currentMode === 'REV'
                 };
                 
                 window.pairSelectApply = function() {
-                var chosen = ALL_PAIRS.filter(function(p) { return _selTmp.has(p); });
+                var chosen = _popPairs().filter(function(p) { return _selTmp.has(p); });
                 try { evtLog('INFO', 'UI', 'Pair popup applied: ' + chosen.length + ' selected'); } catch (err) {}
                 if (chosen.length === 0) {
                 activePairs = DEFAULT_PAIRS.slice();
