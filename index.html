@@ -1229,7 +1229,7 @@
 
                                                                                                                                                                                                                                                                     <!-- SCN input hidden but functional -->
 
-                                                                                                                                                                                                                                                                    <input type="number" id="autoScanIntervalInput" value="60" min="1" onchange="updateAutoScanInterval()" style="display:none;">
+                                                                                                                                                                                                                                                                    <input type="number" id="autoScanIntervalInput" value="30" min="1" onchange="updateAutoScanInterval()" style="display:none;">
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
                                                    
@@ -3101,7 +3101,7 @@
 
                         let isAutoScanOn = false;
 
-                        let autoScanIntervalMs = 60000;
+                        let autoScanIntervalMs = 30000;
                                                 function _calcScanIntervalMs() {
                                                     var a = parseInt((document.getElementById('scanMin') || {}).value, 10);
                                                     var b = parseInt((document.getElementById('scanMax') || {}).value, 10);
@@ -3148,7 +3148,8 @@
                                                     try { if (autoScanInterval) setupAutoScan(); } catch (e) {}
                                                 }
                         var _scanCountdownSec = 0;
-                        var _scanCountdownMax = 40;
+                        var _scanCountdownMax = 30;
+                        _calcScanIntervalMs = function () { return 30000; };
                         var _scanCountdownTimer = null;
                         function _startScanCountdown() {
                             if (_scanCountdownTimer) clearInterval(_scanCountdownTimer);
@@ -5028,7 +5029,7 @@ window._srvScanRun = _srvScanRun;
                             if (isAutoScanOn) {
                                 autoScanInterval = setInterval(() => {
                                     dispatchMultiCycleScan();
-                                }, (autoScanIntervalMs = _calcScanIntervalMs()));
+                                }, (autoScanIntervalMs = 30000));
                             } else {
                                 _stopScanCountdown();
                             }
