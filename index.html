@@ -1073,8 +1073,8 @@
                                                                                                                                                                                             if (_mt && _sl.r != null) {
                                                                                                                                                                                                 _cells.push('R' + _sl.r);
                                                                                                                                                                                                 _cells.push('X' + _sl.s1 + '-X' + _sl.s2);
-                                                                                                                                                                                                if (_sl.gap != null) _cells.push(String(_sl.gap));
-                                                                                                                                                                                                if (_sl.cur != null) _cells.push(String(_sl.cur));
+                                                                                                                                                                                                _cells.push(String(_sl.c1 != null ? _sl.c1 : (_sl.gap != null ? _sl.gap : 0)));
+                                                                                                                                                                                                _cells.push(String(_sl.c2 != null ? _sl.c2 : (_sl.cur != null ? _sl.cur : 0)));
                                                                                                                                                                                             }
                                                                                                                                                                                             var _cl = '';
                                                                                                                                                                                                             if (_mt && (_sl.col === 'G' || _sl.col === 'R')) {
@@ -5729,8 +5729,8 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
 
        // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
 
-       function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal) {
-                                window._tpSel = { pair: pair, c: c, r: r, s1: s1, s2: s2, col: colColor, type: type, gap: gapVal, cur: curGapVal };
+       function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal, c1v, c2v) {
+                                window._tpSel = { pair: pair, c: c, r: r, s1: s1, s2: s2, col: colColor, type: type, gap: gapVal, cur: curGapVal, c1: (c1v != null ? c1v : 0), c2: (c2v != null ? c2v : 0) };
                          window._tcFocus = pair; evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
                                            try { document.documentElement.setAttribute('data-sig', ((type === 'REV') ? (colColor === 'R') : (colColor === 'G')) ? 'G' : 'R'); } catch (e) {}
        
@@ -7400,7 +7400,7 @@ let uniqueList = [ ...filterTop5Unique(globalRevs, false) ].sort((a, b) => b.c1 
                                                           
                                                                                                       
                                                           
-                                                                                                      html += `<tr class="${rowClass} highlight-gem" ${(function () { var _k = _wpTmrReg(data); var _f = _wpFillInfo(_k); return 'data-k="' + _k + '" data-wpst="' + _f.kind + '" style="--wpf:' + _f.pct + '%;'; })()}${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal})">
+                                                                                                      html += `<tr class="${rowClass} highlight-gem" ${(function () { var _k = _wpTmrReg(data); var _f = _wpFillInfo(_k); return 'data-k="' + _k + '" data-wpst="' + _f.kind + '" style="--wpf:' + _f.pct + '%;'; })()}${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal}, ${data.c1 || 0}, ${data.c2 || 0})">
                                                                                             <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span></td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
