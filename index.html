@@ -5184,7 +5184,45 @@
               window._lvlPick[tg] = String(keys[(ci + 1) % keys.length]);
               try { renderFilteredTable(); } catch (e) {}
             }
-            function _lvlHdrClickFn(tg, row) {
+            function _lvlStep(dir) {
+                    var _av = {}, _src = window._lvlAvail || {};
+                    ['REV', 'MOM'].forEach(function (t) {
+                      Object.keys(_src[t] || {}).forEach(function (v) { _av[v] = 1; });
+                    });
+                    var _ks = Object.keys(_av).map(Number).sort(function (a, b) { return a - b; });
+                    var _cur = +window._lvlOnly || 0;
+                    if (_cur > 0 && _ks.indexOf(_cur) < 0) {
+                      _ks.push(_cur);
+                      _ks.sort(function (a, b) { return a - b; });
+                    }
+                    if (!_ks.length) return;
+                    var _ci2 = _ks.indexOf(_cur);
+                    if (_ci2 < 0) _ci2 = 0;
+                    else _ci2 = (_ci2 + dir + _ks.length) % _ks.length;
+                    window._lvlOnly = _ks[_ci2];
+                    try { localStorage.setItem('lvlOnlyPick', String(_ks[_ci2])); } catch (e) {}
+                    try { if (typeof window.wpsSaveDebounced === 'function') window.wpsSaveDebounced(); } catch (e) {}
+                    try { renderFilteredTable(); } catch (e) {}
+                  }
+                  function _lvlBuildSp(sp) {
+                    sp.textContent = '';
+                    var mkB = function (ch, dir) {
+                      var b = document.createElement('span');
+                      b.textContent = ch;
+                      b.style.cssText = 'cursor:pointer;font-size:9px;padding:0 8px;user-select:none;-webkit-user-select:none;';
+                      b.onclick = function (ev) {
+                        if (ev && ev.stopPropagation) ev.stopPropagation();
+                        _lvlStep(dir);
+                      };
+                      return b;
+                    };
+                    var t = document.createElement('span');
+                    t.className = 'lvlTxt';
+                    sp.appendChild(mkB('\u25C0', -1));
+                    sp.appendChild(t);
+                    sp.appendChild(mkB('\u25B6', 1));
+                  }
+                  function _lvlHdrClickFn(tg, row) {
               return function (ev) {
                 if (ev && ev.stopPropagation) ev.stopPropagation();
                 _lvlNextClick(tg, row.cells && row.cells[0] ? row.cells[0].textContent : '');
@@ -5203,7 +5241,8 @@
                                 var _tgN = (tb.id === 'peaksTableBodyRev') ? 'REV' : 'MOM';
                                 for (var _ci = 0; _ci < rows.length; _ci++) {
                                   rows[_ci].style.cursor = 'pointer';
-                                  rows[_ci].onclick = _lvlHdrClickFn(_tgN, rows[_ci]);
+                                  rows[_ci].onclick = null;
+                                                    rows[_ci].style.cursor = 'default';
                                 }
                 for (var mi = 0; mi < rows.length; mi++) {
                   if (merge) rows[mi].style.setProperty('display', 'none', 'important');
@@ -5219,14 +5258,17 @@
                   if (!sp) {
                     sp = document.createElement('span');
                     sp.className = 'lvlMerge';
-                    sp.style.cssText = 'letter-spacing:0.05em;margin-left:10px;cursor:pointer;';
+                    sp.style.cssText = 'letter-spacing:0.05em;margin-left:10px;';
+                                        _lvlBuildSp(sp);
                                         sp.onclick = function (ev) {
                                           if (ev && ev.stopPropagation) ev.stopPropagation();
-                                          _lvlNextClick(_tgN, sp.textContent);
+                                          /* level step triangles handle their own clicks */
                                         };
                     h.appendChild(sp);
                   }
-                  if (sp.textContent !== txt) sp.textContent = txt;
+                  var _lb = sp.querySelector('.lvlTxt');
+                                    if (!_lb) { _lvlBuildSp(sp); _lb = sp.querySelector('.lvlTxt'); }
+                                    if (_lb && _lb.textContent !== txt) _lb.textContent = txt;
                 } else if (sp) {
                   sp.parentNode.removeChild(sp);
                 }
