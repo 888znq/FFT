@@ -111,7 +111,7 @@
   ::-webkit-scrollbar-thumb { background: var(--accent-green) !important; border: 3px solid var(--bg-base); border-radius: 2px; box-shadow: var(--neon-glow); }
   ::-webkit-scrollbar-track { background: var(--bg-base); }
   /* --- App3 Modal Styles --- */
-  #app3-modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); backdrop-filter: blur(6px); z-index: 2001; }
+    #app3-modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 2001; }
   #app3-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 90vw; max-width: 380px; height: 480px; background: var(--bg-base); border: 1px solid var(--border); z-index: 2002; flex-direction: column; border-radius: 2px; overflow: hidden; }
   .app3-modal-stat-row { padding: 9px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; }
   #app3-modal ::-webkit-scrollbar { width: 2px; }
@@ -467,9 +467,9 @@
     window.pairColorHex=col;
     document.documentElement.style.setProperty('--pair-color',col);
     document.documentElement.classList.add('pc-on');
-    try{if(typeof requestDraw==='function')requestDraw();}catch(e3){}
-  };
-  setInterval(window._pcApply,250);
+        try{if(typeof requestDraw==='function')requestDraw();}catch(e3){}
+      };
+      setInterval(window._pcApply,1000);
     </script>
     <div id="main-container">
       <div id="canvas-viewport"><canvas id="matrixCanvas"></canvas></div>
@@ -628,7 +628,7 @@
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 0; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-family:'JetBrains Mono',monospace;">FRX</button>
               <button id="tcToggleBtn" class="pairIconBtn" data-mode="TICK" title="Tick / Grid" aria-label="Tick / Grid" onclick="tcToggle()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">TICK</button>
-              <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}html body #buyBtn,html body #sellBtn{border-radius:6px !important;}html body div:has(> #tradeAmount),html body div:has(> #tradeExpiryVisible),html body div:has(> #scanMin),html body div:has(> #scanMax),html body #accountBalance{border-radius:6px !important;}html body #trade-console{margin-top:auto !important;padding:4px 6px !important;gap:3px !important;grid-auto-rows:min-content !important;align-content:end !important;box-sizing:border-box !important;}html body #trade-console > div{gap:3px !important;width:100% !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax){height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console #tradeAmount,html body #trade-console #tradeExpiryVisible,html body #trade-console #scanMin,html body #trade-console #scanMax{height:100% !important;min-height:0 !important;line-height:1 !important;font-size:12px !important;padding:0 !important;margin:0 !important;text-align:center !important;}html body #trade-console #buyBtn,html body #trade-console #sellBtn{height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;font-size:10px !important;letter-spacing:0.5px !important;flex:1 1 0 !important;min-width:0 !important;display:flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #trade-console .pairIconBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:28px !important;padding:0 4px !important;box-sizing:border-box !important;}html body #trade-console #accountBalance{height:24px !important;min-height:0 !important;max-height:24px !important;line-height:22px !important;font-size:12px !important;padding:0 4px !important;box-sizing:border-box !important;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><button id="tradeHistBtn" onclick="openTradeHistory()" title="History" aria-label="History" style="flex:0 0 auto; height:28px; min-width:36px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px; display:inline-flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg></button><span id="accountBalance" title="Tap to switch DEMO / REAL" onclick="toggleAccountType()" style="flex:1 1 70px; min-width:0; height:28px; box-sizing:border-box; text-align:center; color:#FFD700; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">--</span><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><style>html body #pairHubPanel#pairHubPanel#pairHubPanel#pairHubPanel#pairHubPanel{border-radius:20px !important;overflow:hidden !important;}</style><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:20px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){el.setAttribute('data-mode',el.textContent.trim()==='GRID'?'GRID':'TICK');});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
+              <style>#tcWrap button{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}#tcWrap button.tcOn{background:#FFD700 !important;border-color:#FFD700 !important;}#tcToggleBtn,#pairHubBtn,#logBtn,#tradeHistBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}div:has(> #tradeAmount),div:has(> #tradeExpiryVisible),div:has(> #scanMin),div:has(> #scanMax){background:#E2E8F0 !important;border-color:#E2E8F0 !important;}#tradeAmount,#tradeExpiryVisible,#scanMin,#scanMax{color:var(--bg-base) !important;}#scanTimerDisplay{background:#E2E8F0;color:var(--bg-base) !important;padding:2px 6px;border-radius:2px;}.ctrl-row .ctrl-input{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:#E2E8F0 !important;}.ctrl-row > span:has(.ctrl-input){color:var(--bg-base) !important;}.pairIconBtn{font-size:0 !important; min-width:32px; height:28px; padding:0 6px !important; display:inline-flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;}.pairIconBtn::before{content:''; width:16px; height:16px; flex:0 0 16px; background:currentColor; -webkit-mask:var(--ico) center/contain no-repeat; mask:var(--ico) center/contain no-repeat;}#tcToggleBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M7 15l4-5 3 3 5-7'/%3E%3C/svg%3E");}#tcToggleBtn[data-mode='GRID']{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='1'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18M15 3v18'/%3E%3C/svg%3E");}#logBtn{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2h9l5 5v15H6z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M9 13h8M9 17h8'/%3E%3C/svg%3E");}#logBtn::after{content:attr(data-n); font-size:9px; font-weight:800; font-family:'JetBrains Mono',monospace;}html body #buyBtn,html body #sellBtn{border-radius:6px !important;}html body div:has(> #tradeAmount),html body div:has(> #tradeExpiryVisible),html body div:has(> #scanMin),html body div:has(> #scanMax),html body #accountBalance{border-radius:6px !important;}html body #trade-console{margin-top:auto !important;padding:4px 6px !important;gap:3px !important;grid-auto-rows:min-content !important;align-content:end !important;box-sizing:border-box !important;}html body #trade-console > div{gap:3px !important;width:100% !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax){height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}html body #trade-console #tradeAmount,html body #trade-console #tradeExpiryVisible,html body #trade-console #scanMin,html body #trade-console #scanMax{height:100% !important;min-height:0 !important;line-height:1 !important;font-size:12px !important;padding:0 !important;margin:0 !important;text-align:center !important;}html body #trade-console #buyBtn,html body #trade-console #sellBtn{height:24px !important;min-height:0 !important;max-height:24px !important;padding:0 !important;margin:0 !important;font-size:10px !important;letter-spacing:0.5px !important;flex:1 1 0 !important;min-width:0 !important;display:flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #trade-console .pairIconBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:28px !important;padding:0 4px !important;box-sizing:border-box !important;}html body #trade-console #accountBalance{height:24px !important;min-height:0 !important;max-height:24px !important;line-height:22px !important;font-size:12px !important;padding:0 4px !important;box-sizing:border-box !important;}</style><button id="logBtn" class="pairIconBtn" title="Event Log" aria-label="Event Log" onclick="openEventLog()" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px;">LOG</button><button id="tradeHistBtn" onclick="openTradeHistory()" title="History" aria-label="History" style="flex:0 0 auto; height:28px; min-width:36px; box-sizing:border-box; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; cursor:pointer; border-radius:2px; display:inline-flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg></button><span id="accountBalance" title="Tap to switch DEMO / REAL" onclick="toggleAccountType()" style="flex:1 1 70px; min-width:0; height:28px; box-sizing:border-box; text-align:center; color:#FFD700; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">--</span><div id="pairHubOverlay" onclick="closePairHub()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,4,50,0.85); z-index:2990;"></div><style>html body #pairHubPanel#pairHubPanel#pairHubPanel#pairHubPanel#pairHubPanel{border-radius:20px !important;overflow:hidden !important;}</style><div id="pairHubPanel" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:92vw; max-width:420px; max-height:80vh; background:var(--bg-base); border:1px solid #FFFFFF; z-index:2991; flex-direction:column; border-radius:20px; overflow:hidden;"><div style="padding:10px 14px; background:var(--bg-panel); border-bottom:1px solid #FFFFFF; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;"><span style="font-size:11px; font-weight:800; letter-spacing:0.18em; color:#FFD700;">$ PAIRS</span><button id="pairHubClose" onclick="closePairHub()" style="background:none; border:none; color:#FFFFFF; font-size:14px; font-weight:800; cursor:pointer; padding:0 4px;">✕</button></div><div id="pairHubBody" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:10px; overflow-y:auto;"><div id="specialButtonsContainer" style="display:flex; gap:3px; flex-wrap:wrap; flex:0 0 auto; align-items:center; margin-top:0;"></div><button id="catBtn-24x7" onclick="catBtnClick('24x7')" style="flex:0 0 auto; background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:6px 10px; font-size:10px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">ALL</button></div></div><script>(function(){var _panel=document.getElementById('pairHubBody');var _ov=document.getElementById('pairHubOverlay');var _md=document.getElementById('pairHubPanel');if(_ov)document.body.appendChild(_ov);if(_md)document.body.appendChild(_md);['catBtn-CRY','catBtn-$$$','catBtn-DRV','catBtn-MTL','catBtn-FRX','showAllBtn','hidePairsBtn'].forEach(function(id){var el=document.getElementById(id);if(el&&_panel)_panel.appendChild(el);});function _hubSet(open){var p=document.getElementById('pairHubPanel');var o=document.getElementById('pairHubOverlay');var b=document.getElementById('pairHubBtn');if(p)p.style.display=open?'flex':'none';if(o)o.style.display=open?'block':'none';if(b){b.style.background='#E2E8F0';b.style.color='#000432';}}window.openPairHub=function(){_hubSet(true);};window.closePairHub=function(){_hubSet(false);};window.togglePairHub=function(){var p=document.getElementById('pairHubPanel');_hubSet(!(p&&p.style.display==='flex'));};if(_md)_md.addEventListener('click',function(e){var t=e.target.closest?e.target.closest('button'):null;if(!t)return;if(t.id==='catBtn-24x7'||t.id==='sbAddBtn'||t.id==='hidePairsBtn'||t.id==='pairHubClose')return;setTimeout(function(){_hubSet(false);},0);});function _bindWatch(id,fn){var el=document.getElementById(id);if(!el)return;fn(el);new MutationObserver(function(){fn(el);}).observe(el,{childList:true,characterData:true,subtree:true});}_bindWatch('tcToggleBtn',function(el){var m=el.textContent.trim()==='GRID'?'GRID':'TICK';if(el.getAttribute('data-mode')!==m)el.setAttribute('data-mode',m);});_bindWatch('logBtn',function(el){var n=el.textContent.replace(/^\s*LOG\s*/,'').trim();if(el.getAttribute('data-n')!==n)el.setAttribute('data-n',n);});})();</script>
             </div>
             <!-- SYS button hidden — still accessible via JS -->
             <style>html body #trade-console #buyBtn,html body #trade-console #sellBtn{font-size:0 !important;color:transparent !important;-webkit-text-fill-color:transparent !important;text-shadow:none !important;letter-spacing:0 !important;}html body #scanTimerDisplay{border-radius:12px !important;height:24px !important;line-height:24px !important;padding:0 10px !important;box-sizing:border-box !important;display:inline-block !important;min-width:44px !important;text-align:center !important;}</style><style>html body #wall-finder-pane .ctrl-row{align-items:center !important;gap:4px !important;}html body #wall-finder-pane .ctrl-row .ctrl-input{height:24px !important;min-height:0 !important;line-height:24px !important;border-radius:12px !important;padding-top:0 !important;padding-bottom:0 !important;box-sizing:border-box !important;}html body #wall-finder-pane #minPctInput{width:100% !important;}html body #wall-finder-pane #r0OnlyBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:34px !important;padding:0 8px !important;border-radius:12px !important;line-height:1 !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;}html body #wall-finder-pane #scanTimerDisplay{height:24px !important;line-height:24px !important;border-radius:12px !important;padding:0 10px !important;min-width:44px !important;text-align:center !important;box-sizing:border-box !important;}html body #trade-console #tcToggleBtn,html body #trade-console #pairHubBtn,html body #trade-console #logBtn,html body #trade-console #tradeHistBtn{height:24px !important;min-height:0 !important;max-height:24px !important;min-width:0 !important;width:0 !important;flex:1 1 0 !important;padding:0 2px !important;margin:0 !important;border-radius:12px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;box-sizing:border-box !important;overflow:hidden !important;}html body #trade-console #pairHubBtn svg,html body #trade-console #tradeHistBtn svg{width:14px !important;height:14px !important;}html body #trade-console .pairIconBtn::before{width:14px !important;height:14px !important;flex:0 0 14px !important;}html body #trade-console #accountBalance{flex:0 0 calc((100% - 3px) / 2) !important;width:calc((100% - 3px) / 2) !important;max-width:calc((100% - 3px) / 2) !important;min-width:0 !important;border-radius:12px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;background:var(--pair-color, #E2E8F0) !important;background-color:var(--pair-color, #E2E8F0) !important;border-color:var(--pair-color, #E2E8F0) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}html body #trade-console div:has(> #tradeAmount),html body #trade-console div:has(> #tradeExpiryVisible),html body #trade-console div:has(> #scanMin),html body #trade-console div:has(> #scanMax),html body #trade-console #buyBtn,html body #trade-console #sellBtn{border-radius:12px !important;height:24px !important;}html body #trade-console > div{align-items:center !important;flex-wrap:nowrap !important;}</style><style>html body #masterSysBtn{display:none !important;visibility:hidden !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;overflow:hidden !important;}</style><button id="masterSysBtn" onclick="toggleMasterEngines()" style="display:none;">SYS: MANUAL</button>
@@ -739,15 +739,20 @@
         var up = (type === 'REV') ? (col === 'R') : (col === 'G');
         return up ? 'G' : 'R';
       }
-      function _sigPaint() {
-        var d = _sigDir();
-        if (d === _sigLast) return;
-        _sigLast = d;
-        if (d) document.documentElement.setAttribute('data-sig', d);
-        else document.documentElement.removeAttribute('data-sig');
-      }
-      setInterval(_sigPaint, 200);
-      _sigPaint();
+      var _sigLastId = null;
+            function _sigPaint() {
+              var curId = (typeof lastClickedSigId !== 'undefined') ? lastClickedSigId : '';
+              if (curId === _sigLastId) return;
+              _sigLastId = curId;
+              var d = _sigDir();
+              if (d === _sigLast) return;
+              _sigLast = d;
+              if (d) document.documentElement.setAttribute('data-sig', d);
+              else document.documentElement.removeAttribute('data-sig');
+            }
+            window._sigPaint = _sigPaint;
+            setInterval(_sigPaint, 1000);
+            _sigPaint();
     })();</script>
             <script>(function(){var _SHOW_FLOAT_TRADE_PILL=true;function _mvTradePill(){var f=document.getElementById('floatTradePill');if(f&&f.getAttribute('data-ready'))return;var sell=document.getElementById('sellBtn');var buy=document.getElementById('buyBtn');var amt=document.getElementById('tradeAmount');var exp=document.getElementById('tradeExpiryVisible');var bal=document.getElementById('accountBalance');if(!sell||!buy||!amt||!exp||!bal)return;if(!f){f=document.createElement('div');f.id='floatTradePill';document.body.appendChild(f);}if(!_SHOW_FLOAT_TRADE_PILL){f.style.setProperty('display','none','important');}else{f.style.removeProperty('display');}var items=[amt.parentNode,exp.parentNode,sell,buy,bal];var parents=[];items.forEach(function(el){if(el.parentNode&&el.parentNode!==f&&parents.indexOf(el.parentNode)<0)parents.push(el.parentNode);f.appendChild(el);});parents.forEach(function(p){if(p.id!=='trade-console'&&p.children.length===0)p.style.display='none';});f.setAttribute('data-ready','1');}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_mvTradePill);else _mvTradePill();window.addEventListener('load',_mvTradePill);if(!_SHOW_FLOAT_TRADE_PILL){var _stPill=document.createElement('style');_stPill.id='floatTradePillHideCss';_stPill.textContent='#floatTradePill{display:none !important;visibility:hidden !important;pointer-events:none !important;}';document.head.appendChild(_stPill);setInterval(function(){var _ePill=document.getElementById('floatTradePill');if(_ePill&&_ePill.style.display!=='none'){_ePill.style.setProperty('display','none','important');}},200);}})();</script>
             <script>
@@ -831,10 +836,15 @@
         var c = _tpAutoCycle();
         return c > 0 ? c : raw;
       };
-      function _tpSync() {
-        if (!window._tradePillOn || window._tradeCustom) return;
-        var inp = document.getElementById('tradePairInput');
-        var txt = _tpLabel(_tpAutoPair());
+      var _tpFastKey = '';
+            function _tpSync() {
+              if (!window._tradePillOn || window._tradeCustom) return;
+              var _ap0 = _tpAutoPair(), _cy0 = _tpAutoCycle(), _sl0 = window._tpSel || {};
+              var _fk0 = _ap0 + '|' + _cy0 + '|' + (_sl0.pair || '') + '|' + (_sl0.r != null ? _sl0.r : '') + '|' + (_sl0.s1 || '') + '|' + (_sl0.c1 != null ? _sl0.c1 : '') + '|' + (_sl0.c2 != null ? _sl0.c2 : '') + '|' + (_sl0.col || '') + '|' + (_sl0.type || '');
+              if (_fk0 === _tpFastKey && document.getElementById('tpSigRow')) return;
+              _tpFastKey = _fk0;
+              var inp = document.getElementById('tradePairInput');
+              var txt = _tpLabel(_ap0);
         try {
           if (!document.getElementById('tpRowCss')) {
             var _rs = document.createElement('style');
@@ -985,7 +995,8 @@
               if (e.cancelable) e.preventDefault();
             }, { capture: true, passive: false });
         });
-      setInterval(_tpSync, 300);
+      window._tpSync = _tpSync;
+            setInterval(_tpSync, 1000);
       var _tpTries = 0;
       var _tpTimer = setInterval(function () {
           _tpTries++;
@@ -1053,7 +1064,7 @@
       </div>
       <div id="stats">INITIALIZING SYSTEM BOOT SEQUENCE...</div>
     </div>
-    <div id="bootOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-base);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
+    <div id="bootOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-base);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;">
       <div style="width:580px;max-width:94vw;">
         <div style="font-size:11px;font-weight:800;letter-spacing:0.3em;color:#FFFFFF;margin-bottom:18px;text-align:center;">⬡ WALLSPECTRUM AOFS BOOT SEQUENCE</div>
         <div style="background:var(--bg-base);border:1px solid #fff;border-radius:2px;height:6px;margin-bottom:18px;overflow:hidden;">
@@ -1248,7 +1259,7 @@
         </div>
       </div>
     </div>
-    <div id="personalize-modalOverlay" onclick="closePersonalizeModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); backdrop-filter: blur(6px); z-index: 3000;"></div>
+    <div id="personalize-modalOverlay" onclick="closePersonalizeModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 3000;"></div>
     <div id="personalize-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 90vw; max-width: 320px; background: var(--bg-base); border: 1px solid #FFFFFF; z-index: 3001; flex-direction: column; border-radius: 2px; box-shadow: 0 0 20px rgba(0, 176, 255, 0.2);">
       <div style="padding:13px 15px; background:var(--bg-base); color:#FFD700; border-bottom:1px solid #FFFFFF; font-weight:800; font-size:11px; letter-spacing:0.16em; display:flex; justify-content:space-between; align-items:center;">
         <span>PERSONALIZATION</span>
@@ -1275,7 +1286,7 @@
         </div>
       </div>
     </div>
-    <div id="history-modalOverlay" onclick="closeTradeHistory()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); backdrop-filter: blur(6px); z-index: 2005;"></div>
+    <div id="history-modalOverlay" onclick="closeTradeHistory()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 2005;"></div>
     <div id="history-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 90vw; max-width: 450px; height: 550px; background: var(--bg-base); border: 1px solid #FFFFFF; z-index: 2006; flex-direction: column; border-radius: 2px; overflow: hidden; box-shadow: 0 0 20px rgba(0, 176, 255, 0.2);">
       <div style="padding:13px 15px; background:var(--bg-base); color:#00B0FF; border-bottom:1px solid #FFFFFF; font-weight:800; font-size:11px; letter-spacing:0.16em; display:flex; justify-content:space-between; align-items:center;">
         <span>TRADE PORTFOLIO</span>
@@ -3238,7 +3249,8 @@
         else { streakCol = prev.c; streakLen = 0; }
       }
       matrixData[col][row] = { c: streakCol, s: streakLen, p: p };
-      _scheduleStreakPanelRefresh();
+            if (col > (window._matrixMaxCol || 0)) window._matrixMaxCol = col;
+            _scheduleStreakPanelRefresh(row);
       // 🔴 NEW: TRIGGER AUTONOMOUS ROBOT VERIFICATION 🔴
       if (autoHunterEnabled) {
         /* AUTO TRADE DISABLED */
@@ -3397,21 +3409,89 @@
 
                 </div>`;
     }
-    document.getElementById('app3-mainContainer').innerHTML = app3Html;
-    hSpacer.style.width = Math.round((maxCol + 1) * CELL_W) + 'px';
-    requestDraw();
-  }
-  var _spRefreshScheduled = false;
-  function _scheduleStreakPanelRefresh() {
-    if (_spRefreshScheduled) return;
-    _spRefreshScheduled = true;
-    requestAnimationFrame(function() {
-        _spRefreshScheduled = false;
-        _refreshStreakPanelOnly();
-      });
-  }
-  function _refreshStreakPanelOnly() {
-    if (timesArray.length === 0) return;
+    window._matrixMaxCol = maxCol;
+        document.getElementById('app3-mainContainer').innerHTML = app3Html;
+        var _newW = Math.round((maxCol + 1) * CELL_W) + 'px';
+        if (hSpacer.style.width !== _newW) hSpacer.style.width = _newW;
+        requestDraw();
+      }
+      var _spRefreshScheduled = false;
+      var _spDirtyRows = new Set();
+      function _scheduleStreakPanelRefresh(row) {
+        if (typeof row === 'number' && row >= 0) _spDirtyRows.add(row);
+        else _spDirtyRows.add(-1);
+        if (_spRefreshScheduled) return;
+        _spRefreshScheduled = true;
+        requestAnimationFrame(function() {
+            _spRefreshScheduled = false;
+            _refreshStreakPanelOnly();
+          });
+      }
+      function _recalcSingleStreakRow(r, maxCol) {
+        streakInstances[r] = { R: {}, G: {} };
+        streakHistoryApp3[r] = { R: {}, G: {} };
+        let currentStreak = 0, currentColor = 'N', lastActiveCol = 0, rM = 0, gM = 0;
+        for (let c = 0; c <= maxCol; c++) {
+          let colObj = matrixData[c];
+          let cell = colObj ? colObj[r] : undefined;
+          if (cell) {
+            if (cell.s === 0 || cell.s === 1 || cell.c !== currentColor) {
+              if (currentStreak > 0 && currentColor !== 'N' && cell.s === 1) {
+                if (!streakInstances[r][currentColor][currentStreak]) streakInstances[r][currentColor][currentStreak] = [];
+                streakInstances[r][currentColor][currentStreak].push(lastActiveCol);
+                streakHistoryApp3[r][currentColor][currentStreak] = (streakHistoryApp3[r][currentColor][currentStreak] || 0) + 1;
+                if (currentColor === 'R' && currentStreak > rM) rM = currentStreak;
+                else if (currentColor === 'G' && currentStreak > gM) gM = currentStreak;
+              }
+            }
+            currentColor = cell.s > 0 ? cell.c : 'N';
+            currentStreak = cell.s;
+            if (cell.s > 0) lastActiveCol = c;
+          } else {
+            currentStreak = 0;
+            currentColor = 'N';
+          }
+        }
+        if (currentStreak > 0 && currentColor !== 'N') {
+          if (!streakInstances[r][currentColor][currentStreak]) streakInstances[r][currentColor][currentStreak] = [];
+          streakInstances[r][currentColor][currentStreak].push(lastActiveCol);
+          streakHistoryApp3[r][currentColor][currentStreak] = (streakHistoryApp3[r][currentColor][currentStreak] || 0) + 1;
+          if (currentColor === 'R' && currentStreak > rM) rM = currentStreak;
+          else if (currentColor === 'G' && currentStreak > gM) gM = currentStreak;
+        }
+        var cont = document.getElementById('app3-mainContainer');
+        var rowEl = cont && cont.children ? cont.children[r] : null;
+        if (rowEl && rowEl.children.length >= 2) {
+          var rTxt = rM ? 'x' + rM : '·';
+          var gTxt = gM ? 'x' + gM : '·';
+          if (rowEl.children[0].textContent !== rTxt) rowEl.children[0].textContent = rTxt;
+          if (rowEl.children[1].textContent !== gTxt) rowEl.children[1].textContent = gTxt;
+        }
+      }
+      function _refreshStreakPanelOnly() {
+        if (timesArray.length === 0) { _spDirtyRows.clear(); return; }
+        var sEnd0 = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
+        sEnd0 = Math.min(sEnd0, (sessionWindowEndMin - sessionWindowStartMin) * 60) + _cycleOff();
+        var visMax0 = Math.floor((sEnd0 - 1) / CYCLE);
+        var rawMax0 = typeof window._matrixMaxCol === 'number' ? window._matrixMaxCol : -1;
+        if (rawMax0 < 0) {
+          var cols0 = Object.keys(matrixData).map(Number);
+          if (cols0.length === 0) { _spDirtyRows.clear(); return; }
+          rawMax0 = Math.max.apply(null, cols0);
+          window._matrixMaxCol = rawMax0;
+        }
+        var maxCol0 = Math.min(rawMax0, visMax0);
+        if (_spDirtyRows.has(-1) || _spDirtyRows.size === 0) {
+          for (var r0 = 0; r0 < CYCLE; r0++) _recalcSingleStreakRow(r0, maxCol0);
+        } else {
+          _spDirtyRows.forEach(function(r0) {
+            if (r0 >= 0 && r0 < CYCLE) _recalcSingleStreakRow(r0, maxCol0);
+          });
+        }
+        _spDirtyRows.clear();
+        var newW0 = Math.round((maxCol0 + 1) * CELL_W) + 'px';
+        if (hSpacer.style.width !== newW0) hSpacer.style.width = newW0;
+        if (true) return;
     var sEnd = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
     var _visStartSec = sessionWindowStartMin * 60;
     var _visEndSec   = sessionWindowEndMin   * 60;
@@ -3683,9 +3763,12 @@
     }
     processVisualMatrix();
     let isFirstClick = (sigId !== lastClickedSigId);
-    if (isFirstClick) {
-      lastClickedSigId = sigId;
-    }
+        if (isFirstClick) {
+          lastClickedSigId = sigId;
+          if (typeof window._sigPaint === 'function') window._sigPaint();
+        }
+        if (typeof window._pcApply === 'function') window._pcApply();
+        if (typeof window._tpSync === 'function') window._tpSync();
     highlightRow = r;
     currentInstances = [];
     currentInstanceIndex = -1;
@@ -4043,33 +4126,30 @@
     if (!d) return null;
     var nowMs = Date.now();
     var nowSec = Math.floor(nowMs / 1000) - currentStartTsUtc;
-    var ca = window._wpTmrCache[k];
-    if (ca) {
-      var rem0 = ca.kind === 'FIRED' ? ca.idx + d.c - nowSec : (ca.kind === 'FUT' ? ca.idx - nowSec : 1);
-      if (nowMs - ca.at < 10000 && rem0 > 0) return { kind: ca.kind, rem: rem0 };
-    }
-    var pl = null;
-    try { pl = _champPlan(d); } catch (e) { pl = null; }
-    if (!pl) return null;
-    var kind = pl.kind === 'NONE' ? (pl.missed ? 'MISS' : 'NONE') : pl.kind;
-    window._wpTmrCache[k] = { kind: kind, idx: pl.idx, at: nowMs };
-    var rem = kind === 'FIRED' ? pl.idx + d.c - pl.nowSec : (kind === 'FUT' ? pl.idx - pl.nowSec : 0);
-    return { kind: kind, rem: rem };
-  }
-  function _wpTmrText(k) {
-    var r = _wpTmrCalc(k);
-    if (!r) return '--';
-    if (r.kind === 'MISS') return 'MISSED';
-    if (r.kind === 'NONE') return '--';
-    return (r.kind === 'FIRED' ? '\u25CF' : '') + _wpTmrFmt(r.rem);
-  }
-  function _wpTmrTick() {
-    var cells = document.querySelectorAll('#wall-finder-pane td.wpTmr');
-    for (var ti = 0; ti < cells.length; ti++) {
-      var tt = _wpTmrText(cells[ti].getAttribute('data-k'));
-      if (cells[ti].textContent !== tt) cells[ti].textContent = tt;
-    }
-  }
+    var c = d.c || 60;
+        var rr = (((d.r - ((currentStartTsUtc || 0) % c)) % c) + c) % c;
+        var step = Math.floor((nowSec - 1 - rr) / c);
+        var ca = window._wpTmrCache[k];
+        if (ca) {
+          var rem0 = ca.kind === 'FIRED' ? ca.idx + c - nowSec : (ca.kind === 'FUT' ? ca.idx - nowSec : 1);
+          if (ca.step === step && rem0 > 0) return { kind: ca.kind, rem: rem0 };
+        }
+        var pl = null;
+        try { pl = _champPlan(d); } catch (e) { pl = null; }
+        if (!pl) return null;
+        var kind = pl.kind === 'NONE' ? (pl.missed ? 'MISS' : 'NONE') : pl.kind;
+        window._wpTmrCache[k] = { kind: kind, idx: pl.idx, step: step };
+        var rem = kind === 'FIRED' ? pl.idx + c - pl.nowSec : (kind === 'FUT' ? pl.idx - pl.nowSec : 0);
+        return { kind: kind, rem: rem };
+      }
+      function _wpTmrText(k) {
+        var r = _wpTmrCalc(k);
+        if (!r) return '--';
+        if (r.kind === 'MISS') return 'MISSED';
+        if (r.kind === 'NONE') return '--';
+        return (r.kind === 'FIRED' ? '\u25CF' : '') + _wpTmrFmt(r.rem);
+      }
+      function _wpTmrTick() {}
   (function () {
       if (document.getElementById('wpTmrCss')) return;
       var st = document.createElement('style');
@@ -4105,62 +4185,58 @@
     return { kind: r.kind, pct: Math.max(0, Math.min(100, Math.round(p * 10) / 10)) };
   }
   function _wpFillTick() {
-    var rows = document.querySelectorAll('#wall-finder-pane tr.highlight-gem[data-k]');
-    for (var fi = 0; fi < rows.length; fi++) {
-      var f = _wpFillInfo(rows[fi].getAttribute('data-k'));
-      rows[fi].style.setProperty('--wpf', f.pct + '%');
-      if (rows[fi].getAttribute('data-wpst') !== f.kind) rows[fi].setAttribute('data-wpst', f.kind);
+      var rows = window._wpGemRows || document.querySelectorAll('#wall-finder-pane tr.highlight-gem[data-k]');
+      for (var fi = 0; fi < rows.length; fi++) {
+        var row = rows[fi];
+        var f = _wpFillInfo(row.getAttribute('data-k'));
+        var wpfStr = f.pct + '%';
+        if (row._lastWpf !== wpfStr) {
+          row._lastWpf = wpfStr;
+          row.style.setProperty('--wpf', wpfStr);
+        }
+        if (row.getAttribute('data-wpst') !== f.kind) row.setAttribute('data-wpst', f.kind);
+      }
     }
-  }
-  (function () {
-      if (document.getElementById('wpFillCss')) return;
-      var fs = document.createElement('style');
-      fs.id = 'wpFillCss';
-      var Q = 'html body #wall-finder-pane#wall-finder-pane tr.highlight-gem';
-      fs.textContent = Q + ' > td:nth-child(1){width:28% !important;padding-left:8px !important;}' +
-      Q + ' > td:nth-child(2){width:10% !important;}' +
-      Q + ' > td:nth-child(3){width:10% !important;}' +
-      Q + ' > td:nth-child(4){width:19% !important;}' +
-      Q + ' > td:nth-child(5){width:10% !important;}' +
-      Q + ' > td:nth-child(6){width:10% !important;}' +
-      Q + ' > td:nth-child(7){width:13% !important;padding-left:2px !important;padding-right:10px !important;}' +
-      Q + '{position:relative !important;}' +
-      Q + '::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--wpf,0%);background:linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.28));border-radius:999px;pointer-events:none;z-index:2;transition:width 1s linear;box-shadow:inset -4px 0 0 var(--pair-color,#E2E8F0),0 0 8px 1px color-mix(in srgb,var(--pair-color,#E2E8F0) 60%,transparent);}' +
-      Q + '.row-red::after{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--accent-red,#E63946) 40%,#FFFFFF 60%) 8%,transparent),color-mix(in srgb,color-mix(in srgb,var(--accent-red,#E63946) 40%,#FFFFFF 60%) 40%,transparent));}' +
-      Q + '.row-green::after{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--accent-green,#2ED573) 40%,#FFFFFF 60%) 8%,transparent),color-mix(in srgb,color-mix(in srgb,var(--accent-green,#2ED573) 40%,#FFFFFF 60%) 40%,transparent));}' +
-      Q + '[data-wpst="FIRED"]::after{animation:wpFillPulse 0.7s ease-in-out infinite;}' +
-      Q + '[data-wpst="MISS"]::after{opacity:0.15;}' +
-      Q + '[data-wpst="NONE"]::after{width:0;box-shadow:none;}' +
-      '@keyframes wpFillPulse{0%,100%{opacity:0.7;filter:brightness(1);}50%{opacity:1;filter:brightness(1.3);}}';
-      document.head.appendChild(fs);
-    })();
-  setInterval(_wpFillTick, 1000);
-  function _wpFixColspan() {
-    try {
-      var pane = document.getElementById('wall-finder-pane');
-      if (!pane) return;
-      var els = pane.querySelectorAll('td[colspan="8"],th[colspan="8"]');
-      for (var ci = 0; ci < els.length; ci++) els[ci].setAttribute('colspan', '7');
-    } catch (e) {}
-  }
-  (function () {
-      if (!document.getElementById('wpColCss')) {
-        var cs = document.createElement('style');
-        cs.id = 'wpColCss';
-        cs.textContent = '#wall-finder-pane thead th:nth-child(8){display:none !important;}';
-        document.head.appendChild(cs);
-      }
-      function _wpColHook() {
+    (function () {
+        if (document.getElementById('wpFillCss')) return;
+        var fs = document.createElement('style');
+        fs.id = 'wpFillCss';
+        var Q = 'html body #wall-finder-pane#wall-finder-pane tr.highlight-gem';
+        fs.textContent = Q + ' > td:nth-child(1){width:28% !important;padding-left:8px !important;}' +
+        Q + ' > td:nth-child(2){width:10% !important;}' +
+        Q + ' > td:nth-child(3){width:10% !important;}' +
+        Q + ' > td:nth-child(4){width:19% !important;}' +
+        Q + ' > td:nth-child(5){width:10% !important;}' +
+        Q + ' > td:nth-child(6){width:10% !important;}' +
+        Q + ' > td:nth-child(7){width:13% !important;padding-left:2px !important;padding-right:10px !important;}' +
+        Q + '{position:relative !important;}' +
+        Q + '::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--wpf,0%);background:linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.28));border-radius:999px;pointer-events:none;z-index:2;box-shadow:inset -4px 0 0 var(--pair-color,#E2E8F0);}' +
+        Q + '.row-red::after{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--accent-red,#E63946) 40%,#FFFFFF 60%) 8%,transparent),color-mix(in srgb,color-mix(in srgb,var(--accent-red,#E63946) 40%,#FFFFFF 60%) 40%,transparent));}' +
+        Q + '.row-green::after{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--accent-green,#2ED573) 40%,#FFFFFF 60%) 8%,transparent),color-mix(in srgb,color-mix(in srgb,var(--accent-green,#2ED573) 40%,#FFFFFF 60%) 40%,transparent));}' +
+        Q + '[data-wpst="FIRED"]::after{animation:wpFillPulse 0.7s ease-in-out infinite;}' +
+        Q + '[data-wpst="MISS"]::after{opacity:0.15;}' +
+        Q + '[data-wpst="NONE"]::after{width:0;box-shadow:none;}' +
+        '@keyframes wpFillPulse{0%,100%{opacity:0.55;}50%{opacity:1;}}';
+        document.head.appendChild(fs);
+      })();
+    setInterval(_wpFillTick, 1000);
+    function _wpFixColspan() {
+      try {
         var pane = document.getElementById('wall-finder-pane');
-        if (!pane) { setTimeout(_wpColHook, 500); return; }
-        if (window._wpColObs) return;
-        window._wpColObs = new MutationObserver(function () { _wpFixColspan(); });
-        window._wpColObs.observe(pane, { childList: true, subtree: true });
+        if (!pane) return;
+        var els = pane.querySelectorAll('td[colspan="8"],th[colspan="8"]');
+        for (var ci = 0; ci < els.length; ci++) els[ci].setAttribute('colspan', '7');
+      } catch (e) {}
+    }
+    (function () {
+        if (!document.getElementById('wpColCss')) {
+          var cs = document.createElement('style');
+          cs.id = 'wpColCss';
+          cs.textContent = '#wall-finder-pane thead th:nth-child(8){display:none !important;}';
+          document.head.appendChild(cs);
+        }
         _wpFixColspan();
-      }
-      _wpColHook();
-    })();
-  setInterval(_wpFixColspan, 1000);
+      })();
   function _wpFixCols() {
     try {
       var pane = document.getElementById('wall-finder-pane');
@@ -4226,8 +4302,7 @@
         document.head.appendChild(sg);
       }
       _wpFixCols();
-    })();
-  setInterval(_wpFixCols, 1000);
+          })();
   function _ordPaint() {
     var b = document.getElementById('ordLvlBtn');
     if (!b) return;
@@ -4261,7 +4336,7 @@
     _ordPaint();
   }
   window.addEventListener('load', _ordMount);
-  setInterval(_ordMount, 1000);
+    var _ordMountTmr = setInterval(function () { _ordMount(); if (document.getElementById('ordLvlBtn')) clearInterval(_ordMountTmr); }, 500);
   var _LS = {
     W_BASE: 0.68, W_REC: 0.15, W_GAP: 0.10, W_TIME: 0.07,
     PRIOR_P: 0.75, PRIOR_K: 4, Z: 1.28,
@@ -4701,7 +4776,7 @@
     _alPaint();
   }
   window.addEventListener('load', _alMount);
-  setInterval(_alMount, 1000);
+    var _alMountTmr = setInterval(function () { _alMount(); if (document.getElementById('allLvlBtn')) clearInterval(_alMountTmr); }, 500);
   function _abPaint() {
     var b = document.getElementById('autoBestBtn');
     if (!b) return;
@@ -4733,7 +4808,7 @@
     _abPaint();
   }
   window.addEventListener('load', _abMount);
-  setInterval(_abMount, 1000);
+    var _abMountTmr = setInterval(function () { _abMount(); if (document.getElementById('autoBestBtn')) clearInterval(_abMountTmr); }, 500);
   window._champIs = function (x) {
     var ch = _champState[x.type];
     return !!(ch && ch.key === _champKey(x));
@@ -4949,25 +5024,9 @@
     renderScannerTable(revTop10, momTop10, displayDead);
     if (typeof window.tcOnTableRendered === 'function') window.tcOnTableRendered();                     }
   function _buildScannerRowsHtml(list) {
-    if (!window._allLvlOn || !list || list.length === 0 || !list[0]._lk) return _buildScannerRowsHtmlRaw(list);
-    var cs = 7;
-        var _hb = 'var(--bg-base,#000432)', _hf = '#FFFFFF';
-        try {
-          var tb0 = document.getElementById(list[0]._lk.indexOf('MOM|') === 0 ? 'peaksTableBodyMom' : 'peaksTableBodyRev');
-          var tbl0 = tb0 ? tb0.closest('table') : null;
-          var th0 = tbl0 ? tbl0.querySelector('thead tr') : null;
-          if (th0 && th0.children.length) cs = th0.children.length;
-          if (tbl0) {
-            var _hc = Array.prototype.slice.call(tbl0.querySelectorAll('thead th, thead td, thead tr, thead'));
-            if (tbl0.previousElementSibling) _hc.push(tbl0.previousElementSibling);
-            for (var _hi = 0; _hi < _hc.length; _hi++) {
-              if (!_hc[_hi].offsetHeight) continue;
-              var _hcs = window.getComputedStyle(_hc[_hi]);
-              var _hbg = _hcs.backgroundColor;
-              if (_hbg && _hbg !== 'transparent' && !/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(_hbg)) { _hb = _hbg; _hf = _hcs.color || '#FFFFFF'; break; }
-            }
-          }
-        } catch (e) {}
+      if (!window._allLvlOn || !list || list.length === 0 || !list[0]._lk) return _buildScannerRowsHtmlRaw(list);
+      var cs = 7;
+      var _hb = window.pairColorHex || '#E2E8F0', _hf = window.systemThemeHex || '#000432';
     var html = '';
     var i = 0, k, grp, isOpen, total;
     while (i < list.length) {
@@ -5054,61 +5113,76 @@
               } catch (e) {}
             }
             function _paintLvlHdrs(tb) {
-              if (!tb) return;
-              _mergeLvlHdr(tb);
-              var bg = window.pairColorHex || '#E2E8F0';
-        var fg = window.systemThemeHex || '#000432';
-        var els = tb.querySelectorAll('tr.lvlHdr, tr.lvlHdr td, tr.lvlHdr span');
-        for (var i = 0; i < els.length; i++) {
-          var el = els[i];
-          el.style.setProperty('background', bg, 'important');
-          el.style.setProperty('color', fg, 'important');
-          el.style.setProperty('-webkit-text-fill-color', fg, 'important');
-          if (el.tagName === 'SPAN') el.style.setProperty('border-color', fg, 'important');
-                if (el.tagName === 'TD') el.style.setProperty('text-align', 'center', 'important');
-        }
-      }
-      function draw() {
-    if (timesArray.length === 0) return;
-    const viewW = viewport.clientWidth; const viewH = viewport.clientHeight;
-    const scrollL = hScroll.scrollLeft; const scrollT = 0;
-    canvas.width = viewW; canvas.height = viewH;
-    ctx.fillStyle = window.CHART_BG || window.systemThemeHex || "#000432"; ctx.fillRect(0, 0, viewW, viewH);
-    var dynamicFontSize = Math.max(8, Math.floor(CELL_H * 0.72));
-    ctx.font = `800 ${dynamicFontSize}px 'Inter', 'JetBrains Mono'`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var startCol = Math.floor(scrollL / CELL_W);
-    var endCol = Math.ceil((scrollL + viewW) / CELL_W);
-    var centerOff = Math.round(CELL_W / 2);
-    var nowUtc = Math.floor(Date.now() / 1000);
-    var pcIndex = nowUtc - currentStartTsUtc;
-    var currentIndex = Math.max(pcIndex, window._liveMaxIndex || 0);
-    for (var c = startCol; c <= endCol; c++) {
-      var x = Math.round((c * CELL_W) - scrollL);
-      if (matrixData[c]) {
-        for (var r = 0; r < CYCLE; r++) {
-          var totalSec = (c * CYCLE) + r - _cycleOff();
-          // Render if it has a real price OR if it's a historical missing tick (past the current time)
-          if (matrixData[c][r] && (matrixData[c][r].p !== -1.0 || totalSec <= currentIndex)) {
-            var y = Math.round((r * CELL_H) - scrollT);
-            var d = matrixData[c][r];
-            var label = 'X' + d.s;
-            ctx.globalAlpha = 1.0; // Solid visibility for everything
-            if (d.s > 0) {
-              // Color active streaks
-              ctx.fillStyle = d.c === 'G' ? (window.accentGreenHex || "#2ED573") : (window.accentRedHex || "#E63946");
-            } else {
-              // New Off-White for historical X0
-              ctx.fillStyle = "#E2E8F0";
-            }
-            if (!(d.s > 0) && window.pairColorHex) { ctx.fillStyle = window.pairColorHex; }
-            _pillFill(ctx, x + 1, y + 1, CELL_W - 2, CELL_H - 1);
-            ctx.fillStyle = window.systemThemeHex || "#000432";
-            ctx.fillText(label, x + centerOff, y + (CELL_H/2) + 1);
-          }
-        }
-      }
-    }
+                          if (!tb) return;
+                          _mergeLvlHdr(tb);
+                          var bg = window.pairColorHex || '#E2E8F0';
+                          var fg = window.systemThemeHex || '#000432';
+                          var els = tb.querySelectorAll('tr.lvlHdr, tr.lvlHdr td, tr.lvlHdr span');
+                          for (var i = 0; i < els.length; i++) {
+                            var el = els[i];
+                            el.style.setProperty('background', bg, 'important');
+                            el.style.setProperty('color', fg, 'important');
+                            el.style.setProperty('-webkit-text-fill-color', fg, 'important');
+                            if (el.tagName === 'SPAN') el.style.setProperty('border-color', fg, 'important');
+                            if (el.tagName === 'TD') el.style.setProperty('text-align', 'center', 'important');
+                          }
+                          window._wpGemRows = document.querySelectorAll('#wall-finder-pane tr.highlight-gem[data-k]');
+                          _wpFixColspan();
+                        }
+                  var _pillSpriteCache = { key: '', G: null, R: null, N: null };
+                  function _getPillSprites(w, h, colG, colR, colN) {
+                    var rw = Math.max(1, Math.round(w)), rh = Math.max(1, Math.round(h));
+                    var k = rw + 'x' + rh + '|' + colG + '|' + colR + '|' + colN;
+                    if (_pillSpriteCache.key === k) return _pillSpriteCache;
+                    function _mk(fill) {
+                      var cv = document.createElement('canvas');
+                      cv.width = rw; cv.height = rh;
+                      var cx = cv.getContext('2d');
+                      cx.fillStyle = fill;
+                      window._pillFill(cx, 0, 0, rw, rh);
+                      return cv;
+                    }
+                    _pillSpriteCache = { key: k, G: _mk(colG), R: _mk(colR), N: _mk(colN) };
+                    return _pillSpriteCache;
+                  }
+                  function draw() {
+                if (timesArray.length === 0) return;
+                const viewW = viewport.clientWidth; const viewH = viewport.clientHeight;
+                const scrollL = hScroll.scrollLeft; const scrollT = 0;
+                if (canvas.width !== viewW) canvas.width = viewW;
+                if (canvas.height !== viewH) canvas.height = viewH;
+                ctx.fillStyle = window.CHART_BG || window.systemThemeHex || "#000432"; ctx.fillRect(0, 0, viewW, viewH);
+                var dynamicFontSize = Math.max(8, Math.floor(CELL_H * 0.72));
+                ctx.font = `800 ${dynamicFontSize}px 'Inter', 'JetBrains Mono'`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                var startCol = Math.floor(scrollL / CELL_W);
+                var endCol = Math.ceil((scrollL + viewW) / CELL_W);
+                var centerOff = Math.round(CELL_W / 2);
+                var nowUtc = Math.floor(Date.now() / 1000);
+                var pcIndex = nowUtc - currentStartTsUtc;
+                var currentIndex = Math.max(pcIndex, window._liveMaxIndex || 0);
+                var colG = window.accentGreenHex || "#2ED573";
+                var colR = window.accentRedHex || "#E63946";
+                var colN = window.pairColorHex || "#E2E8F0";
+                var sprites = _getPillSprites(CELL_W - 2, CELL_H - 1, colG, colR, colN);
+                var halfCellH = (CELL_H / 2) + 1;
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = window.systemThemeHex || "#000432";
+                for (var c = startCol; c <= endCol; c++) {
+                  var x = Math.round((c * CELL_W) - scrollL);
+                  var colData = matrixData[c];
+                  if (colData) {
+                    for (var r = 0; r < CYCLE; r++) {
+                      var d = colData[r];
+                      if (d && (d.p !== -1.0 || ((c * CYCLE) + r - _cycleOff()) <= currentIndex)) {
+                        var y = Math.round((r * CELL_H) - scrollT);
+                        var sp = (d.s > 0) ? (d.c === 'G' ? sprites.G : sprites.R) : sprites.N;
+                        ctx.drawImage(sp, x + 1, y + 1);
+                        ctx.fillText('X' + d.s, x + centerOff, y + halfCellH);
+                      }
+                    }
+                  }
+                }
     if (highlightRow >= 0) {
       const yPos = Math.round((highlightRow * CELL_H) - scrollT);
       if (yPos > -CELL_H && yPos < viewH) {
@@ -5220,16 +5294,12 @@
             }
           }
           // draw fulfilled box (solid, pulsing glow)
-          if (b.hitCol >= 0) {
-            const xPos = Math.round((b.hitCol * CELL_W) - scrollL);
-            const yPos = Math.round((highlightRow * CELL_H) - scrollT);
-            if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
-              ctx.save();
-              ctx.shadowColor = "#FFFFFF"; ctx.shadowBlur = 10 + 14 * _pulse;
-              ctx.globalAlpha = 0;
-              ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2;
-              ctx.strokeRect(xPos, yPos, CELL_W, CELL_H);
-              ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+                    if (b.hitCol >= 0) {
+                      const xPos = Math.round((b.hitCol * CELL_W) - scrollL);
+                      const yPos = Math.round((highlightRow * CELL_H) - scrollT);
+                      if (xPos >= -CELL_W && xPos <= viewW && yPos >= -CELL_H && yPos <= viewH) {
+                        ctx.save();
+                        ctx.globalAlpha = 1;
               {
                 var _tEl = ((Date.now() / 1000) - currentStartTsUtc + _cycleOff()) - b.hitCol * CYCLE;
                 var _tFr = Math.max(0, Math.min(1, _tEl / CYCLE));
@@ -5341,9 +5411,11 @@
   let _futureBox3Col = -1;
   let _pulseTimer = null;
   function _startPulse() {
-    if (_pulseTimer) return;
-    _pulseTimer = setInterval(() => { if (_armed) requestDraw(); }, 50);
-  }
+      if (_pulseTimer) return;
+      _pulseTimer = setInterval(() => {
+        if (_armed && (_neonBox1Col >= 0 || _neonBox2Col >= 0 || _neonBox3Col >= 0)) requestDraw();
+      }, 1000);
+    }
   function _stopPulse() {
     if (_pulseTimer) { clearInterval(_pulseTimer); _pulseTimer = null; }
   }
