@@ -4381,7 +4381,8 @@
     var nowUtc = Math.floor(Date.now() / 1000);
     return (((x.r - (nowUtc % c)) % c) + c) % c;
   }
-  window.toggleLvlExp = function (k) {
+  if (typeof window._lvlOnly === 'undefined') window._lvlOnly = 1;
+    window.toggleLvlExp = function (k) {
     if (!window._lvlsExp) window._lvlsExp = {};
     window._lvlsExp[k] = !window._lvlsExp[k];
     try { renderFilteredTable(); } catch (e) {}
@@ -4397,9 +4398,10 @@
       x = list[i];
       if (_hiddenPairs.has(x.pair)) continue;
       if (r0OnlyMode && x.r !== 0) continue;
-      if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
-      pool.push(x);
-      pk = x.s1 + '|' + x.pair;
+            if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
+            if (window._lvlOnly && +x.s1 !== +window._lvlOnly) continue;
+            pool.push(x);
+            pk = x.s1 + '|' + x.pair;
       if (bestPair[pk] === undefined || x.pct > bestPair[pk]) bestPair[pk] = x.pct;
     }
     var byPairLvl = {};
@@ -4455,7 +4457,7 @@
     lvlKeys.forEach(function (k) {
         var grp = byLvl[k];
         var ek = tg + '|' + k;
-        var lim = window._lvlsExp[ek] ? grp.length : 1;
+        var lim = (window._lvlOnly || window._lvlsExp[ek]) ? grp.length : 1;
         var q;
         window._lvlsCnt[ek] = grp.length;
         for (q = 0; q < lim; q++) {
@@ -4871,11 +4873,10 @@
       while (i < list.length && list[i]._lk === k) { grp.push(list[i]); i++; }
       isOpen = !!(window._lvlsExp && window._lvlsExp[k]);
       total = (window._lvlsCnt && window._lvlsCnt[k]) || grp.length;
-      html += '<tr class="lvlHdr" onclick="toggleLvlExp(\'' + k + '\')" style="cursor:pointer;background:var(--bg-base,#000432) !important;">' +
+      html += '<tr class="lvlHdr"' + (window._lvlOnly ? '' : ' onclick="toggleLvlExp(\'' + k + '\')"') + ' style="cursor:' + (window._lvlOnly ? 'default' : 'pointer') + ';background:var(--bg-base,#000432) !important;">' +
       '<td colspan="' + cs + '" style="padding:4px 6px;background:var(--bg-base,#000432) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:11px;font-weight:800;text-align:left;">' +
       'X' + grp[0].s1 + '-X' + grp[0].s2 +
-      '<span style="float:right;background:var(--bg-base,#000432) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;border:1px solid #FFFFFF;padding:0 8px;font-size:10px;font-weight:800;">' +
-      (isOpen ? 'COLLAPSE ▲ (' : 'EXPAND ▼ (') + total + ')</span></td></tr>';
+      (window._lvlOnly ? '' : '<span style="float:right;background:var(--bg-base,#000432) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;border:1px solid #FFFFFF;padding:0 8px;font-size:10px;font-weight:800;">' + (isOpen ? 'COLLAPSE ▲ (' : 'EXPAND ▼ (') + total + ')</span>') + '</td></tr>';
       html += _buildScannerRowsHtmlRaw(grp);
     }
     return html;
@@ -12868,6 +12869,7 @@
       var S = window.LVP = { ready: true, exp: {}, cnt: {}, init: {}, prevLevel: null };
       if (typeof window._allLvlOn === 'undefined') window._allLvlOn = false;
       if (typeof window._allLvlOrd === 'undefined') window._allLvlOrd = true;
+            if (typeof window._lvlOnly === 'undefined') window._lvlOnly = 1;
       var tagOf = (typeof WeakMap === 'function') ? new WeakMap() : null;
       var instRST = false, instRows = false, origRST = null, origRows = null;
       function el(id) { return document.getElementById(id); }
@@ -12907,6 +12909,7 @@
           if (hidden(x.pair)) continue;
           if (r0() && x.r !== 0) continue;
           if ((x.pct || 0) < mp) continue;
+                    if (window._lvlOnly && +x.s1 !== +window._lvlOnly) continue;
           lk = tag + '|' + x.s1;
           if (!by[lk]) { by[lk] = []; keys.push(lk); }
           by[lk].push(x);
@@ -12927,7 +12930,7 @@
         var out = [];
         keys.forEach(function (k) {
             var arr = by[k].slice(0, 10), j;
-            if (!S.exp[k]) arr = arr.slice(0, 1);
+            if (!S.exp[k] && !window._lvlOnly) arr = arr.slice(0, 1);
             for (j = 0; j < arr.length; j++) out.push(arr[j]);
           });
         if (tagOf) tagOf.set(out, tag);
@@ -12965,11 +12968,10 @@
             grp = [];
             while (i < list.length && (tag + '|' + list[i].s1) === k) { grp.push(list[i]); i++; }
             isOpen = !!S.exp[k];
-            html += '<tr class="lvlHdr" onclick="window.LVP.toggle(\'' + k + '\')" style="cursor:pointer;background:var(--bg-base,#000432) !important;">' +
+            html += '<tr class="lvlHdr"' + (window._lvlOnly ? '' : ' onclick="window.LVP.toggle(\'' + k + '\')"') + ' style="cursor:' + (window._lvlOnly ? 'default' : 'pointer') + ';background:var(--bg-base,#000432) !important;">' +
             '<td colspan="' + cs + '" style="padding:4px 6px;background:var(--bg-base,#000432) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:11px;font-weight:800;text-align:left;">' +
             'X' + grp[0].s1 + '-X' + grp[0].s2 +
-            '<span style="float:right;background:var(--bg-base,#000432) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;border:1px solid #FFFFFF;padding:0 8px;font-size:10px;font-weight:800;">' +
-            (isOpen ? 'COLLAPSE ▲' : 'EXPAND ▼') + '</span></td></tr>';
+            (window._lvlOnly ? '' : '<span style="float:right;background:var(--bg-base,#000432) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;border:1px solid #FFFFFF;padding:0 8px;font-size:10px;font-weight:800;">' + (isOpen ? 'COLLAPSE ▲' : 'EXPAND ▼') + '</span>') + '</td></tr>';
             html += origRows.call(this, grp);
           }
           return html;
