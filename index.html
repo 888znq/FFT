@@ -197,7 +197,8 @@
   #tcWrap > div[style*="pointer-events"]{border-radius:14px !important;}
   #bootLogBox,#evtLogBody{border-radius:18px !important;}
   .app3-list-row,.idx-cell{border:1px solid var(--bg-base) !important;border-radius:999px !important;overflow:hidden;}
-  #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-radius:999px !important;border:none !important;margin:3px 6px;}
+  #wall-finder-pane div[style*="letter-spacing:0.4em"]{border-radius:999px !important;border:none !important;margin:3px 6px !important;}
+    #wall-finder-pane .ctrl-row{padding:3px 6px 0 6px !important;border-bottom:none !important;}
   #peaksTableBodyRev td[colspan],#peaksTableBodyMom td[colspan]{border-radius:999px !important;border:none !important;}
     #peaksTableBodyRev tr.lvlHdr > td[colspan],#peaksTableBodyMom tr.lvlHdr > td[colspan]{border-top:2px solid var(--bg-base,#000432) !important;box-shadow:0 -3px 0 var(--bg-base,#000432) !important;}
   table{border-collapse:separate !important;border-spacing:0 3px !important;}
@@ -284,7 +285,12 @@
   html body div:has(> #pairSelGrid) #pairSelGrid > button{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}
   html body #pairPickerModal #pairPickerGrid > button{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}
   html body #pairPickerModal #pairPickerGrid > button[data-sel="1"],html body div:has(> #pairSelGrid) #pairSelGrid > button[data-sel="1"]{background:var(--pcol) !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;border-color:transparent !important;}
-  /* ===== DIM / BRIGHT STATE: dim = not fetched / not selected, bright = fetched / selected ===== */
+  /* ===== UNIFORM 1px SEPARATORS: boot tiles + pair popups (real borders snap to whole pixels) ===== */
+    html body #bootOverlay#bootOverlay #bootPairGrid#bootPairGrid,html body #pairPickerModal#pairPickerModal #pairPickerGrid#pairPickerGrid,html body div:has(> #pairSelGrid) #pairSelGrid#pairSelGrid{gap:0 !important;row-gap:0 !important;column-gap:0 !important;}
+    html body #bootOverlay#bootOverlay #bootPairGrid#bootPairGrid > div[data-pc],html body #pairPickerModal#pairPickerModal #pairPickerGrid#pairPickerGrid > button,html body div:has(> #pairSelGrid) #pairSelGrid#pairSelGrid > button{box-sizing:border-box !important;border:0 solid #000432 !important;border-right-width:1px !important;border-bottom-width:1px !important;box-shadow:none !important;outline:none !important;margin:0 !important;}
+    html body #pairPickerModal#pairPickerModal > div:nth-child(2) > button[onclick*="SelectAll"],html body div:has(> #pairSelGrid) > div:nth-child(2) > button[onclick*="SelectAll"]{border:0 solid #000432 !important;border-bottom-width:1px !important;box-shadow:none !important;}
+    html body #bootOverlay#bootOverlay #bootLogBox{border-top:0 !important;}
+    /* ===== DIM / BRIGHT STATE: dim = not fetched / not selected, bright = fetched / selected ===== */
   html body #bootOverlay #bootPairGrid > div[data-pc]:not([data-st="done"]),html body #pairPickerModal #pairPickerGrid > button:not([data-sel="1"]),html body div:has(> #pairSelGrid) #pairSelGrid > button:not([data-sel="1"]){opacity:0.5 !important;box-shadow:none !important;}
   html body #bootOverlay #bootPairGrid > div[data-pc][data-st="done"],html body #pairPickerModal #pairPickerGrid > button[data-sel="1"],html body div:has(> #pairSelGrid) #pairSelGrid > button[data-sel="1"]{opacity:1 !important;box-shadow:none !important;}
   #app3-modal button,#numpadModal button,#selPopupModal button{border-radius:6px !important;}
@@ -421,7 +427,22 @@
   html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row *{font-size:10px !important;}
   html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .ctrl-input,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row select,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #autoBestBtn,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #r0OnlyBtn,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #scanTimerDisplay{height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;}
     </style>
-  </head>
+  <style id="pcPopupFix">
+    html.pc-on :is(#evtLogModal,#history-modal,#hidePairsModal,#swModal,#specialBtnModal,#personalize-modal,#pairHubPanel,#numpadModal,#selPopupModal,#app3-modal){background:var(--pair-color) !important;}
+    html.pc-on body:not(#pcx) :is(#evtLogModal,#history-modal,#hidePairsModal,#swModal,#specialBtnModal,#personalize-modal,#pairHubPanel,#numpadModal,#selPopupModal,#app3-modal) > div:first-child{background:color-mix(in srgb,#000432 18%,var(--pair-color)) !important;}
+    html.pc-on :is(#evtLogModal,#history-modal,#hidePairsModal,#swModal,#specialBtnModal,#personalize-modal,#pairHubPanel,#numpadModal,#selPopupModal,#app3-modal) ::-webkit-scrollbar-track{background:color-mix(in srgb,#000432 12%,var(--pair-color)) !important;}
+    :where(html.pc-on) :is(#evtLogModal,#history-modal,#hidePairsModal,#swModal,#specialBtnModal,#personalize-modal,#pairHubPanel,#numpadModal,#selPopupModal,#app3-modal) :where(button){background:color-mix(in srgb,#000432 16%,var(--pair-color)) !important;}
+    :where(html.pc-on) :is(#evtLogModal,#history-modal,#hidePairsModal,#swModal,#specialBtnModal,#personalize-modal,#pairHubPanel,#numpadModal,#selPopupModal,#app3-modal) :where(input,select,textarea){background:color-mix(in srgb,#FFFFFF 30%,var(--pair-color)) !important;}
+    html.pc-on #tcWrap > div[style*="pointer-events"]{background:var(--pair-color) !important;border-color:var(--bg-base) !important;}
+  </style>
+    <style id="wpGapFix">
+    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect){height:25px !important;min-height:25px !important;max-height:25px !important;padding:0 !important;margin:0 !important;border:0 !important;gap:0 !important;background:#000432 !important;box-sizing:border-box !important;}
+    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect) > :has(#sessionLengthSelect),html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect) .custom-select-wrapper{height:100% !important;min-height:0 !important;max-height:none !important;margin:0 !important;border:0 !important;}
+    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .table-wrapper,html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .table-wrapper > div{margin:0 !important;padding:0 !important;gap:0 !important;row-gap:0 !important;}
+    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane div[style*="letter-spacing:0.4em"]{margin:0 !important;border:0 !important;border-top:1px solid #000432 !important;box-shadow:none !important;outline:none !important;}
+    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane table{border-top:0 !important;border-spacing:0 1px !important;margin:0 !important;background:#000432 !important;}
+      </style>
+    </head>
   <body>
     <script>
   window._pillPath=function(c,x,y,w,h){var r=Math.max(0,Math.min(Math.abs(w),Math.abs(h))/2);c.beginPath();if(c.roundRect){c.roundRect(x,y,w,h,r);}else{var x2=x+w,y2=y+h;c.moveTo(x+r,y);c.arcTo(x2,y,x2,y2,r);c.arcTo(x2,y2,x,y2,r);c.arcTo(x,y2,x,y,r);c.arcTo(x,y,x2,y,r);c.closePath();}};
@@ -681,6 +702,30 @@
   html body div#trade-console#trade-console#trade-console > div > div:has(> #scanMin){border-radius:0 0 0 16px !important;}
   html body div#trade-console#trade-console#trade-console > div > div:has(> #scanMax){border-radius:0 0 16px 0 !important;}
   html:has(#tcToggleBtn[data-mode="TICK"]) body #floatTradePill{display:none !important;}
+    html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:not(:has(#sessionLengthSelect)){display:none !important;}
+    html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect){display:flex !important;flex-wrap:nowrap !important;}
+    html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row > *:not(:has(#sessionLengthSelect)):not(#sessionLengthSelect){display:none !important;}
+    html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row > :has(#sessionLengthSelect){display:flex !important;flex:1 1 100% !important;width:100% !important;min-width:0 !important;max-width:100% !important;}
+      html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect){height:25px !important;min-height:25px !important;max-height:25px !important;align-items:stretch !important;padding:0 0 1px 0 !important;margin:0 !important;gap:0 !important;border:none !important;box-sizing:border-box !important;}
+        html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect) > :has(#sessionLengthSelect){margin:0 !important;padding:0 !important;height:100% !important;border:none !important;}
+        html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect) .custom-select-wrapper{border:none !important;border-radius:0 !important;margin:0 !important;padding:0 8px !important;height:100% !important;min-height:0 !important;}
+          html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row:has(#sessionLengthSelect){height:26px !important;min-height:26px !important;max-height:26px !important;padding:0 0 1px 0 !important;background:#000432 !important;}
+          html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane div[style*="letter-spacing:0.4em"]{margin:0 !important;}
+                    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane div[style*="letter-spacing:0.4em"]{margin:0 !important;border-radius:0 !important;}
+                    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane table{width:100% !important;margin:0 !important;border-spacing:0 1px !important;}
+                    html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane tbody > tr > td{border-radius:0 !important;}
+                    html body div#trade-console#trade-console#trade-console#trade-console#trade-console#trade-console#trade-console{border-top:1px solid #000432 !important;}
+          html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane table{border-spacing:0 1px !important;background:#000432 !important;}
+          html body div#trade-console#trade-console#trade-console#trade-console#trade-console#trade-console{gap:1px !important;background:#000432 !important;}
+          html body div#trade-console#trade-console#trade-console#trade-console#trade-console#trade-console > div{gap:1px !important;margin:0 !important;}
+      html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper{display:flex !important;align-items:center !important;justify-content:center !important;gap:8px !important;height:100% !important;min-height:0 !important;padding:0 10px !important;box-sizing:border-box !important;text-align:center !important;}
+      html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper > *:not(svg){flex:0 1 auto !important;width:auto !important;max-width:none !important;height:auto !important;padding:0 !important;margin:0 !important;font-size:13px !important;font-weight:800 !important;letter-spacing:0.05em !important;line-height:1 !important;text-align:center !important;text-align-last:center !important;white-space:nowrap !important;overflow:visible !important;text-overflow:clip !important;}
+      html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper svg{position:static !important;flex:0 0 10px !important;width:10px !important;height:10px !important;margin:0 !important;}
+      html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane #sessionLengthSelect{width:100% !important;height:100% !important;padding:0 !important;font-size:13px !important;font-weight:800 !important;text-align:center !important;text-align-last:center !important;-webkit-appearance:none !important;appearance:none !important;}
+    html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper,html:not(.ctrl-show) body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row .custom-select-wrapper > *{width:100% !important;max-width:100% !important;border-radius:14px 14px 0 0 !important;}
+        html body div#trade-console > div:not(:has(*)){display:none !important;margin:0 !important;padding:0 !important;height:0 !important;min-height:0 !important;border:0 !important;}
+        html body div#trade-console{row-gap:1px !important;}
+        html body div#trade-console > div:has(#tcToggleBtn){margin:0 !important;}
             </style>
             <script>(function(){
       var _sigLast = '';
@@ -2812,7 +2857,7 @@
         var _bb = (st === 'err') ? 'transparent' : (_bon ? _bu : 'var(--bg-base)');
         var _bf = (st === 'err') ? '#E63946' : (_bon ? '#000432' : '#FFFFFF');
         var _bd = (st === 'err') ? '#E63946' : (_bon ? _bu : '#444');
-        return `<div data-pc="1" data-st="${st}" style="--pbg:${_bu};--pfg:#000432;--pbc:${_bu};padding:6px 4px;border:1px solid ${_bd};background:${_bb};border-radius:2px;color:${_bf};opacity:1;text-align:center;white-space:nowrap;overflow:hidden;font-size:10px;font-weight:800;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;">${icon} ${name}</div>`;
+        return `<div data-pc="1" data-st="${st}" style="--pbg:${_bu};--pfg:#000432;--pbc:${_bu};box-sizing:border-box;padding:6px 4px;border:0 solid #000432;border-right-width:1px;border-bottom-width:1px;background:${_bb};border-radius:0;color:${_bf};opacity:1;text-align:center;white-space:nowrap;overflow:hidden;font-size:10px;font-weight:800;letter-spacing:0.3px;font-family:'JetBrains Mono',monospace;">${icon} ${name}</div>`;
       }).join('');
   }
   function bootDone() {
@@ -4150,7 +4195,34 @@
       if (!document.getElementById('wpSegCss')) {
         var sg = document.createElement('style');
         sg.id = 'wpSegCss';
-        sg.textContent = 'html body #wall-finder-pane#wall-finder-pane table{table-layout:fixed !important;width:100% !important;margin:0 !important;}';
+        var SP = 'html body #wall-finder-pane#wall-finder-pane ';
+                sg.textContent = SP + 'table{table-layout:fixed !important;width:100% !important;margin:0 !important;}' +
+                SP + 'div[style*="letter-spacing:0.4em"]{border:none !important;border-radius:999px !important;margin:1px 0 !important;box-shadow:none !important;}' +
+                        SP + 'table{border-spacing:0 1px !important;}' +
+                                SP + 'tr.row-red > td:not(:last-child),' + SP + 'tr.row-green > td:not(:last-child){border-right:1px solid #000432 !important;box-shadow:none !important;}' +
+                                        SP + 'table{border-top:1px solid #000432 !important;}' +
+                                        SP + 'div[style*="letter-spacing:0.4em"]{border-bottom:1px solid #000432 !important;}' +
+                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' .ctrl-row:has(#sessionLengthSelect){height:26px !important;min-height:26px !important;max-height:26px !important;padding:0 !important;margin:0 !important;border:none !important;border-bottom:1px solid #000432 !important;box-sizing:border-box !important;gap:0 !important;background:#000432 !important;}' +
+                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' .ctrl-row:has(#sessionLengthSelect) .custom-select-wrapper{border:none !important;margin:0 !important;height:100% !important;box-shadow:none !important;}' +
+                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' div[style*="letter-spacing:0.4em"]{margin:0 !important;border:none !important;box-shadow:none !important;outline:none !important;}' +
+                                                'html body ' + '#trade-console'.repeat(9) + '{gap:1px !important;row-gap:1px !important;column-gap:1px !important;background:#000432 !important;border-top:1px solid #000432 !important;}' +
+                                                'html body ' + '#trade-console'.repeat(9) + ' > div{gap:1px !important;row-gap:1px !important;column-gap:1px !important;margin:0 !important;}' +
+                                                'html body ' + '#trade-console'.repeat(9) + ' > div > *{margin:0 !important;border:0 !important;outline:0 !important;box-shadow:none !important;}' +
+                                                        'html body ' + '#wall-finder-pane'.repeat(9) + '{gap:0 !important;row-gap:0 !important;}' +
+                                                        'html body ' + '#wall-finder-pane'.repeat(9) + ' > *{margin-top:0 !important;margin-bottom:0 !important;}' +
+                                                        'html body ' + '#wall-finder-pane'.repeat(9) + ' div:has(> div[style*="letter-spacing:0.4em"]),html body ' + '#wall-finder-pane'.repeat(9) + ' div:has(> table){padding-top:0 !important;margin-top:0 !important;gap:0 !important;row-gap:0 !important;}' +
+                                                        'html body ' + '#wall-finder-pane'.repeat(9) + ' .ctrl-row:has(#sessionLengthSelect) + *{margin-top:0 !important;padding-top:0 !important;}' +
+                                                        'html body ' + '#wall-finder-pane'.repeat(9) + ' div[style*="letter-spacing:0.4em"]{border-top:none !important;margin-top:0 !important;}' +
+                                                                                                        'html body ' + '#wall-finder-pane'.repeat(9) + ' div[style*="letter-spacing:0.4em"]{border-bottom:1px solid #000432 !important;}' +
+                        SP + '.ctrl-row{gap:1px !important;}' +
+                        SP + '.ctrl-row > *{margin:0 !important;}' +
+                SP + 'tr.lvlHdr > td[colspan]{border-top:1px solid #000432 !important;border-bottom:1px solid #000432 !important;box-shadow:none !important;}' +
+                SP + '#peaksTableBodyRev tr.lvlHdr > td[colspan],' + SP + '#peaksTableBodyMom tr.lvlHdr > td[colspan]{border-top:1px solid #000432 !important;border-bottom:1px solid #000432 !important;box-shadow:none !important;}' +
+                                'html body ' + '#wall-finder-pane'.repeat(9) + ' tr.lvlMergedNext > td{border-top:1px solid #000432 !important;}' +
+                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' tr.lvlHdr[style*="display: none"] + tr > td,html body ' + '#wall-finder-pane'.repeat(9) + ' tr.lvlHdr[style*="display:none"] + tr > td{border-top:1px solid #000432 !important;}' +
+                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' table > tbody > tr:first-child > td{border-top:1px solid #000432 !important;}' +
+                                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' table{border-spacing:0 !important;}' +
+                                                                'html body ' + '#wall-finder-pane'.repeat(9) + ' tr.row-red > td,html body ' + '#wall-finder-pane'.repeat(9) + ' tr.row-green > td{border-bottom:1px solid #000432 !important;}';
         document.head.appendChild(sg);
       }
       _wpFixCols();
@@ -4177,7 +4249,13 @@
     b.type = 'button';
     b.textContent = 'ORD';
     b.title = 'With LVLS: list levels in order X1, X2, X3...';
-    b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+        b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+        if (!document.getElementById('lvlBtnHideCss')) {
+          var _hs1 = document.createElement('style');
+          _hs1.id = 'lvlBtnHideCss';
+          _hs1.textContent = 'html:not(.ctrl-show) #allLvlBtn,html:not(.ctrl-show) #ordLvlBtn{display:none !important;}html.ctrl-show #allLvlBtn,html.ctrl-show #ordLvlBtn{display:flex !important;}';
+          document.head.appendChild(_hs1);
+        }
     b.addEventListener('click', function (e) { e.stopPropagation(); _ordToggle(); });
     lv.parentNode.insertBefore(b, lv.nextSibling);
     _ordPaint();
@@ -4605,7 +4683,13 @@
     b.type = 'button';
     b.textContent = 'LVLS';
     b.title = 'Level ALL: show the best % rows of every level at once';
-    b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+        b.style.cssText = 'flex:1 1 24% !important;height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;align-items:center !important;justify-content:center !important;padding:0 2px !important;margin:0 !important;font-size:10px !important;font-weight:800 !important;cursor:pointer;font-family:inherit;border:1px solid #000432;';
+        if (!document.getElementById('lvlBtnHideCss')) {
+          var _hs2 = document.createElement('style');
+          _hs2.id = 'lvlBtnHideCss';
+          _hs2.textContent = 'html:not(.ctrl-show) #allLvlBtn,html:not(.ctrl-show) #ordLvlBtn{display:none !important;}html.ctrl-show #allLvlBtn,html.ctrl-show #ordLvlBtn{display:flex !important;}';
+          document.head.appendChild(_hs2);
+        }
     b.addEventListener('click', function (e) { e.stopPropagation(); _alToggle(); });
     best.parentNode.insertBefore(b, best.nextSibling);
     if (window._allLvlOn) {
@@ -4936,9 +5020,43 @@
         _paintLvlHdrs(revTbody);
         _paintLvlHdrs(momTbody);
       }
-      function _paintLvlHdrs(tb) {
-        if (!tb) return;
-        var bg = window.pairColorHex || '#E2E8F0';
+      function _mergeLvlHdr(tb) {
+              try {
+                var tbl = tb.closest('table');
+                var h = tbl ? tbl.previousElementSibling : null;
+                if (!h || (h.getAttribute('style') || '').indexOf('letter-spacing:0.4em') < 0) {
+                  h = (tbl && tbl.parentNode) ? tbl.parentNode.previousElementSibling : null;
+                }
+                if (!h || (h.getAttribute('style') || '').indexOf('letter-spacing:0.4em') < 0) return;
+                var rows = tb.querySelectorAll('tr.lvlHdr');
+                var merge = rows.length === 1 && !!window._lvlOnly;
+                for (var mi = 0; mi < rows.length; mi++) {
+                  if (merge) rows[mi].style.setProperty('display', 'none', 'important');
+                  else rows[mi].style.removeProperty('display');
+                                  }
+                                  var _mOld = tb.querySelectorAll('tr.lvlMergedNext');
+                                  for (var oi = 0; oi < _mOld.length; oi++) _mOld[oi].classList.remove('lvlMergedNext');
+                                  if (merge && rows[0].nextElementSibling) rows[0].nextElementSibling.classList.add('lvlMergedNext');
+                var sp = h.querySelector('.lvlMerge');
+                if (merge) {
+                  var c0 = rows[0].cells && rows[0].cells[0] ? rows[0].cells[0] : null;
+                  var txt = (c0 && c0.childNodes[0]) ? c0.childNodes[0].textContent : '';
+                  if (!sp) {
+                    sp = document.createElement('span');
+                    sp.className = 'lvlMerge';
+                    sp.style.cssText = 'letter-spacing:0.05em;margin-left:10px;';
+                    h.appendChild(sp);
+                  }
+                  if (sp.textContent !== txt) sp.textContent = txt;
+                } else if (sp) {
+                  sp.parentNode.removeChild(sp);
+                }
+              } catch (e) {}
+            }
+            function _paintLvlHdrs(tb) {
+              if (!tb) return;
+              _mergeLvlHdr(tb);
+              var bg = window.pairColorHex || '#E2E8F0';
         var fg = window.systemThemeHex || '#000432';
         var els = tb.querySelectorAll('tr.lvlHdr, tr.lvlHdr td, tr.lvlHdr span');
         for (var i = 0; i < els.length; i++) {
@@ -6169,7 +6287,7 @@
         var bg = sel ? pc : 'var(--bg-base)';
         var fg = sel ? '#000432' : '#FFFFFF';
         var bd = sel ? pc : '#444';
-        return '<button onclick="pairPickerToggle(\'' + p + '\', this)"' + (sel ? ' data-sel="1"' : '') + ' style="--pcol:' + pc + ';background:' + bg + ';color:' + fg + ';border:1px solid ' + bd + ';padding:6px 4px;font-size:10px;font-weight:800;cursor:pointer;border-radius:2px;letter-spacing:0.3px;font-family:\'JetBrains Mono\',monospace;transition:all 0.1s;" data-pair="' + p + '">' + name + '</button>';
+        return '<button onclick="pairPickerToggle(\'' + p + '\', this)"' + (sel ? ' data-sel="1"' : '') + ' style="--pcol:' + pc + ';background:' + bg + ';color:' + fg + ';box-sizing:border-box;border:0 solid #000432;border-right-width:1px;border-bottom-width:1px;padding:6px 4px;font-size:10px;font-weight:800;cursor:pointer;border-radius:0;letter-spacing:0.3px;font-family:\'JetBrains Mono\',monospace;transition:all 0.1s;" data-pair="' + p + '">' + name + '</button>';
       }).join('');
   }
   function _renderPairGridOld(filter) {
