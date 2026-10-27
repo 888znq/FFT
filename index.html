@@ -3484,7 +3484,7 @@
   // ── OLYMPTRADE PAIR BRIDGE: copies pair to clipboard + postMessage sync ──
   function manualSelectSignal(pair, c, r, s1, s2, colColor, type, gapVal, curGapVal, c1v, c2v) {
     window._tpSel = { pair: pair, c: c, r: r, s1: s1, s2: s2, col: colColor, type: type, gap: gapVal, cur: curGapVal, c1: (c1v != null ? c1v : 0), c2: (c2v != null ? c2v : 0) };
-    window._tcFocus = pair; evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
+    window._tcFocus = pair; window._tcBoxView = false; evtLog('INFO', 'SIGNAL', 'Selected ' + pair + ' ' + type + ' C' + c + ' R' + r + ' X' + s1 + '-X' + s2 + ' ' + colColor);
     try { document.documentElement.setAttribute('data-sig', ((type === 'REV') ? (colColor === 'R') : (colColor === 'G')) ? 'G' : 'R'); } catch (e) {}
     if (brokerFireEnabled) {
       // cleanPair = stripped for OT/PO/clipboard (e.g. "EURUSD"); 1HZ is KEPT because the clipboard
@@ -7703,8 +7703,21 @@
           if (selD && selD.prices && selD.prices.length > 0 && !_hiddenPairs.has(selAll[selK])) selN++;
         }
         var tcFoc = window._tcFocus || null;
-        var tcFocOk = !!(tcFoc && selAll.indexOf(tcFoc) >= 0);
-        TC.multi = selN > 1;
+                if (!tcFoc && !window._tcBoxView && window._tpSel && window._tpSel.pair && selAll.indexOf(window._tpSel.pair) >= 0) {
+                  var _fbD = allPairData[window._tpSel.pair];
+                  if (_fbD && _fbD.prices && _fbD.prices.length > 0 && !_hiddenPairs.has(window._tpSel.pair)) { tcFoc = window._tpSel.pair; window._tcFocus = tcFoc; }
+                }
+                if (!tcFoc && selN > 1 && (!window._tcBoxView || !window._tcBoxesOn)) {
+                          var _fbList = [window._tpSel && window._tpSel.pair, activePair].concat(selAll);
+                          for (var _fbI = 0; _fbI < _fbList.length; _fbI++) {
+                            var _fbP = _fbList[_fbI];
+                            if (!_fbP || selAll.indexOf(_fbP) < 0 || _hiddenPairs.has(_fbP)) continue;
+                            var _fbPD = allPairData[_fbP];
+                            if (_fbPD && _fbPD.prices && _fbPD.prices.length > 0) { tcFoc = _fbP; window._tcFocus = _fbP; break; }
+                          }
+                        }
+                        var tcFocOk = !!(tcFoc && selAll.indexOf(tcFoc) >= 0);
+                        TC.multi = selN > 1;
         TC.boxesOnly = TC.multi && !tcFocOk; ctx.fillStyle = window.CHART_BG || BG; ctx.fillRect(0, 0, W, H);
         try { TC.wrap.setAttribute('data-bx', TC.boxesOnly ? '1' : '0'); } catch (e) {}
         var base = TC.multi ? (tcFocOk ? [tcFoc] : selAll) : (TC.all ? selAll : [activePair]);
@@ -10097,7 +10110,7 @@
           var bxh = TC.hov[bxi];
           if (bxh.w && bxh.o && bxh.o.sig && mx >= bxh.x && mx <= bxh.x + bxh.w && my >= bxh.y && my <= bxh.y + bxh.h) {
             var bxs = bxh.o.sig;
-            if (TC.multi && !TC.boxesOnly && window._tcFocus === bxs.pair) { TC.hitFlag = true; window._tcFocus = null; tcDraw(); return; }
+            if (TC.multi && !TC.boxesOnly && window._tcFocus === bxs.pair) { TC.hitFlag = true; window._tcFocus = null; window._tcBoxView = true; tcDraw(); return; }
             window._tcFocus = bxs.pair;
             if (typeof manualSelectSignal === 'function') {
               TC.hitFlag = true; _wpFocusSet(bxs.pair); manualSelectSignal(bxs.pair, bxs.c, bxs.r, bxs.s1, bxs.s2, bxs.col, bxs.type, bxs.gap || 0, bxs.curGap || 0);
