@@ -11404,7 +11404,12 @@
             plan: function(ms) { D.plans++; D.planMs += ms; }
           };
           function frame(t) {
-            if (D.lastFrame) {
+                      if (!TC.on) {
+                        D.lastFrame = 0;
+                        setTimeout(function() { requestAnimationFrame(frame); }, 1000);
+                        return;
+                      }
+                      if (D.lastFrame) {
               var d = t - D.lastFrame;
               D.frames++;
               if (d > 34) D.slow++;
@@ -11826,7 +11831,8 @@
         symToIdx = {};
         PAIRS.forEach((p, i) => { symToIdx[p.sym] = i; });
         _rebuildLegend();
-        cycleStart = Date.now();
+                _mmtDirty = true;
+                cycleStart = Date.now();
         subIndex = 0;
         if (wsReady) subscribeNext();
       };
@@ -11887,6 +11893,7 @@
         p.price = price;
         const pct = (price - p.open) / p.open * 100;
         p.ticks.push({ elapsed, pct });
+                _mmtDirty = true;
         const elPx = document.getElementById('mmt-lp-' + p.label);
         const elPct = document.getElementById('mmt-ld-' + p.label);
         if (elPx) elPx.textContent = price.toFixed(price > 10 ? 3 : 5);
@@ -11906,6 +11913,7 @@
             const cl = document.getElementById('mmt-cycle-lbl');
             if (cl) cl.textContent = 'Cycle ' + cycleNum;
             pairData.forEach(p => { p.ticks = []; p.open = null; p.price = null; });
+                        _mmtDirty = true;
             resetting = false;
             if (rb) rb.style.display = 'none';
             subIndex = 0;
@@ -12044,14 +12052,23 @@
           canvas.height = H;
           canvas.style.width = W + 'px';
           canvas.style.height = H + 'px';
-        }
-      }
-      function loop() {
-        resize();
-        draw();
-        updateTimerUI();
-        requestAnimationFrame(loop);
-      }
+                    _mmtDirty = true;
+                  }
+                }
+                var _mmtDirty = true, _mmtSlowAt = 0;
+                function loop() {
+                  var _nw = Date.now();
+                  if (_nw - _mmtSlowAt >= 250) {
+                    _mmtSlowAt = _nw;
+                    resize();
+                    updateTimerUI();
+                  }
+                  if (_mmtDirty) {
+                    _mmtDirty = false;
+                    draw();
+                  }
+                  requestAnimationFrame(loop);
+                }
       canvas.addEventListener('mousemove', (e) => {
           const rect = canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
