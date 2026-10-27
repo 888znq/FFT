@@ -4535,25 +4535,34 @@
     var nowUtc = Math.floor(Date.now() / 1000);
     return (((x.r - (nowUtc % c)) % c) + c) % c;
   }
-  if (typeof window._lvlOnly === 'undefined') window._lvlOnly = 1;
-    window.toggleLvlExp = function (k) {
+  if (typeof window._lvlOnly === 'undefined') {
+      window._lvlOnly = 1;
+      try {
+        var _lvSv = parseInt(localStorage.getItem('lvlOnlyPick'), 10);
+        if (_lvSv > 0) window._lvlOnly = _lvSv;
+      } catch (e) {}
+    }
+      window.toggleLvlExp = function (k) {
     if (!window._lvlsExp) window._lvlsExp = {};
     window._lvlsExp[k] = !window._lvlsExp[k];
     try { renderFilteredTable(); } catch (e) {}
   };
   function _allLvlBuild(list, tag) {
-    if (!window._lvlsExp) window._lvlsExp = {};
-    if (!window._lvlsCnt) window._lvlsCnt = {};
-    var tg = tag || 'REV';
-    var bestPair = {};
-    var pool = [];
-    var i, j, x, y, pk;
-    for (i = 0; i < list.length; i++) {
-      x = list[i];
-      if (_hiddenPairs.has(x.pair)) continue;
-      if (r0OnlyMode && x.r !== 0) continue;
-            if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
-            if (window._lvlOnly && +x.s1 !== +window._lvlOnly) continue;
+      if (!window._lvlsExp) window._lvlsExp = {};
+      if (!window._lvlsCnt) window._lvlsCnt = {};
+      var tg = tag || 'REV';
+      var bestPair = {};
+      var pool = [];
+      var i, j, x, y, pk;
+      if (!window._lvlAvail) window._lvlAvail = {};
+      window._lvlAvail[tg] = {};
+      for (i = 0; i < list.length; i++) {
+        x = list[i];
+        if (_hiddenPairs.has(x.pair)) continue;
+        if (r0OnlyMode && x.r !== 0) continue;
+              if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
+              window._lvlAvail[tg][x.s1] = 1;
+              if (window._lvlOnly && +x.s1 !== +window._lvlOnly) continue;
             pool.push(x);
             pk = x.s1 + '|' + x.pair;
       if (bestPair[pk] === undefined || x.pct > bestPair[pk]) bestPair[pk] = x.pct;
@@ -4614,11 +4623,22 @@
           return B.sc - A.sc;
         });
     }
-    var out = [];
-    lvlKeys.forEach(function (k) {
-        var grp = byLvl[k];
-        var ek = tg + '|' + k;
-        var lim = (window._lvlOnly || window._lvlsExp[ek]) ? grp.length : 1;
+    window._lvlKeysAvail = window._lvlKeysAvail || {};
+        window._lvlKeysAvail[tg] = lvlKeys.slice();
+        var _pkP = window._lvlPick ? window._lvlPick[tg] : null;
+        if (_pkP !== null && _pkP !== undefined) {
+          var _pkHit = -1;
+          for (var _pkI = 0; _pkI < lvlKeys.length; _pkI++) {
+            if (String(lvlKeys[_pkI]) === String(_pkP)) { _pkHit = _pkI; break; }
+          }
+          if (_pkHit >= 0) lvlKeys.splice(0, lvlKeys.length, lvlKeys[_pkHit]);
+          else window._lvlPick[tg] = null;
+        }
+        var out = [];
+        lvlKeys.forEach(function (k) {
+            var grp = byLvl[k];
+            var ek = tg + '|' + k;
+            var lim = (window._lvlOnly || window._lvlsExp[ek]) ? grp.length : 1;
         var q;
         window._lvlsCnt[ek] = grp.length;
         for (q = 0; q < lim; q++) {
@@ -5079,7 +5099,98 @@
         _paintLvlHdrs(revTbody);
         _paintLvlHdrs(momTbody);
       }
-      function _mergeLvlHdr(tb) {
+      function _lvlNextClick(tg, txt) {
+              var _av = {}, _src = window._lvlAvail || {};
+              ['REV', 'MOM'].forEach(function (t) {
+                Object.keys(_src[t] || {}).forEach(function (v) { _av[v] = 1; });
+              });
+              var _ks = Object.keys(_av).map(Number).sort(function (a, b) { return a - b; });
+              var _c0 = +window._lvlOnly || 0;
+                      if (_c0 > 0 && _ks.indexOf(_c0) < 0) {
+                        _ks.push(_c0);
+                        _ks.sort(function (a, b) { return a - b; });
+                      }
+                      if (!_ks.length) return;
+                      var _oldOv = document.getElementById('lvlPickOv');
+                      if (_oldOv && _oldOv.parentNode) _oldOv.parentNode.removeChild(_oldOv);
+                      var _ov = document.createElement('div');
+                      _ov.id = 'lvlPickOv';
+                      _ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
+                      var _bx = document.createElement('div');
+                      var _cPair = window.pairColorHex || '#E2E8F0';
+                              var _cFg = window.systemThemeHex || '#000432';
+                              var _cOn = window.accentGreenHex || '#2ED573';
+                              _bx.style.cssText = 'background:' + _cFg + ';border:1px solid ' + _cPair + ';padding:12px;min-width:220px;max-width:90vw;max-height:80vh;overflow:auto;font-family:inherit;';
+                      var _tt = document.createElement('div');
+                      _tt.textContent = 'SELECT LEVEL';
+                      _tt.style.cssText = 'color:' + _cPair + ';-webkit-text-fill-color:' + _cPair + ';font-size:11px;font-weight:800;letter-spacing:0.2em;text-align:center;margin-bottom:10px;';
+                      _bx.appendChild(_tt);
+                      var _gd = document.createElement('div');
+                      _gd.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px;';
+                      var _closePick = function () {
+                        document.removeEventListener('keydown', _escPick, true);
+                        if (_ov.parentNode) _ov.parentNode.removeChild(_ov);
+                      };
+                      var _escPick = function (ev) { if (ev.key === 'Escape') _closePick(); };
+                      _ks.forEach(function (k) {
+                        var on = (k === _c0);
+                        var bt = document.createElement('button');
+                        bt.type = 'button';
+                        bt.textContent = 'X' + k + '-X' + (k + 1);
+                        bt.setAttribute('data-on', on ? '1' : '0');
+                                  bt.style.cssText = 'padding:10px 6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;border:none;background:' + (on ? _cOn : _cPair) + ';color:' + _cFg + ';-webkit-text-fill-color:' + _cFg + ';';
+                        bt.addEventListener('click', function (ev) {
+                          ev.stopPropagation();
+                          window._lvlOnly = k;
+                          try { localStorage.setItem('lvlOnlyPick', String(k)); } catch (e) {}
+                          _closePick();
+                          try { renderFilteredTable(); } catch (e) {}
+                        });
+                        _gd.appendChild(bt);
+                      });
+                      _bx.appendChild(_gd);
+                      _ov.appendChild(_bx);
+                      _ov.addEventListener('click', function (ev) { if (ev.target === _ov) _closePick(); });
+                      document.addEventListener('keydown', _escPick, true);
+                              document.body.appendChild(_ov);
+                              try {
+                                var _pbs = _gd.querySelectorAll('button');
+                                for (var _pI = 0; _pI < _pbs.length; _pI++) {
+                                  var _pB = _pbs[_pI];
+                                  var _pW = _pB.offsetWidth, _pH = _pB.offsetHeight;
+                                  if (!_pW || !_pH || typeof window._pillFill !== 'function') continue;
+                                  var _pC = document.createElement('canvas');
+                                  _pC.width = _pW;
+                                  _pC.height = _pH;
+                                  var _pX = _pC.getContext('2d');
+                                  _pX.fillStyle = _pB.getAttribute('data-on') === '1' ? _cOn : _cPair;
+                                  window._pillFill(_pX, 0, 0, _pW, _pH);
+                                  _pB.style.backgroundColor = 'transparent';
+                                  _pB.style.backgroundImage = 'url(' + _pC.toDataURL() + ')';
+                                  _pB.style.backgroundSize = '100% 100%';
+                                  _pB.style.backgroundRepeat = 'no-repeat';
+                                }
+                              } catch (e) {}
+                    }
+            function _lvlNextClickOld(tg, txt) {
+              var m = /X(\d+)/.exec(txt || '');
+              var keys = (window._lvlKeysAvail && window._lvlKeysAvail[tg]) || [];
+              if (!m || keys.length < 2) return;
+              var ci = -1;
+              for (var ki = 0; ki < keys.length; ki++) {
+                if (String(keys[ki]) === m[1]) { ci = ki; break; }
+              }
+              window._lvlPick = window._lvlPick || {};
+              window._lvlPick[tg] = String(keys[(ci + 1) % keys.length]);
+              try { renderFilteredTable(); } catch (e) {}
+            }
+            function _lvlHdrClickFn(tg, row) {
+              return function (ev) {
+                if (ev && ev.stopPropagation) ev.stopPropagation();
+                _lvlNextClick(tg, row.cells && row.cells[0] ? row.cells[0].textContent : '');
+              };
+            }
+            function _mergeLvlHdr(tb) {
               try {
                 var tbl = tb.closest('table');
                 var h = tbl ? tbl.previousElementSibling : null;
@@ -5089,6 +5200,11 @@
                 if (!h || (h.getAttribute('style') || '').indexOf('letter-spacing:0.4em') < 0) return;
                 var rows = tb.querySelectorAll('tr.lvlHdr');
                 var merge = rows.length === 1 && !!window._lvlOnly;
+                                var _tgN = (tb.id === 'peaksTableBodyRev') ? 'REV' : 'MOM';
+                                for (var _ci = 0; _ci < rows.length; _ci++) {
+                                  rows[_ci].style.cursor = 'pointer';
+                                  rows[_ci].onclick = _lvlHdrClickFn(_tgN, rows[_ci]);
+                                }
                 for (var mi = 0; mi < rows.length; mi++) {
                   if (merge) rows[mi].style.setProperty('display', 'none', 'important');
                   else rows[mi].style.removeProperty('display');
@@ -5103,7 +5219,11 @@
                   if (!sp) {
                     sp = document.createElement('span');
                     sp.className = 'lvlMerge';
-                    sp.style.cssText = 'letter-spacing:0.05em;margin-left:10px;';
+                    sp.style.cssText = 'letter-spacing:0.05em;margin-left:10px;cursor:pointer;';
+                                        sp.onclick = function (ev) {
+                                          if (ev && ev.stopPropagation) ev.stopPropagation();
+                                          _lvlNextClick(_tgN, sp.textContent);
+                                        };
                     h.appendChild(sp);
                   }
                   if (sp.textContent !== txt) sp.textContent = txt;
@@ -6067,9 +6187,12 @@
   }
   var _hiddenPairs = new Set(); // pairs temporarily hidden from wall panel only
   var _wpFocusPair = null;
-  function _wpFocusSet(pair) {
-    _wpFocusPair = pair;
-    _hiddenPairs.clear();
+    try { _wpFocusPair = localStorage.getItem('wpFocusPairPick') || null; } catch (e) {}
+    function _wpFocusSet(pair) {
+      _wpFocusPair = pair;
+      try { if (pair) localStorage.setItem('wpFocusPairPick', String(pair)); } catch (e) {}
+      try { if (typeof window.wpsSaveDebounced === 'function') window.wpsSaveDebounced(); } catch (e) {}
+      _hiddenPairs.clear();
     var _wpAll = (activePairs || []).concat(ALL_PAIRS);
     for (var _wi = 0; _wi < _wpAll.length; _wi++) {
       /* keep every picked pair visible in the wall panel */
@@ -12126,7 +12249,9 @@
           fireOn: typeof brokerFireEnabled !== 'undefined' ? brokerFireEnabled : true,
           minPct: _wpsElVal('minPctInput'),
           level: _wpsElVal('levelFilterSelect'),
-          scanMin: _wpsElVal('scanMin'),
+                    lvlOnly: window._lvlOnly || null,
+                    focusPair: (typeof _wpFocusPair !== 'undefined') ? _wpFocusPair : null,
+                    scanMin: _wpsElVal('scanMin'),
           scanMax: _wpsElVal('scanMax'),
           sessionLen: _wpsElVal('sessionLengthSelect'),
           _updatedAt: Date.now()
@@ -12211,7 +12336,14 @@
         // 24x7 must be the default every time the app opens — ignore any category
         // saved from a previous session's toggle so boot always lands on 24x7.
         _wpsForceDefaultCat('24x7');
-        if (state.minPct !== undefined && state.minPct !== null) {
+                if (state.lvlOnly !== undefined && state.lvlOnly !== null && +state.lvlOnly > 0) {
+                  window._lvlOnly = +state.lvlOnly;
+                  try { localStorage.setItem('lvlOnlyPick', String(+state.lvlOnly)); } catch (e) {}
+                }
+                if (state.focusPair) {
+                  try { _wpFocusSet(state.focusPair); } catch (e) {}
+                }
+                if (state.minPct !== undefined && state.minPct !== null) {
           var minPctEl = document.getElementById('minPctInput');
           if (minPctEl) minPctEl.value = state.minPct;
         }
