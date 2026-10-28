@@ -4550,6 +4550,69 @@
   function _allLvlBuild(list, tag) {
       if (!window._lvlsExp) window._lvlsExp = {};
       if (!window._lvlsCnt) window._lvlsCnt = {};
+      if (!window._lvlAvail) window._lvlAvail = {};
+      var tg = tag || 'REV';
+      var TOPN = 10;
+      var byLvl = {}, pset = {}, i, x;
+      window._lvlAvail[tg] = {};
+      for (i = 0; i < list.length; i++) {
+        x = list[i];
+        if (_hiddenPairs.has(x.pair)) continue;
+        if (r0OnlyMode && x.r !== 0) continue;
+        if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
+        window._lvlAvail[tg][x.s1] = 1;
+        if (window._lvlOnly && +x.s1 !== +window._lvlOnly) continue;
+        if (!byLvl[x.s1]) byLvl[x.s1] = [];
+        byLvl[x.s1].push({ z: x, e: _btLvlsEta(x) });
+        pset[x.pair] = 1;
+      }
+      var lvlKeys = Object.keys(byLvl);
+      var cmp0 = function (a, b) {
+        return (b.z.pct - a.z.pct) || ((b.z.c1 || 0) - (a.z.c1 || 0)) || (a.e - b.e);
+      };
+      var cmp = cmp0;
+            lvlKeys.forEach(function (lk) {
+              var seen = {};
+              byLvl[lk].sort(cmp0);
+              byLvl[lk] = byLvl[lk].filter(function (o) {
+                if (seen[o.z.pair]) return false;
+                seen[o.z.pair] = 1;
+                return true;
+              });
+            });
+      if (window._allLvlOrd) {
+        lvlKeys.sort(function (a, b) { return (+a) - (+b); });
+      } else {
+        lvlKeys.sort(function (a, b) { return cmp(byLvl[a][0], byLvl[b][0]); });
+      }
+      window._lvlKeysAvail = window._lvlKeysAvail || {};
+      window._lvlKeysAvail[tg] = lvlKeys.slice();
+      var pk = window._lvlPick ? window._lvlPick[tg] : null;
+      if (pk !== null && pk !== undefined) {
+        var hit = -1, h;
+        for (h = 0; h < lvlKeys.length; h++) {
+          if (String(lvlKeys[h]) === String(pk)) { hit = h; break; }
+        }
+        if (hit >= 0) lvlKeys.splice(0, lvlKeys.length, lvlKeys[hit]);
+        else window._lvlPick[tg] = null;
+      }
+      var out = [];
+      lvlKeys.forEach(function (k) {
+        var grp = byLvl[k];
+        var ek = tg + '|' + k;
+        var lim = (window._lvlOnly || window._lvlsExp[ek]) ? grp.length : 1;
+        var q;
+        window._lvlsCnt[ek] = grp.length;
+        for (q = 0; q < lim; q++) {
+          grp[q].z._lk = ek;
+          out.push(grp[q].z);
+        }
+      });
+      return out;
+    }
+    function _allLvlBuildOld(list, tag) {
+      if (!window._lvlsExp) window._lvlsExp = {};
+      if (!window._lvlsCnt) window._lvlsCnt = {};
       var tg = tag || 'REV';
       var bestPair = {};
       var pool = [];
@@ -4853,9 +4916,18 @@
     .filter(function(x) { return x.pct >= _minPct; })
     .filter(function(x) { return _levelVal === 0 || x.s1 === _levelVal; })
     .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
-    if (topList.length === 0) return;
-    topList.sort(function(a, b) { return _champScore(b) - _champScore(a); });
-    var top = (window._champTop ? window._champTop(_amMode, topList) : null) || topList[0];
+    var top = null;
+        if (window._allLvlOn && typeof _allLvlBuild === 'function') {
+          try {
+            var _kingList = _allLvlBuild(_allSigs, _amMode);
+            if (_kingList && _kingList.length) top = _kingList[0];
+          } catch (eK) {}
+        }
+        if (!top) {
+          if (topList.length === 0) return;
+          topList.sort(function(a, b) { return _champScore(b) - _champScore(a); });
+          top = (window._champTop ? window._champTop(_amMode, topList) : null) || topList[0];
+        }
     if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
     if (activePair !== top.pair) {
       activePair = top.pair;
@@ -13360,13 +13432,19 @@
           if (!by[lk]) { by[lk] = []; keys.push(lk); }
           by[lk].push(x);
         }
-        var cmp = function (a, b) {
-                  if (window._lvlOnly) return ((b.pct || 0) - (a.pct || 0)) || ((b.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (b.c || 0)) || (a.r - b.r);
-                  return (((b.pct || 0) * (b.c1 || 0)) - ((a.pct || 0) * (a.c1 || 0))) || ((a.c || 0) - (b.c || 0)) || (a.r - b.r);
+        var cmp0 = function (a, b) {
+                  return ((b.pct || 0) - (a.pct || 0)) || ((b.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (b.c || 0)) || (a.r - b.r);
                 };
-        keys.forEach(function (k) {
-            by[k].sort(cmp);
-            S.cnt[k] = Math.min(10, by[k].length);
+                var cmp = cmp0;
+                                keys.forEach(function (k) {
+                                    var seen = {};
+                                    by[k].sort(cmp0);
+                                    by[k] = by[k].filter(function (o) {
+                                      if (seen[o.pair]) return false;
+                                      seen[o.pair] = 1;
+                                      return true;
+                                    });
+                    S.cnt[k] = by[k].length;
             if (!S.init[k]) { S.init[k] = true; S.exp[k] = false; }
           });
         keys.sort(function (a, b) {
@@ -13376,7 +13454,7 @@
           });
         var out = [];
         keys.forEach(function (k) {
-            var arr = by[k].slice(0, 10), j;
+            var arr = by[k], j;
             if (!S.exp[k] && !window._lvlOnly) arr = arr.slice(0, 1);
             for (j = 0; j < arr.length; j++) out.push(arr[j]);
           });
