@@ -4577,7 +4577,7 @@
                                                     byLvl[lk].forEach(function (o) {
                                                       var pn = o.z.pair;
                                                       cnt[pn] = (cnt[pn] || 0) + 1;
-                                                      var rk = pn + '|' + o.z.s1 + '|' + o.z.s2 + '|' + o.z.col + '|' + o.z.pct + '|' + o.z.c1 + '|' + o.z.c2;
+                                                      var rk = pn + '|' + o.z.s1 + '|' + o.z.s2 + '|' + o.z.pct + '|' + o.z.c1 + '|' + o.z.c2;
                                                                                   if (seenRes[rk]) { cnt[pn]--; return; }
                                                                                   seenRes[rk] = 1;
                                                                                   if (cnt[pn] > 20) return;
@@ -5103,9 +5103,18 @@
           (!r0OnlyMode || x.r === 0);
         })
       .sort(function (a, b) {
-          return (b.pct * b.c1) - (a.pct * a.c1);
-        })
-      .slice(0, 100);
+                return ((b.pct * b.c1) - (a.pct * a.c1)) || (_btLvlsEta(a) - _btLvlsEta(b));
+              })
+            .filter((function () {
+                var _seen = {};
+                return function (x) {
+                  var rk = x.pair + '|' + x.s1 + '|' + x.s2 + '|' + x.pct + '|' + x.c1 + '|' + x.c2;
+                  if (_seen[rk]) return false;
+                  _seen[rk] = 1;
+                  return true;
+                };
+              })())
+            .slice(0, 100);
     }
     var revTop10 = _buildTop10(globalRevs.slice(), 'REV');
     var momTop10 = _buildTop10(globalMoms.slice(), 'MOM');
