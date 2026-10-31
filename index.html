@@ -4572,16 +4572,18 @@
       };
       var cmp = cmp0;
             lvlKeys.forEach(function (lk) {
-                          var cnt = {}, order = [], grpd = {};
-                          byLvl[lk].sort(cmp0);
-                          byLvl[lk].forEach(function (o) {
-                            var pn = o.z.pair;
-                            cnt[pn] = (cnt[pn] || 0) + 1;
-                            if (cnt[pn] > 20) return;
-                            if (!grpd[pn]) { grpd[pn] = []; order.push(pn); }
-                            grpd[pn].push(o);
-                          });
-                          byLvl[lk] = [].concat.apply([], order.map(function (pn) { return grpd[pn]; }));
+                          var cnt = {}, kept = [], seenRes = {};
+                                                    byLvl[lk].sort(cmp0);
+                                                    byLvl[lk].forEach(function (o) {
+                                                      var pn = o.z.pair;
+                                                      cnt[pn] = (cnt[pn] || 0) + 1;
+                                                      var rk = pn + '|' + o.z.s1 + '|' + o.z.s2 + '|' + o.z.col + '|' + o.z.pct + '|' + o.z.c1 + '|' + o.z.c2;
+                                                                                  if (seenRes[rk]) { cnt[pn]--; return; }
+                                                                                  seenRes[rk] = 1;
+                                                                                  if (cnt[pn] > 20) return;
+                                                                                  kept.push(o);
+                                                    });
+                                                    byLvl[lk] = kept;
                         });
                   if (window._allLvlOrd) {
                     lvlKeys.sort(function (a, b) { return (+a) - (+b); });
@@ -4604,8 +4606,9 @@
                     var grp = byLvl[k];
                     var ek = tg + '|' + k;
                     var lim = grp.length;
-        var q;
-        window._lvlsCnt[ek] = grp.length;
+                            if (Object.keys(pset).length > 1 && lim > 25) lim = 25;
+                            var q;
+                            window._lvlsCnt[ek] = grp.length;
         for (q = 0; q < lim; q++) {
           grp[q].z._lk = ek;
           out.push(grp[q].z);
