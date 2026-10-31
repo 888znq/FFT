@@ -4572,35 +4572,38 @@
       };
       var cmp = cmp0;
             lvlKeys.forEach(function (lk) {
-              var seen = {};
-              byLvl[lk].sort(cmp0);
-              byLvl[lk] = byLvl[lk].filter(function (o) {
-                if (seen[o.z.pair]) return false;
-                seen[o.z.pair] = 1;
-                return true;
-              });
-            });
-      if (window._allLvlOrd) {
-        lvlKeys.sort(function (a, b) { return (+a) - (+b); });
-      } else {
-        lvlKeys.sort(function (a, b) { return cmp(byLvl[a][0], byLvl[b][0]); });
-      }
-      window._lvlKeysAvail = window._lvlKeysAvail || {};
-      window._lvlKeysAvail[tg] = lvlKeys.slice();
-      var pk = window._lvlPick ? window._lvlPick[tg] : null;
-      if (pk !== null && pk !== undefined) {
-        var hit = -1, h;
-        for (h = 0; h < lvlKeys.length; h++) {
-          if (String(lvlKeys[h]) === String(pk)) { hit = h; break; }
-        }
-        if (hit >= 0) lvlKeys.splice(0, lvlKeys.length, lvlKeys[hit]);
-        else window._lvlPick[tg] = null;
-      }
-      var out = [];
-      lvlKeys.forEach(function (k) {
-        var grp = byLvl[k];
-        var ek = tg + '|' + k;
-        var lim = (window._lvlOnly || window._lvlsExp[ek]) ? grp.length : 1;
+                          var cnt = {}, order = [], grpd = {};
+                          byLvl[lk].sort(cmp0);
+                          byLvl[lk].forEach(function (o) {
+                            var pn = o.z.pair;
+                            cnt[pn] = (cnt[pn] || 0) + 1;
+                            if (cnt[pn] > 20) return;
+                            if (!grpd[pn]) { grpd[pn] = []; order.push(pn); }
+                            grpd[pn].push(o);
+                          });
+                          byLvl[lk] = [].concat.apply([], order.map(function (pn) { return grpd[pn]; }));
+                        });
+                  if (window._allLvlOrd) {
+                    lvlKeys.sort(function (a, b) { return (+a) - (+b); });
+                  } else {
+                    lvlKeys.sort(function (a, b) { return cmp(byLvl[a][0], byLvl[b][0]); });
+                  }
+                  window._lvlKeysAvail = window._lvlKeysAvail || {};
+                  window._lvlKeysAvail[tg] = lvlKeys.slice();
+                  var pk = window._lvlPick ? window._lvlPick[tg] : null;
+                  if (pk !== null && pk !== undefined) {
+                    var hit = -1, h;
+                    for (h = 0; h < lvlKeys.length; h++) {
+                      if (String(lvlKeys[h]) === String(pk)) { hit = h; break; }
+                    }
+                    if (hit >= 0) lvlKeys.splice(0, lvlKeys.length, lvlKeys[hit]);
+                    else window._lvlPick[tg] = null;
+                  }
+                  var out = [];
+                  lvlKeys.forEach(function (k) {
+                    var grp = byLvl[k];
+                    var ek = tg + '|' + k;
+                    var lim = grp.length;
         var q;
         window._lvlsCnt[ek] = grp.length;
         for (q = 0; q < lim; q++) {
