@@ -568,7 +568,7 @@ const DRVT = {
   reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,
   signals: {}, sigStart: 0, sigAt: 0, sigBusy: false,
   queue: [], queueBusy: false, lastBuyAt: 0, rlUntil: 0,
-  buys: 0, rejected: 0, wins: 0, losses: 0, pnl: 0, balance: null, tickN: 0
+  buys: 0, rejected: 0, wins: 0, losses: 0, pnl: 0, balance: null, tickN: 0, hist: []
 };
 
 function drvScore(x) {
@@ -844,6 +844,11 @@ function drvOnMessage(msg) {
       pnl = (c.profit !== undefined && c.profit !== null) ? Number(c.profit) : (Number(c.sell_price || 0) - Number(c.buy_price || 0));
       if (pnl > 0) DRVT.wins++; else DRVT.losses++;
       DRVT.pnl += pnl;
+      item.closedAt = Math.floor(Date.now() / 1000);
+      item.pnl = pnl;
+      item.exit = Number(c.exit_tick || c.sell_spot || c.current_spot) || 0;
+      DRVT.hist.unshift(item);
+      if (DRVT.hist.length > 300) DRVT.hist.length = 300;
       logEvent("DRV_RESULT", "CLOSED " + (item.dir || "?") + " " + (item.pair || "?") + " id=" + c.contract_id + " " + (pnl > 0 ? "WIN" : "LOSS") + " pnl=$" + pnl.toFixed(2));
       try {
         if (c.id && ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget: c.id }));
@@ -1541,7 +1546,13 @@ const server = http.createServer((req, res) => {
       if (!drvIt || !drvIt.pair) continue;
       drvOut.push({ id: drvK, pair: drvIt.pair, dir: drvIt.dir, type: drvIt.type, exp: drvIt.exp, stake: drvIt.stake, payout: drvIt.payout, openAt: drvIt.openAt, entry: drvIt.entry, cur: drvIt.cur, profit: drvIt.profit, r: drvIt.r, s1: drvIt.s1, s2: drvIt.s2, col: drvIt.col });
     }
-    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut });
+    var drvCl = [], drvH, drvHi;
+    for (drvHi = 0; drvHi < DRVT.hist.length; drvHi++) {
+      drvH = DRVT.hist[drvHi];
+      if (!drvH || !drvH.pair) continue;
+      drvCl.push({ id: drvH.id, pair: drvH.pair, dir: drvH.dir, type: drvH.type, exp: drvH.exp, stake: drvH.stake, openAt: drvH.openAt, closedAt: drvH.closedAt, entry: drvH.entry, exit: drvH.exit, pnl: drvH.pnl, r: drvH.r, s1: drvH.s1, s2: drvH.s2, col: drvH.col });
+    }
+    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl } });
     return;
   }
 

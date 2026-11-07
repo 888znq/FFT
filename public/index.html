@@ -2422,7 +2422,7 @@
         if (tk2) { hdr2['x-api-token'] = tk2; }
         fetch('/drv', { cache: 'no-store', headers: hdr2 })
           .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; } })
+          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; } })
           .catch(function () {})
           .then(function () { lvDrvBusy = false; });
       }
@@ -11386,14 +11386,19 @@
           ctx.restore();
         }
         window._drvBoxHits = [];
-        var dtbList = window._drvOpen || [], dtbNow = Date.now() / 1000, dtbAct = [], dtbI, dtbT, dtbW = 138, dtbH = 34, dtbX, dtbY, dtbUp, dtbPl, dtbRem, dtbCl, dtbPulse, dtbL1, dtbL2;
+        var dtbList = window._drvOpen || [], dtbCls = window._drvClosed || [], dtbSs = window._drvSess || null, dtbNow = Date.now() / 1000, dtbAct = [], dtbI, dtbT, dtbW = 154, dtbH = 22, dtbX, dtbY, dtbUp, dtbPl, dtbRem, dtbCl, dtbPulse, dtbL1, dtbL2, dtbHd;
         for (dtbI = 0; dtbI < dtbList.length; dtbI++) {
           dtbT = dtbList[dtbI];
           if (!dtbT || !dtbT.pair || !(dtbT.openAt > 0) || !(dtbT.exp > 0)) continue;
-          if (dtbNow > dtbT.openAt + dtbT.exp + 2) continue;
+          if (dtbNow > dtbT.openAt + dtbT.exp + 90) continue;
           dtbAct.push(dtbT);
         }
         dtbAct.sort(function (a, b) { return (a.openAt + a.exp) - (b.openAt + b.exp); });
+        for (dtbI = 0; dtbI < dtbCls.length; dtbI++) {
+          dtbT = dtbCls[dtbI];
+          if (!dtbT || !dtbT.pair || !(dtbT.openAt > 0)) continue;
+          dtbAct.push(dtbT);
+        }
         dtbX = W - PADR - dtbW - 8;
         dtbY = ptop + 8;
         if (dtbAct.length > 0 && dtbX > PADL + 40) {
@@ -11403,20 +11408,30 @@
           ctx.textBaseline = 'alphabetic';
           ctx.font = 'bold 10px ' + MONO;
           dtbPulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+          if (dtbSs) {
+            dtbHd = 'SESSION W' + dtbSs.wins + ' L' + dtbSs.losses + '  ' + (dtbSs.pnl >= 0 ? '+' : '-') + '$' + Math.abs(dtbSs.pnl).toFixed(2);
+            ctx.fillStyle = (dtbSs.pnl >= 0) ? CY : AM;
+            ctx.fillText(dtbHd, dtbX, dtbY + 10);
+            dtbY += 16;
+          }
           TC.pulseOn = true;
           for (dtbI = 0; dtbI < dtbAct.length; dtbI++) {
-            if (dtbY + dtbH > pbot - 4) break;
+            if (dtbY + dtbH > pbot - 4) {
+              ctx.fillStyle = DIM;
+              ctx.fillText('+' + (dtbAct.length - dtbI) + ' more', dtbX + 9, dtbY + 10);
+              break;
+            }
             dtbT = dtbAct[dtbI];
             dtbUp = (dtbT.dir === 'CALL');
-            dtbPl = (typeof dtbT.profit === 'number' && isFinite(dtbT.profit)) ? dtbT.profit : null;
+            dtbPl = dtbT.closedAt ? Number(dtbT.pnl) : ((typeof dtbT.profit === 'number' && isFinite(dtbT.profit)) ? dtbT.profit : null);
             dtbRem = Math.max(0, dtbT.openAt + dtbT.exp - Date.now() / 1000);
             dtbCl = (dtbPl === null) ? DIM : (dtbPl >= 0 ? CY : AM);
             dtbL1 = getPairDisplayName(dtbT.pair) + ' ' + dtbT.dir + ' $' + Number(dtbT.stake || 0).toFixed(2);
-            dtbL2 = ((dtbPl === null) ? '--' : ((dtbPl >= 0 ? '+' : '-') + '$' + Math.abs(dtbPl).toFixed(2))) + '  ' + dtbRem.toFixed(0) + 's';
+            dtbL2 = ((dtbPl === null) ? '--' : ((dtbPl >= 0 ? '+' : '-') + '$' + Math.abs(dtbPl).toFixed(2))) + (dtbT.closedAt ? (dtbPl > 0 ? ' W' : ' L') : ('  ' + dtbRem.toFixed(0) + 's'));
             ctx.globalAlpha = 0.93;
             ctx.fillStyle = BG;
             ctx.fillRect(dtbX, dtbY, dtbW, dtbH);
-            ctx.globalAlpha = 0.12 + 0.1 * dtbPulse;
+            ctx.globalAlpha = dtbT.closedAt ? 0.1 : 0.12 + 0.1 * dtbPulse;
             ctx.fillStyle = dtbCl;
             ctx.fillRect(dtbX, dtbY, dtbW, dtbH);
             ctx.globalAlpha = 1;
@@ -11426,11 +11441,13 @@
             ctx.fillStyle = dtbUp ? CY : AM;
             ctx.fillRect(dtbX, dtbY, 4, dtbH);
             ctx.fillStyle = '#E2E8F0';
-            ctx.fillText(dtbL1, dtbX + 9, dtbY + 14);
+            ctx.fillText(dtbL1, dtbX + 9, dtbY + 15);
             ctx.fillStyle = dtbCl;
-            ctx.fillText(dtbL2, dtbX + 9, dtbY + 28);
+            ctx.textAlign = 'right';
+            ctx.fillText(dtbL2, dtbX + dtbW - 6, dtbY + 15);
+            ctx.textAlign = 'left';
             window._drvBoxHits.push({ x: dtbX, y: dtbY, w: dtbW, h: dtbH, pair: dtbT.pair, c: dtbT.exp, r: dtbT.r, s1: dtbT.s1, s2: (dtbT.s2 !== undefined ? dtbT.s2 : dtbT.s1), col: dtbT.col || (((dtbT.type === 'REV') === dtbUp) ? 'R' : 'G'), type: dtbT.type });
-            dtbY += dtbH + 5;
+            dtbY += dtbH + 3;
           }
           ctx.restore();
         }
