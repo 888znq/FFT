@@ -699,20 +699,18 @@ function drvHoldPick(list, tag, start) {
   for (k in best) arr.push(best[k]);
   if (!arr.length) return null;
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-  arr.sort(function (a, b) {
-    return ((b.x.c1 || 0) - (a.x.c1 || 0)) || (misOf(a.x) - misOf(b.x));
-  });
-  var tied = [], j, t, rp, pick = null, pickT = Infinity;
+  var topC1 = 0, floor, j, t, rp, m, pick = null, pickT = Infinity, pickM = Infinity;
   for (j = 0; j < arr.length; j++) {
-    if ((arr[j].x.c1 || 0) === (arr[0].x.c1 || 0) && misOf(arr[j].x) === misOf(arr[0].x)) tied.push(arr[j]);
-    else break;
+    if ((arr[j].x.c1 || 0) > topC1) topC1 = arr[j].x.c1 || 0;
   }
-  if (tied.length === 1) return tied[0].x;
-  for (j = 0; j < tied.length; j++) {
-    t = seen[tied[j].key];
-    rp = drvHoldReplay(tied[j].x, tag, start);
+  floor = Math.ceil(topC1 * 0.6);
+  for (j = 0; j < arr.length; j++) {
+    if ((arr[j].x.c1 || 0) < floor) continue;
+    t = seen[arr[j].key];
+    rp = drvHoldReplay(arr[j].x, tag, start);
     if (rp !== null && rp < t) t = rp;
-    if (t < pickT) { pickT = t; pick = tied[j].x; }
+    m = misOf(arr[j].x);
+    if (t < pickT || (t === pickT && m < pickM)) { pickT = t; pickM = m; pick = arr[j].x; }
   }
   return pick;
 }

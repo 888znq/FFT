@@ -7019,16 +7019,11 @@
       var c1Floor = Math.ceil(topC1 * 0.6);
       var misOf = function (z) { return (tag === 'MOM') ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
       out.sort(function (a, b) {
-        return ((b.c1 || 0) - (a.c1 || 0)) || (misOf(a) - misOf(b)) || (a._holdT - b._holdT);
-      });
-      var topRow = out.length ? out.shift() : null;
-      out.sort(function (a, b) {
         var qa = ((a.c1 || 0) >= c1Floor) ? 0 : 1, qb = ((b.c1 || 0) >= c1Floor) ? 0 : 1;
         if (qa !== qb) return qa - qb;
-        if (qa === 0) return (misOf(a) - misOf(b)) || ((b.c1 || 0) - (a.c1 || 0)) || (a._holdT - b._holdT);
+        if (qa === 0) return (a._holdT - b._holdT) || (misOf(a) - misOf(b)) || ((b.c1 || 0) - (a.c1 || 0));
         return ((b.c1 || 0) - (a.c1 || 0)) || (misOf(a) - misOf(b)) || (a._holdT - b._holdT);
       });
-      if (topRow) out.unshift(topRow);
       return out.slice(0, TOPN);
     };
     window._holdToggle = function () {
