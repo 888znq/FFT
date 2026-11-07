@@ -15163,16 +15163,26 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
   window._drvAutoAmt = 0.35;
   window._drvAutoFire = function(node, nowSec) {
     var sg, pair, c, id, amtEl, prevAmt, prevPair;
-    if (window._drvAutoTrade === false) return;
     if (!node || !node.sig || node.kind !== 'FIRED') return;
-    if (!(window._drvOnly || (window._pairTg && window._pairTg.DRV))) return;
-    if (document.hidden) return;
     sg = node.sig;
     pair = sg.pair;
     if (!/^1HZ/i.test(String(pair))) return;
     c = sg.c;
-    if (!(c > 0)) return;
-    if (nowSec - node.idx > 4) return;
+    var _dw = '', _dk;
+    if (window._drvAutoTrade === false) _dw = 'auto trade switch _drvAutoTrade is false';
+    else if (!(window._drvOnly || (window._pairTg && window._pairTg.DRV))) _dw = 'DRV not active (_drvOnly=' + !!window._drvOnly + ' _pairTg.DRV=' + !!(window._pairTg && window._pairTg.DRV) + ')';
+    else if (document.hidden) _dw = 'browser tab hidden';
+    else if (!(c > 0)) _dw = 'invalid cycle c=' + c;
+    else if (nowSec - node.idx > 4) _dw = 'signal too old (' + (nowSec - node.idx) + 's since fire, limit 4s)';
+    if (_dw) {
+      _dk = pair + '|' + sg.type + '|' + sg.c + '|' + sg.r + '|' + node.idx + '|' + _dw.slice(0, 12);
+      if (!window._drvSkipSeen || Object.keys(window._drvSkipSeen).length > 300) window._drvSkipSeen = {};
+      if (!window._drvSkipSeen[_dk]) {
+        window._drvSkipSeen[_dk] = 1;
+        try { evtLog('INFO', 'DRV-AUTO', 'SKIP ' + sg.type + ' ' + pair + ' c=' + c + ' r=' + sg.r + ' - ' + _dw); } catch (eSk) {}
+      }
+      return;
+    }
     id = pair + '|' + sg.type + '|' + c + '|' + sg.r + '|' + sg.s1 + '|' + sg.s2 + '|' + sg.col + '|' + node.idx + '|' + currentStartTsUtc;
     if (!window._drvAutoSeen || Object.keys(window._drvAutoSeen).length > 500) window._drvAutoSeen = {};
     if (window._drvAutoSeen[id]) return;
@@ -15252,6 +15262,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
       ' | pending=' + pend + ' open=' + o.length + ' closed(last30) W' + w + '/L' + l + ' pnl=$' + pnl.toFixed(2) +
       ' | auto loss-streak=' + (window._mtlAutoLoss || 0) + ' busy=' + (window._mtlAutoBusy ? 'yes' : 'no') + ' fired=' + Object.keys(window._mtlAutoFiredSet || {}).length +
       ' | engine ready=' + !!E.ready + ' scanBusy=' + !!E.scanBusy + ' ws=' + (E.ws ? 'on' : 'off') + ' REV=' + tp + ' MOM=' + tm +
+      ' | drv auto=' + (window._drvAutoTrade !== false) + ' only=' + !!window._drvOnly + ' tg=' + !!(window._pairTg && window._pairTg.DRV) + ' amt=' + window._drvAutoAmt + ' fired=' + Object.keys(window._drvAutoSeen || {}).length + ' tabHidden=' + !!document.hidden +
       ' | cooldown=' + rl + 's';
   };
   setInterval(function() { try { evtLog('INFO', 'ACTIVITY', window.botActivity()); } catch (eAc) {} }, 60000);
@@ -16796,7 +16807,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     return ok;
   }
   function doCopy() {
-    _lg('SYSTEM', 'Log copied');
+    try { _lg('SYSTEM', 'Log copied'); } catch (eLc) {}
     var txt = buildText(), b = els.btnCopy;
     try {
       if (window.AndroidClipboard) {
@@ -16812,7 +16823,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     flash(b, fallbackCopy(txt), 'COPY');
   }
   function doDownload() {
-    _lg('SYSTEM', 'Log downloaded');
+    try { _lg('SYSTEM', 'Log downloaded'); } catch (eLd) {}
     var txt = buildText(), blob, url, a;
     try {
       blob = new Blob([txt], { type: 'text/plain' });
@@ -17034,8 +17045,8 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
       var _hlab = (_hbx && _hbx.firstChild) ? _hbx.firstChild : null;
       if (_hlab && _hlab.className === 'cb-gl') _hlab.style.setProperty('display', 'none', 'important');
       var _lb = document.getElementById('logBtn');
-      var _lg = (_lb && _lb.closest) ? _lb.closest('.cb-g') : null;
-      if (_lg) _lg.classList.add('cb-nl');
+      var _lgb = (_lb && _lb.closest) ? _lb.closest('.cb-g') : null;
+      if (_lgb) _lgb.classList.add('cb-nl');
     }
   } catch (e13) {}
 })();
