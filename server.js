@@ -1044,6 +1044,7 @@ function drvScoreText() {
 }
 
 function drvCheckFire() {
+  return;
   if (!DRVT.ready) return;
   var start = DRVT.sigStart, nowIdx = nowSec() - start;
   if (!start || nowIdx < 1 || nowIdx >= 3600 || Date.now() - DRVT.sigAt > 120000) return;
@@ -1877,7 +1878,7 @@ const server = http.createServer((req, res) => {
         drvLk.push({ pair: drvLp, type: drvLs.type, c: drvLs.c, r: drvLs.r, s1: drvLs.s1, s2: drvLs.s2, col: drvLs.col, pct: drvLs.pct, held: drvLocked(drvLp) });
       }
     }
-    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: drvLk, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl }, score: drvScoreboard() });
+    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: [], sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl }, score: drvScoreboard() });
     return;
   }
 

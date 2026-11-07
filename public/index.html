@@ -4551,6 +4551,7 @@
     return true;
   };
   function _sigHitTrade(pair, ts, streakCol, row, streakLen) {
+    return;
     var _hs = (typeof window._tcClicked === 'function') ? window._tcClicked() : null;
     if (!_hs || _hs.pair !== pair || _hs.c !== CYCLE || _hs.r !== row) return;
     if (streakCol !== _hs.col || streakLen !== _hs.s1) return;
@@ -4572,7 +4573,7 @@
     evtLog('INFO', 'SIGNAL-TRADE', (_hUp ? 'BUY ' : 'SELL ') + _hPair + ' $' + _hAmt + ' (signal hit X' + _hs.s1 + ' ' + _hId + ')');
   }
   (function () {
-    window._autoTopTrade = true;
+    window._autoTopTrade = false;
     window._atLast = {};
     window._atNextAt = 0;
     function _atTopKey(id) {
