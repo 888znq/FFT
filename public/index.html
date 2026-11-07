@@ -6256,7 +6256,7 @@
           }
           return best;
         }
-        window._wpKing = { REV: _kingPick(globalRevs), MOM: _kingPick(globalMoms) };
+        window._wpKing = { REV: revTop10.length ? revTop10[0] : null, MOM: momTop10.length ? momTop10[0] : null };
         renderScannerTable(revTop10, momTop10, displayDead);
     if (typeof window.tcOnTableRendered === 'function') window.tcOnTableRendered();                     }
   function _buildScannerRowsHtml(list) {
