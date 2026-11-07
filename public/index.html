@@ -2412,6 +2412,21 @@
           .then(function () { clearTimeout(tmr); lvBusy = false; });
       }
 
+      var lvDrvBusy = false;
+      function lvDrvPoll() {
+        if (lvDrvBusy || document.hidden) { return; }
+        if (!/^https?:$/.test(window.location.protocol)) { return; }
+        lvDrvBusy = true;
+        var hdr2 = {};
+        var tk2 = lvToken();
+        if (tk2) { hdr2['x-api-token'] = tk2; }
+        fetch('/drv', { cache: 'no-store', headers: hdr2 })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; } })
+          .catch(function () {})
+          .then(function () { lvDrvBusy = false; });
+      }
+
       lvInjectCss();
       var lvHeadEl = document.getElementById('lvHead');
       if (lvHeadEl) {
@@ -2423,6 +2438,8 @@
       lvSet(lvMk('bad', 'INIT', 'Checking server...'));
       lvPoll();
       setInterval(lvPoll, LV_POLL_MS);
+      setInterval(lvDrvPoll, 2000);
+      lvDrvPoll();
       window.addEventListener('online', lvPoll);
       document.addEventListener('visibilitychange', function () { if (!document.hidden) { lvPoll(); } });
     })();
@@ -11258,6 +11275,114 @@
             ctx.globalAlpha = 0;
           }
           ctx.fillText(mtWin ? '\u2713' : '\u2717', (mtXa + mtXb) / 2, TC.candle ? Math.max(ptop + 24, mtY1 - 26) : (mtY1 + mtY2) / 2);
+          ctx.restore();
+        }
+        var rdList = window._drvOpen || [], rdNow = Date.now() / 1000, rdI, rdPi, rdK, rdM, rdT, rdIt, rdEi, rdXi, rdEp, rdCp, rdLo, rdHi, rdKe, rdKs, rdV, rdX0, rdX1, rdXa, rdXb, rdXc, rdY1, rdY2, rdYe, rdYc, rdUp, rdWin, rdDir, rdPl, rdRem, rdRows, rdMw, rdPw, rdPh, rdPx, rdPy, rdPulse, rdDelta, rdDec;
+        for (rdI = 0; rdI < rdList.length; rdI++) {
+          rdT = rdList[rdI];
+          if (!rdT || !rdT.pair || !(rdT.openAt > 0) || !(rdT.exp > 0)) continue;
+          if (rdNow > rdT.openAt + rdT.exp + 2) continue;
+          rdIt = null;
+          for (rdPi = 0; rdPi < info.length; rdPi++) {
+            if (info[rdPi].pair === rdT.pair) { rdIt = info[rdPi]; break; }
+          }
+          if (!rdIt) continue;
+          rdEi = rdT.openAt - currentStartTsUtc;
+          rdXi = rdEi + rdT.exp;
+          if (rdEi < 0 || rdEi >= rdIt.len) continue;
+          rdEp = Number(rdT.entry) || 0;
+          if (!(rdEp > 0)) {
+            for (rdK = Math.min(rdEi, rdIt.len - 1); rdK >= 0; rdK--) {
+              if (rdIt.prices[rdK] !== -1) { rdEp = rdIt.prices[rdK]; break; }
+            }
+          }
+          if (!(rdEp > 0)) continue;
+          rdCp = (rdIt.last >= 0) ? rdIt.prices[rdIt.last] : rdEp;
+          rdLo = Math.min(rdEp, rdCp);
+          rdHi = Math.max(rdEp, rdCp);
+          rdKe = Math.min(rdIt.last >= 0 ? rdIt.last : rdEi, rdIt.len - 1);
+          rdKs = Math.max(1, Math.ceil(Math.max(1, rdKe - rdEi) / 300));
+          for (rdK = rdEi; rdK <= rdKe; rdK += rdKs) {
+            rdV = rdIt.prices[rdK];
+            if (rdV === -1 || rdV === undefined) continue;
+            if (rdV < rdLo) rdLo = rdV;
+            if (rdV > rdHi) rdHi = rdV;
+          }
+          rdX0 = xOf(rdEi);
+          rdX1 = xOf(rdXi);
+          if (rdX1 < PADL || rdX0 > W - PADR) continue;
+          rdXa = Math.max(PADL, rdX0);
+          rdXb = Math.min(W - PADR, rdX1);
+          rdXc = Math.max(PADL, Math.min(W - PADR, xOf(rdIt.last >= 0 ? rdIt.last : rdEi)));
+          rdY1 = Math.max(ptop, yOfPair(rdIt, rdHi) - 3);
+          rdY2 = Math.min(pbot, yOfPair(rdIt, rdLo) + 3);
+          if (rdY2 - rdY1 < 8) { rdYc = (rdY1 + rdY2) / 2; rdY1 = rdYc - 4; rdY2 = rdYc + 4; }
+          rdYe = Math.max(ptop, Math.min(pbot, yOfPair(rdIt, rdEp)));
+          rdYc = Math.max(ptop, Math.min(pbot, yOfPair(rdIt, rdCp)));
+          rdUp = (rdT.dir === 'CALL');
+          rdWin = rdUp ? (rdCp > rdEp) : (rdCp < rdEp);
+          rdDir = rdUp ? (window.accentGreenHex || '#2ED573') : (window.accentRedHex || '#E63946');
+          rdDelta = rdCp - rdEp;
+          rdRem = Math.max(0, (rdT.openAt + rdT.exp) - Date.now() / 1000);
+          rdPl = (typeof rdT.profit === 'number' && isFinite(rdT.profit)) ? rdT.profit : null;
+          rdPulse = 0.5 + 0.5 * Math.sin(Date.now() / 120);
+          rdDec = (rdIt.dec >= 0 && rdIt.dec <= 8) ? rdIt.dec : 3;
+          TC.pulseOn = true;
+          ctx.save();
+          ctx.setLineDash([6, 3]);
+          ctx.globalAlpha = 0.1 + 0.08 * rdPulse;
+          ctx.fillStyle = rdWin ? CY : AM;
+          ctx.fillRect(rdXa, rdY1, Math.max(0, rdXb - rdXa), rdY2 - rdY1);
+          ctx.globalAlpha = 0.9;
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = rdWin ? CY : AM;
+          ctx.strokeRect(rdXa, rdY1, Math.max(0, rdXb - rdXa), rdY2 - rdY1);
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = rdDir;
+          ctx.beginPath();
+          ctx.moveTo(rdXa, rdYe);
+          ctx.lineTo(rdXb, rdYe);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(rdXa, rdYe, 4.5, 0, 6.2832);
+          ctx.fillStyle = rdDir;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(rdXc, rdYc, 4 + 2 * rdPulse, 0, 6.2832);
+          ctx.fillStyle = rdWin ? CY : AM;
+          ctx.fill();
+          rdRows = [
+            'LIVE ' + rdT.dir + ' ' + getPairDisplayName(rdT.pair) + '  $' + Number(rdT.stake || 0).toFixed(2),
+            (rdT.type || '') + ' R' + (rdT.r !== undefined ? rdT.r : '-') + ' X' + (rdT.s1 !== undefined ? rdT.s1 : '-') + '  ' + rdT.exp + 's  ' + rdRem.toFixed(1) + 's left',
+            'IN ' + rdEp.toFixed(rdDec) + '  NOW ' + rdCp.toFixed(rdDec),
+            (rdDelta >= 0 ? '+' : '') + rdDelta.toFixed(rdDec) + '  ' + (rdWin ? 'WINNING' : 'LOSING') + (rdPl !== null ? '  P/L ' + (rdPl >= 0 ? '+' : '-') + '$' + Math.abs(rdPl).toFixed(2) : '')
+          ];
+          ctx.font = 'bold 10px ' + MONO;
+          rdMw = 0;
+          for (rdM = 0; rdM < rdRows.length; rdM++) {
+            rdMw = Math.max(rdMw, ctx.measureText(rdRows[rdM]).width);
+          }
+          rdPw = rdMw + 12;
+          rdPh = rdRows.length * 13 + 6;
+          rdPx = Math.max(PADL + 2, Math.min(W - PADR - rdPw - 2, rdXa));
+          rdPy = rdY1 - rdPh - 6;
+          if (rdPy < ptop + 2) rdPy = rdY2 + 6;
+          rdPy = Math.max(ptop + 2, Math.min(pbot - rdPh - 2, rdPy));
+          ctx.globalAlpha = 0.92;
+          ctx.fillStyle = BG;
+          ctx.fillRect(rdPx, rdPy, rdPw, rdPh);
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = rdWin ? CY : AM;
+          ctx.strokeRect(rdPx + 0.5, rdPy + 0.5, rdPw - 1, rdPh - 1);
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'alphabetic';
+          for (rdM = 0; rdM < rdRows.length; rdM++) {
+            ctx.fillStyle = (rdM === rdRows.length - 1) ? (rdWin ? CY : AM) : '#E2E8F0';
+            ctx.fillText(rdRows[rdM], rdPx + 6, rdPy + 13 + rdM * 13);
+          }
           ctx.restore();
         }
         if (typeof lastClickedSigId === 'string' && lastClickedSigId && currentInstances.length > 0) {

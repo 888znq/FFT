@@ -816,6 +816,10 @@ function drvOnMessage(msg) {
     item = DRVT.pending[rid] || {};
     delete DRVT.pending[rid];
     DRVT.buys++;
+    item.id = msg.buy.contract_id;
+    item.openAt = Number(msg.buy.start_time) || Math.floor(Date.now() / 1000);
+    item.stake = Number(msg.buy.buy_price) || DRVT.stake;
+    item.payout = Number(msg.buy.payout) || 0;
     DRVT.open[msg.buy.contract_id] = item;
     logEvent("DRV_BUY_OK", "OPEN (DERIV CONFIRMED) " + (item.dir || "?") + " " + (item.pair || "?") + " id=" + msg.buy.contract_id + " stake=$" + msg.buy.buy_price);
     try {
@@ -831,6 +835,10 @@ function drvOnMessage(msg) {
     c = msg.proposal_open_contract;
     item = DRVT.open[c.contract_id];
     if (!item) return;
+    if (c.entry_tick || c.entry_spot) item.entry = Number(c.entry_tick || c.entry_spot);
+    if (c.current_spot !== undefined && c.current_spot !== null) item.cur = Number(c.current_spot);
+    if (c.profit !== undefined && c.profit !== null) item.profit = Number(c.profit);
+    if (c.date_start) item.openAt = Number(c.date_start);
     if (c.is_sold || c.is_expired || c.status === "won" || c.status === "lost") {
       delete DRVT.open[c.contract_id];
       pnl = (c.profit !== undefined && c.profit !== null) ? Number(c.profit) : (Number(c.sell_price || 0) - Number(c.buy_price || 0));
@@ -1519,6 +1527,21 @@ const server = http.createServer((req, res) => {
       lastTickTime,
       recentEvents
     });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/drv") {
+    if (!isAuthorized(req, urlObj)) {
+      sendJson(res, 401, { error: "Unauthorized" });
+      return;
+    }
+    var drvOut = [], drvK, drvIt;
+    for (drvK in DRVT.open) {
+      drvIt = DRVT.open[drvK];
+      if (!drvIt || !drvIt.pair) continue;
+      drvOut.push({ id: drvK, pair: drvIt.pair, dir: drvIt.dir, type: drvIt.type, exp: drvIt.exp, stake: drvIt.stake, payout: drvIt.payout, openAt: drvIt.openAt, entry: drvIt.entry, cur: drvIt.cur, profit: drvIt.profit, r: drvIt.r, s1: drvIt.s1 });
+    }
+    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut });
     return;
   }
 
