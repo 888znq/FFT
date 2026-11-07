@@ -660,6 +660,40 @@ function drvHoldReplay(x, tag, start) {
 }
 
 function drvHoldPick(list, tag, start) {
+  var i, x, miss, rows = [], bestBy = {}, out, bk, kb, b;
+  if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
+  if (!DRVT.holdLock) DRVT.holdLock = {};
+  if (!DRVT.runners) DRVT.runners = {};
+  for (i = 0; i < list.length; i++) {
+    x = list[i];
+    if (!x) continue;
+    miss = tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0);
+    if (miss !== 0) continue;
+    rows.push(x);
+  }
+  rows.sort(function (a, b2) {
+    return ((b2.pct || 0) - (a.pct || 0)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0));
+  });
+  bk = function (z) {
+    return z.pair + "|" + (z.sess || 1) + "|" + z.col + "|" + z.s1 + "|" + z.s2 + "|" + z.pct + "|" + z.c1 + "|" + z.c2;
+  };
+  for (i = 0; i < rows.length; i++) {
+    kb = bk(rows[i]);
+    b = bestBy[kb];
+    if (!b || rows[i].r < b.r || (rows[i].r === b.r && rows[i].c < b.c)) bestBy[kb] = rows[i];
+  }
+  out = rows.filter(function (z) { return bestBy[bk(z)] === z; });
+  if (!out.length) {
+    DRVT.holdLock[tag] = "";
+    DRVT.runners[tag] = [];
+    return null;
+  }
+  DRVT.holdLock[tag] = out[0].pair + "|" + out[0].c + "|" + out[0].r + "|" + out[0].s1 + "|" + out[0].s2 + "|" + out[0].col + "|" + tag;
+  DRVT.runners[tag] = out.slice(1, 3);
+  return out[0];
+}
+
+function drvHoldPickOld(list, tag, start) {
   var now = nowSec(), nowMs = Date.now(), i, x, k, key, e, o, best = {}, arr = [], seen;
   if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
   seen = DRVT.holdSeen;
@@ -676,40 +710,29 @@ function drvHoldPick(list, tag, start) {
     return null;
   }
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-  var j, t, rp, ob, best = null, cur = null, lk, obs = [];
+  var j, ob, obs = [];
+  best = null;
   if (!DRVT.holdLock) DRVT.holdLock = {};
-  lk = DRVT.holdLock[tag];
   var beats = function (a, b) {
-    if (a.h !== b.h) return a.h;
-    if (a.h) {
-      if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
-      if (a.t !== b.t) return a.t < b.t;
-      if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
-      if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
-      return (a.x.pct || 0) > (b.x.pct || 0);
-    }
-    if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
     if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
-    if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
-    return (a.x.pct || 0) > (b.x.pct || 0);
+    if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+    if ((a.x.pct || 0) !== (b.x.pct || 0)) return (a.x.pct || 0) > (b.x.pct || 0);
+    return (a.x.s1 || 0) < (b.x.s1 || 0);
   };
-  var hd;
   for (j = 0; j < arr.length; j++) {
-    t = seen[arr[j].key];
-    hd = misOf(arr[j].x) === 0;
-    if (hd) {
-      rp = drvHoldReplay(arr[j].x, tag, start);
-      if (rp !== null && rp < t) t = rp;
-    } else {
-      t = nowMs;
+    if (misOf(arr[j].x) !== 0) {
       seen[arr[j].key] = nowMs;
+      continue;
     }
-    ob = { x: arr[j].x, key: arr[j].key, t: t, h: hd };
+    ob = { x: arr[j].x, key: arr[j].key, t: seen[arr[j].key], h: true };
     obs.push(ob);
-    if (ob.key === lk) cur = ob;
     if (!best || beats(ob, best) || (!beats(best, ob) && ob.key < best.key)) best = ob;
   }
-  if (cur && cur.h && !((best.x.s1 || 0) < (cur.x.s1 || 0) || ((best.x.s1 || 0) === (cur.x.s1 || 0) && best.t < cur.t))) best = cur;
+  if (!best) {
+    DRVT.holdLock[tag] = "";
+    if (DRVT.runners) DRVT.runners[tag] = [];
+    return null;
+  }
   DRVT.holdLock[tag] = best.key;
   try {
     obs.sort(function (a, b) { return beats(a, b) ? -1 : (beats(b, a) ? 1 : (a.key < b.key ? -1 : 1)); });

@@ -5994,7 +5994,7 @@
     .filter(function(x) { return _levelVal === 0 || x.s1 === _levelVal; })
     .sort(function(a, b) { return (b.pct * b.c1) - (a.pct * a.c1); });
     var top = null;
-    if (window._holdOn && typeof window._holdBuild === 'function') {
+    if (false && window._holdOn && typeof window._holdBuild === 'function') {
       if (typeof window._holdSettled === 'function' && !window._holdSettled() && (window._holdSelTry = (window._holdSelTry || 0) + 1) < 40) {
         setTimeout(_autoSelectTopSignal, 300);
         return;
@@ -6200,8 +6200,6 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-      if (window._holdOn && typeof window._holdBuild === 'function') return window._holdBuild(tag);
-      if (_wsC2On) return _wsC2Build(list);
             return _wsBuild(list);
             return _buildTop10Core(list);
     }
@@ -6229,6 +6227,8 @@
               })())
             .slice(0, 100);
     }
+    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice()); };
+    window._holdKing = function (tg) { var _hl = window._holdBuild(tg); return _hl.length ? _hl[0] : null; };
     var revTop10 = _buildTop10(globalRevs.slice(), 'REV');
     var momTop10 = _buildTop10(globalMoms.slice(), 'MOM');
     if (false && window._tcSigMode === 'MIX') {
@@ -6292,18 +6292,18 @@
       });
     return html;
   }
-  var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = 100, _wsC2On = false, _wsC2n = 0;
+  var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = Infinity, _wsC2On = false, _wsC2n = 0;
     function _wsStepC2(dir) {
-      if (window._HOLD_ONLY !== false) return;
-      window._holdOn = false;
       _wsC2n = (_wsC2n + (dir || 1) + 11) % 11;
       try { renderFilteredTable(); } catch (e) {}
       try { window._lockTopSignal(); } catch (e) {}
     }
 
   function _wsBuild(list) {
+      var _mpEl = document.getElementById('minPctInput'), _lvEl = document.getElementById('levelFilterSelect');
+      var _mp = _mpEl ? (parseFloat(_mpEl.value) || 0) : 0, _lv = _lvEl ? (parseInt(_lvEl.value) || 0) : 0;
       var out = list.filter(function (x) {
-        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === _wsC2n;
+        return !_hiddenPairs.has(x.pair) && x.pct >= _mp && (_lv === 0 || x.s1 === _lv) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === _wsC2n;
       });
       out.sort(function (a, b) {
         return (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
@@ -6351,7 +6351,33 @@
                 { k: 'c2up', txt: '\u25B6', on: false, fn: function () { _wsStepC2(1); } },
                 { k: 'hold', txt: 'HOLD', on: !!window._holdOn, fn: function () { window._holdToggle(); } }
       ];
-      if (window._HOLD_ONLY !== false) {
+      if (true) {
+        if (!window._wsC2Bound) {
+          window._wsC2Bound = 1;
+          document.addEventListener('click', function (ev) {
+            var t = ev.target;
+            if (!t || !t.closest) return;
+            if (t.closest('.wsC2dn')) { ev.stopPropagation(); _wsStepC2(-1); }
+            else if (t.closest('.wsC2up')) { ev.stopPropagation(); _wsStepC2(1); }
+          }, true);
+        }
+        ['peaksTableBodyRev', 'peaksTableBodyMom'].forEach(function (_id) {
+          var _tb = document.getElementById(_id);
+          var _tbl = _tb ? _tb.closest('table') : null;
+          if (_tbl && !_tbl.querySelector('thead')) {
+            var _hd = document.createElement('thead');
+            var _ths = 'font-size:9px;font-weight:800;color:#FFFFFF;background:var(--bg-panel);padding:4px 2px;text-align:center;border-bottom:1px solid #000432;position:sticky;top:0;z-index:2;';
+            _hd.innerHTML = '<tr><th style="' + _ths + 'text-align:left;padding-left:14px;">PAIR</th><th style="' + _ths + '">CYCLE</th><th style="' + _ths + '">ROW</th><th style="' + _ths + '">STREAK</th><th style="' + _ths + '">C1</th><th style="' + _ths + '">C2</th><th style="' + _ths + 'padding-right:12px;">PROB%</th></tr>';
+            _tbl.insertBefore(_hd, _tb);
+          }
+          var _th = _tbl ? _tbl.querySelector('thead tr th:nth-child(6)') : null;
+          if (!_th) return;
+          var _lbl = 'C2=' + (_id === 'peaksTableBodyMom' ? (_wsC2n ? 'C1-' + _wsC2n : 'C1') : _wsC2n);
+          if (_th.getAttribute('data-c2lbl') === _lbl && _th.querySelector('.wsC2dn')) return;
+          _th.setAttribute('data-c2lbl', _lbl);
+          _th.style.whiteSpace = 'nowrap';
+          _th.innerHTML = '<span class="wsC2dn" style="cursor:pointer;padding:2px 4px 2px 0;font-size:.85em;user-select:none;" title="Previous C2 count">&#9664;</span>' + _lbl + '<span class="wsC2up" style="cursor:pointer;padding:2px 0 2px 4px;font-size:.85em;user-select:none;" title="Next C2 count">&#9654;</span>';
+        });
         var _pbx = document.querySelectorAll('.wsPaneBtns');
         for (var _pbi = 0; _pbi < _pbx.length; _pbi++) { if (_pbx[_pbi].parentNode) _pbx[_pbi].parentNode.removeChild(_pbx[_pbi]); }
         var _phd = document.querySelectorAll('.wsHdr');
@@ -6993,13 +7019,12 @@
       }
       var dkB = {}, dkK, dkE, dkO;
       var misOf = function (z) { return (tag === 'MOM') ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
+      var dkKey = function (z) { return z.pair + '|' + z.c + '|' + z.r + '|' + z.s1 + '|' + z.s2 + '|' + z.col + '|' + tag; };
       var dkCmp = function (a, b) {
-        if (misOf(a) === 0 && misOf(b) === 0) {
-          return ((a.s1 || 0) - (b.s1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.c1 || 0) - (a.c1 || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
-        }
-        return ((b.c1 || 0) - (a.c1 || 0)) || ((a.s1 || 0) - (b.s1 || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
+        return ((b.c1 || 0) - (a.c1 || 0)) || (misOf(a) - misOf(b)) || ((b.pct || 0) - (a.pct || 0)) || ((a.s1 || 0) - (b.s1 || 0)) || (dkKey(a) < dkKey(b) ? -1 : (dkKey(a) > dkKey(b) ? 1 : 0));
       };
-      out.sort(function (a, b) { return (misOf(a) - misOf(b)) || dkCmp(a, b); });
+      out = out.filter(function (z) { return misOf(z) === 0; });
+      out.sort(dkCmp);
       var dkCnt = {}, dkSeen = {};
       out = out.filter(function (z) {
         var rk = z.pair + '|' + z.s1 + '|' + z.s2 + '|' + z.col + '|' + (z.c1 || 0) + '|' + (z.c2 || 0);
@@ -7019,18 +7044,10 @@
       var best = null, bestK = '', cur = null, k, e, x, p, o;
       var misOf = function (z) { return (tag === 'MOM') ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
       var beats = function (a, b) {
-        if (a.h !== b.h) return a.h;
-        if (a.h) {
-          if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
-          if (a.t0 !== b.t0) return a.t0 < b.t0;
-          if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
-          if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
-          return (a.x.pct || 0) > (b.x.pct || 0);
-        }
-        if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
         if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
-        if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
-        return (a.x.pct || 0) > (b.x.pct || 0);
+        if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+        if ((a.x.pct || 0) !== (b.x.pct || 0)) return (a.x.pct || 0) > (b.x.pct || 0);
+        return (a.x.s1 || 0) < (b.x.s1 || 0);
       };
       if (KG.sess !== S.sess) { KG.sess = S.sess; KG.REV = ''; KG.MOM = ''; KG['REV#f'] = ''; KG['MOM#f'] = ''; }
       for (k in S.map) {
@@ -7045,11 +7062,10 @@
         if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(x.pair))) continue;
         if ((+x.s1 || 0) < 1 || +x.s2 !== (+x.s1) + 1 || (x.c1 || 0) < 3) continue;
         if (filt && !filt(x)) continue;
-        if (k === KG[lkTag]) cur = e;
+        if (misOf(x) !== 0) continue;
         if (!best || beats(e, best) || (!beats(best, e) && k < bestK)) { best = e; bestK = k; }
       }
       if (!best) { KG[lkTag] = ''; return null; }
-      if (cur && cur.h && !(((+best.x.s1 || 0) < (+cur.x.s1 || 0)) || ((+best.x.s1 || 0) === (+cur.x.s1 || 0) && best.t0 < cur.t0))) { best = cur; bestK = KG[lkTag]; }
       KG[lkTag] = bestK;
       o = {};
       for (p in best.x) o[p] = best.x[p];
@@ -7491,7 +7507,7 @@
   })();
   function _wpKingHtml(tag) {
     try {
-      if (typeof window._holdKing !== 'function') return '';
+      return '';
       var d = window._holdKing(tag);
       if (!d) return '';
       var cs = 'font-size:11px;font-weight:700;padding:8px 2px;text-align:center;';
