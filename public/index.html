@@ -7009,15 +7009,14 @@
       var dkCmp = function (a, b) {
         return ((b.c1 || 0) - (a.c1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
       };
-      out.forEach(function (z) {
+      out.sort(function (a, b) { return (misOf(a) - misOf(b)) || dkCmp(a, b); });
+      var dkCnt = {};
+      out = out.filter(function (z) {
         dkK = misOf(z);
-        dkO = dkB[dkK];
-        if (!dkO || dkCmp(z, dkO) < 0) dkB[dkK] = z;
+        dkCnt[dkK] = (dkCnt[dkK] || 0) + 1;
+        return dkCnt[dkK] <= 10;
       });
-      out = [];
-      for (dkK in dkB) out.push(dkB[dkK]);
-      out.sort(function (a, b) { return misOf(a) - misOf(b); });
-      return out.slice(0, TOPN);
+      return out;
     };
     window._holdToggle = function () {
       if (window._HOLD_ONLY !== false) { window._holdOn = true; return; }
