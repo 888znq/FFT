@@ -7072,13 +7072,17 @@
       return o;
     };
     window._holdAllZero = function (tag) {
-      var zOut = [], zSeen = {}, zK, zE, zX, zP, zO, zRk;
+      var zOut = [], zSeen = {}, zNext = {}, zSrc, zI, zK, zE, zX, zP, zO, zRk, zT;
       var zHid = (typeof _hiddenPairs !== 'undefined') ? _hiddenPairs : null;
       var zR0 = (typeof r0OnlyMode !== 'undefined') && r0OnlyMode;
-      for (zK in S.map) {
-        zE = S.map[zK];
-        if (zE.tag !== tag || !zE.h) continue;
-        zX = zE.x;
+      var zNow = Date.now();
+      var zSt = window._zeroSeen;
+      if (!zSt || zSt.sess !== S.sess) zSt = window._zeroSeen = { sess: S.sess, m: { REV: {}, MOM: {} } };
+      var zPrev = zSt.m[tag] || {};
+      zSrc = (tag === 'MOM') ? globalMoms : globalRevs;
+      for (zI = 0; zI < zSrc.length; zI++) {
+        zX = zSrc[zI];
+        if (!zX || (+zX.s1 || 0) !== 1 || (+zX.s2 || 0) !== 2 || (zX.c1 || 0) < 1) continue;
         if (zHid && zHid.has(zX.pair)) continue;
         if (typeof activePairs !== 'undefined' && activePairs !== null && activePairs.indexOf(zX.pair) < 0) continue;
         if (zR0 && zX.r !== 0) continue;
@@ -7086,13 +7090,19 @@
         if (window._fxOnly && /^1HZ/i.test(String(zX.pair))) continue;
         if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(zX.pair))) continue;
         if (((tag === 'MOM') ? ((zX.c1 || 0) - (zX.c2 || 0)) : (zX.c2 || 0)) !== 0) continue;
+        zK = zX.pair + '|' + zX.c + '|' + zX.r + '|' + zX.s1 + '|' + zX.s2 + '|' + zX.col + '|' + tag;
+        zE = S.map[zK];
+        zT = zPrev[zK] || zNow;
+        if (zE && zE.h && zE.t0 < zT) zT = zE.t0;
+        zNext[zK] = zT;
         zO = {};
         for (zP in zX) zO[zP] = zX[zP];
-        zO._holdT = zE.t0;
+        zO._holdT = zT;
         zOut.push(zO);
       }
+      zSt.m[tag] = zNext;
       zOut.sort(function (a, b) {
-        return ((b.c1 || 0) - (a.c1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.pct || 0) - (a.pct || 0)) || ((a.s1 || 0) - (b.s1 || 0));
+        return ((b.c1 || 0) - (a.c1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.pct || 0) - (a.pct || 0));
       });
       return zOut.filter(function (z) {
         zRk = z.pair + '|' + z.s1 + '|' + z.s2 + '|' + z.col + '|' + (z.c1 || 0) + '|' + (z.c2 || 0);
@@ -7555,9 +7565,16 @@
   }
 
     function renderScannerTable(revList, momList, deadList) {
+      var zUsed = false;
       if (window._zeroOn && typeof window._holdAllZero === 'function') {
-        revList = window._holdAllZero('REV');
-        momList = window._holdAllZero('MOM');
+        var zR = window._holdAllZero('REV'), zM = window._holdAllZero('MOM');
+        if (zR.length + zM.length > 0) {
+          revList = zR;
+          momList = zM;
+          zUsed = true;
+        } else if (typeof scanPending !== 'undefined' && scanPending === 0 && (globalRevs.length + globalMoms.length) > 0) {
+          window._zeroOn = false;
+        }
       }
       var revTbody = document.getElementById('peaksTableBodyRev');
       var momTbody = document.getElementById('peaksTableBodyMom');
@@ -7565,6 +7582,14 @@
       if (momTbody) momTbody.innerHTML = _wpKingHtml('MOM') + _buildScannerRowsHtml(momList);
         _paintLvlHdrs(revTbody);
         _paintLvlHdrs(momTbody);
+        try {
+          var zTb = [revTbody, momTbody], zJ, zTr;
+          for (zJ = 0; zJ < 2; zJ++) {
+            if (!zTb[zJ] || !zUsed) continue;
+            zTr = zTb[zJ].querySelector('tr.highlight-gem');
+            if (zTr) zTr.classList.add('zeroTop');
+          }
+        } catch (eZ) {}
                 _wsPaintPaneBtns();
       }
 
@@ -17754,6 +17779,13 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
 <script>
 (function () {
   var zTries = 0;
+  window._zeroOn = true;
+  try {
+    var zSt0 = document.createElement('style');
+    zSt0.id = 'zeroPulseCss';
+    zSt0.textContent = '@keyframes zeroPulse{0%,100%{filter:brightness(1);outline-color:rgba(255,215,0,0.35);}50%{filter:brightness(1.6);outline-color:rgba(255,215,0,1);}}html body tr.zeroTop{animation:zeroPulse 1s ease-in-out infinite !important;outline:2px solid #FFD700 !important;outline-offset:-2px !important;}';
+    document.head.appendChild(zSt0);
+  } catch (eP0) {}
   var zTitle = 'ZERO-HOLD: show every signal that still has no miss (REV C2=0, MOM C1=C2), highest C1 first, with first-seen time and hold time';
   function zFlip(v) {
     window._zeroOn = !!v;
