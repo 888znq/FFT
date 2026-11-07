@@ -7021,6 +7021,41 @@
       });
       return out;
     };
+    var KG = { sess: '', REV: '', MOM: '' };
+    window._holdKing = function (tag) {
+      var hid = (typeof _hiddenPairs !== 'undefined') ? _hiddenPairs : null;
+      var r0 = (typeof r0OnlyMode !== 'undefined') && r0OnlyMode;
+      var best = null, bestK = '', cur = null, k, e, x, p, o;
+      var misOf = function (z) { return (tag === 'MOM') ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
+      var beats = function (a, b) {
+        if (a.t0 !== b.t0) return a.t0 < b.t0;
+        if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+        if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+        return (a.x.pct || 0) > (b.x.pct || 0);
+      };
+      if (KG.sess !== S.sess) { KG.sess = S.sess; KG.REV = ''; KG.MOM = ''; }
+      for (k in S.map) {
+        e = S.map[k];
+        if (e.tag !== tag) continue;
+        x = e.x;
+        if (hid && hid.has(x.pair)) continue;
+        if (typeof activePairs !== 'undefined' && activePairs !== null && activePairs.indexOf(x.pair) < 0) continue;
+        if (r0 && x.r !== 0) continue;
+        if (window._drvOnly && !/^1HZ/i.test(String(x.pair))) continue;
+        if (window._fxOnly && /^1HZ/i.test(String(x.pair))) continue;
+        if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(x.pair))) continue;
+        if (+x.s1 !== 1 || +x.s2 !== 2 || (x.c1 || 0) < 3) continue;
+        if (k === KG[tag]) cur = e;
+        if (!best || beats(e, best) || (!beats(best, e) && k < bestK)) { best = e; bestK = k; }
+      }
+      if (!best) { KG[tag] = ''; return null; }
+      if (cur && !(best.t0 < cur.t0)) { best = cur; bestK = KG[tag]; }
+      KG[tag] = bestK;
+      o = {};
+      for (p in best.x) o[p] = best.x[p];
+      o._holdT = best.t0;
+      return o;
+    };
     window._holdToggle = function () {
       if (window._HOLD_ONLY !== false) { window._holdOn = true; return; }
       window._holdOn = !window._holdOn;
@@ -7455,7 +7490,22 @@
     document.head.appendChild(st);
   })();
   function _wpKingHtml(tag) {
-    return '';
+    try {
+      if (typeof window._holdKing !== 'function') return '';
+      var d = window._holdKing(tag);
+      if (!d) return '';
+      var cs = 'font-size:11px;font-weight:700;padding:8px 2px;text-align:center;';
+      return '<tr class="' + (d.col === 'R' ? 'row-red' : 'row-green') + ' kingRow" style="cursor:pointer;" onclick="_wpFocusSet(\'' + d.pair + '\'); manualSelectSignal(\'' + d.pair + '\', ' + d.c + ', ' + d.r + ', ' + d.s1 + ', ' + d.s2 + ', \'' + d.col + '\', \'' + d.type + '\', ' + (d.gap || 0) + ', ' + (d.curGap || 0) + ', ' + (d.c1 || 0) + ', ' + (d.c2 || 0) + ')">' +
+        '<td style="' + cs + 'text-align:left;padding-left:8px;overflow:hidden;white-space:nowrap;box-shadow:inset 4px 0 0 #FFD700 !important;">\u2605 ' + getPairDisplayName(d.pair) + (d._holdT ? window._holdTag(d) : '') + '</td>' +
+        '<td style="' + cs + '">C' + d.c + '</td>' +
+        '<td style="' + cs + '">R' + d.r + '</td>' +
+        '<td style="' + cs + '">X' + d.s1 + '-X' + d.s2 + '</td>' +
+        '<td style="' + cs + '">' + (d.c1 || 0) + '</td>' +
+        '<td style="' + cs + '">' + (d.c2 || 0) + '</td>' +
+        '<td style="' + cs + '">' + d.pct + '%</td></tr>';
+    } catch (e) {
+      return '';
+    }
   }
 
     function renderScannerTable(revList, momList, deadList) {
