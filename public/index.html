@@ -2413,11 +2413,42 @@
       }
 
       var lvDrvBusy = false;
+      var _drvBtnEl = null, _drvPanEl = null, _drvPanOpen = false;
+      function _drvBtnPaint() {
+        var m = window._drvMis || { st: 'none', lab: 'DRV: WAITING', det: '' };
+        if (!_drvBtnEl) {
+          _drvBtnEl = document.createElement('button');
+          _drvBtnEl.id = 'drvMisBtn';
+          _drvBtnEl.type = 'button';
+          _drvBtnEl.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:2147483000;padding:5px 10px;border:2px solid #FFFFFF;border-radius:6px;font:bold 10px monospace;letter-spacing:0.05em;cursor:pointer;';
+          _drvPanEl = document.createElement('div');
+          _drvPanEl.id = 'drvMisPan';
+          _drvPanEl.style.cssText = 'position:fixed;left:8px;bottom:40px;z-index:2147483000;max-width:440px;max-height:50vh;overflow:auto;padding:8px 10px;border:1px solid #FFFFFF;border-radius:6px;background:#000432;color:#E2E8F0;font:10px monospace;white-space:pre-wrap;display:none;';
+          _drvBtnEl.onclick = function () {
+            _drvPanOpen = !_drvPanOpen;
+            _drvBtnPaint();
+          };
+          (document.body || document.documentElement).appendChild(_drvPanEl);
+          (document.body || document.documentElement).appendChild(_drvBtnEl);
+        }
+        _drvBtnEl.textContent = m.lab;
+        _drvBtnEl.style.background = (m.st === 'bad') ? '#E63946' : ((m.st === 'ok') ? '#2ED573' : '#475569');
+        _drvBtnEl.style.color = (m.st === 'ok') ? '#000432' : '#FFFFFF';
+        _drvPanEl.textContent = m.det || '';
+        _drvPanEl.style.display = (_drvPanOpen && m.det) ? 'block' : 'none';
+      }
+      function _drvBtnSet(st, lab, det) {
+        try {
+          window._drvMis = { st: st, lab: lab, det: det || '' };
+          _drvBtnPaint();
+        } catch (eBt) {}
+      }
       function _drvChk(locks) {
         try {
-          if (typeof globalRevs === 'undefined' || typeof globalMoms === 'undefined') { return; }
+          if (!locks || !locks.length) { window._drvChkSig = ''; _drvBtnSet('none', 'DRV: NO LOCK', 'Server has no locked signals'); return; }
+          if (typeof globalRevs === 'undefined' || typeof globalMoms === 'undefined') { _drvBtnSet('none', 'DRV: CLIENT NOT READY', 'Front end scan data not loaded yet'); return; }
           var scf = window._champScore;
-          if (typeof scf !== 'function') { return; }
+          if (typeof scf !== 'function') { _drvBtnSet('none', 'DRV: CLIENT NOT READY', 'Front end scoring not loaded yet'); return; }
           var mpe = document.getElementById('minPctInput');
           var mp = mpe ? (parseFloat(mpe.value) || 85) : 85;
           var parts = [], bad = 0;
@@ -2455,6 +2486,7 @@
             if (d.length) { bad++; }
             parts.push(L.type + ' ' + L.pair + ' C' + L.c + ' R' + L.r + ' X' + L.s1 + ' ' + L.col + (d.length ? ' => ' + d.join('; ') : ' => OK'));
           }
+          _drvBtnSet(bad ? 'bad' : 'ok', bad ? ('DRV MISMATCH (' + bad + ')') : 'DRV SYNC OK', parts.join('\n'));
           var msg = parts.join(' | ');
           if (msg !== window._drvChkSig) {
             window._drvChkSig = msg;
@@ -2471,8 +2503,8 @@
         if (tk2) { hdr2['x-api-token'] = tk2; }
         fetch('/drv', { cache: 'no-store', headers: hdr2 })
           .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; if (window._drvLocks.length) { _drvChk(window._drvLocks); } } })
-          .catch(function () {})
+          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; _drvChk(window._drvLocks); } else if (!j) { _drvBtnSet('bad', 'DRV: SERVER ERROR', '/drv returned no data'); } })
+          .catch(function () { _drvBtnSet('bad', 'DRV: NO SERVER', '/drv unreachable'); })
           .then(function () { lvDrvBusy = false; });
       }
 
@@ -2488,6 +2520,7 @@
       lvPoll();
       setInterval(lvPoll, LV_POLL_MS);
       setInterval(lvDrvPoll, 2000);
+      _drvBtnSet('none', 'DRV: WAITING', 'No server data yet');
       lvDrvPoll();
       window.addEventListener('online', lvPoll);
       document.addEventListener('visibilitychange', function () { if (!document.hidden) { lvPoll(); } });
