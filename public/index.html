@@ -2458,7 +2458,7 @@
             var bp = {}, i, x, s, k;
             for (i = 0; i < src.length; i++) {
               x = src[i];
-              if (x.c !== L.c || !(x.pct >= mp)) { continue; }
+              if (x.c !== L.c || !(x.pct >= mp) || !/^1HZ/i.test(x.pair)) { continue; }
               s = scf(x);
               if (!bp[x.pair] || s > bp[x.pair].s) { bp[x.pair] = { x: x, s: s }; }
             }
@@ -2478,6 +2478,11 @@
               if (cx.s1 !== L.s1) { d.push('X client ' + cx.s1 + ' vs server ' + L.s1); }
               if (cx.s2 !== l2) { d.push('X2 client ' + cx.s2 + ' vs server ' + l2); }
               if (cx.col !== L.col) { d.push('col client ' + cx.col + ' vs server ' + L.col); }
+            }
+            var hs = Math.floor(Date.now() / 1000);
+            hs = hs - (hs % 3600);
+            if (typeof currentStartTsUtc !== 'undefined' && (currentStartTsUtc !== hs || (typeof currentDuration !== 'undefined' && currentDuration !== 3600))) {
+              d.push('scan window differs: client start ' + currentStartTsUtc + ' dur ' + (typeof currentDuration !== 'undefined' ? currentDuration : '?') + ' vs server hour start ' + hs + ' dur 3600');
             }
             var tp = window._lastAutoTop;
             if (tp && tp.type === L.type && (tp.pair !== L.pair || tp.r !== L.r || tp.s1 !== L.s1 || tp.col !== L.col)) {
