@@ -17786,7 +17786,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     zSt0.textContent = '@keyframes zeroPulse{0%,100%{filter:brightness(1);outline-color:rgba(255,215,0,0.35);}50%{filter:brightness(1.6);outline-color:rgba(255,215,0,1);}}html body tr.zeroTop{animation:zeroPulse 1s ease-in-out infinite !important;outline:2px solid #FFD700 !important;outline-offset:-2px !important;}';
     document.head.appendChild(zSt0);
   } catch (eP0) {}
-  var zTitle = 'ZERO-HOLD: show every signal that still has no miss (REV C2=0, MOM C1=C2), highest C1 first, with first-seen time and hold time';
+  var zTitle = 'BELL CURVE: show every signal that still has no miss (REV C2=0, MOM C1=C2), highest C1 first, with first-seen time and hold time';
   function zFlip(v) {
     window._zeroOn = !!v;
     try { if (typeof renderFilteredTable === 'function') renderFilteredTable(); } catch (e0) {}
@@ -17798,7 +17798,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     b.id = 'zeroHoldBtn';
     b.type = 'button';
     b.className = 'cb-btn';
-    b.textContent = 'ZERO-HOLD';
+    b.textContent = 'BELL CURVE';
     b.title = zTitle;
     b.onclick = function () {
       zFlip(!window._zeroOn);
@@ -17815,7 +17815,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
           type: 'button',
           group: 'SIGNAL',
           order: 50,
-          label: 'ZERO-HOLD',
+          label: 'BELL CURVE',
           title: zTitle,
           get: function () { return !!window._zeroOn; },
           set: function (v) { zFlip(v); }
