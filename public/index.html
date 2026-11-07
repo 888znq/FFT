@@ -7576,7 +7576,7 @@
           zUsed = true;
         } else if (typeof scanPending !== 'undefined' && scanPending === 0 && (globalRevs.length + globalMoms.length) > 0) {
           window._zeroOn = false;
-          try { window._zeroAlert([], [], false); } catch (eA) {}
+          try { window._zeroAlert([], [], false, true); } catch (eA) {}
         }
       }
       var revTbody = document.getElementById('peaksTableBodyRev');
@@ -17787,7 +17787,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
 <script>
 (function () {
   var zTries = 0;
-  var zPrev = null, zNewAt = {}, zBox = null, zChip = null;
+  var zPrev = null, zNewAt = {}, zBox = null, zChip = null, zObjPrev = {}, zOC = {}, zBroken = [], zCurLists = null, zHost = null;
   try {
     var zSt2 = document.createElement('style');
     zSt2.id = 'zeroAlertCss';
@@ -17806,7 +17806,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     if (zBox && zBox.parentNode) return zBox;
     zBox = document.createElement('div');
     zBox.id = 'zeroAlertBox';
-    zBox.style.cssText = 'position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;max-width:92vw;';
+    zBox.style.cssText = 'position:fixed;top:6px;right:6px;z-index:2147483000;display:flex;flex-direction:column;align-items:flex-end;gap:3px;pointer-events:none;max-width:290px;';
     zChip = document.createElement('div');
     zChip.style.cssText = 'padding:3px 12px;font:800 11px/1.3 Inter,monospace;letter-spacing:0.08em;background:#FFD700;color:#000432;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,0.5);white-space:nowrap;display:none;';
     zBox.appendChild(zChip);
@@ -17821,20 +17821,105 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     while (b.childNodes.length > 9) b.removeChild(b.childNodes[1]);
     setTimeout(function () { try { if (t.parentNode) t.parentNode.removeChild(t); } catch (eT) {} }, ms);
   }
-  window._zeroAlert = function (zR, zM, on) {
+  function zP2(n) { return n < 10 ? '0' + n : '' + n; }
+  function zHostEl() {
+    if (zHost && zHost.parentNode) return zHost;
+    zHost = document.createElement('div');
+    zHost.id = 'zeroBoxes';
+    zHost.style.cssText = 'position:fixed;top:6px;left:6px;right:300px;z-index:2147482999;display:none;gap:6px;align-items:flex-start;';
+    document.body.appendChild(zHost);
+    return zHost;
+  }
+  function zTr(x, tag, sub, bar) {
+    var bg = x.col === 'R' ? 'var(--accent-red,#E63946)' : 'var(--accent-green,#2ED573)';
+    var nm = x.pair, ty = x.type || tag;
+    var cs = 'font:700 10px/1.2 Inter,monospace;color:#000432;padding:5px 2px;text-align:center;border-right:1px solid #FFFFFF;';
+    try { nm = getPairDisplayName(x.pair); } catch (eN2) {}
+    return '<tr style="cursor:pointer;background:' + bg + ';" onclick="_wpFocusSet(\'' + x.pair + '\'); manualSelectSignal(\'' + x.pair + '\', ' + x.c + ', ' + x.r + ', ' + x.s1 + ', ' + x.s2 + ', \'' + x.col + '\', \'' + ty + '\', ' + (x.gap || 0) + ', ' + (x.curGap || 0) + ', ' + (x.c1 || 0) + ', ' + (x.c2 || 0) + ')">' +
+      '<td style="' + cs + 'text-align:left;padding-left:8px;overflow:hidden;white-space:nowrap;box-shadow:inset 4px 0 0 ' + bar + ';">' + nm + sub + '</td>' +
+      '<td style="' + cs + '">C' + x.c + '</td>' +
+      '<td style="' + cs + '">R' + x.r + '</td>' +
+      '<td style="' + cs + '">X' + x.s1 + '-X' + x.s2 + '</td>' +
+      '<td style="' + cs + '">' + (x.c1 || 0) + '</td>' +
+      '<td style="' + cs + '">' + (x.c2 || 0) + '</td>' +
+      '<td style="' + cs + 'border-right:0;">' + x.pct + '%</td></tr>';
+  }
+  function zRadar() {
+    var out = [], L = zCurLists, t, i, x, k, r, tags = ['REV', 'MOM'];
+    if (!L) return out;
+    for (t = 0; t < 2; t++) {
+      for (i = 0; i < L[t].length; i++) {
+        x = L[t][i];
+        r = null;
+        try {
+          k = _wpTmrKey(x);
+          if (!window._wpTmrMap || !window._wpTmrMap[k]) _wpTmrReg(x);
+          r = _wpTmrCalc(k);
+        } catch (eR) { r = null; }
+        if (r && r.kind === 'FIRED') out.push({ x: x, tag: tags[t], rem: Math.max(0, r.rem) });
+      }
+    }
+    out.sort(function (a, b) { return (a.rem - b.rem) || ((b.x.c1 || 0) - (a.x.c1 || 0)); });
+    return out;
+  }
+  function zBoxHtml(title, color, n, rows, btn) {
+    var th = 'position:sticky;top:0;background:#000432;font:800 8px/1.2 Inter,monospace;letter-spacing:0.08em;color:#8890b8;padding:3px 2px;text-align:center;';
+    return '<div style="flex:1 1 50%;min-width:0;background:#000432;border:1px solid ' + color + ';box-shadow:0 2px 12px rgba(0,0,0,0.5);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 8px;font:800 10px/1.3 Inter,monospace;letter-spacing:0.12em;color:' + color + ';"><span>' + title + ' \u00B7 ' + n + '</span>' + btn + '</div>' +
+      '<div class="zbBody" style="max-height:34vh;overflow-y:auto;"><table style="width:100%;table-layout:fixed;border-collapse:collapse;">' +
+      '<colgroup><col style="width:28%"><col style="width:10%"><col style="width:10%"><col style="width:19%"><col style="width:10%"><col style="width:10%"><col style="width:13%"></colgroup>' +
+      '<tr><th style="' + th + '">PAIR</th><th style="' + th + '">CYCLE</th><th style="' + th + '">ROW</th><th style="' + th + '">STREAK</th><th style="' + th + '">C1</th><th style="' + th + '">C2</th><th style="' + th + '">PROB%</th></tr>' +
+      (rows || '<tr><td colspan="7" style="padding:10px 0;font:800 10px Inter,monospace;text-align:center;color:#8890b8;">NONE</td></tr>') +
+      '</table></div></div>';
+  }
+  function zPaintBoxes() {
+    var host, rad, i, d, t, r1 = '', r2 = '', old, nw, sv = [0, 0], sp = 'display:block;font-size:8px;font-weight:800;line-height:9px;';
+    try {
+      rad = zRadar();
+      if (!rad.length && !zBroken.length) { if (zHost) zHost.style.display = 'none'; return; }
+      host = zHostEl();
+      for (i = 0; i < rad.length; i++) {
+        d = rad[i];
+        r1 += zTr(d.x, d.tag, '<span style="' + sp + '">' + d.tag + ' \u00B7 DECIDES IN ' + d.rem + 's</span>' + ((d.x._holdT && window._holdTag) ? window._holdTag(d.x) : ''), '#FFD700');
+      }
+      for (i = 0; i < zBroken.length; i++) {
+        d = zBroken[i];
+        t = new Date(d.at);
+        r2 += zTr(d.x, d.tag, '<span style="' + sp + '">' + d.tag + ' \u00B7 BROKE ' + zP2(t.getHours()) + ':' + zP2(t.getMinutes()) + ':' + zP2(t.getSeconds()) + '</span>', '#FFFFFF');
+      }
+      old = host.querySelectorAll('.zbBody');
+      if (old[0]) sv[0] = old[0].scrollTop;
+      if (old[1]) sv[1] = old[1].scrollTop;
+      host.innerHTML = zBoxHtml('ON RADAR \u25B2', '#FFD700', rad.length, r1, '') +
+        zBoxHtml('BROKEN \u25BC', '#E63946', zBroken.length, r2, '<span onclick="window._zeroClearBroken()" style="cursor:pointer;pointer-events:auto;padding:0 6px;border:1px solid #E63946;border-radius:999px;font-size:9px;">CLEAR</span>');
+      host.style.display = 'flex';
+      nw = host.querySelectorAll('.zbBody');
+      if (nw[0]) nw[0].scrollTop = sv[0];
+      if (nw[1]) nw[1].scrollTop = sv[1];
+    } catch (eB) {}
+  }
+  window._zeroClearBroken = function () { zBroken = []; zPaintBoxes(); };
+  setInterval(zPaintBoxes, 1000);
+  window._zeroAlert = function (zR, zM, on, auto) {
     var cur = {}, first, flags = [[], []], lists = [zR, zM], tags = ['REV', 'MOM'], li, i, x, k, now = Date.now(), brk = false;
     if (!on) {
+      if (auto && zPrev) { var zQ2; for (zQ2 in zObjPrev) zBroken.unshift({ x: zObjPrev[zQ2].x, tag: zObjPrev[zQ2].tag, at: Date.now() }); }
       zPrev = null;
+      zObjPrev = {};
+      zCurLists = null;
+      zPaintBoxes();
       if (zChip) zChip.style.display = 'none';
       return null;
     }
     zEnsure();
     first = (zPrev === null);
+    zOC = {};
     for (li = 0; li < 2; li++) {
       for (i = 0; i < lists[li].length; i++) {
         x = lists[li][i];
         k = zKey(x, tags[li]);
         cur[k] = zName(x) + ' ' + tags[li];
+        zOC[k] = { x: x, tag: tags[li] };
         if (!first && !zPrev[k] && !zNewAt[k]) {
           zNewAt[k] = now;
           zToast('NEW \u25B2 ' + cur[k], '#FFD700', '#000432', 12000);
@@ -17847,12 +17932,16 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
         if (!cur[k]) {
           delete zNewAt[k];
           brk = true;
-          zToast('BROKE \u25BC ' + zPrev[k], '#E63946', '#FFFFFF', 15000);
+          if (zObjPrev[k]) zBroken.unshift({ x: zObjPrev[k].x, tag: zObjPrev[k].tag, at: now });
         }
       }
     }
     if (brk) { try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch (eV) {} }
     zPrev = cur;
+    zObjPrev = zOC;
+    zCurLists = [zR, zM];
+    zBroken = zBroken.filter(function (b) { return now - b.at < 1200000; }).slice(0, 40);
+    zPaintBoxes();
     zChip.textContent = '\u25CF BELL CURVE LIVE ' + (zR.length + zM.length) + '  \u00B7  REV ' + zR.length + '  \u00B7  MOM ' + zM.length;
     zChip.style.display = 'block';
     return flags;
