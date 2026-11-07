@@ -6300,10 +6300,8 @@
     }
 
   function _wsBuild(list) {
-      var _mpEl = document.getElementById('minPctInput'), _lvEl = document.getElementById('levelFilterSelect');
-      var _mp = _mpEl ? (parseFloat(_mpEl.value) || 0) : 0, _lv = _lvEl ? (parseInt(_lvEl.value) || 0) : 0;
       var out = list.filter(function (x) {
-        return !_hiddenPairs.has(x.pair) && x.pct >= _mp && (_lv === 0 || x.s1 === _lv) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === _wsC2n;
+        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === _wsC2n;
       });
       out.sort(function (a, b) {
         return (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
