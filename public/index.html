@@ -571,6 +571,7 @@
             </span>
             <span style="display:none; font-size:9px; font-weight:800; color:#888; letter-spacing:0.08em; flex-shrink:0;">SCAN</span>
             <button id="r0OnlyBtn" onclick="toggleR0Only()" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">R0</button>
+            <button id="scoreBtn" type="button" onclick="openDrvScore()" title="DRV scoreboard: king vs opposite vs runner-ups" style="background:var(--bg-base); color:#FFFFFF; border:1px solid #FFFFFF; padding:0 6px; height:28px; font-size:9px; font-weight:800; cursor:pointer; border-radius:2px; letter-spacing:0.5px; flex-shrink:0; font-family:'Inter',monospace;">SCORE</button>
             <div style="flex:1; height:4px; background:transparent; border-radius:2px; overflow:hidden;">
               <div id="scanTimerProgressBar" style="display:none; height:100%; width:100%; background:#FFD700; border-radius:2px; transition:width 1s linear;"></div>
             </div>
@@ -17698,5 +17699,204 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     _tsBox.style.display = 'none';
     document.body.appendChild(_tsBox);
   })();</script>
+<style>
+/* SCORE button: same look and sizing rules as the R0 button next to it */
+#scoreBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;border-radius:999px !important;}
+html.pc-on body:not(#pcx) #scoreBtn{background:var(--pair-color) !important;border-color:var(--pair-color) !important;color:#000432 !important;}
+html body div#wall-finder-pane #scoreBtn{height:28px !important;min-height:28px !important;max-height:28px !important;font-size:10px !important;min-width:38px !important;line-height:1 !important;}
+html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane .ctrl-row #scoreBtn{height:22px !important;min-height:22px !important;max-height:22px !important;line-height:22px !important;}
+</style>
+<script>
+/* DRV SCOREBOARD popup: reads `score` from the server's /drv endpoint (see drvScoreboard() in server.js) */
+(function () {
+  var ORDER = ['REAL', 'KING_ALL', 'KING_SKIPPED', 'OPPOSITE', 'RUNNER2', 'RUNNER3'];
+  var LABEL = {
+    REAL: 'REAL demo trades', KING_ALL: 'KING every fire (paper)', KING_SKIPPED: 'KING fires with no real trade',
+    OPPOSITE: 'OPPOSITE of king (control)', RUNNER2: '2nd ranked signal', RUNNER3: '3rd ranked signal'
+  };
+  var FONT = "'JetBrains Mono',monospace";
+  var el = null, body = null, selEl = null, timer = null, lastScore = null, lastAt = 0, detailGroup = 'KING_ALL', lastText = '';
+
+  function tok() {
+    try {
+      var q = new URLSearchParams(window.location.search).get('token');
+      return q || window.localStorage.getItem('ws_token') || '';
+    } catch (e) { return ''; }
+  }
+  function mk(tag, css, txt) {
+    var n = document.createElement(tag);
+    if (css) n.style.cssText = css;
+    if (txt !== undefined && txt !== null) n.textContent = txt;
+    return n;
+  }
+  function tone(r, be) {
+    if (!r || r.n < 30) return '#94A3B8';
+    if (be === null || be === undefined) return '#E2E8F0';
+    if (r.winPct - r.moe > be) return '#2ED573';
+    if (r.winPct + r.moe < be) return '#FF6B6B';
+    return '#FFD700';
+  }
+  function cell(txt, color, align, bold) {
+    return mk('td', 'padding:3px 6px;text-align:' + (align || 'right') + ';white-space:nowrap;color:' + (color || '#E2E8F0') + ';' + (bold ? 'font-weight:800;' : ''), txt);
+  }
+  function head(cols) {
+    var tr = mk('tr', 'border-bottom:1px solid #475569;');
+    cols.forEach(function (c, i) { tr.appendChild(mk('th', 'padding:3px 6px;font-size:9px;letter-spacing:0.05em;color:#94A3B8;text-align:' + (i === 0 ? 'left' : 'right') + ';', c)); });
+    return tr;
+  }
+  function rowTr(name, r, be, indent) {
+    var tr = mk('tr', 'border-bottom:1px solid rgba(255,255,255,0.08);'), c = tone(r, be);
+    tr.appendChild(cell((indent ? '\u00A0\u00A0' : '') + name, '#FFFFFF', 'left', !indent));
+    tr.appendChild(cell(String(r.n), '#E2E8F0'));
+    tr.appendChild(cell(String(r.w), '#E2E8F0'));
+    tr.appendChild(cell(r.winPct.toFixed(1), c, 'right', true));
+    tr.appendChild(cell('\u00B1' + r.moe.toFixed(1), '#94A3B8'));
+    tr.appendChild(cell(r.claimPct.toFixed(1), '#94A3B8'));
+    return tr;
+  }
+  function subName(k, g) {
+    var s = k.slice(g.length + 1);
+    if (s === 'REV') return 'type REV';
+    if (s === 'MOM') return 'type MOM';
+    if (s === 'perfect') return 'perfect record (0 misses)';
+    if (s === 'imperfect') return 'has misses';
+    if (s.indexOf('c1=') === 0) return 'c1 ' + s.slice(3);
+    if (s.indexOf('s1=') === 0) return 'streak X' + s.slice(3);
+    return s;
+  }
+  function subOrder(k, g) {
+    var s = k.slice(g.length + 1), n;
+    if (s === 'REV') return 10;
+    if (s === 'MOM') return 11;
+    if (s.indexOf('c1=') === 0) return 20 + (s === 'c1=3' ? 0 : (s === 'c1=4-5' ? 1 : 2));
+    if (s === 'perfect') return 30;
+    if (s === 'imperfect') return 31;
+    if (s.indexOf('s1=') === 0) { n = parseInt(s.slice(3), 10) || 0; return 100 + n; }
+    return 500;
+  }
+  function buildText(sc) {
+    var out = ['DRV SCOREBOARD', 'break-even win%: ' + (sc.breakEvenPct === null ? 'unknown' : sc.breakEvenPct) + ' | pending ' + sc.pending + ' | ties ' + sc.ties + ' | voided ' + sc.voided, ''];
+    var keys = Object.keys(sc.rows).sort();
+    ORDER.forEach(function (g) {
+      keys.forEach(function (k) {
+        if (k.split('|')[0] !== g) return;
+        var r = sc.rows[k];
+        out.push(k + '  n=' + r.n + ' wins=' + r.w + ' win%=' + r.winPct + ' +/-' + r.moe + ' claimed%=' + r.claimPct);
+      });
+    });
+    return out.join('\n');
+  }
+  function render() {
+    if (!body) return;
+    body.textContent = '';
+    var sc = lastScore;
+    if (!sc) { body.appendChild(mk('div', 'padding:10px;color:#94A3B8;', 'Loading...')); return; }
+    var be = (sc.breakEvenPct === null || sc.breakEvenPct === undefined) ? null : sc.breakEvenPct;
+    var rows = sc.rows || {};
+    lastText = buildText(sc);
+
+    var info = mk('div', 'padding:4px 8px 8px;font-size:10px;line-height:1.5;color:#E2E8F0;');
+    info.appendChild(document.createTextNode('Break-even win%: ' + (be === null ? 'unknown yet (needs one real buy)' : be.toFixed(1)) + '   |   waiting: ' + sc.pending + '   |   ties (loss): ' + sc.ties + '   |   voided: ' + sc.voided));
+    body.appendChild(info);
+
+    var t1 = mk('table', 'width:100%;border-collapse:collapse;font-size:11px;font-family:' + FONT + ';');
+    t1.appendChild(head(['GROUP', 'N', 'WINS', 'WIN%', '95%', 'CLAIMED%']));
+    var any = false;
+    ORDER.forEach(function (g) {
+      if (rows[g]) { any = true; var tr = rowTr(g, rows[g], be, false); tr.title = LABEL[g]; t1.appendChild(tr); }
+    });
+    if (!any) {
+      var e = mk('tr'), td = mk('td', 'padding:10px 6px;color:#94A3B8;text-align:left;', 'No finished trades yet. The first result appears one cycle (about a minute) after the first king fire.');
+      td.colSpan = 6; e.appendChild(td); t1.appendChild(e);
+    }
+    body.appendChild(t1);
+
+    var leg = mk('div', 'padding:6px 8px;font-size:9px;line-height:1.5;color:#94A3B8;');
+    leg.appendChild(document.createTextNode('Colour: '));
+    [['green', '#2ED573', 'clearly above break-even'], ['red', '#FF6B6B', 'clearly below'], ['amber', '#FFD700', 'cannot tell yet'], ['grey', '#94A3B8', 'under 30 trades']].forEach(function (a, i) {
+      leg.appendChild(mk('span', 'color:' + a[1] + ';font-weight:800;', a[0]));
+      leg.appendChild(document.createTextNode(' = ' + a[2] + (i < 3 ? ' \u00B7 ' : '')));
+    });
+    leg.appendChild(mk('div', 'margin-top:3px;', 'Judge a row only with 300+ trades. Compare KING_ALL against OPPOSITE and the RUNNERs: if the king is not clearly better, the ranking adds nothing.'));
+    body.appendChild(leg);
+
+    var dh = mk('div', 'display:flex;align-items:center;gap:6px;padding:6px 8px 4px;border-top:1px solid #475569;');
+    dh.appendChild(mk('span', 'font-size:9px;font-weight:800;letter-spacing:0.08em;color:#94A3B8;', 'BREAKDOWN OF'));
+    selEl = mk('select', 'background:#E2E8F0;color:#000432;border:1px solid #E2E8F0;border-radius:2px;height:22px;font:bold 10px ' + FONT + ';');
+    ORDER.forEach(function (g) {
+      if (!rows[g]) return;
+      var o = mk('option', '', g); o.value = g; if (g === detailGroup) o.selected = true; selEl.appendChild(o);
+    });
+    selEl.onchange = function () { detailGroup = selEl.value; render(); };
+    dh.appendChild(selEl);
+    body.appendChild(dh);
+
+    if (rows[detailGroup]) {
+      var t2 = mk('table', 'width:100%;border-collapse:collapse;font-size:11px;font-family:' + FONT + ';');
+      t2.appendChild(head(['SLICE', 'N', 'WINS', 'WIN%', '95%', 'CLAIMED%']));
+      Object.keys(rows).filter(function (k) { return k.indexOf(detailGroup + '|') === 0; })
+        .sort(function (a, b) { return (subOrder(a, detailGroup) - subOrder(b, detailGroup)) || (a < b ? -1 : 1); })
+        .forEach(function (k) { t2.appendChild(rowTr(subName(k, detailGroup), rows[k], be, true)); });
+      body.appendChild(t2);
+    }
+  }
+  function setStatus(msg) { var s = document.getElementById('drvScoreStatus'); if (s) s.textContent = msg; }
+  function load() {
+    if (!/^https?:$/.test(window.location.protocol)) { lastScore = null; render(); setStatus('Open the page from the server (http://...) to see the scoreboard.'); return; }
+    var h = {}, t = tok();
+    if (t) h['x-api-token'] = t;
+    setStatus('updating...');
+    fetch('/drv', { cache: 'no-store', headers: h })
+      .then(function (r) { if (r.status === 401) throw new Error('401 - open the page once with ?token=...'); if (!r.ok) throw new Error('server answered ' + r.status); return r.json(); })
+      .then(function (j) {
+        if (!j || !j.score) throw new Error('server has no scoreboard yet - deploy the new server.js');
+        lastScore = j.score; lastAt = Date.now(); render();
+        var d = new Date(lastAt), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+        setStatus('updated ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) + ' \u00B7 auto-refresh 5s');
+      })
+      .catch(function (e) { setStatus('Error: ' + (e && e.message ? e.message : e)); });
+  }
+  function copyTxt(btn) {
+    var t = lastText || '', done = function (ok) { btn.textContent = ok ? 'COPIED' : 'COPY FAILED'; setTimeout(function () { btn.textContent = 'COPY'; }, 1500); };
+    var fb = function () {
+      try { var ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;left:-9999px;top:0;'; document.body.appendChild(ta); ta.select(); var ok = document.execCommand('copy'); document.body.removeChild(ta); done(!!ok); } catch (e) { done(false); }
+    };
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { done(true); }, fb); else fb(); } catch (e2) { fb(); }
+  }
+  function close() {
+    if (el) el.style.display = 'none';
+    if (timer) { clearInterval(timer); timer = null; }
+    document.removeEventListener('keydown', onKey, true);
+  }
+  function onKey(ev) { if (ev.key === 'Escape') close(); }
+  function build() {
+    el = mk('div', 'position:fixed;left:0;top:0;width:100%;height:100%;z-index:2147483200;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;');
+    el.id = 'drvScorePop';
+    el.onclick = function (ev) { if (ev.target === el) close(); };
+    var box = mk('div', 'width:min(580px,94vw);max-height:86vh;display:flex;flex-direction:column;background:#000432;color:#E2E8F0;border:1px solid #FFFFFF;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:' + FONT + ';');
+    var hd = mk('div', 'display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #475569;flex-shrink:0;');
+    hd.appendChild(mk('span', 'font-size:11px;font-weight:800;letter-spacing:0.12em;color:#FFFFFF;flex:1;', 'DRV SCOREBOARD'));
+    var bs = 'padding:3px 9px;border:1px solid #FFFFFF;border-radius:4px;background:#1E293B;color:#FFFFFF;font:bold 10px ' + FONT + ';cursor:pointer;';
+    var bR = mk('button', bs, 'REFRESH'); bR.type = 'button'; bR.onclick = load;
+    var bC = mk('button', bs, 'COPY'); bC.type = 'button'; bC.onclick = function () { copyTxt(bC); };
+    var bX = mk('button', bs, '\u2715'); bX.type = 'button'; bX.onclick = close;
+    hd.appendChild(bR); hd.appendChild(bC); hd.appendChild(bX);
+    var st = mk('div', 'padding:3px 10px;font-size:9px;color:#94A3B8;flex-shrink:0;', ''); st.id = 'drvScoreStatus';
+    body = mk('div', 'overflow:auto;padding:2px 2px 8px;min-height:60px;');
+    box.appendChild(hd); box.appendChild(st); box.appendChild(body);
+    el.appendChild(box);
+    document.body.appendChild(el);
+  }
+  window.openDrvScore = function () {
+    if (!el) build();
+    el.style.display = 'flex';
+    document.addEventListener('keydown', onKey, true);
+    render();
+    load();
+    if (timer) clearInterval(timer);
+    timer = setInterval(load, 5000);
+  };
+})();
+</script>
   </body>
 </html>
