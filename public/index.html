@@ -6240,19 +6240,6 @@
       revTop10 = revTop10.filter(x => bestByPair[x.pair] === x);
       momTop10 = momTop10.filter(x => bestByPair[x.pair] === x);
     }
-    function _kingPick(src) {
-          var best = null, i, x;
-          for (i = 0; i < src.length; i++) {
-            x = src[i];
-            if (_hiddenPairs.has(x.pair)) continue;
-            if (r0OnlyMode && x.r !== 0) continue;
-            if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
-            if (!(x.pct < 100)) continue;
-            if (window._allLvlOn ? (window._lvlOnly && +x.s1 !== +window._lvlOnly) : (_levelVal !== 0 && x.s1 !== _levelVal)) continue;
-            if (!best || x.pct > best.pct || (x.pct === best.pct && ((x.c1 || 0) > (best.c1 || 0) || ((x.c1 || 0) === (best.c1 || 0) && _btLvlsEta(x) < _btLvlsEta(best))))) best = x;
-          }
-          return best;
-        }
         window._wpKing = { REV: revTop10.length ? revTop10[0] : null, MOM: momTop10.length ? momTop10[0] : null };
         renderScannerTable(revTop10, momTop10, displayDead);
     if (typeof window.tcOnTableRendered === 'function') window.tcOnTableRendered();                     }
@@ -6997,7 +6984,7 @@
         if (window._drvOnly && !/^1HZ/i.test(String(e.x.pair))) continue;
         if (window._fxOnly && /^1HZ/i.test(String(e.x.pair))) continue;
         if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(e.x.pair))) continue;
-        if (+e.x.s1 !== 1 || +e.x.s2 !== 2) continue;
+        if ((+e.x.s1 || 0) < 1 || +e.x.s2 !== (+e.x.s1) + 1) continue;
         o = {};
         for (p in e.x) o[p] = e.x[p];
         o._holdT = e.t0;
@@ -7006,7 +6993,10 @@
       var dkB = {}, dkK, dkE, dkO;
       var misOf = function (z) { return (tag === 'MOM') ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
       var dkCmp = function (a, b) {
-        return ((b.c1 || 0) - (a.c1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
+        if (misOf(a) === 0 && misOf(b) === 0) {
+          return ((a.s1 || 0) - (b.s1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.c1 || 0) - (a.c1 || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
+        }
+        return ((b.c1 || 0) - (a.c1 || 0)) || ((a.s1 || 0) - (b.s1 || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
       };
       out.sort(function (a, b) { return (misOf(a) - misOf(b)) || dkCmp(a, b); });
       var dkCnt = {}, dkSeen = {};
