@@ -1,0 +1,16 @@
+{
+  "name": "wallspectrum-live",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WALLSPECTRUM active-day Deriv tick collector and live scanner",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
