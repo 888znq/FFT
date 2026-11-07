@@ -17779,6 +17779,24 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
 <script>
 (function () {
   var zTries = 0;
+  var zIcon = (function () {
+    var zs = '<svg viewBox="0 0 62 30" width="46" height="22" aria-hidden="true" style="display:block;margin:0 auto;pointer-events:none;"><defs><linearGradient id="zgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3DFF9A"/><stop offset="1" stop-color="#D8FFEA"/></linearGradient><linearGradient id="zgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5C7A"/><stop offset="1" stop-color="#FFD0DA"/></linearGradient></defs>';
+    var zh = [1.1, 1.9, 3.2, 5.2, 7.8, 11, 14.6, 18.1, 21.2, 23.3, 24, 23.3, 21.2, 18.1, 14.6, 11, 7.8, 5.2, 3.2, 1.9, 1.1];
+    var zi, zx, zy;
+    for (zi = 0; zi < zh.length; zi++) {
+      zx = 1 + zi * 2.9;
+      zy = 28 - zh[zi];
+      zs += '<rect x="' + zx.toFixed(1) + '" y="' + zy.toFixed(1) + '" width="2.4" height="' + zh[zi] + '" fill="url(#' + ((zi === 10) ? 'zgG' : 'zgR') + ')"/>';
+    }
+    zs += '<path d="M1 27.5 C14 27.5 20 3 30.2 3 C40.4 3 46 27.5 61 27.5" fill="none" stroke="#4FC3F7" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    return zs;
+  })();
+  try {
+    var zSt1 = document.createElement('style');
+    zSt1.id = 'zeroIconCss';
+    zSt1.textContent = '#zeroHoldBtn svg{transition:opacity 0.15s ease;}#zeroHoldBtn:not(.on) svg{opacity:0.5;}';
+    document.head.appendChild(zSt1);
+  } catch (eP1) {}
   window._zeroOn = true;
   try {
     var zSt0 = document.createElement('style');
@@ -17798,7 +17816,9 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     b.id = 'zeroHoldBtn';
     b.type = 'button';
     b.className = 'cb-btn';
-    b.textContent = 'BELL CURVE';
+    b.innerHTML = zIcon;
+    b.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:0 12px;min-width:64px;';
+    b.setAttribute('aria-label', 'Bell curve');
     b.title = zTitle;
     b.onclick = function () {
       zFlip(!window._zeroOn);
@@ -17810,7 +17830,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     zTries++;
     try {
       if (window.CtlBar && typeof window.CtlBar.add === 'function') {
-        window.CtlBar.add({
+        var zDef = window.CtlBar.add({
           id: 'zeroHoldBtn',
           type: 'button',
           group: 'SIGNAL',
@@ -17820,6 +17840,17 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
           get: function () { return !!window._zeroOn; },
           set: function (v) { zFlip(v); }
         });
+        try {
+          if (zDef && zDef._el) {
+            zDef._el.innerHTML = zIcon;
+            zDef._el.style.setProperty('display', 'flex', 'important');
+            zDef._el.style.setProperty('align-items', 'center', 'important');
+            zDef._el.style.setProperty('justify-content', 'center', 'important');
+            zDef._el.style.setProperty('padding', '0 12px', 'important');
+            zDef._el.style.setProperty('min-width', '64px', 'important');
+            zDef._el.setAttribute('aria-label', 'Bell curve');
+          }
+        } catch (eIc) {}
         clearInterval(zTm);
       } else if (zTries > 20) {
         zFallback();
