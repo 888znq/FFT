@@ -2413,6 +2413,55 @@
       }
 
       var lvDrvBusy = false;
+      function _drvChk(locks) {
+        try {
+          if (typeof globalRevs === 'undefined' || typeof globalMoms === 'undefined') { return; }
+          var scf = window._champScore;
+          if (typeof scf !== 'function') { return; }
+          var mpe = document.getElementById('minPctInput');
+          var mp = mpe ? (parseFloat(mpe.value) || 85) : 85;
+          var parts = [], bad = 0;
+          for (var li = 0; li < locks.length; li++) {
+            var L = locks[li];
+            var src = (L.type === 'MOM') ? globalMoms : globalRevs;
+            var bp = {}, i, x, s, k;
+            for (i = 0; i < src.length; i++) {
+              x = src[i];
+              if (x.c !== L.c || !(x.pct >= mp)) { continue; }
+              s = scf(x);
+              if (!bp[x.pair] || s > bp[x.pair].s) { bp[x.pair] = { x: x, s: s }; }
+            }
+            var arr = [];
+            for (k in bp) { arr.push(bp[k]); }
+            arr.sort(function (a, b) { return b.s - a.s; });
+            var rank = -1;
+            for (i = 0; i < arr.length; i++) { if (arr[i].x.pair === L.pair) { rank = i + 1; break; } }
+            var cx = rank > 0 ? arr[rank - 1].x : null;
+            var l2 = (L.s2 !== undefined ? L.s2 : L.s1);
+            var d = [];
+            if (!cx) {
+              d.push('pair not found on client (C' + L.c + ' pct>=' + mp + ')');
+            } else {
+              if (rank !== 2) { d.push('client rank #' + rank + ' (server locks #2)'); }
+              if (cx.r !== L.r) { d.push('R client ' + cx.r + ' vs server ' + L.r); }
+              if (cx.s1 !== L.s1) { d.push('X client ' + cx.s1 + ' vs server ' + L.s1); }
+              if (cx.s2 !== l2) { d.push('X2 client ' + cx.s2 + ' vs server ' + l2); }
+              if (cx.col !== L.col) { d.push('col client ' + cx.col + ' vs server ' + L.col); }
+            }
+            var tp = window._lastAutoTop;
+            if (tp && tp.type === L.type && (tp.pair !== L.pair || tp.r !== L.r || tp.s1 !== L.s1 || tp.col !== L.col)) {
+              d.push('front auto-top is ' + tp.pair + ' R' + tp.r + ' X' + tp.s1 + ' ' + tp.col);
+            }
+            if (d.length) { bad++; }
+            parts.push(L.type + ' ' + L.pair + ' C' + L.c + ' R' + L.r + ' X' + L.s1 + ' ' + L.col + (d.length ? ' => ' + d.join('; ') : ' => OK'));
+          }
+          var msg = parts.join(' | ');
+          if (msg !== window._drvChkSig) {
+            window._drvChkSig = msg;
+            evtLog(bad ? 'WARN' : 'INFO', 'DRV', (bad ? 'DRV MISMATCH ' : 'DRV MATCH ') + msg);
+          }
+        } catch (eChk) {}
+      }
       function lvDrvPoll() {
         if (lvDrvBusy || document.hidden) { return; }
         if (!/^https?:$/.test(window.location.protocol)) { return; }
@@ -2422,7 +2471,7 @@
         if (tk2) { hdr2['x-api-token'] = tk2; }
         fetch('/drv', { cache: 'no-store', headers: hdr2 })
           .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; } })
+          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; if (window._drvLocks.length) { _drvChk(window._drvLocks); } } })
           .catch(function () {})
           .then(function () { lvDrvBusy = false; });
       }
@@ -5874,6 +5923,7 @@
       CYCLE = top.c;
     }
     window._autoSelTry = 0;
+    window._lastAutoTop = top;
     selectSignal(top.pair, top.c, top.r, top.s1, top.s2, top.col, top.type);
   }
   const blob = new Blob([document.getElementById('fftWorkerLogic').textContent], { type: "text/javascript" });
