@@ -14930,15 +14930,39 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
         var apiPairInput = document.getElementById('apiPair');
         if (apiPairInput) apiPairInput.value = activePair;
       }
+      function _wpsDrvDefault() {
+        var dl = ALL_PAIRS.filter(function (p) { return /^1HZ/.test(p); });
+        var ks = ['CRY', 'DRV', 'MTL', 'FRX', 'MIX', 'ALL'];
+        var ids = { CRY: 'pgCryBtn', DRV: 'pgDrvBtn', MTL: 'pgMtlBtn', FRX: 'pgFrxBtn', MIX: 'pgMixBtn', ALL: 'pgAllBtn' };
+        var ki, kb, kon;
+        if (!dl.length) return;
+        window._pairTg = window._pairTg || {};
+        for (ki = 0; ki < ks.length; ki++) {
+          kon = (ks[ki] === 'DRV');
+          window._pairTg[ks[ki]] = kon;
+          kb = document.getElementById(ids[ks[ki]]);
+          if (kb) {
+            kb.setAttribute('data-sig', kon ? 'on' : 'off');
+            kb.setAttribute('aria-pressed', kon ? 'true' : 'false');
+          }
+        }
+        activePairs = dl;
+        activePair = dl[0];
+        try { _hiddenPairs.clear(); } catch (eH) {}
+        var apIn = document.getElementById('apiPair');
+        if (apIn) apIn.value = activePair;
+        try { if (window._cbPaint) window._cbPaint(); } catch (eP) {}
+      }
       function wpsApplyState(state) {
-        if (!state) return;
+        if (!state) { _wpsDrvDefault(); return; }
         if (String(state.scanMin) === '300' && String(state.scanMax) === '300') {
           state.scanMin = '60';
           state.scanMax = '60';
         }
 
         _wpsForceDefaultCat('24x7');
-                if (state.focusPair && ALL_PAIRS.indexOf(state.focusPair) !== -1) {
+        _wpsDrvDefault();
+                if (state.focusPair && activePairs.indexOf(state.focusPair) !== -1) {
                   try { _wpFocusSet(state.focusPair); } catch (e) {}
                 }
                 if (state.minPct !== undefined && state.minPct !== null) {
@@ -15031,6 +15055,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
             if (_wpsSavePending) wpsSaveNow();
             if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
           }).catch(function() {
+            _wpsDrvDefault();
             _wpsReady = true;
             if (_wpsSavePending) wpsSaveNow();
             if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
