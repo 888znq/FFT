@@ -7010,8 +7010,11 @@
         return ((b.c1 || 0) - (a.c1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.pct || 0) - (a.pct || 0)) || (_btLvlsEta(a) - _btLvlsEta(b));
       };
       out.sort(function (a, b) { return (misOf(a) - misOf(b)) || dkCmp(a, b); });
-      var dkCnt = {};
+      var dkCnt = {}, dkSeen = {};
       out = out.filter(function (z) {
+        var rk = z.pair + '|' + z.s1 + '|' + z.s2 + '|' + z.col + '|' + (z.c1 || 0) + '|' + (z.c2 || 0);
+        if (dkSeen[rk]) return false;
+        dkSeen[rk] = 1;
         dkK = misOf(z);
         dkCnt[dkK] = (dkCnt[dkK] || 0) + 1;
         return dkCnt[dkK] <= 10;
