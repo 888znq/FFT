@@ -668,7 +668,7 @@ function drvHoldPick(list, tag, start) {
     x = list[i];
     if (!x || (x.s1 || 0) !== 1) continue;
     miss = tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0);
-    if (miss !== 0) continue;
+    if (miss !== (DRVT.c2n || 0)) continue;
     rows.push(x);
   }
   rows.sort(function (a, b2) {
@@ -1849,6 +1849,11 @@ const server = http.createServer((req, res) => {
     if (!isAuthorized(req, urlObj)) {
       sendJson(res, 401, { error: "Unauthorized" });
       return;
+    }
+    var drvC2q = urlObj.searchParams.get("c2"), drvC2v;
+    if (drvC2q !== null) {
+      drvC2v = parseInt(drvC2q, 10);
+      if (drvC2v >= 0 && drvC2v <= 10 && drvC2v !== DRVT.c2n) { DRVT.c2n = drvC2v; DRVT.sigAt = 0; }
     }
     var drvOut = [], drvK, drvIt;
     for (drvK in DRVT.open) {
