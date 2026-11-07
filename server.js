@@ -562,7 +562,6 @@ const DRVT = {
   acct: process.env.DRV_ACCOUNT_TYPE || "demo",
   stake: Number(process.env.DRV_STAKE) || 0.35,
   cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
-  minPct: Number(process.env.DRV_MIN_PCT) || 85,
   pairs: ALL_PAIRS.filter(p => /^1HZ/i.test(p)),
   ws: null, ready: false, connecting: false, pingTimer: null,
   reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,
@@ -570,28 +569,6 @@ const DRVT = {
   queue: [], queueBusy: false, lastBuyAt: 0, rlUntil: 0,
   buys: 0, rejected: 0, wins: 0, losses: 0, pnl: 0, balance: null, tickN: 0, hist: []
 };
-
-function drvScore(x) {
-  var n = x.c1 || 0;
-  if (n <= 0) return 0;
-  var p = Math.max(0, Math.min(1, (x.pct || 0) / 100));
-  var z = 1.645, z2 = z * z;
-  var dd = 1 + z2 / n;
-  var mm = p + z2 / (2 * n);
-  var ss = z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
-  return Math.max(0, (mm - ss) / dd) * 100;
-}
-
-function drvPick(list) {
-  var best = null, bs = -1, i, x, s;
-  for (i = 0; i < list.length; i++) {
-    x = list[i];
-    if (!(x.pct >= DRVT.minPct)) continue;
-    s = drvScore(x);
-    if (s > bs) { bs = s; best = x; }
-  }
-  return best;
-}
 
 function drvTickAt(pair, absSec) {
   var idx = absSec - activeDayEpoch;
@@ -1020,7 +997,7 @@ if (process.env.DRV_AUTO === "0") {
   logEvent("DRV_DISABLED", "Server DRV trader refused account type " + DRVT.acct + " (set DRV_ALLOW_REAL=1 to allow)");
 } else {
   setTimeout(function () {
-    logEvent("DRV_START", "Server DRV trader on: " + DRVT.pairs.length + " 1HZ pairs, cycle " + DRVT.cycle + ", min " + DRVT.minPct + "%, stake $" + DRVT.stake + ", acct " + DRVT.acct);
+    logEvent("DRV_START", "Server DRV trader on: " + DRVT.pairs.length + " 1HZ pairs, cycle " + DRVT.cycle + ", king pick = hold logic (REV + MOM), stake $" + DRVT.stake + ", acct " + DRVT.acct);
     drvConnect();
     drvRefreshSignals();
     setInterval(drvTick, 1000);
