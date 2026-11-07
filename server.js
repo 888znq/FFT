@@ -669,7 +669,7 @@ function drvHoldReplay(x, tag, start) {
     } else {
       pc = -1;
     }
-    if (l1 >= 4 && pc >= 75) {
+    if (l1 >= 3 && (mom ? l2 === l1 : l2 === 0)) {
       if (runStart < 0) runStart = i;
       lastRun = runStart;
       since = 0;
@@ -684,11 +684,11 @@ function drvHoldReplay(x, tag, start) {
 
 function drvHoldPick(list, tag, start) {
   var now = nowSec(), nowMs = Date.now(), i, x, k, key, e, o, best = {}, arr = [], seen;
-  if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; }
+  if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
   seen = DRVT.holdSeen;
   for (i = 0; i < list.length; i++) {
     x = list[i];
-    if (!x || (x.pct || 0) < 75 || (x.c1 || 0) < 4 || (x.s1 || 0) < 1) continue;
+    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) < 1 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) continue;
     key = x.pair + "|" + x.c + "|" + x.r + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + tag;
     if (!seen[key]) seen[key] = nowMs;
     k = x.pair + "|" + x.c + "|" + x.s1 + "|" + x.s2 + "|" + x.col;
@@ -699,19 +699,20 @@ function drvHoldPick(list, tag, start) {
   for (k in best) arr.push(best[k]);
   if (!arr.length) return null;
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-  var topC1 = 0, floor, j, t, rp, m, pick = null, pickT = Infinity, pickM = Infinity;
+  var j, t, rp, m, cc, pick = null, pickT = Infinity, pickM = Infinity, pickC = -1, pickKey = "", locked = null, lk;
+  if (!DRVT.holdLock) DRVT.holdLock = {};
+  lk = DRVT.holdLock[tag];
   for (j = 0; j < arr.length; j++) {
-    if ((arr[j].x.c1 || 0) > topC1) topC1 = arr[j].x.c1 || 0;
-  }
-  floor = Math.ceil(topC1 * 0.6);
-  for (j = 0; j < arr.length; j++) {
-    if ((arr[j].x.c1 || 0) < floor) continue;
     t = seen[arr[j].key];
     rp = drvHoldReplay(arr[j].x, tag, start);
     if (rp !== null && rp < t) t = rp;
     m = misOf(arr[j].x);
-    if (t < pickT || (t === pickT && m < pickM)) { pickT = t; pickM = m; pick = arr[j].x; }
+    cc = arr[j].x.c1 || 0;
+    if (lk && arr[j].key === lk) locked = arr[j].x;
+    if (t < pickT || (t === pickT && (cc > pickC || (cc === pickC && m < pickM)))) { pickT = t; pickM = m; pickC = cc; pickKey = arr[j].key; pick = arr[j].x; }
   }
+  if (locked) return locked;
+  DRVT.holdLock[tag] = pickKey;
   return pick;
 }
 

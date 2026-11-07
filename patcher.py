@@ -111,7 +111,7 @@ Rules:
 - If a name, route or value is shared between server.js (the Node backend: /status, /ticks, ...) and public/index.html, change every place so they stay in sync.
 - Never declare the same variable twice in one scope. In JavaScript use var (not const/let) inside any function or block that runs more than once. Make sure no bracket or parenthesis is left unclosed.
 - No explanations, warnings or comments about the patch inside the code blocks. If you have a concern, write it in plain text BEFORE the code block.
-- ROOT-CAUSE RULE: never patch from a guess. Before any patch, trace the cause end to end: what produces the behaviour, what calls, overrides, saves or restores it, and what runs it at startup. If any link of that chain is not in the code shown, reply with ONLY the @names of the parts you need and NO patch.
+- FULL-STACK RULE: this project has two ends that must never drift apart: the backend (server.js) and the frontend (public/index.html). Signal, hold, filter, ranking, session and scan logic exists in BOTH (server.js: drvHoldPick, drvHoldReplay, drvRefreshSignals, drvCheckFire, buildScan; index.html: _holdUpdate, _holdBuild, rpOne, renderFilteredTable, _autoSelectTopSignal). Every change to such logic MUST come as patch blocks for BOTH files in the same reply, with a ===BLOCK=== line between the last block of one file and the next ==== FILE: name ==== header. If one end truly needs no change, say why in one plain sentence before the code block.\n- ROOT-CAUSE RULE: never patch from a guess. Before any patch, trace the cause end to end: what produces the behaviour, what calls, overrides, saves or restores it, and what runs it at startup. If any link of that chain is not in the code shown, reply with ONLY the @names of the parts you need and NO patch.
 - Once the cause is confirmed, give ONE definitive set of blocks (no alternatives, no apply-this-if options), preceded by at most one plain sentence naming the confirmed cause.
 - Surgeries you must handle: swap a value, excision (delete cleanly), injection (bolt on a feature), interceptor (add a check inside an existing process), migration (move logic or a button), refactor (faster formula or loop), sweep (rename everywhere it appears), database bump (saved settings must not crash on old data), link shift (APIs, URLs, tokens), sync (if you change a Web Worker, fix the main script too), layer fix (hidden or unclickable UI).
 Request:"""
@@ -144,7 +144,17 @@ def parse(text):
         t = re.sub(r"^```\w*\n?", "", t, flags=re.M)
     t = re.sub(r"//\s*(OLD|NEW)\s*CHUNK\s*", "", t, flags=re.I)
     out, carry = [], None
+    units = []
     for unit in BLOCK_RE.split(t):
+        while True:
+            sm = SPLIT_RE.search(unit)
+            hm = FILE_HDR.search(unit, sm.end()) if sm else None
+            if not hm:
+                break
+            units.append(unit[:hm.start()])
+            unit = unit[hm.start():]
+        units.append(unit)
+    for unit in units:
         fname = None
         fm = FILE_HDR.search(unit)
         if fm:
@@ -568,8 +578,24 @@ def lite_index(files, instr):
             "Do NOT write any patch and do NOT guess the cause from names alone. Select parts so the full cause chain is visible in the next step: "
             "(1) the code that produces the behaviour in the request, (2) every function, timer, event listener or CSS rule that calls, sets, overrides, saves or restores it, "
             "(3) the boot, init or restore code that runs it at startup. Parts marked MATCH are only hints; follow the calls / used by links. "
+            "If the request touches signal, hold, filter, ranking, session or scan logic, tag at least one part from server.js AND one from public/index.html, because that logic exists in both. "
             "Mind the token budget: every part you tag is sent in full, so tag the FEWEST parts that show the whole cause chain (normally 3 to 6, never more than 8). Prefer the code that produces the behaviour, its direct callers and its startup code; do not tag a part only because it is marked MATCH. Small files are always attached in full, so tag only PART numbers.]\n\n"
             "=== PARTS (%d total) ===\n%s%s\n\n=== SMALL FILES (attached in full later) ===\n%s" % (len(chunks), LEGEND, "\n".join(lines), "\n".join(small)))
+
+
+TWINS = ((("function drvHold", "function drvRefreshSignals", "function drvCheckFire"), ("window._holdBuild", "window._holdUpdate", "function rpOne(")),)
+
+
+def lite_twins(chunks, picked):
+    """Parts of the other end (backend <-> frontend) that hold the twin of a picked signal/hold/filter part."""
+    add = []
+    for a, b in TWINS:
+        for src, dst in ((a, b), (b, a)):
+            if any(c["n"] in picked and any(k in c["t"] for k in src) for c in chunks):
+                for c in chunks:
+                    if c["n"] not in picked and c["n"] not in add and any(k in c["t"] for k in dst):
+                        add.append(c["n"])
+    return add
 
 
 def lite_source(files, instr):
@@ -595,6 +621,7 @@ def lite_source(files, instr):
             rank.append(c["n"])
         rank = rank[:8]
     sel = forced + rank
+    sel += [n for n in lite_twins(chunks, set(sel)) if n not in sel][:4]
     picked = set(sel)
     out = ["[LITE MODE: some files are large, so only the relevant parts of them are shown below (small files are shown in full). "
            "STRICT RULES: (1) Trace the cause of the request through the shown parts before writing anything: what produces the behaviour, what calls, overrides, saves or restores it, and what runs it at startup. "
@@ -602,7 +629,7 @@ def lite_source(files, instr):
            "(3) Only when the cause is confirmed from the shown code, give ONE definitive set of patch blocks, with one plain sentence before them naming the confirmed cause. "
            "Never give alternatives, optional patches, or a patch together with a request for more parts. Patch format: "
            "Reply with ==== FILE: name ==== headers and OLD===SPLIT===NEW blocks whose OLD text is copied exactly from the parts shown and is unique in that whole file "
-           "(include a few surrounding lines). If you need a part that is not shown, reply in plain text with only its name from the list, like @functionName.]"]
+           "(include a few surrounding lines). FULL-STACK RULE: signal, hold, filter, ranking, session and scan logic lives in BOTH server.js and public/index.html, so a change to it needs patch blocks for BOTH files in one reply (put ===BLOCK=== before every new ==== FILE: ==== header). If you need a part that is not shown, reply in plain text with only its name from the list, like @functionName.]"]
     if not sel:
         out.append("(No part of the large files matched the instruction. Name one with @name.)")
     for fname, text in files.items():
@@ -1443,6 +1470,14 @@ def selftest():
     r = build_payload_from(files, "fix marker_walrus", clip="[LITE MODE: ...] @handle_walrus")
     check("own payload in clipboard ignored", r["added"] == 0)
     check("payload ends with the invisible signature", r["text"].endswith(SIG))
+    tw = {"server.js": "\n".join(["// pad"] * 200) + "\nfunction drvHoldPick(a) {\n  return 1;\n}\n" + "\n".join(["// pad"] * 250),
+          "public/index.html": "\n".join(["// pad"] * 200) + "\nfunction rpOne(a) {\n  return 2;\n}\n" + "\n".join(["// pad"] * 250)}
+    twc = lite_build(tw)
+    twn = next(c["n"] for c in twc if c["file"] == "server.js" and "drvHoldPick" in c["t"])
+    ts = lite_source(tw, "@part%d" % twn)
+    check("backend part pulls in its frontend twin", "function rpOne(" in ts and "function drvHoldPick(" in ts)
+    ap = parse("==== FILE: server.js ====\na\n===SPLIT===\nb\n==== FILE: public/index.html ====\nc\n===SPLIT===\nd")
+    check("FILE header after a block needs no BLOCK line", len(ap) == 2 and ap[0][2] == "server.js" and ap[1][2] == "public/index.html" and ap[0][1] == "b")
 
     print("patch parsing / applying")
     p = parse("```\n==== FILE: small.html ====\nhello\n===SPLIT===\nbye\n===BLOCK===\nv1 = x + 1\n===SPLIT===\nv1 = x + 100\n```")
