@@ -6901,7 +6901,7 @@
         var nowI = Math.floor(Date.now() / 1000) - base;
         for (k in S.map) {
           e = S.map[k];
-          if (e.rp) continue;
+          if (e.rp || !e.h) continue;
           if (Date.now() - t1 > 20) { done = false; break; }
           e.rp = true;
           pd = (typeof allPairData !== 'undefined') ? allPairData[e.x.pair] : null;
@@ -6957,13 +6957,15 @@
           lst = lists[li][0]; tg = lists[li][1];
           for (i = 0; i < lst.length; i++) {
             x = lst[i];
-            if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) > 10) continue;
+            if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) < 1 || (x.s2 || 0) !== (x.s1 || 0) + 1 || ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) > 10) continue;
             k = x.pair + '|' + x.c + '|' + x.r + '|' + x.s1 + '|' + x.s2 + '|' + x.col + '|' + tg;
             cur = nmap[k];
             if (cur && (cur.x.c1 || 0) >= (x.c1 || 0)) continue;
             old = S.map[k];
+            var hd = ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === 0;
             t0 = old ? old.t0 : ((S.prev && S.prev[k]) ? S.prev[k] : now);
-            nmap[k] = { t0: t0, tag: tg, x: x, rp: old ? !!old.rp : false };
+            if (!hd) t0 = now;
+            nmap[k] = { t0: t0, tag: tg, x: x, h: hd, rp: old ? !!old.rp : false };
           }
         }
         S.map = nmap;
@@ -7026,9 +7028,17 @@
       var best = null, bestK = '', cur = null, k, e, x, p, o;
       var misOf = function (z) { return (tag === 'MOM') ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
       var beats = function (a, b) {
-        if (a.t0 !== b.t0) return a.t0 < b.t0;
-        if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+        if (a.h !== b.h) return a.h;
+        if (a.h) {
+          if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
+          if (a.t0 !== b.t0) return a.t0 < b.t0;
+          if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+          if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+          return (a.x.pct || 0) > (b.x.pct || 0);
+        }
         if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+        if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+        if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
         return (a.x.pct || 0) > (b.x.pct || 0);
       };
       if (KG.sess !== S.sess) { KG.sess = S.sess; KG.REV = ''; KG.MOM = ''; KG['REV#f'] = ''; KG['MOM#f'] = ''; }
@@ -7042,13 +7052,13 @@
         if (window._drvOnly && !/^1HZ/i.test(String(x.pair))) continue;
         if (window._fxOnly && /^1HZ/i.test(String(x.pair))) continue;
         if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(x.pair))) continue;
-        if (+x.s1 !== 1 || +x.s2 !== 2 || (x.c1 || 0) < 3) continue;
+        if ((+x.s1 || 0) < 1 || +x.s2 !== (+x.s1) + 1 || (x.c1 || 0) < 3) continue;
         if (filt && !filt(x)) continue;
         if (k === KG[lkTag]) cur = e;
         if (!best || beats(e, best) || (!beats(best, e) && k < bestK)) { best = e; bestK = k; }
       }
       if (!best) { KG[lkTag] = ''; return null; }
-      if (cur && !(best.t0 < cur.t0)) { best = cur; bestK = KG[lkTag]; }
+      if (cur && cur.h && !(((+best.x.s1 || 0) < (+cur.x.s1 || 0)) || ((+best.x.s1 || 0) === (+cur.x.s1 || 0) && best.t0 < cur.t0))) { best = cur; bestK = KG[lkTag]; }
       KG[lkTag] = bestK;
       o = {};
       for (p in best.x) o[p] = best.x[p];

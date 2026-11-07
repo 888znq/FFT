@@ -688,7 +688,7 @@ function drvHoldPick(list, tag, start) {
   seen = DRVT.holdSeen;
   for (i = 0; i < list.length; i++) {
     x = list[i];
-    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) > 10) continue;
+    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) < 1 || (x.s2 || 0) !== (x.s1 || 0) + 1 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) > 10) continue;
     key = x.pair + "|" + x.c + "|" + x.r + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + tag;
     if (!seen[key]) seen[key] = nowMs;
     arr.push({ x: x, e: 0, key: key });
@@ -702,20 +702,35 @@ function drvHoldPick(list, tag, start) {
   if (!DRVT.holdLock) DRVT.holdLock = {};
   lk = DRVT.holdLock[tag];
   var beats = function (a, b) {
-    if (a.t !== b.t) return a.t < b.t;
-    if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+    if (a.h !== b.h) return a.h;
+    if (a.h) {
+      if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
+      if (a.t !== b.t) return a.t < b.t;
+      if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+      if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+      return (a.x.pct || 0) > (b.x.pct || 0);
+    }
     if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+    if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+    if ((a.x.s1 || 0) !== (b.x.s1 || 0)) return (a.x.s1 || 0) < (b.x.s1 || 0);
     return (a.x.pct || 0) > (b.x.pct || 0);
   };
+  var hd;
   for (j = 0; j < arr.length; j++) {
     t = seen[arr[j].key];
-    rp = drvHoldReplay(arr[j].x, tag, start);
-    if (rp !== null && rp < t) t = rp;
-    ob = { x: arr[j].x, key: arr[j].key, t: t };
+    hd = misOf(arr[j].x) === 0;
+    if (hd) {
+      rp = drvHoldReplay(arr[j].x, tag, start);
+      if (rp !== null && rp < t) t = rp;
+    } else {
+      t = nowMs;
+      seen[arr[j].key] = nowMs;
+    }
+    ob = { x: arr[j].x, key: arr[j].key, t: t, h: hd };
     if (ob.key === lk) cur = ob;
     if (!best || beats(ob, best) || (!beats(best, ob) && ob.key < best.key)) best = ob;
   }
-  if (cur && !(best.t < cur.t)) best = cur;
+  if (cur && cur.h && !((best.x.s1 || 0) < (cur.x.s1 || 0) || ((best.x.s1 || 0) === (cur.x.s1 || 0) && best.t < cur.t))) best = cur;
   DRVT.holdLock[tag] = best.key;
   return best.x;
 }
