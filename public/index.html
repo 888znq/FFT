@@ -10161,6 +10161,41 @@
         ctx.letterSpacing = '0px';
         if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
       }
+      function _drvAutoScan() {
+        var dsMap, dsKeys, dsI, dsP, dsD, dsSg, dsK, dsPr, dsNow, dsEnd, dsLast, dsLim, dsPl, dsL;
+        if (window._drvAutoTrade === false) return;
+        if (!(window._drvOnly || (window._pairTg && window._pairTg.DRV))) return;
+        if (document.hidden || typeof window._drvAutoFire !== 'function') return;
+        if (!_isWithinMappedWindow()) return;
+        dsEnd = tcSessionEnd();
+        dsNow = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+        if (!(dsNow >= 0 && dsNow < dsEnd)) return;
+        if (!TC.allMap) TC.allMap = tcCollectAll();
+        dsMap = TC.allMap;
+        if (!dsMap) return;
+        dsKeys = Object.keys(dsMap);
+        for (dsI = 0; dsI < dsKeys.length; dsI++) {
+          dsP = dsKeys[dsI];
+          if (!/^1HZ/i.test(dsP)) continue;
+          if (activePairs && activePairs.indexOf(dsP) < 0) continue;
+          if (_hiddenPairs.has(dsP)) continue;
+          dsD = allPairData[dsP];
+          if (!dsD || !dsD.prices || dsD.prices.length === 0) continue;
+          dsPr = dsD.prices;
+          dsLast = tcLastReal(dsPr, Math.min(dsNow, dsPr.length - 1));
+          dsLim = Math.min(dsNow - 1, dsPr.length - 1, dsEnd - 1);
+          dsL = [dsMap[dsP].rev, dsMap[dsP].mom];
+          for (dsK = 0; dsK < 2; dsK++) {
+            dsSg = dsL[dsK];
+            if (!dsSg) continue;
+            dsPl = tcPlan(dsSg, dsPr, dsLim, dsEnd, dsLast);
+            if (!dsPl || dsPl.kind !== 'FIRED') continue;
+            if (dsPl.idx > dsNow || dsNow - dsPl.idx > 4) continue;
+            window._drvAutoFire({ sig: dsSg, idx: dsPl.idx, need: dsPl.need, kind: dsPl.kind, ref: dsPl.ref, rem: dsPl.idx + dsSg.c - dsNow, up: (dsSg.type === 'REV') ? (dsSg.col === 'R') : (dsSg.col === 'G') }, dsNow);
+          }
+        }
+      }
+      setInterval(function () { try { _drvAutoScan(); } catch (eDs) {} }, 1000);
       function tcDrawAll() {
         if (!window.__lagSec) {
           window.__lagSec = function() {};
