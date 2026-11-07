@@ -6009,7 +6009,7 @@
       top = _holdKingTop;
     }
         if (!top && typeof _wsBuild === 'function') {
-              var _wsL = _wsBuild(_allSigs);
+              var _wsL = _wsBuild(_allSigs, 0, 1);
               if (!_wsL.length) { window._autoSelFail(); return; }
               top = _wsL[0];
             }
@@ -6227,7 +6227,7 @@
               })())
             .slice(0, 100);
     }
-    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice()); };
+    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice(), 0, 1); };
     window._holdKing = function (tg) { var _hl = window._holdBuild(tg); return _hl.length ? _hl[0] : null; };
     var revTop10 = _buildTop10(globalRevs.slice(), 'REV');
     var momTop10 = _buildTop10(globalMoms.slice(), 'MOM');
@@ -6241,7 +6241,7 @@
       revTop10 = revTop10.filter(x => bestByPair[x.pair] === x);
       momTop10 = momTop10.filter(x => bestByPair[x.pair] === x);
     }
-        window._wpKing = { REV: revTop10.length ? revTop10[0] : null, MOM: momTop10.length ? momTop10[0] : null };
+        window._wpKing = { REV: window._holdKing('REV'), MOM: window._holdKing('MOM') };
         renderScannerTable(revTop10, momTop10, displayDead);
     if (typeof window.tcOnTableRendered === 'function') window.tcOnTableRendered();                     }
   function _buildScannerRowsHtml(list) {
@@ -6299,9 +6299,9 @@
       try { window._lockTopSignal(); } catch (e) {}
     }
 
-  function _wsBuild(list) {
+  function _wsBuild(list, c2n, lvl) {
       var out = list.filter(function (x) {
-        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === _wsC2n;
+        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === (c2n === undefined ? _wsC2n : c2n) && (lvl === undefined || +x.s1 === lvl);
       });
       out.sort(function (a, b) {
         return (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);

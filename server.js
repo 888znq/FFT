@@ -666,7 +666,7 @@ function drvHoldPick(list, tag, start) {
   if (!DRVT.runners) DRVT.runners = {};
   for (i = 0; i < list.length; i++) {
     x = list[i];
-    if (!x) continue;
+    if (!x || (x.s1 || 0) !== 1) continue;
     miss = tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0);
     if (miss !== 0) continue;
     rows.push(x);
