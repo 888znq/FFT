@@ -7571,24 +7571,25 @@
         var zR = window._holdAllZero('REV'), zM = window._holdAllZero('MOM');
         if (typeof window._zeroAlert === 'function') zNew = window._zeroAlert(zR, zM, true);
         if (zR.length + zM.length > 0) {
+          window._zeroManual = false;
           revList = zR;
           momList = zM;
           zUsed = true;
-        } else if (typeof scanPending !== 'undefined' && scanPending === 0 && (globalRevs.length + globalMoms.length) > 0) {
+        } else if (typeof scanPending !== 'undefined' && scanPending === 0 && !window._zeroManual && (globalRevs.length + globalMoms.length) > 0) {
           window._zeroOn = false;
           try { window._zeroAlert([], [], false, true); } catch (eA) {}
         }
       }
       var revTbody = document.getElementById('peaksTableBodyRev');
       var momTbody = document.getElementById('peaksTableBodyMom');
-      if (revTbody) revTbody.innerHTML = _wpKingHtml('REV') + _buildScannerRowsHtml(revList);
-      if (momTbody) momTbody.innerHTML = _wpKingHtml('MOM') + _buildScannerRowsHtml(momList);
+      if (revTbody) revTbody.innerHTML = (window._zeroOn && window._zeroPanelHtml) ? window._zeroPanelHtml(0) : _wpKingHtml('REV') + _buildScannerRowsHtml(revList);
+      if (momTbody) momTbody.innerHTML = (window._zeroOn && window._zeroPanelHtml) ? window._zeroPanelHtml(1) : _wpKingHtml('MOM') + _buildScannerRowsHtml(momList);
         _paintLvlHdrs(revTbody);
         _paintLvlHdrs(momTbody);
         try {
           var zTb = [revTbody, momTbody], zJ, zTr;
           for (zJ = 0; zJ < 2; zJ++) {
-            if (!zTb[zJ] || !zUsed) continue;
+            if (!zTb[zJ] || !zUsed || window._zeroOn) continue;
             zTr = zTb[zJ].querySelector('tr.highlight-gem');
             if (zTr) zTr.classList.add('zeroTop');
             var zAll = zTb[zJ].querySelectorAll('tr.highlight-gem'), zQ;
@@ -17872,7 +17873,86 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
       (rows || '<tr><td colspan="7" style="padding:10px 0;font:800 10px Inter,monospace;text-align:center;color:#8890b8;">NONE</td></tr>') +
       '</table></div></div>';
   }
+  function zPRow(x, tag, sub, bar, cls) {
+    var rc = x.col === 'R' ? 'row-red' : 'row-green', nm = x.pair, ty = x.type || tag, k = '', f = null, st = '';
+    var cs = 'width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;';
+    try { nm = getPairDisplayName(x.pair); } catch (eN3) {}
+    if (bar) {
+      try {
+        k = _wpTmrKey(x);
+        if (!window._wpTmrMap || !window._wpTmrMap[k]) _wpTmrReg(x);
+        f = _wpFillInfo(k);
+        st = ' data-k="' + k + '" data-wpst="' + f.kind + '" style="--wpf:' + f.pct + '%;"';
+      } catch (eF) { st = ''; }
+    }
+    return '<tr class="' + rc + ' highlight-gem' + (cls ? ' ' + cls : '') + '"' + st + ' onclick="_wpFocusSet(\'' + x.pair + '\'); manualSelectSignal(\'' + x.pair + '\', ' + x.c + ', ' + x.r + ', ' + x.s1 + ', ' + x.s2 + ', \'' + x.col + '\', \'' + ty + '\', ' + (x.gap || 0) + ', ' + (x.curGap || 0) + ', ' + (x.c1 || 0) + ', ' + (x.c2 || 0) + ')">' +
+      '<td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">' + nm + sub + '</td>' +
+      '<td style="' + cs + '">C' + x.c + '</td>' +
+      '<td style="' + cs + '">R' + x.r + '</td>' +
+      '<td style="' + cs + 'width:18%;">X' + x.s1 + '-X' + x.s2 + '</td>' +
+      '<td style="' + cs + 'width:9%;">' + (x.c1 || 0) + '</td>' +
+      '<td style="' + cs + 'width:9%;">' + (x.c2 || 0) + '</td>' +
+      '<td style="width:14%; font-size:11px; font-weight:700; padding:8px 2px; text-align:center;">' + x.pct + '%</td></tr>';
+  }
+  window._zeroPanelHtml = function (which) {
+    var tt = 'padding:4px 8px;background:#000432;font:800 10px/1.3 Inter,monospace;letter-spacing:0.12em;text-align:left;';
+    var sp = 'display:block;font-size:8px;font-weight:800;line-height:9px;';
+    var none = '<tr><td colspan="7" style="padding:15px 0;font-size:12px;font-weight:800;text-align:center;color:#FFFFFF;letter-spacing:0.1em;">NONE</td></tr>';
+    var h = '', i, d, t, rad, now = Date.now();
+    try {
+      if (which !== 0) return '';
+      if (which === 0) {
+        rad = zRadar();
+        for (i = 0; i < rad.length; i++) {
+          d = rad[i];
+          h += zPRow(d.x, d.tag, '<span style="' + sp + '">' + d.tag + ' \u00B7 DECIDES IN ' + d.rem + 's</span>' + ((d.x._holdT && window._holdTag) ? window._holdTag(d.x) : ''), true, 'zeroAlert' + (i === 0 ? ' zeroTop' : ''));
+        }
+        return '<tr><td colspan="7" style="' + tt + 'color:#FFD700;border-bottom:1px solid #FFD700;">ON RADAR \u25B2 \u00B7 ' + rad.length + '</td></tr>' + (h || none);
+      }
+      for (i = 0; i < zBroken.length; i++) {
+        d = zBroken[i];
+        t = new Date(d.at);
+        h += zPRow(d.x, d.tag, '<span style="' + sp + '">' + d.tag + ' \u00B7 BROKE ' + zP2(t.getHours()) + ':' + zP2(t.getMinutes()) + ':' + zP2(t.getSeconds()) + '</span>', false, (now - d.at < 10000) ? 'zeroNew' : '');
+      }
+      return '<tr><td colspan="7" style="' + tt + 'color:#E63946;border-bottom:1px solid #E63946;">BROKEN \u25BC \u00B7 ' + zBroken.length + '<span onclick="window._zeroClearBroken()" style="float:right;cursor:pointer;padding:0 6px;border:1px solid #E63946;border-radius:999px;font-size:9px;">CLEAR</span></td></tr>' + (h || none);
+    } catch (eH) {
+      return none;
+    }
+  };
   function zPaintBoxes() {
+    var rt, mt, zTb, zMp, zRp, zRb;
+    try {
+      if (zHost) zHost.style.display = 'none';
+      mt = document.getElementById('peaksTableBodyMom');
+      rt = document.getElementById('peaksTableBodyRev');
+      zTb = (mt && mt.closest) ? mt.closest('table') : null;
+      zMp = (zTb && zTb.parentNode) ? zTb.parentNode.parentNode : null;
+      zRb = (rt && rt.closest) ? rt.closest('table') : null;
+      zRp = (zRb && zRb.parentNode) ? zRb.parentNode.parentNode : null;
+      if (!window._zeroOn) {
+        if (zMp) zMp.style.setProperty('display', 'flex');
+        if (zRp) {
+          zRp.style.setProperty('flex', '1');
+          zRp.style.removeProperty('width');
+          zRp.style.removeProperty('max-width');
+          zRp.style.removeProperty('grid-column');
+          if (zRp.parentNode) zRp.parentNode.style.removeProperty('grid-template-columns');
+        }
+        return;
+      }
+      if (zMp) zMp.style.setProperty('display', 'none', 'important');
+      if (zRp) {
+        zRp.style.setProperty('flex', '1 1 100%', 'important');
+        zRp.style.setProperty('width', '100%', 'important');
+        zRp.style.setProperty('max-width', '100%', 'important');
+        zRp.style.setProperty('grid-column', '1 / -1', 'important');
+        if (zRp.parentNode) zRp.parentNode.style.setProperty('grid-template-columns', '1fr', 'important');
+      }
+      if (rt) rt.innerHTML = window._zeroPanelHtml(0);
+      if (mt) mt.innerHTML = window._zeroPanelHtml(1);
+    } catch (eQ) {}
+  }
+  function zPaintBoxesOld() {
     var host, rad, i, d, t, r1 = '', r2 = '', old, nw, sv = [0, 0], sp = 'display:block;font-size:8px;font-weight:800;line-height:9px;';
     try {
       rad = zRadar();
@@ -17974,6 +18054,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
   var zTitle = 'BELL CURVE: show every signal that still has no miss (REV C2=0, MOM C1=C2), highest C1 first, with first-seen time and hold time';
   function zFlip(v) {
     window._zeroOn = !!v;
+    window._zeroManual = !!v;
     try { if (typeof renderFilteredTable === 'function') renderFilteredTable(); } catch (e0) {}
   }
   function zFallback() {
