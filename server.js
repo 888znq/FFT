@@ -688,10 +688,10 @@ function drvHoldPick(list, tag, start) {
   seen = DRVT.holdSeen;
   for (i = 0; i < list.length; i++) {
     x = list[i];
-    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) continue;
+    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) > 10) continue;
     key = x.pair + "|" + x.c + "|" + x.r + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + tag;
     if (!seen[key]) seen[key] = nowMs;
-    k = x.pair + "|" + x.c + "|" + x.s1 + "|" + x.s2 + "|" + x.col;
+    k = x.pair + "|" + x.c + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
     e = (((x.r - (now % x.c)) % x.c) + x.c) % x.c;
     o = best[k];
     if (!o || (x.c1 || 0) > (o.x.c1 || 0) || ((x.c1 || 0) === (o.x.c1 || 0) && ((x.pct || 0) > (o.x.pct || 0) || ((x.pct || 0) === (o.x.pct || 0) && e < o.e)))) best[k] = { x: x, e: e, key: key };
@@ -708,7 +708,7 @@ function drvHoldPick(list, tag, start) {
     if (rp !== null && rp < t) t = rp;
     m = misOf(arr[j].x);
     cc = arr[j].x.c1 || 0;
-    if (cc > pickC || (cc === pickC && (t < pickT || (t === pickT && (arr[j].x.pct || 0) > pickP)))) { pickT = t; pickP = arr[j].x.pct || 0; pickM = m; pickC = cc; pickKey = arr[j].key; pick = arr[j].x; }
+    if (m < pickM || (m === pickM && (cc > pickC || (cc === pickC && (t < pickT || (t === pickT && (arr[j].x.pct || 0) > pickP)))))) { pickT = t; pickP = arr[j].x.pct || 0; pickM = m; pickC = cc; pickKey = arr[j].key; pick = arr[j].x; }
   }
   DRVT.holdLock[tag] = pickKey;
   return pick;
