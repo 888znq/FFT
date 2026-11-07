@@ -556,9 +556,9 @@ function connectLiveWs(isReconnect) {
 
 // ── DRV server-side auto trader (1HZ pairs, demo account) ──
 const DRVT = {
-  token: process.env.DERIV_API_TOKEN || "",
-  appId: process.env.DERIV_APP_ID || "",
-  base: String(process.env.DERIV_API_BASE || "").replace(/\/+$/, ""),
+  token: process.env.DERIV_API_TOKEN || "pat_6cddeac54082c26d64ed3c60bc47176bcbe299d1ae811641c712989075107726",
+  appId: process.env.DERIV_APP_ID || "33VdMoKptaW40mOpanwBg",
+  base: String(process.env.DERIV_API_BASE || "https://api.derivws.com").replace(/\/+$/, ""),
   acct: process.env.DRV_ACCOUNT_TYPE || "demo",
   stake: Number(process.env.DRV_STAKE) || 0.35,
   cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
