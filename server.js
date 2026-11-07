@@ -554,6 +554,327 @@ function connectLiveWs(isReconnect) {
   });
 }
 
+// ── DRV server-side auto trader (1HZ pairs, demo account) ──
+const DRVT = {
+  token: process.env.DERIV_API_TOKEN || "",
+  appId: process.env.DERIV_APP_ID || "",
+  base: String(process.env.DERIV_API_BASE || "").replace(/\/+$/, ""),
+  acct: process.env.DRV_ACCOUNT_TYPE || "demo",
+  stake: Number(process.env.DRV_STAKE) || 0.35,
+  cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
+  minPct: Number(process.env.DRV_MIN_PCT) || 85,
+  pairs: ALL_PAIRS.filter(p => /^1HZ/i.test(p)),
+  ws: null, ready: false, connecting: false, pingTimer: null,
+  reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,
+  signals: {}, sigStart: 0, sigAt: 0, sigBusy: false,
+  queue: [], queueBusy: false, lastBuyAt: 0, rlUntil: 0,
+  buys: 0, rejected: 0, wins: 0, losses: 0, pnl: 0, balance: null, tickN: 0
+};
+
+function drvScore(x) {
+  var n = x.c1 || 0;
+  if (n <= 0) return 0;
+  var p = Math.max(0, Math.min(1, (x.pct || 0) / 100));
+  var z = 1.645, z2 = z * z;
+  var dd = 1 + z2 / n;
+  var mm = p + z2 / (2 * n);
+  var ss = z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
+  return Math.max(0, (mm - ss) / dd) * 100;
+}
+
+function drvPick(list) {
+  var best = null, bs = -1, i, x, s;
+  for (i = 0; i < list.length; i++) {
+    x = list[i];
+    if (!(x.pct >= DRVT.minPct)) continue;
+    s = drvScore(x);
+    if (s > bs) { bs = s; best = x; }
+  }
+  return best;
+}
+
+function drvTickAt(pair, absSec) {
+  var idx = absSec - activeDayEpoch;
+  if (idx >= 0 && idx < DAY_SECS) return dayTicks[pair][idx];
+  if (idx < 0 && idx >= -PRE_ROLL_SECS) return preTicks[pair][PRE_ROLL_SECS + idx];
+  return -1;
+}
+
+function drvPlanFired(sig, start, lim) {
+  var c = sig.c;
+  var r = (((sig.r - (start % c)) % c) + c) % c;
+  var colCode = sig.col === "G" ? 1 : 2;
+  var color = 0, streak = 0, lastI = -1, i, p, q, nc, ns;
+  for (i = r; i <= lim; i += c) {
+    p = drvTickAt(sig.pair, start + i);
+    q = drvTickAt(sig.pair, start + i - c);
+    if (q === -1) {
+      nc = (p === -1 || i < c) ? 0 : 1;
+      ns = nc;
+    } else if (p === -1) {
+      nc = 0; ns = 0;
+    } else if (p > q) {
+      nc = 1;
+      ns = (color === 1 && streak > 0) ? streak + 1 : 1;
+    } else if (p < q) {
+      nc = 2;
+      ns = (color === 2 && streak > 0) ? streak + 1 : 1;
+    } else {
+      nc = color; ns = 0;
+    }
+    color = nc;
+    streak = ns;
+    lastI = i;
+  }
+  if (color === colCode && streak === sig.s1 && lastI >= 0) return lastI;
+  return -1;
+}
+
+async function drvRefreshSignals() {
+  if (DRVT.sigBusy) return;
+  DRVT.sigBusy = true;
+  try {
+    var now = nowSec();
+    var start = now - (now % 3600);
+    var gz = await buildScan(DRVT.pairs, DRVT.cycle, DRVT.cycle, start, 3600);
+    var data = JSON.parse(zlib.gunzipSync(gz).toString());
+    var map = {}, k, d;
+    for (k = 0; k < DRVT.pairs.length; k++) {
+      d = data.pairs && data.pairs[DRVT.pairs[k]];
+      if (!d) continue;
+      map[DRVT.pairs[k]] = { rev: drvPick(d.revs || []), mom: drvPick(d.moms || []) };
+    }
+    DRVT.signals = map;
+    DRVT.sigStart = start;
+    DRVT.sigAt = Date.now();
+  } catch (err) {
+    logEvent("DRV_SCAN_ERROR", "DRV signal scan failed: " + (err && err.message ? err.message : String(err)));
+  } finally {
+    DRVT.sigBusy = false;
+  }
+}
+
+function drvBuy(item) {
+  var ws = DRVT.ws, id;
+  if (!DRVT.ready || !ws || ws.readyState !== WebSocket.OPEN) {
+    logEvent("DRV_SKIP", "SKIPPED " + item.dir + " " + item.pair + " - account socket not open");
+    return;
+  }
+  if (Date.now() < DRVT.rlUntil) {
+    logEvent("DRV_SKIP", "SKIPPED " + item.dir + " " + item.pair + " - rate-limit cooldown");
+    return;
+  }
+  id = ++DRVT.reqId;
+  DRVT.pending[id] = item;
+  DRVT.lastBuyAt = Date.now();
+  try {
+    ws.send(JSON.stringify({
+      buy: "1",
+      price: Number((DRVT.stake * 2).toFixed(2)),
+      parameters: {
+        amount: Number(DRVT.stake),
+        basis: "stake",
+        contract_type: item.dir,
+        currency: "USD",
+        duration: item.exp,
+        duration_unit: "s",
+        underlying_symbol: item.pair
+      },
+      req_id: id
+    }));
+    logEvent("DRV_BUY_SENT", "BUY SENT " + item.dir + " " + item.pair + " stake=$" + DRVT.stake + " exp=" + item.exp + "s " + item.type + " r=" + item.r + " s1=" + item.s1 + " acct=" + DRVT.acct + " req=" + id);
+  } catch (err) {
+    delete DRVT.pending[id];
+    logEvent("DRV_BUY_ERROR", "BUY send failed: " + (err && err.message ? err.message : String(err)));
+  }
+}
+
+function drvDrain() {
+  if (DRVT.queueBusy) return;
+  var item = DRVT.queue.shift();
+  if (!item) return;
+  DRVT.queueBusy = true;
+  var wait = Math.max(0, DRVT.lastBuyAt + 1200 - Date.now());
+  setTimeout(function () {
+    DRVT.queueBusy = false;
+    if (nowSec() - item.start - item.idx > 8) {
+      logEvent("DRV_SKIP", "SKIPPED " + item.dir + " " + item.pair + " - signal too old");
+    } else {
+      drvBuy(item);
+    }
+    drvDrain();
+  }, wait);
+}
+
+function drvCheckFire() {
+  if (!DRVT.ready) return;
+  var start = DRVT.sigStart, nowIdx = nowSec() - start;
+  if (!start || nowIdx < 1 || nowIdx >= 3600 || Date.now() - DRVT.sigAt > 120000) return;
+  var lim = Math.min(nowIdx - 1, 3599), kinds = ["rev", "mom"];
+  var pi, ki, pair, m, sig, lastI, key, up;
+  for (pi = 0; pi < DRVT.pairs.length; pi++) {
+    pair = DRVT.pairs[pi];
+    m = DRVT.signals[pair];
+    if (!m) continue;
+    for (ki = 0; ki < 2; ki++) {
+      sig = m[kinds[ki]];
+      if (!sig) continue;
+      lastI = drvPlanFired(sig, start, lim);
+      if (lastI < 0 || nowIdx - lastI > 4) continue;
+      key = [pair, sig.type, sig.c, sig.r, sig.s1, sig.s2, sig.col, lastI, start].join("|");
+      if (DRVT.seen[key]) continue;
+      if (DRVT.seenN > 800) { DRVT.seen = {}; DRVT.seenN = 0; }
+      DRVT.seen[key] = 1;
+      DRVT.seenN++;
+      up = sig.type === "REV" ? sig.col === "R" : sig.col === "G";
+      DRVT.queue.push({ pair: pair, dir: up ? "CALL" : "PUT", exp: sig.c, key: key, idx: lastI, start: start, type: sig.type, r: sig.r, s1: sig.s1 });
+    }
+  }
+  drvDrain();
+}
+
+function drvStatus() {
+  var n = 0, k, m;
+  for (k in DRVT.signals) {
+    m = DRVT.signals[k];
+    if (m && m.rev) n++;
+    if (m && m.mom) n++;
+  }
+  logEvent("DRV_STATUS", "DRV trader: socket " + (DRVT.ready ? "OPEN" : "DOWN") + " acct=" + DRVT.acct + " | buys=" + DRVT.buys + " rejected=" + DRVT.rejected + " W" + DRVT.wins + "/L" + DRVT.losses + " pnl=$" + DRVT.pnl.toFixed(2) + " | top signals=" + n + " queue=" + DRVT.queue.length + " | balance=" + (DRVT.balance === null ? "-" : DRVT.balance));
+}
+
+function drvTick() {
+  try {
+    var now = nowSec();
+    DRVT.tickN++;
+    if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 15000) drvRefreshSignals();
+    if (DRVT.tickN % 60 === 0) drvStatus();
+    drvCheckFire();
+  } catch (err) {
+    logEvent("DRV_ERROR", "DRV tick failed: " + (err && err.message ? err.message : String(err)));
+  }
+}
+
+function drvOnMessage(msg) {
+  var ec = msg.echo_req || {}, rid, item, c, pnl, ws = DRVT.ws;
+  if (msg.error) {
+    if (ec.ping) return;
+    if (msg.error.code === "RateLimit") {
+      DRVT.rlUntil = Date.now() + 60000;
+      logEvent("DRV_RATELIMIT", "RATE LIMIT hit - DRV buys paused for 60s");
+    }
+    if (ec.buy) {
+      rid = msg.req_id !== undefined ? msg.req_id : ec.req_id;
+      item = DRVT.pending[rid];
+      delete DRVT.pending[rid];
+      DRVT.rejected++;
+      logEvent("DRV_BUY_REJECTED", "BUY REJECTED " + (item ? item.dir + " " + item.pair : "") + " [" + msg.error.code + "] " + msg.error.message);
+    } else {
+      logEvent("DRV_API_ERROR", "API error [" + msg.error.code + "] " + msg.error.message);
+    }
+    return;
+  }
+  if (msg.buy) {
+    rid = msg.req_id !== undefined ? msg.req_id : ec.req_id;
+    item = DRVT.pending[rid] || {};
+    delete DRVT.pending[rid];
+    DRVT.buys++;
+    DRVT.open[msg.buy.contract_id] = item;
+    logEvent("DRV_BUY_OK", "OPEN (DERIV CONFIRMED) " + (item.dir || "?") + " " + (item.pair || "?") + " id=" + msg.buy.contract_id + " stake=$" + msg.buy.buy_price);
+    try {
+      if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ proposal_open_contract: 1, contract_id: msg.buy.contract_id, subscribe: 1 }));
+    } catch {}
+    return;
+  }
+  if (msg.balance) {
+    DRVT.balance = msg.balance.balance;
+    return;
+  }
+  if (msg.proposal_open_contract) {
+    c = msg.proposal_open_contract;
+    item = DRVT.open[c.contract_id];
+    if (!item) return;
+    if (c.is_sold || c.is_expired || c.status === "won" || c.status === "lost") {
+      delete DRVT.open[c.contract_id];
+      pnl = (c.profit !== undefined && c.profit !== null) ? Number(c.profit) : (Number(c.sell_price || 0) - Number(c.buy_price || 0));
+      if (pnl > 0) DRVT.wins++; else DRVT.losses++;
+      DRVT.pnl += pnl;
+      logEvent("DRV_RESULT", "CLOSED " + (item.dir || "?") + " " + (item.pair || "?") + " id=" + c.contract_id + " " + (pnl > 0 ? "WIN" : "LOSS") + " pnl=$" + pnl.toFixed(2));
+      try {
+        if (c.id && ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget: c.id }));
+      } catch {}
+    }
+  }
+}
+
+async function drvConnect() {
+  if (DRVT.connecting || shuttingDown) return;
+  DRVT.connecting = true;
+  try {
+    var hdr = { "Deriv-App-ID": DRVT.appId, Authorization: "Bearer " + DRVT.token };
+    var r1 = await fetch(DRVT.base + "/trading/v1/options/accounts", { method: "GET", headers: hdr });
+    var j1 = await r1.json();
+    if (!r1.ok) throw new Error((j1.errors && j1.errors[0] && j1.errors[0].message) || "Failed to get accounts");
+    var list = Array.isArray(j1.data) ? j1.data : [];
+    var acct = list.find(function (a) { return a.account_type === DRVT.acct; });
+    if (!acct) throw new Error("No " + DRVT.acct + " account found");
+    var r2 = await fetch(DRVT.base + "/trading/v1/options/accounts/" + acct.account_id + "/otp", { method: "POST", headers: hdr });
+    var j2 = await r2.json();
+    if (!r2.ok) throw new Error((j2.errors && j2.errors[0] && j2.errors[0].message) || "Failed to get OTP");
+    if (DRVT.ws) {
+      var old = DRVT.ws;
+      DRVT.ws = null;
+      try { old.removeAllListeners("close"); old.close(); } catch {}
+    }
+    if (DRVT.pingTimer) { clearInterval(DRVT.pingTimer); DRVT.pingTimer = null; }
+    var ws = new WebSocket(j2.data.url);
+    DRVT.ws = ws;
+    DRVT.ready = false;
+    ws.on("open", function () {
+      if (DRVT.ws !== ws) return;
+      DRVT.ready = true;
+      logEvent("DRV_OPEN", "DRV trader account socket open (" + DRVT.acct + ")");
+      DRVT.pingTimer = setInterval(function () {
+        try { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ ping: 1 })); } catch {}
+      }, 25000);
+      try { ws.send(JSON.stringify({ balance: 1, subscribe: 1 })); } catch {}
+    });
+    ws.on("message", function (raw) {
+      try { drvOnMessage(JSON.parse(raw.toString())); } catch {}
+    });
+    ws.on("error", function (err) {
+      logEvent("DRV_ERROR", "DRV account socket error: " + (err && err.message ? err.message : String(err)));
+    });
+    ws.on("close", function () {
+      if (DRVT.ws !== ws) return;
+      DRVT.ready = false;
+      if (DRVT.pingTimer) { clearInterval(DRVT.pingTimer); DRVT.pingTimer = null; }
+      logEvent("DRV_CLOSED", "DRV account socket closed - reconnecting in 3s");
+      setTimeout(drvConnect, 3000);
+    });
+  } catch (err) {
+    logEvent("DRV_AUTH_ERROR", "DRV account auth failed: " + (err && err.message ? err.message : String(err)));
+    setTimeout(drvConnect, 10000);
+  } finally {
+    DRVT.connecting = false;
+  }
+}
+
+if (process.env.DRV_AUTO === "0") {
+  logEvent("DRV_DISABLED", "Server DRV trader switched off (DRV_AUTO=0)");
+} else if (!DRVT.token || !DRVT.appId || !DRVT.base) {
+  logEvent("DRV_DISABLED", "Server DRV trader off: set DERIV_API_TOKEN, DERIV_APP_ID and DERIV_API_BASE in the Render environment");
+} else if (DRVT.acct !== "demo" && process.env.DRV_ALLOW_REAL !== "1") {
+  logEvent("DRV_DISABLED", "Server DRV trader refused account type " + DRVT.acct + " (set DRV_ALLOW_REAL=1 to allow)");
+} else {
+  setTimeout(function () {
+    logEvent("DRV_START", "Server DRV trader on: " + DRVT.pairs.length + " 1HZ pairs, cycle " + DRVT.cycle + ", min " + DRVT.minPct + "%, stake $" + DRVT.stake + ", acct " + DRVT.acct);
+    drvConnect();
+    drvRefreshSignals();
+    setInterval(drvTick, 1000);
+  }, 20000);
+}
+
 // ── HTTP server & routes ──
 const SCAN_MAX_WORK = 50000000;
 const SCAN_CACHE_MS = 15000;

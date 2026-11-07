@@ -15194,7 +15194,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
       _trLog('ERROR', 'BUY send failed: ' + eT.message);
     }
   };
-  window._drvAutoTrade = true;
+  window._drvAutoTrade = false;
   window._drvAutoAmt = 0.35;
   window._drvAutoFire = function(node, nowSec) {
     var sg, pair, c, id, amtEl, prevAmt, prevPair;
