@@ -699,19 +699,26 @@ function drvHoldPick(list, tag, start) {
   for (k in best) arr.push(best[k]);
   if (!arr.length) return null;
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-  var j, t, rp, m, cc, pick = null, pickT = Infinity, pickP = -1, pickM = Infinity, pickC = -1, pickKey = "", locked = null, lk;
+  var j, t, rp, ob, best = null, cur = null, lk;
   if (!DRVT.holdLock) DRVT.holdLock = {};
   lk = DRVT.holdLock[tag];
+  var beats = function (a, b) {
+    if (a.t !== b.t) return a.t < b.t;
+    if ((a.x.c1 || 0) !== (b.x.c1 || 0)) return (a.x.c1 || 0) > (b.x.c1 || 0);
+    if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
+    return (a.x.pct || 0) > (b.x.pct || 0);
+  };
   for (j = 0; j < arr.length; j++) {
     t = seen[arr[j].key];
     rp = drvHoldReplay(arr[j].x, tag, start);
     if (rp !== null && rp < t) t = rp;
-    m = misOf(arr[j].x);
-    cc = arr[j].x.c1 || 0;
-    if (m < pickM || (m === pickM && (cc > pickC || (cc === pickC && (t < pickT || (t === pickT && (arr[j].x.pct || 0) > pickP)))))) { pickT = t; pickP = arr[j].x.pct || 0; pickM = m; pickC = cc; pickKey = arr[j].key; pick = arr[j].x; }
+    ob = { x: arr[j].x, key: arr[j].key, t: t };
+    if (ob.key === lk) cur = ob;
+    if (!best || beats(ob, best) || (!beats(best, ob) && ob.key < best.key)) best = ob;
   }
-  DRVT.holdLock[tag] = pickKey;
-  return pick;
+  if (cur && !(best.t < cur.t)) best = cur;
+  DRVT.holdLock[tag] = best.key;
+  return best.x;
 }
 
 async function drvRefreshSignals() {
