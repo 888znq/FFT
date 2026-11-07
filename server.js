@@ -672,10 +672,11 @@ function drvHoldPick(list, tag, start) {
   }
   if (!arr.length) {
     if (DRVT.holdLock) DRVT.holdLock[tag] = "";
+    if (DRVT.runners) DRVT.runners[tag] = [];
     return null;
   }
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-  var j, t, rp, ob, best = null, cur = null, lk;
+  var j, t, rp, ob, best = null, cur = null, lk, obs = [];
   if (!DRVT.holdLock) DRVT.holdLock = {};
   lk = DRVT.holdLock[tag];
   var beats = function (a, b) {
@@ -704,11 +705,19 @@ function drvHoldPick(list, tag, start) {
       seen[arr[j].key] = nowMs;
     }
     ob = { x: arr[j].x, key: arr[j].key, t: t, h: hd };
+    obs.push(ob);
     if (ob.key === lk) cur = ob;
     if (!best || beats(ob, best) || (!beats(best, ob) && ob.key < best.key)) best = ob;
   }
   if (cur && cur.h && !((best.x.s1 || 0) < (cur.x.s1 || 0) || ((best.x.s1 || 0) === (cur.x.s1 || 0) && best.t < cur.t))) best = cur;
   DRVT.holdLock[tag] = best.key;
+  try {
+    obs.sort(function (a, b) { return beats(a, b) ? -1 : (beats(b, a) ? 1 : (a.key < b.key ? -1 : 1)); });
+    var rn = [];
+    for (j = 0; j < obs.length && rn.length < 2; j++) { if (obs[j].key !== best.key) rn.push(obs[j].x); }
+    if (!DRVT.runners) DRVT.runners = {};
+    DRVT.runners[tag] = rn;
+  } catch (eRn) {}
   return best.x;
 }
 
@@ -822,6 +831,195 @@ function drvDrain() {
   }, wait);
 }
 
+// ── DRV paper scoreboard ──
+// Records every king fire (and its opposite call, and the 2nd/3rd ranked signals) together with the
+// claim it made (c1/c2/pct), then checks the real outcome from the tick data one cycle later.
+// Paper trades cost nothing and never touch Deriv. Real trades are added to the same board at close.
+const DRVS = {
+  file: process.env.DRV_LOG_FILE === "off" ? "" : (process.env.DRV_LOG_FILE || path.join(__dirname, "drv_trades.jsonl")),
+  g: {}, pending: [], byKey: {}, seen: {}, seenN: 0, ties: 0, voided: 0, errLogged: false
+};
+
+function drvDirOf(sig) {
+  return (sig.type === "REV" ? sig.col === "R" : sig.col === "G") ? "CALL" : "PUT";
+}
+
+function drvMissOf(sig) {
+  var c1 = sig.c1 || 0, c2 = sig.c2 || 0;
+  return sig.type === "MOM" ? c1 - c2 : c2;
+}
+
+function drvC1Band(n) {
+  return n >= 6 ? "6+" : (n >= 4 ? "4-5" : "3");
+}
+
+function drvStatAdd(group, r, win) {
+  var ks = [group, group + "|" + r.type, group + "|c1=" + drvC1Band(r.c1 || 0), group + "|s1=" + r.s1, group + "|" + (r.perf ? "perfect" : "imperfect")], i, o;
+  for (i = 0; i < ks.length; i++) {
+    o = DRVS.g[ks[i]];
+    if (!o) o = DRVS.g[ks[i]] = { n: 0, w: 0, cl: 0 };
+    o.n++;
+    if (win) o.w++;
+    o.cl += (+r.claim || 0);
+  }
+}
+
+function drvLogRec(r, win) {
+  if (!DRVS.file) return;
+  var o = { t: r.t, g: r.g, pair: r.pair, type: r.type, c: r.c, r: r.r, s1: r.s1, col: r.col, dir: r.dir, c1: r.c1, c2: r.c2, pct: r.pct, claim: r.claim, perf: r.perf, real: !!r.real, win: !!win };
+  if (r.pnl !== undefined) { o.pnl = r.pnl; o.stake = r.stake; o.payout = r.payout; }
+  try { fs.appendFile(DRVS.file, JSON.stringify(o) + "\n", function () {}); } catch (e) {}
+}
+
+function drvLoadLog() {
+  if (!DRVS.file) return;
+  try {
+    if (!fs.existsSync(DRVS.file)) return;
+    if (fs.statSync(DRVS.file).size > 40000000) {
+      logEvent("DRV_LOG", "Scoreboard file is over 40 MB, not restored: " + DRVS.file);
+      return;
+    }
+    var lines = fs.readFileSync(DRVS.file, "utf8").split("\n"), i, r, n = 0;
+    for (i = 0; i < lines.length; i++) {
+      if (!lines[i]) continue;
+      try { r = JSON.parse(lines[i]); } catch (e) { continue; }
+      if (!r || !r.g || !r.type) continue;
+      drvStatAdd(r.g, r, r.win);
+      if (r.g === "KING_ALL" && !r.real) drvStatAdd("KING_SKIPPED", r, r.win);
+      n++;
+    }
+    logEvent("DRV_LOG", "Scoreboard restored from " + DRVS.file + ": " + n + " records");
+  } catch (err) {
+    logEvent("DRV_LOG", "Scoreboard restore failed: " + (err && err.message ? err.message : String(err)));
+  }
+}
+
+function drvPaperAdd(g, sig, dir, idx, start, key) {
+  var c1 = sig.c1 || 0, c2 = sig.c2 || 0, pct = sig.pct || 0;
+  var r = {
+    g: g, t: Date.now(), pair: sig.pair, type: sig.type, c: sig.c, r: sig.r, s1: sig.s1, col: sig.col, dir: dir,
+    c1: c1, c2: c2, pct: pct, claim: g === "OPPOSITE" ? 100 - pct : pct, perf: drvMissOf(sig) === 0,
+    start: start, idx: idx, key: key, real: false
+  };
+  if (DRVS.pending.length < 3000) DRVS.pending.push(r);
+  return r;
+}
+
+function drvPaperDone(r, win) {
+  drvStatAdd(r.g, r, win);
+  if (r.g === "KING_ALL" && !r.real) drvStatAdd("KING_SKIPPED", r, win);
+  drvLogRec(r, win);
+  if (r.g === "KING_ALL") {
+    logEvent("DRV_PAPER", (win ? "WIN " : "LOSS ") + r.dir + " " + r.pair + " " + r.type + " r=" + r.r + " s1=" + r.s1 + " " + r.col + " claim c1=" + r.c1 + " c2=" + r.c2 + " pct=" + r.pct + (r.real ? " (real trade placed)" : " (no real trade)"));
+  }
+}
+
+function drvPaperScan() {
+  var start = DRVT.sigStart, nowIdx = nowSec() - start;
+  if (!start || nowIdx < 1 || nowIdx >= 3600 || Date.now() - DRVT.sigAt > 120000) return;
+  var lim = Math.min(nowIdx - 1, 3599), list = [], tags = ["REV", "MOM"];
+  var pi, ti, ki, m, rn, it, sig, lastI, key, pk, dir, rec;
+  for (pi = 0; pi < DRVT.pairs.length; pi++) {
+    m = DRVT.signals[DRVT.pairs[pi]];
+    if (!m) continue;
+    if (m.rev) list.push({ g: "KING_ALL", s: m.rev });
+    if (m.mom) list.push({ g: "KING_ALL", s: m.mom });
+  }
+  for (ti = 0; ti < 2; ti++) {
+    rn = (DRVT.runners && DRVT.runners[tags[ti]]) || [];
+    for (ki = 0; ki < rn.length && ki < 2; ki++) list.push({ g: ki === 0 ? "RUNNER2" : "RUNNER3", s: rn[ki] });
+  }
+  for (pi = 0; pi < list.length; pi++) {
+    it = list[pi];
+    sig = it.s;
+    lastI = drvPlanFired(sig, start, lim);
+    if (lastI < 0 || nowIdx - lastI > 4) continue;
+    key = [sig.pair, sig.type, sig.c, sig.r, sig.s1, sig.s2, sig.col, lastI, start].join("|");
+    pk = it.g + "|" + key;
+    if (DRVS.seen[pk]) continue;
+    if (DRVS.seenN > 1500) { DRVS.seen = {}; DRVS.seenN = 0; }
+    DRVS.seen[pk] = 1;
+    DRVS.seenN++;
+    dir = drvDirOf(sig);
+    rec = drvPaperAdd(it.g, sig, dir, lastI, start, key);
+    if (it.g === "KING_ALL") {
+      DRVS.byKey[key] = rec;
+      drvPaperAdd("OPPOSITE", sig, dir === "CALL" ? "PUT" : "CALL", lastI, start, key);
+    }
+  }
+}
+
+function drvResolvePaper() {
+  var now = nowSec(), keep = [], i, r, due, p0, p1, win;
+  for (i = 0; i < DRVS.pending.length; i++) {
+    r = DRVS.pending[i];
+    due = r.start + r.idx + r.c;
+    if (now < due + 2) { keep.push(r); continue; }
+    p0 = drvTickAt(r.pair, r.start + r.idx);
+    p1 = drvTickAt(r.pair, due);
+    if (p0 === -1) { DRVS.voided++; if (r.g === "KING_ALL") delete DRVS.byKey[r.key]; continue; }
+    if (p1 === -1) {
+      if (now < due + 15) keep.push(r);
+      else { DRVS.voided++; if (r.g === "KING_ALL") delete DRVS.byKey[r.key]; }
+      continue;
+    }
+    if (p1 === p0) DRVS.ties++;
+    win = r.dir === "CALL" ? p1 > p0 : p1 < p0;
+    if (r.g === "KING_ALL") delete DRVS.byKey[r.key];
+    drvPaperDone(r, win);
+  }
+  DRVS.pending = keep;
+}
+
+function drvRealDone(item, pnl) {
+  if (!item || !item.pair) return;
+  var win = pnl > 0;
+  var r = {
+    g: "REAL", t: item.buyAt || Date.now(), pair: item.pair, type: item.type, c: item.exp, r: item.r, s1: item.s1, col: item.col, dir: item.dir,
+    c1: item.c1 || 0, c2: item.c2 || 0, pct: item.pct || 0, claim: item.pct || 0, perf: !!item.perf, real: true,
+    pnl: pnl, stake: item.stake, payout: item.payout
+  };
+  drvStatAdd("REAL", r, win);
+  drvLogRec(r, win);
+  logEvent("DRV_TRADE", (win ? "WIN " : "LOSS ") + item.dir + " " + item.pair + " " + item.type + " r=" + item.r + " s1=" + item.s1 + " " + item.col + " claim c1=" + (item.c1 || 0) + " c2=" + (item.c2 || 0) + " pct=" + (item.pct || 0) + " pnl=$" + pnl.toFixed(2));
+}
+
+function drvScoreboard() {
+  var rows = {}, k, o, p;
+  for (k in DRVS.g) {
+    o = DRVS.g[k];
+    p = o.n ? o.w / o.n : 0;
+    rows[k] = {
+      n: o.n, w: o.w,
+      winPct: Number((p * 100).toFixed(1)),
+      moe: Number((196 * Math.sqrt(p * (1 - p) / Math.max(1, o.n))).toFixed(1)),
+      claimPct: Number((o.cl / Math.max(1, o.n)).toFixed(1))
+    };
+  }
+  return { breakEvenPct: DRVT.be ? Number((DRVT.be * 100).toFixed(1)) : null, pending: DRVS.pending.length, ties: DRVS.ties, voided: DRVS.voided, rows: rows };
+}
+
+function drvScoreText() {
+  var sb = drvScoreboard(), order = ["REAL", "KING_ALL", "KING_SKIPPED", "OPPOSITE", "RUNNER2", "RUNNER3"];
+  var keys = Object.keys(sb.rows).sort(), out = [], gi, ki, k, r;
+  var pad = function (s, n) { s = String(s); while (s.length < n) s += " "; return s; };
+  out.push("DRV SCOREBOARD  (win% = what really happened, claimed% = what the signal predicted)");
+  out.push("break-even win% (stake / payout, from last buy): " + (sb.breakEvenPct === null ? "unknown yet" : sb.breakEvenPct));
+  out.push("paper trades waiting for result: " + sb.pending + " | ties (counted as loss): " + sb.ties + " | voided (missing tick): " + sb.voided);
+  out.push("Judge a row only with 300+ trades. Compare KING_ALL vs OPPOSITE vs RUNNER2/RUNNER3.");
+  out.push("");
+  out.push(pad("group", 28) + pad("n", 7) + pad("wins", 7) + pad("win%", 8) + pad("+/-95%", 8) + "claimed%");
+  for (gi = 0; gi < order.length; gi++) {
+    for (ki = 0; ki < keys.length; ki++) {
+      k = keys[ki];
+      if (k.split("|")[0] !== order[gi]) continue;
+      r = sb.rows[k];
+      out.push(pad(k, 28) + pad(r.n, 7) + pad(r.w, 7) + pad(r.winPct, 8) + pad(r.moe, 8) + r.claimPct);
+    }
+  }
+  return out.join("\n") + "\n";
+}
+
 function drvCheckFire() {
   if (!DRVT.ready) return;
   var start = DRVT.sigStart, nowIdx = nowSec() - start;
@@ -843,7 +1041,7 @@ function drvCheckFire() {
       DRVT.seen[key] = 1;
       DRVT.seenN++;
       up = sig.type === "REV" ? sig.col === "R" : sig.col === "G";
-      DRVT.queue.push({ pair: pair, dir: up ? "CALL" : "PUT", exp: sig.c, key: key, idx: lastI, start: start, type: sig.type, r: sig.r, s1: sig.s1, s2: sig.s2, col: sig.col });
+      DRVT.queue.push({ pair: pair, dir: up ? "CALL" : "PUT", exp: sig.c, key: key, idx: lastI, start: start, type: sig.type, r: sig.r, s1: sig.s1, s2: sig.s2, col: sig.col, c1: sig.c1 || 0, c2: sig.c2 || 0, pct: sig.pct || 0, perf: drvMissOf(sig) === 0 });
     }
   }
   drvDrain();
@@ -865,6 +1063,12 @@ function drvTick() {
     DRVT.tickN++;
     if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 30000) drvRefreshSignals();
     if (DRVT.tickN % 60 === 0) drvStatus();
+    try {
+      drvPaperScan();
+      drvResolvePaper();
+    } catch (eP) {
+      if (!DRVS.errLogged) { DRVS.errLogged = true; logEvent("DRV_PAPER_ERROR", "paper scoreboard failed: " + (eP && eP.stack ? eP.stack : String(eP))); }
+    }
     drvCheckFire();
   } catch (err) {
     logEvent("DRV_ERROR", "DRV tick failed: " + (err && err.message ? err.message : String(err)));
@@ -899,6 +1103,8 @@ function drvOnMessage(msg) {
     item.openAt = Number(msg.buy.start_time) || Math.floor(Date.now() / 1000);
     item.stake = Number(msg.buy.buy_price) || DRVT.stake;
     item.payout = Number(msg.buy.payout) || 0;
+    if (item.payout > 0 && item.stake > 0) DRVT.be = item.stake / item.payout;
+    if (item.key && DRVS.byKey[item.key]) DRVS.byKey[item.key].real = true;
     DRVT.open[msg.buy.contract_id] = item;
     logEvent("DRV_BUY_OK", "OPEN (DERIV CONFIRMED) " + (item.dir || "?") + " " + (item.pair || "?") + " id=" + msg.buy.contract_id + " stake=$" + msg.buy.buy_price);
     try {
@@ -926,6 +1132,7 @@ function drvOnMessage(msg) {
       item.closedAt = Math.floor(Date.now() / 1000);
       item.pnl = pnl;
       item.exit = Number(c.exit_tick || c.sell_spot || c.current_spot) || 0;
+      try { drvRealDone(item, pnl); } catch (eR) {}
       DRVT.hist.unshift(item);
       if (DRVT.hist.length > 300) DRVT.hist.length = 300;
       logEvent("DRV_RESULT", "CLOSED " + (item.dir || "?") + " " + (item.pair || "?") + " id=" + c.contract_id + " " + (pnl > 0 ? "WIN" : "LOSS") + " pnl=$" + pnl.toFixed(2));
@@ -998,6 +1205,7 @@ if (process.env.DRV_AUTO === "0") {
 } else {
   setTimeout(function () {
     logEvent("DRV_START", "Server DRV trader on: " + DRVT.pairs.length + " 1HZ pairs, cycle " + DRVT.cycle + ", king pick = hold logic (REV + MOM), stake $" + DRVT.stake + ", acct " + DRVT.acct);
+    drvLoadLog();
     drvConnect();
     drvRefreshSignals();
     setInterval(drvTick, 1000);
@@ -1641,7 +1849,17 @@ const server = http.createServer((req, res) => {
         drvLk.push({ pair: drvLp, type: drvLs.type, c: drvLs.c, r: drvLs.r, s1: drvLs.s1, s2: drvLs.s2, col: drvLs.col, pct: drvLs.pct, held: drvLocked(drvLp) });
       }
     }
-    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: drvLk, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl } });
+    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: drvLk, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl }, score: drvScoreboard() });
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/drvscore") {
+    if (!isAuthorized(req, urlObj)) {
+      sendJson(res, 401, { error: "Unauthorized" });
+      return;
+    }
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+    res.end(drvScoreText());
     return;
   }
 
