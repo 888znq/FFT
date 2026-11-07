@@ -638,11 +638,21 @@ async function drvRefreshSignals() {
     var start = now - (now % 3600);
     var gz = await buildScan(DRVT.pairs, DRVT.cycle, DRVT.cycle, start, 3600);
     var data = JSON.parse(zlib.gunzipSync(gz).toString());
-    var map = {}, k, d;
+    var map = {}, k, d, revs = [], moms = [], pr;
     for (k = 0; k < DRVT.pairs.length; k++) {
       d = data.pairs && data.pairs[DRVT.pairs[k]];
       if (!d) continue;
-      map[DRVT.pairs[k]] = { rev: drvPick(d.revs || []), mom: drvPick(d.moms || []) };
+      pr = drvPick(d.revs || []);
+      if (pr) revs.push({ pair: DRVT.pairs[k], sig: pr, sc: drvScore(pr) });
+      pr = drvPick(d.moms || []);
+      if (pr) moms.push({ pair: DRVT.pairs[k], sig: pr, sc: drvScore(pr) });
+    }
+    revs.sort(function (x, y) { return y.sc - x.sc; });
+    moms.sort(function (x, y) { return y.sc - x.sc; });
+    if (revs[1]) map[revs[1].pair] = { rev: revs[1].sig, mom: null };
+    if (moms[1]) {
+      if (!map[moms[1].pair]) map[moms[1].pair] = { rev: null, mom: null };
+      map[moms[1].pair].mom = moms[1].sig;
     }
     DRVT.signals = map;
     DRVT.sigStart = start;
@@ -652,6 +662,19 @@ async function drvRefreshSignals() {
   } finally {
     DRVT.sigBusy = false;
   }
+}
+
+function drvLocked(pair) {
+  var now = Date.now(), k, it;
+  for (k in DRVT.open) {
+    it = DRVT.open[k];
+    if (it && it.pair === pair && it.buyAt && now < it.buyAt + it.exp * 1000 + 2000) return true;
+  }
+  for (k in DRVT.pending) {
+    it = DRVT.pending[k];
+    if (it && it.pair === pair && it.buyAt && now < it.buyAt + it.exp * 1000 + 2000) return true;
+  }
+  return false;
 }
 
 function drvBuy(item) {
@@ -665,6 +688,7 @@ function drvBuy(item) {
     return;
   }
   id = ++DRVT.reqId;
+  item.buyAt = Date.now();
   DRVT.pending[id] = item;
   DRVT.lastBuyAt = Date.now();
   try {
@@ -691,7 +715,18 @@ function drvBuy(item) {
 
 function drvDrain() {
   if (DRVT.queueBusy) return;
-  var item = DRVT.queue.shift();
+  var item = null, qi, qx, keep = [];
+  for (qi = 0; qi < DRVT.queue.length; qi++) {
+    qx = DRVT.queue[qi];
+    if (nowSec() - qx.start - qx.idx > 8) {
+      logEvent("DRV_SKIP", "SKIPPED " + qx.dir + " " + qx.pair + " - signal too old");
+    } else if (!item && !drvLocked(qx.pair)) {
+      item = qx;
+    } else {
+      keep.push(qx);
+    }
+  }
+  DRVT.queue = keep;
   if (!item) return;
   DRVT.queueBusy = true;
   var wait = Math.max(0, DRVT.lastBuyAt + 1200 - Date.now());
@@ -699,6 +734,8 @@ function drvDrain() {
     DRVT.queueBusy = false;
     if (nowSec() - item.start - item.idx > 8) {
       logEvent("DRV_SKIP", "SKIPPED " + item.dir + " " + item.pair + " - signal too old");
+    } else if (drvLocked(item.pair)) {
+      logEvent("DRV_SKIP", "SKIPPED " + item.dir + " " + item.pair + " - pair locked by open position");
     } else {
       drvBuy(item);
     }
@@ -747,7 +784,7 @@ function drvTick() {
   try {
     var now = nowSec();
     DRVT.tickN++;
-    if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 15000) drvRefreshSignals();
+    if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 60000) drvRefreshSignals();
     if (DRVT.tickN % 60 === 0) drvStatus();
     drvCheckFire();
   } catch (err) {
