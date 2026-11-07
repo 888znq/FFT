@@ -11401,7 +11401,16 @@
         }
         dtbX = W - PADR - dtbW - 8;
         dtbY = ptop + 8;
-        var dtbLk = window._drvLocks || [], dtbLi, dtbLs, dtbLc;
+        var dtbLk = window._drvLocks || [], dtbLi, dtbLs, dtbLc, dtbLW = 320, dtbLH = 24, dtbLX, dtbLd, dtbLfi, dtbLcx, dtbLcells, dtbLwid, dtbLq, dtbLr, dtbLg, dtbLpc, dtbLcw, dtbLbg, dtbLgr;
+        dtbLX = Math.max(PADL + 8, W - PADR - dtbLW - 8);
+        if (dtbLk.length > 0 && (!window._lkCol || Date.now() - window._lkCol.t > 2000)) {
+          try {
+            var lkCs = getComputedStyle(document.documentElement);
+            window._lkCol = { t: Date.now(), r: (lkCs.getPropertyValue('--accent-red') || '').trim() || '#E63946', g: (lkCs.getPropertyValue('--accent-green') || '').trim() || '#2ED573' };
+          } catch (eLkc) { window._lkCol = { t: Date.now(), r: '#E63946', g: '#2ED573' }; }
+        }
+        dtbLr = window._lkCol ? window._lkCol.r : '#E63946';
+        dtbLg = window._lkCol ? window._lkCol.g : '#2ED573';
         if ((dtbAct.length > 0 || dtbLk.length > 0) && dtbX > PADL + 40) {
           ctx.save();
           ctx.setLineDash([]);
@@ -11417,33 +11426,66 @@
           }
           if (dtbLk.length > 0) {
             ctx.fillStyle = DIM;
-            ctx.fillText('LOCKED SIGNALS', dtbX, dtbY + 10);
+            ctx.fillText('LOCKED SIGNALS', dtbLX, dtbY + 10);
             dtbY += 14;
+            ctx.font = 'bold 11px ' + MONO;
             for (dtbLi = 0; dtbLi < dtbLk.length; dtbLi++) {
               dtbLs = dtbLk[dtbLi];
-              if (dtbY + dtbH > pbot - 4) break;
-              dtbUp = (dtbLs.type === 'REV') ? (dtbLs.col === 'R') : (dtbLs.col === 'G');
+              if (dtbY + dtbLH > pbot - 4) break;
+              var dtbLs2 = (dtbLs.s2 !== undefined ? dtbLs.s2 : dtbLs.s1);
+              dtbLd = _sigOutFind(dtbLs.pair, dtbLs.c, dtbLs.r, dtbLs.s1, dtbLs2, dtbLs.col, dtbLs.type) || dtbLs;
               dtbLc = dtbLs.held ? '#FFFFFF' : DIM;
-              ctx.globalAlpha = 0.93;
-              ctx.fillStyle = BG;
-              ctx.fillRect(dtbX, dtbY, dtbW, dtbH);
+              dtbLbg = (dtbLs.col === 'R') ? dtbLr : dtbLg;
+              dtbLfi = 0;
+              try { if (typeof _wpTmrReg === 'function' && typeof _wpFillInfo === 'function') dtbLfi = Number(_wpFillInfo(_wpTmrReg(dtbLd)).pct) || 0; } catch (eLkf) { dtbLfi = 0; }
+              dtbLpc = '#E2E8F0';
+              try { if (typeof tcPairColor === 'function') dtbLpc = tcPairColor(dtbLs.pair) || '#E2E8F0'; } catch (eLkp) { dtbLpc = '#E2E8F0'; }
               ctx.globalAlpha = 1;
+              ctx.fillStyle = dtbLbg;
+              ctx.fillRect(dtbLX, dtbY, dtbLW, dtbLH);
+              if (dtbLfi > 0) {
+                dtbLgr = ctx.createLinearGradient(dtbLX, 0, dtbLX + dtbLW * dtbLfi / 100, 0);
+                dtbLgr.addColorStop(0, 'rgba(255,255,255,0.05)');
+                dtbLgr.addColorStop(1, 'rgba(255,255,255,0.28)');
+                ctx.fillStyle = dtbLgr;
+                ctx.fillRect(dtbLX, dtbY, dtbLW * dtbLfi / 100, dtbLH);
+                ctx.fillStyle = dtbLpc;
+                ctx.fillRect(dtbLX + dtbLW * dtbLfi / 100 - 4, dtbY, 4, dtbLH);
+              }
+              dtbLcells = [getPairDisplayName(dtbLs.pair) + (window._payText ? window._payText(dtbLs.pair) : ''), 'C' + dtbLs.c, 'R' + dtbLs.r, 'X' + dtbLs.s1 + '-X' + dtbLs2, (dtbLd.c1 !== undefined ? dtbLd.c1 : '-'), (dtbLd.c2 !== undefined ? dtbLd.c2 : '-'), (dtbLd.pct !== undefined ? dtbLd.pct + '%' : '-')];
+              dtbLwid = [0.28, 0.11, 0.11, 0.18, 0.09, 0.09, 0.14];
+              dtbLcx = dtbLX;
+              for (dtbLq = 0; dtbLq < 7; dtbLq++) {
+                dtbLcw = dtbLW * dtbLwid[dtbLq];
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(dtbLcx, dtbY, dtbLcw, dtbLH);
+                ctx.clip();
+                ctx.fillStyle = '#FFFFFF';
+                if (dtbLq === 0) {
+                  ctx.textAlign = 'left';
+                  ctx.fillText(String(dtbLcells[dtbLq]), dtbLcx + 6, dtbY + 16);
+                } else {
+                  ctx.textAlign = 'center';
+                  ctx.fillText(String(dtbLcells[dtbLq]), dtbLcx + dtbLcw / 2, dtbY + 16);
+                }
+                ctx.restore();
+                if (dtbLq < 6) {
+                  ctx.fillStyle = '#FFFFFF';
+                  ctx.fillRect(Math.round(dtbLcx + dtbLcw) - 1, dtbY, 1, dtbLH);
+                }
+                dtbLcx += dtbLcw;
+              }
+              ctx.textAlign = 'left';
               ctx.lineWidth = dtbLs.held ? 2 : 1.5;
               ctx.strokeStyle = dtbLc;
               ctx.setLineDash([4, 3]);
-              ctx.strokeRect(dtbX + 0.5, dtbY + 0.5, dtbW - 1, dtbH - 1);
+              ctx.strokeRect(dtbLX + 0.5, dtbY + 0.5, dtbLW - 1, dtbLH - 1);
               ctx.setLineDash([]);
-              ctx.fillStyle = dtbUp ? CY : AM;
-              ctx.fillRect(dtbX, dtbY, 4, dtbH);
-              ctx.fillStyle = '#E2E8F0';
-              ctx.fillText('LK ' + dtbLs.type + ' ' + getPairDisplayName(dtbLs.pair) + ' R' + dtbLs.r + ' X' + dtbLs.s1, dtbX + 9, dtbY + 15);
-              ctx.fillStyle = dtbLc;
-              ctx.textAlign = 'right';
-              ctx.fillText(dtbLs.held ? 'HELD' : 'ARM', dtbX + dtbW - 6, dtbY + 15);
-              ctx.textAlign = 'left';
-              window._drvBoxHits.push({ x: dtbX, y: dtbY, w: dtbW, h: dtbH, pair: dtbLs.pair, c: dtbLs.c, r: dtbLs.r, s1: dtbLs.s1, s2: (dtbLs.s2 !== undefined ? dtbLs.s2 : dtbLs.s1), col: dtbLs.col, type: dtbLs.type });
-              dtbY += dtbH + 3;
+              window._drvBoxHits.push({ x: dtbLX, y: dtbY, w: dtbLW, h: dtbLH, pair: dtbLs.pair, c: dtbLs.c, r: dtbLs.r, s1: dtbLs.s1, s2: dtbLs2, col: dtbLs.col, type: dtbLs.type });
+              dtbY += dtbLH + 3;
             }
+            ctx.font = 'bold 10px ' + MONO;
             if (dtbAct.length > 0) {
               ctx.fillStyle = DIM;
               ctx.fillText('TRADES', dtbX, dtbY + 10);
