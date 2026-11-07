@@ -7071,6 +7071,36 @@
       o._holdT = best.t0;
       return o;
     };
+    window._holdAllZero = function (tag) {
+      var zOut = [], zSeen = {}, zK, zE, zX, zP, zO, zRk;
+      var zHid = (typeof _hiddenPairs !== 'undefined') ? _hiddenPairs : null;
+      var zR0 = (typeof r0OnlyMode !== 'undefined') && r0OnlyMode;
+      for (zK in S.map) {
+        zE = S.map[zK];
+        if (zE.tag !== tag || !zE.h) continue;
+        zX = zE.x;
+        if (zHid && zHid.has(zX.pair)) continue;
+        if (typeof activePairs !== 'undefined' && activePairs !== null && activePairs.indexOf(zX.pair) < 0) continue;
+        if (zR0 && zX.r !== 0) continue;
+        if (window._drvOnly && !/^1HZ/i.test(String(zX.pair))) continue;
+        if (window._fxOnly && /^1HZ/i.test(String(zX.pair))) continue;
+        if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(zX.pair))) continue;
+        if (((tag === 'MOM') ? ((zX.c1 || 0) - (zX.c2 || 0)) : (zX.c2 || 0)) !== 0) continue;
+        zO = {};
+        for (zP in zX) zO[zP] = zX[zP];
+        zO._holdT = zE.t0;
+        zOut.push(zO);
+      }
+      zOut.sort(function (a, b) {
+        return ((b.c1 || 0) - (a.c1 || 0)) || ((a._holdT || 0) - (b._holdT || 0)) || ((b.pct || 0) - (a.pct || 0)) || ((a.s1 || 0) - (b.s1 || 0));
+      });
+      return zOut.filter(function (z) {
+        zRk = z.pair + '|' + z.s1 + '|' + z.s2 + '|' + z.col + '|' + (z.c1 || 0) + '|' + (z.c2 || 0);
+        if (zSeen[zRk]) return false;
+        zSeen[zRk] = 1;
+        return true;
+      });
+    };
     window._holdToggle = function () {
       if (window._HOLD_ONLY !== false) { window._holdOn = true; return; }
       window._holdOn = !window._holdOn;
@@ -7525,6 +7555,10 @@
   }
 
     function renderScannerTable(revList, momList, deadList) {
+      if (window._zeroOn && typeof window._holdAllZero === 'function') {
+        revList = window._holdAllZero('REV');
+        momList = window._holdAllZero('MOM');
+      }
       var revTbody = document.getElementById('peaksTableBodyRev');
       var momTbody = document.getElementById('peaksTableBodyMom');
       if (revTbody) revTbody.innerHTML = _wpKingHtml('REV') + _buildScannerRowsHtml(revList);
@@ -17717,6 +17751,55 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     _tsBox.style.display = 'none';
     document.body.appendChild(_tsBox);
   })();</script>
+<script>
+(function () {
+  var zTries = 0;
+  var zTitle = 'ZERO-HOLD: show every signal that still has no miss (REV C2=0, MOM C1=C2), highest C1 first, with first-seen time and hold time';
+  function zFlip(v) {
+    window._zeroOn = !!v;
+    try { if (typeof renderFilteredTable === 'function') renderFilteredTable(); } catch (e0) {}
+  }
+  function zFallback() {
+    var inner = document.getElementById('ctlBarInner');
+    if (!inner || document.getElementById('zeroHoldBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'zeroHoldBtn';
+    b.type = 'button';
+    b.className = 'cb-btn';
+    b.textContent = 'ZERO-HOLD';
+    b.title = zTitle;
+    b.onclick = function () {
+      zFlip(!window._zeroOn);
+      b.classList.toggle('on', !!window._zeroOn);
+    };
+    inner.appendChild(b);
+  }
+  var zTm = setInterval(function () {
+    zTries++;
+    try {
+      if (window.CtlBar && typeof window.CtlBar.add === 'function') {
+        window.CtlBar.add({
+          id: 'zeroHoldBtn',
+          type: 'button',
+          group: 'SIGNAL',
+          order: 50,
+          label: 'ZERO-HOLD',
+          title: zTitle,
+          get: function () { return !!window._zeroOn; },
+          set: function (v) { zFlip(v); }
+        });
+        clearInterval(zTm);
+      } else if (zTries > 20) {
+        zFallback();
+        clearInterval(zTm);
+      }
+    } catch (e1) {
+      clearInterval(zTm);
+      zFallback();
+    }
+  }, 500);
+})();
+</script>
 <style>
 /* SCORE popup shape: the page forces 999px on any inline border-radius, so the radius is set here by id instead */
 #drvScoreBox{border-radius:14px !important;overflow:hidden;}
