@@ -17700,6 +17700,9 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
     document.body.appendChild(_tsBox);
   })();</script>
 <style>
+/* SCORE popup shape: the page forces 999px on any inline border-radius, so the radius is set here by id instead */
+#drvScoreBox{border-radius:14px !important;overflow:hidden;}
+#drvScorePop button,#drvScorePop select,#scoreFloatBtn{border-radius:999px !important;}
 /* SCORE button: same look and sizing rules as the R0 button next to it */
 #scoreBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;border-radius:999px !important;}
 html.pc-on body:not(#pcx) #scoreBtn{background:var(--pair-color) !important;border-color:var(--pair-color) !important;color:#000432 !important;}
@@ -17822,7 +17825,7 @@ html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#w
 
     var dh = mk('div', 'display:flex;align-items:center;gap:6px;padding:6px 8px 4px;border-top:1px solid #475569;');
     dh.appendChild(mk('span', 'font-size:9px;font-weight:800;letter-spacing:0.08em;color:#94A3B8;', 'BREAKDOWN OF'));
-    selEl = mk('select', 'background:#E2E8F0;color:#000432;border:1px solid #E2E8F0;border-radius:2px;height:22px;font:bold 10px ' + FONT + ';');
+    selEl = mk('select', 'background:#E2E8F0;color:#000432;border:1px solid #E2E8F0;height:22px;font:bold 10px ' + FONT + ';');
     ORDER.forEach(function (g) {
       if (!rows[g]) return;
       var o = mk('option', '', g); o.value = g; if (g === detailGroup) o.selected = true; selEl.appendChild(o);
@@ -17873,10 +17876,11 @@ html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#w
     el = mk('div', 'position:fixed;left:0;top:0;width:100%;height:100%;z-index:2147483200;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;');
     el.id = 'drvScorePop';
     el.onclick = function (ev) { if (ev.target === el) close(); };
-    var box = mk('div', 'width:min(580px,94vw);max-height:86vh;display:flex;flex-direction:column;background:#000432;color:#E2E8F0;border:1px solid #FFFFFF;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:' + FONT + ';');
+    var box = mk('div', 'width:min(580px,94vw);max-height:86vh;display:flex;flex-direction:column;background:#000432;color:#E2E8F0;border:1px solid #FFFFFF;box-shadow:0 8px 40px rgba(0,0,0,0.7);font-family:' + FONT + ';');
+    box.id = 'drvScoreBox';
     var hd = mk('div', 'display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #475569;flex-shrink:0;');
     hd.appendChild(mk('span', 'font-size:11px;font-weight:800;letter-spacing:0.12em;color:#FFFFFF;flex:1;', 'DRV SCOREBOARD'));
-    var bs = 'padding:3px 9px;border:1px solid #FFFFFF;border-radius:4px;background:#1E293B;color:#FFFFFF;font:bold 10px ' + FONT + ';cursor:pointer;';
+    var bs = 'padding:3px 9px;border:1px solid #FFFFFF;background:#1E293B;color:#FFFFFF;font:bold 10px ' + FONT + ';cursor:pointer;';
     var bR = mk('button', bs, 'REFRESH'); bR.type = 'button'; bR.onclick = load;
     var bC = mk('button', bs, 'COPY'); bC.type = 'button'; bC.onclick = function () { copyTxt(bC); };
     var bX = mk('button', bs, '\u2715'); bX.type = 'button'; bX.onclick = close;
@@ -17902,7 +17906,7 @@ html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#w
       if (!document.body) return;
       var b = document.getElementById('scoreFloatBtn');
       if (!b) {
-        b = mk('button', 'position:fixed;left:110px;bottom:8px;z-index:2147483000;padding:5px 10px;border:2px solid #FFFFFF;border-radius:6px;background:#1E293B;color:#FFFFFF;font:bold 10px monospace;letter-spacing:0.05em;cursor:pointer;', 'SCORE');
+        b = mk('button', 'position:fixed;left:110px;bottom:8px;z-index:2147483000;padding:5px 10px;border:2px solid #FFFFFF;background:#1E293B;color:#FFFFFF;font:bold 10px monospace;letter-spacing:0.05em;cursor:pointer;', 'SCORE');
         b.id = 'scoreFloatBtn';
         b.type = 'button';
         b.title = 'DRV scoreboard: king vs opposite vs runner-ups';
