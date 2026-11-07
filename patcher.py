@@ -903,6 +903,9 @@ except Exception:
 
 
 
+PUSH_REPO = "888znq/FFT"
+
+
 def _ssl_ctx():
     import ssl
     if os.environ.get("FFT_INSECURE_SSL") == "1":

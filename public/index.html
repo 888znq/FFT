@@ -6357,11 +6357,11 @@
   setInterval(_drvPaint, 1500);
   (function () {
     var tgDefs = [
-      { id: 'pgCryBtn', k: 'CRY', l: 'CRY', t: 'Toggle CRY' },
-      { id: 'pgDrvBtn', k: 'DRV', l: 'DRV', t: 'Toggle DRV' },
+      { id: 'pgDrvBtn', k: 'DRV', l: 'DRV\n05:30 - 05:30\nMON - SUN', t: 'Toggle DRV' },
+      { id: 'pgCryBtn', k: 'CRY', l: 'CRY\n05:30 - 05:30\nSAT - SUN', t: 'Toggle CRY' },
       { id: 'pgMtlBtn', k: 'MTL', l: 'MTL', t: 'Toggle MTL' },
       { id: 'pgFrxBtn', k: 'FRX', l: 'FRX', t: 'Toggle FRX' },
-      { id: 'pgMixBtn', k: 'MIX', l: 'MTL/FRX/CRY', t: 'Toggle MTL/FRX/CRY' },
+      { id: 'pgMixBtn', k: 'MIX', l: 'FRX/MTL/CRY\n11:30 - 23:30\nMON - FRI', t: 'Toggle MTL/FRX/CRY' },
       { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 37 pairs - tap to pick one, several or all' }
     ];
     window._pairTg = window._pairTg || { CRY: false, DRV: false, MTL: false, FRX: false, MIX: false, ALL: false };
@@ -16256,9 +16256,13 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
             K + ' button:active{filter:brightness(0.85) !important;transform:translateY(1px) !important;}',
             K + ' button:disabled{opacity:0.45 !important;}',
             K + ' input::placeholder{color:#7F89B8 !important;opacity:1 !important;}',
+            K + ' #pgFrxBtn,' + K + ' #pgMtlBtn,' + K + ' #pgAllBtn{display:none !important;}',
+            K + ' #pgDrvBtn,' + K + ' #pgCryBtn,' + K + ' #pgMixBtn{white-space:pre-line !important;text-align:left !important;line-height:1.1 !important;font-size:8px !important;letter-spacing:0.02em !important;padding:0 3px 0 8px !important;}',
             K + ' input:focus,' + K + ' select:focus{outline:1px solid var(--pair-color,#E2E8F0) !important;outline-offset:-1px !important;}',
             K + ' div:has(> input),' + K + ' div:has(> select){background:transparent !important;}',
-            K + ' #ctlBarInner > .cb-g:has(#tcBar),' + K + ' #ctlBarInner > .cb-g:has(#scanMin),' + K + ' #ctlBarInner > .cb-g:has(#scanMax),' + K + ' #ctlBarInner > .cb-g:has(.cb-rng),' + K + ' .cb-rng,' + K + ' .cb-cu:has(.cb-rng){display:none !important;}'
+            K + ' #ctlBarInner > .cb-g:has(#scanMin),' + K + ' #ctlBarInner > .cb-g:has(#scanMax),' + K + ' #ctlBarInner > .cb-g:has(.cb-rng),' + K + ' .cb-rng,' + K + ' .cb-cu:has(.cb-rng){display:none !important;}',
+            K + ' #tcBar > button,' + K + ' #floatTradePill > :not(#accountBalance){display:none !important;}',
+            K + ' #ctlBarInner > .cb-g:has(#tcBar){flex:1 1 auto !important;}'
           ].join('\n');
           document.head.appendChild(proSt);
         }
