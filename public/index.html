@@ -2422,7 +2422,7 @@
         if (tk2) { hdr2['x-api-token'] = tk2; }
         fetch('/drv', { cache: 'no-store', headers: hdr2 })
           .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; } })
+          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; } })
           .catch(function () {})
           .then(function () { lvDrvBusy = false; });
       }
@@ -11401,7 +11401,8 @@
         }
         dtbX = W - PADR - dtbW - 8;
         dtbY = ptop + 8;
-        if (dtbAct.length > 0 && dtbX > PADL + 40) {
+        var dtbLk = window._drvLocks || [], dtbLi, dtbLs, dtbLc;
+        if ((dtbAct.length > 0 || dtbLk.length > 0) && dtbX > PADL + 40) {
           ctx.save();
           ctx.setLineDash([]);
           ctx.textAlign = 'left';
@@ -11413,6 +11414,41 @@
             ctx.fillStyle = (dtbSs.pnl >= 0) ? CY : AM;
             ctx.fillText(dtbHd, dtbX, dtbY + 10);
             dtbY += 16;
+          }
+          if (dtbLk.length > 0) {
+            ctx.fillStyle = DIM;
+            ctx.fillText('LOCKED SIGNALS', dtbX, dtbY + 10);
+            dtbY += 14;
+            for (dtbLi = 0; dtbLi < dtbLk.length; dtbLi++) {
+              dtbLs = dtbLk[dtbLi];
+              if (dtbY + dtbH > pbot - 4) break;
+              dtbUp = (dtbLs.type === 'REV') ? (dtbLs.col === 'R') : (dtbLs.col === 'G');
+              dtbLc = dtbLs.held ? '#FFFFFF' : DIM;
+              ctx.globalAlpha = 0.93;
+              ctx.fillStyle = BG;
+              ctx.fillRect(dtbX, dtbY, dtbW, dtbH);
+              ctx.globalAlpha = 1;
+              ctx.lineWidth = dtbLs.held ? 2 : 1.5;
+              ctx.strokeStyle = dtbLc;
+              ctx.setLineDash([4, 3]);
+              ctx.strokeRect(dtbX + 0.5, dtbY + 0.5, dtbW - 1, dtbH - 1);
+              ctx.setLineDash([]);
+              ctx.fillStyle = dtbUp ? CY : AM;
+              ctx.fillRect(dtbX, dtbY, 4, dtbH);
+              ctx.fillStyle = '#E2E8F0';
+              ctx.fillText('LK ' + dtbLs.type + ' ' + getPairDisplayName(dtbLs.pair) + ' R' + dtbLs.r + ' X' + dtbLs.s1, dtbX + 9, dtbY + 15);
+              ctx.fillStyle = dtbLc;
+              ctx.textAlign = 'right';
+              ctx.fillText(dtbLs.held ? 'HELD' : 'ARM', dtbX + dtbW - 6, dtbY + 15);
+              ctx.textAlign = 'left';
+              window._drvBoxHits.push({ x: dtbX, y: dtbY, w: dtbW, h: dtbH, pair: dtbLs.pair, c: dtbLs.c, r: dtbLs.r, s1: dtbLs.s1, s2: (dtbLs.s2 !== undefined ? dtbLs.s2 : dtbLs.s1), col: dtbLs.col, type: dtbLs.type });
+              dtbY += dtbH + 3;
+            }
+            if (dtbAct.length > 0) {
+              ctx.fillStyle = DIM;
+              ctx.fillText('TRADES', dtbX, dtbY + 10);
+              dtbY += 14;
+            }
           }
           TC.pulseOn = true;
           for (dtbI = 0; dtbI < dtbAct.length; dtbI++) {

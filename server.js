@@ -1552,7 +1552,17 @@ const server = http.createServer((req, res) => {
       if (!drvH || !drvH.pair) continue;
       drvCl.push({ id: drvH.id, pair: drvH.pair, dir: drvH.dir, type: drvH.type, exp: drvH.exp, stake: drvH.stake, openAt: drvH.openAt, closedAt: drvH.closedAt, entry: drvH.entry, exit: drvH.exit, pnl: drvH.pnl, r: drvH.r, s1: drvH.s1, s2: drvH.s2, col: drvH.col });
     }
-    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl } });
+    var drvLk = [], drvLp, drvLm, drvLt, drvLs;
+    for (drvLp in DRVT.signals) {
+      drvLm = DRVT.signals[drvLp];
+      if (!drvLm) continue;
+      for (drvLt = 0; drvLt < 2; drvLt++) {
+        drvLs = drvLt === 0 ? drvLm.rev : drvLm.mom;
+        if (!drvLs) continue;
+        drvLk.push({ pair: drvLp, type: drvLs.type, c: drvLs.c, r: drvLs.r, s1: drvLs.s1, s2: drvLs.s2, col: drvLs.col, pct: drvLs.pct, held: drvLocked(drvLp) });
+      }
+    }
+    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: drvLk, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl } });
     return;
   }
 
