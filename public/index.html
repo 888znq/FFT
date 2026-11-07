@@ -9803,6 +9803,7 @@
               lkNode = nodes[lkI];
               TC.liveLock = { key: lkKey(lkNode.sig), end: lkNode.idx + lkNode.sig.c, node: lkNode, t0: Math.floor(Date.now() / 1000), tr: null };
               TC.lastLockId = lkKey(lkNode.sig) + '|' + lkNode.idx;
+              try { window._drvAutoFire(lkNode, nowSec); } catch (eDa) {}
               lkNode.rem = TC.liveLock.end - nowSec;
               break;
             }
@@ -15104,7 +15105,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
   executeTrade = function(type, btnElement) {
     var amt = parseFloat(document.getElementById('tradeAmount').value);
     var expEl = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
-    var exp = (window._mtlAutoFiring && window._mtlAutoExp > 0) ? window._mtlAutoExp : window.tcExpiryFor(activePair, parseInt(expEl.value, 10));
+    var exp = (window._mtlAutoFiring && window._mtlAutoExp > 0) ? window._mtlAutoExp : ((window._drvAutoFiring && window._drvAutoExp > 0) ? window._drvAutoExp : window.tcExpiryFor(activePair, parseInt(expEl.value, 10)));
     if (!isNaN(exp) && exp < 300 && (window._mtlOnly || /^frx(XAU|XAG)/i.test(String(activePair)))) exp = 300;
     if (isNaN(amt) || amt <= 0) { _rtToast('INVALID TRADE AMOUNT', '#FFD700'); return; }
     if (isNaN(exp) || exp < 1) { _rtToast('INVALID EXPIRY', '#FFD700'); return; }
@@ -15156,6 +15157,42 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
     } catch (eT) {
       delete _rtPending[reqId];
       _trLog('ERROR', 'BUY send failed: ' + eT.message);
+    }
+  };
+  window._drvAutoTrade = true;
+  window._drvAutoAmt = 0.35;
+  window._drvAutoFire = function(node, nowSec) {
+    var sg, pair, c, id, amtEl, prevAmt, prevPair;
+    if (window._drvAutoTrade === false) return;
+    if (!node || !node.sig || node.kind !== 'FIRED') return;
+    if (!(window._drvOnly || (window._pairTg && window._pairTg.DRV))) return;
+    if (document.hidden) return;
+    sg = node.sig;
+    pair = sg.pair;
+    if (!/^1HZ/i.test(String(pair))) return;
+    c = sg.c;
+    if (!(c > 0)) return;
+    if (nowSec - node.idx > 4) return;
+    id = pair + '|' + sg.type + '|' + c + '|' + sg.r + '|' + sg.s1 + '|' + sg.s2 + '|' + sg.col + '|' + node.idx + '|' + currentStartTsUtc;
+    if (!window._drvAutoSeen || Object.keys(window._drvAutoSeen).length > 500) window._drvAutoSeen = {};
+    if (window._drvAutoSeen[id]) return;
+    window._drvAutoSeen[id] = 1;
+    amtEl = document.getElementById('tradeAmount');
+    if (!amtEl) return;
+    prevAmt = amtEl.value;
+    prevPair = activePair;
+    amtEl.value = String(window._drvAutoAmt);
+    activePair = pair;
+    window._drvAutoExp = c;
+    window._drvAutoFiring = true;
+    try {
+      evtLog('INFO', 'DRV-AUTO', 'FIRE ' + sg.type + ' ' + (node.up ? 'CALL' : 'PUT') + ' ' + pair + ' stake=$' + window._drvAutoAmt + ' exp=' + c + 's signal c=' + c + ' r=' + sg.r + ' s1=' + sg.s1);
+      executeTrade(node.up ? 'CALL' : 'PUT', document.getElementById('buyBtn') || document.createElement('button'));
+    } catch (eDf) {
+    } finally {
+      window._drvAutoFiring = false;
+      activePair = prevPair;
+      amtEl.value = prevAmt;
     }
   };
   window.tcTruth = function(node) {
