@@ -17896,6 +17896,31 @@ html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#w
     if (timer) clearInterval(timer);
     timer = setInterval(load, 5000);
   };
+  /* Always-visible SCORE button: sits right of the DRV SYNC pill (bottom-left), works even when the control row is hidden */
+  function mountFloat() {
+    try {
+      if (!document.body) return;
+      var b = document.getElementById('scoreFloatBtn');
+      if (!b) {
+        b = mk('button', 'position:fixed;left:110px;bottom:8px;z-index:2147483000;padding:5px 10px;border:2px solid #FFFFFF;border-radius:6px;background:#1E293B;color:#FFFFFF;font:bold 10px monospace;letter-spacing:0.05em;cursor:pointer;', 'SCORE');
+        b.id = 'scoreFloatBtn';
+        b.type = 'button';
+        b.title = 'DRV scoreboard: king vs opposite vs runner-ups';
+        b.onclick = function () { window.openDrvScore(); };
+        document.body.appendChild(b);
+      }
+      var d = document.getElementById('drvMisBtn');
+      if (d) {
+        var r = d.getBoundingClientRect();
+        if (r.width > 0) {
+          b.style.left = Math.round(r.right + 6) + 'px';
+          b.style.bottom = Math.max(0, Math.round(window.innerHeight - r.bottom)) + 'px';
+        }
+      }
+    } catch (e) {}
+  }
+  mountFloat();
+  setInterval(mountFloat, 1000);
 })();
 </script>
   </body>
