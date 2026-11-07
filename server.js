@@ -688,7 +688,7 @@ function drvHoldPick(list, tag, start) {
   seen = DRVT.holdSeen;
   for (i = 0; i < list.length; i++) {
     x = list[i];
-    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) < 1 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) continue;
+    if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) continue;
     key = x.pair + "|" + x.c + "|" + x.r + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + tag;
     if (!seen[key]) seen[key] = nowMs;
     k = x.pair + "|" + x.c + "|" + x.s1 + "|" + x.s2 + "|" + x.col;

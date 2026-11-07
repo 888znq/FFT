@@ -6960,7 +6960,7 @@
           lst = lists[li][0]; tg = lists[li][1];
           for (i = 0; i < lst.length; i++) {
             x = lst[i];
-            if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) < 1 || ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) continue;
+            if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) continue;
             k = x.pair + '|' + x.c + '|' + x.r + '|' + x.s1 + '|' + x.s2 + '|' + x.col + '|' + tg;
             cur = nmap[k];
             if (cur && (cur.x.c1 || 0) >= (x.c1 || 0)) continue;
@@ -6998,7 +6998,7 @@
         if (window._drvOnly && !/^1HZ/i.test(String(e.x.pair))) continue;
         if (window._fxOnly && /^1HZ/i.test(String(e.x.pair))) continue;
         if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(e.x.pair))) continue;
-        if (window._mtlOnly && (+e.x.s1 !== 1 || +e.x.s2 !== 2)) continue;
+        if (+e.x.s1 !== 1 || +e.x.s2 !== 2) continue;
         o = {};
         for (p in e.x) o[p] = e.x[p];
         o._holdT = e.t0;
