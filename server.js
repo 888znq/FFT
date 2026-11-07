@@ -789,6 +789,7 @@ function drvLocked(pair) {
 }
 
 function drvBuy(item) {
+  return;
   var ws = DRVT.ws, id;
   if (!DRVT.ready || !ws || ws.readyState !== WebSocket.OPEN) {
     logEvent("DRV_SKIP", "SKIPPED " + item.dir + " " + item.pair + " - account socket not open");
@@ -1168,6 +1169,7 @@ function drvOnMessage(msg) {
 }
 
 async function drvConnect() {
+  return;
   if (DRVT.connecting || shuttingDown) return;
   DRVT.connecting = true;
   try {

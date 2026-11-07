@@ -4593,6 +4593,7 @@
       try { evtLog('INFO', 'SIGNAL-TRADE', label); } catch (e4) {}
     }
     function _atTick() {
+      return;
       try {
         if (!window._autoTopTrade || !window._wpTmrMap || typeof _wpTmrCalc !== 'function') return;
         ['peaksTableBodyRev', 'peaksTableBodyMom'].forEach(function (tid) {
@@ -7425,6 +7426,7 @@
       return { dir: d0, len: len };
     }
     function fire(top, topKey, tag) {
+      return;
       if (!top) return;
       if (typeof currentAccountType === 'undefined' || currentAccountType !== 'demo') return;
       if (window._mtlAutoBusy) {
@@ -15665,6 +15667,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
     }
   };
   executeTrade = function(type, btnElement) {
+    if (window._mtlAutoFiring || window._drvAutoFiring) { return; }
     var amt = parseFloat(document.getElementById('tradeAmount').value);
     var expEl = document.getElementById('tradeExpiryVisible') || document.getElementById('tradeExpiry');
     var exp = (window._mtlAutoFiring && window._mtlAutoExp > 0) ? window._mtlAutoExp : ((window._drvAutoFiring && window._drvAutoExp > 0) ? window._drvAutoExp : window.tcExpiryFor(activePair, parseInt(expEl.value, 10)));
@@ -15724,6 +15727,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
   window._drvAutoTrade = false;
   window._drvAutoAmt = 0.35;
   window._drvAutoFire = function(node, nowSec) {
+    return;
     var sg, pair, c, id, amtEl, prevAmt, prevPair;
     if (!node || !node.sig || node.kind !== 'FIRED') return;
     sg = node.sig;
@@ -17718,6 +17722,7 @@ html body #logPop #logPopEv,html body #logPop #logPopBd > .lpVw{padding-top:32px
 <style>
 /* SCORE popup shape: the page forces 999px on any inline border-radius, so the radius is set here by id instead */
 #drvScoreBox{border-radius:14px !important;overflow:hidden;}
+html body #drvMisBtn#drvMisBtn#drvMisBtn,html body #scoreFloatBtn#scoreFloatBtn#scoreFloatBtn,html body #scoreBtn#scoreBtn#scoreBtn{display:none !important;}
 #drvScorePop button,#drvScorePop select,#scoreFloatBtn{border-radius:999px !important;}
 /* SCORE button: same look and sizing rules as the R0 button next to it */
 #scoreBtn{background:#E2E8F0 !important;color:var(--bg-base) !important;border-color:var(--bg-base) !important;border-radius:999px !important;}
