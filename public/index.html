@@ -2488,7 +2488,7 @@
       }
       function _drvBtnSet(st, lab, det) {
         try {
-          if (st === 'bad' && (!window._drvMis || window._drvMis.st !== 'bad' || window._drvMis.det !== (det || ''))) { _drvPanOpen = true; }
+          
           window._drvMis = { st: st, lab: lab, det: det || '' };
           try {
             document.title = document.title.replace(/^\[DRV MISMATCH\] /, '');
