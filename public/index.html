@@ -2413,7 +2413,47 @@
       }
 
       var lvDrvBusy = false;
-      var _drvBtnEl = null, _drvPanEl = null, _drvPanOpen = false;
+      var _drvBtnEl = null, _drvPanEl = null, _drvPanOpen = false, _drvTxtEl = null, _drvCpyEl = null;
+      function _drvCopy() {
+        var t = '', m = window._drvMis || { lab: '', det: '' }, info = {}, st = '';
+        try {
+          info.time = new Date().toISOString();
+          info.clientStart = (typeof currentStartTsUtc !== 'undefined') ? currentStartTsUtc : null;
+          info.clientDur = (typeof currentDuration !== 'undefined') ? currentDuration : null;
+          info.scanMin = (document.getElementById('scanMin') || {}).value;
+          info.scanMax = (document.getElementById('scanMax') || {}).value;
+          info.minPct = (document.getElementById('minPctInput') || {}).value;
+          info.clientRevs = (typeof globalRevs !== 'undefined') ? globalRevs.length : null;
+          info.clientMoms = (typeof globalMoms !== 'undefined') ? globalMoms.length : null;
+          info.autoTop = window._lastAutoTop || null;
+          info.serverLocks = window._drvLocks || [];
+          st = JSON.stringify(info, null, 1);
+        } catch (eI) { st = String(eI); }
+        t = 'DRV SERVER vs FRONT END REPORT\nSTATUS: ' + m.lab + '\n\n' + (m.det || '') + '\n\nSTATE:\n' + st;
+        var done = function (ok) {
+          if (_drvCpyEl) {
+            _drvCpyEl.textContent = ok ? 'COPIED' : 'COPY FAILED';
+            setTimeout(function () { if (_drvCpyEl) { _drvCpyEl.textContent = 'COPY REPORT'; } }, 1500);
+          }
+        };
+        var fbk = function () {
+          try {
+            var ta = document.createElement('textarea');
+            ta.value = t;
+            ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(ta);
+            ta.select();
+            var ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            done(!!ok);
+          } catch (eF) { done(false); }
+        };
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(function () { done(true); }, fbk); }
+          else { fbk(); }
+        } catch (eC) { fbk(); }
+      }
+      setInterval(function () { if (window._drvLocks && window._drvLocks.length) { _drvChk(window._drvLocks); } }, 500);
       function _drvBtnPaint() {
         var m = window._drvMis || { st: 'none', lab: 'DRV: WAITING', det: '' };
         if (!_drvBtnEl) {
@@ -2424,6 +2464,15 @@
           _drvPanEl = document.createElement('div');
           _drvPanEl.id = 'drvMisPan';
           _drvPanEl.style.cssText = 'position:fixed;left:8px;bottom:40px;z-index:2147483000;max-width:440px;max-height:50vh;overflow:auto;padding:8px 10px;border:1px solid #FFFFFF;border-radius:6px;background:#000432;color:#E2E8F0;font:10px monospace;white-space:pre-wrap;display:none;';
+          _drvCpyEl = document.createElement('button');
+          _drvCpyEl.type = 'button';
+          _drvCpyEl.textContent = 'COPY REPORT';
+          _drvCpyEl.style.cssText = 'display:block;margin:0 0 6px 0;padding:3px 8px;border:1px solid #FFFFFF;border-radius:4px;background:#1E293B;color:#FFFFFF;font:bold 10px monospace;cursor:pointer;';
+          _drvCpyEl.onclick = function (ev) { if (ev && ev.stopPropagation) { ev.stopPropagation(); } _drvCopy(); };
+          _drvTxtEl = document.createElement('pre');
+          _drvTxtEl.style.cssText = 'margin:0;white-space:pre-wrap;font:10px monospace;color:#E2E8F0;';
+          _drvPanEl.appendChild(_drvCpyEl);
+          _drvPanEl.appendChild(_drvTxtEl);
           _drvBtnEl.onclick = function () {
             _drvPanOpen = !_drvPanOpen;
             _drvBtnPaint();
@@ -2434,12 +2483,17 @@
         _drvBtnEl.textContent = m.lab;
         _drvBtnEl.style.background = (m.st === 'bad') ? '#E63946' : ((m.st === 'ok') ? '#2ED573' : '#475569');
         _drvBtnEl.style.color = (m.st === 'ok') ? '#000432' : '#FFFFFF';
-        _drvPanEl.textContent = m.det || '';
+        _drvTxtEl.textContent = m.det || '';
         _drvPanEl.style.display = (_drvPanOpen && m.det) ? 'block' : 'none';
       }
       function _drvBtnSet(st, lab, det) {
         try {
+          if (st === 'bad' && (!window._drvMis || window._drvMis.st !== 'bad' || window._drvMis.det !== (det || ''))) { _drvPanOpen = true; }
           window._drvMis = { st: st, lab: lab, det: det || '' };
+          try {
+            document.title = document.title.replace(/^\[DRV MISMATCH\] /, '');
+            if (st === 'bad') { document.title = '[DRV MISMATCH] ' + document.title; }
+          } catch (eT) {}
           _drvBtnPaint();
         } catch (eBt) {}
       }
@@ -2451,7 +2505,8 @@
           if (typeof scf !== 'function') { _drvBtnSet('none', 'DRV: CLIENT NOT READY', 'Front end scoring not loaded yet'); return; }
           var mpe = document.getElementById('minPctInput');
           var mp = mpe ? (parseFloat(mpe.value) || 85) : 85;
-          var parts = [], bad = 0;
+          var parts = [], bad = 0, fixes = [], fxs = {};
+          var fxAdd = function (tx) { if (!fxs[tx]) { fxs[tx] = 1; fixes.push(tx); } };
           for (var li = 0; li < locks.length; li++) {
             var L = locks[li];
             var src = (L.type === 'MOM') ? globalMoms : globalRevs;
@@ -2473,26 +2528,53 @@
             if (!cx) {
               d.push('pair not found on client (C' + L.c + ' pct>=' + mp + ')');
             } else {
-              if (rank !== 2) { d.push('client rank #' + rank + ' (server locks #2)'); }
+              if (rank !== 1) { d.push('client rank #' + rank + ' (server locks #1)'); }
               if (cx.r !== L.r) { d.push('R client ' + cx.r + ' vs server ' + L.r); }
               if (cx.s1 !== L.s1) { d.push('X client ' + cx.s1 + ' vs server ' + L.s1); }
               if (cx.s2 !== l2) { d.push('X2 client ' + cx.s2 + ' vs server ' + l2); }
               if (cx.col !== L.col) { d.push('col client ' + cx.col + ' vs server ' + L.col); }
+              if (L.c1 !== undefined && cx.c1 !== L.c1) { d.push('c1 client ' + cx.c1 + ' vs server ' + L.c1); }
+              if (L.c2 !== undefined && cx.c2 !== L.c2) { d.push('c2 client ' + cx.c2 + ' vs server ' + L.c2); }
+              if (L.pct !== undefined && cx.pct !== L.pct) { d.push('pct client ' + cx.pct + ' vs server ' + L.pct); }
+              if (rank !== 1 || cx.r !== L.r || cx.s1 !== L.s1 || cx.s2 !== l2 || cx.col !== L.col || (L.c1 !== undefined && cx.c1 !== L.c1) || (L.c2 !== undefined && cx.c2 !== L.c2) || (L.pct !== undefined && cx.pct !== L.pct)) {
+                fxAdd('Scan result/pick differs -> server @part19 (buildScan) + @part17 (scanOne) + @part9 (drvScore/drvPick) + @part10 (drvRefreshSignals) vs client @part117 (dispatchMultiCycleScan) + @part116 (handleWorkerMessage) + @part105 (_champScore) + @part64 (_drvChk)');
+              }
             }
             var hs = Math.floor(Date.now() / 1000);
             hs = hs - (hs % 3600);
             if (typeof currentStartTsUtc !== 'undefined' && (currentStartTsUtc !== hs || (typeof currentDuration !== 'undefined' && currentDuration !== 3600))) {
               d.push('scan window differs: client start ' + currentStartTsUtc + ' dur ' + (typeof currentDuration !== 'undefined' ? currentDuration : '?') + ' vs server hour start ' + hs + ' dur 3600');
             }
+            for (var dw = 0; dw < d.length; dw++) {
+              if (d[dw].indexOf('scan window differs') === 0) { fxAdd('Scan window differs -> client must scan current hour 3600s: @part117 (dispatchMultiCycleScan sStart/sEnd, session window) vs server @part10 (drvRefreshSignals start/3600) + @part19 (buildScan)'); }
+            }
+            var smE = document.getElementById('scanMin'), sxE = document.getElementById('scanMax');
+            var smN = smE ? (parseInt(smE.value) || 60) : 60, sxN = sxE ? (parseInt(sxE.value) || 120) : 120;
+            if (smN > sxN) { var swT = smN; smN = sxN; sxN = swT; }
+            if (L.c < smN || L.c > sxN) {
+              d.push('lock cycle C' + L.c + ' outside client scan range ' + smN + '-' + sxN);
+              fxAdd('Client scan range must include server cycle -> @part117 (scanMin/scanMax in dispatchMultiCycleScan) vs server DRVT.cycle in @part8');
+            }
+            if (typeof activePairs !== 'undefined' && activePairs !== null && activePairs.indexOf(L.pair) < 0) {
+              d.push('lock pair ' + L.pair + ' not in client active pairs');
+              fxAdd('Client does not scan the locked pair -> @part116 (handleWorkerMessage _inAp) + @part117 (pairsToScan)');
+            }
+            if (mp !== 85) {
+              d.push('client min% ' + mp + ' vs server default 85');
+              fxAdd('Min % differs -> client minPctInput (@part237 mountMinPct) vs server DRVT.minPct in @part8');
+            }
             var tp = window._lastAutoTop;
             if (tp && tp.type === L.type && (tp.pair !== L.pair || tp.r !== L.r || tp.s1 !== L.s1 || tp.col !== L.col)) {
               d.push('front auto-top is ' + tp.pair + ' R' + tp.r + ' X' + tp.s1 + ' ' + tp.col);
             }
+            for (var dj = 0; dj < d.length; dj++) {
+              if (d[dj].indexOf('front auto-top') === 0) { fxAdd('Front auto-selected signal differs from server lock -> client @part115 (_autoSelectTopSignal) vs server @part10 (drvRefreshSignals)'); }
+            }
             if (d.length) { bad++; }
             parts.push(L.type + ' ' + L.pair + ' C' + L.c + ' R' + L.r + ' X' + L.s1 + ' ' + L.col + (d.length ? ' => ' + d.join('; ') : ' => OK'));
           }
-          _drvBtnSet(bad ? 'bad' : 'ok', bad ? ('DRV MISMATCH (' + bad + ')') : 'DRV SYNC OK', parts.join('\n'));
-          var msg = parts.join(' | ');
+          _drvBtnSet(bad ? 'bad' : 'ok', bad ? ('DRV MISMATCH (' + bad + ')') : 'DRV SYNC OK', parts.join('\n') + (fixes.length ? '\n\nPARTS TO CHANGE:\n- ' + fixes.join('\n- ') : ''));
+          var msg = parts.join(' | ') + (fixes.length ? ' || FIX: ' + fixes.join(' ; ') : '');
           if (msg !== window._drvChkSig) {
             window._drvChkSig = msg;
             evtLog(bad ? 'WARN' : 'INFO', 'DRV', (bad ? 'DRV MISMATCH ' : 'DRV MATCH ') + msg);
@@ -2524,7 +2606,7 @@
       lvSet(lvMk('bad', 'INIT', 'Checking server...'));
       lvPoll();
       setInterval(lvPoll, LV_POLL_MS);
-      setInterval(lvDrvPoll, 2000);
+      setInterval(lvDrvPoll, 1000);
       _drvBtnSet('none', 'DRV: WAITING', 'No server data yet');
       lvDrvPoll();
       window.addEventListener('online', lvPoll);

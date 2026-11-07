@@ -649,10 +649,10 @@ async function drvRefreshSignals() {
     }
     revs.sort(function (x, y) { return y.sc - x.sc; });
     moms.sort(function (x, y) { return y.sc - x.sc; });
-    if (revs[1]) map[revs[1].pair] = { rev: revs[1].sig, mom: null };
-    if (moms[1]) {
-      if (!map[moms[1].pair]) map[moms[1].pair] = { rev: null, mom: null };
-      map[moms[1].pair].mom = moms[1].sig;
+    if (revs[0]) map[revs[0].pair] = { rev: revs[0].sig, mom: null };
+    if (moms[0]) {
+      if (!map[moms[0].pair]) map[moms[0].pair] = { rev: null, mom: null };
+      map[moms[0].pair].mom = moms[0].sig;
     }
     DRVT.signals = map;
     DRVT.sigStart = start;
