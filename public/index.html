@@ -4589,11 +4589,9 @@
     function _atSend(msg, label) {
       var _atPm = { trinityOS_pair: msg.trinityOS_trade.pair, trinityOS_pairStamp: Date.now() };
       _atPostAll(_atPm);
-      setTimeout(function () { _atPostAll(msg); }, 700);
       try { evtLog('INFO', 'SIGNAL-TRADE', label); } catch (e4) {}
     }
     function _atTick() {
-      return;
       try {
         if (!window._autoTopTrade || !window._wpTmrMap || typeof _wpTmrCalc !== 'function') return;
         ['peaksTableBodyRev', 'peaksTableBodyMom'].forEach(function (tid) {
