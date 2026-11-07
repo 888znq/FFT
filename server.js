@@ -699,7 +699,7 @@ function drvHoldPick(list, tag, start) {
   for (k in best) arr.push(best[k]);
   if (!arr.length) return null;
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-  var j, t, rp, m, cc, pick = null, pickT = Infinity, pickM = Infinity, pickC = -1, pickKey = "", locked = null, lk;
+  var j, t, rp, m, cc, pick = null, pickT = Infinity, pickP = -1, pickM = Infinity, pickC = -1, pickKey = "", locked = null, lk;
   if (!DRVT.holdLock) DRVT.holdLock = {};
   lk = DRVT.holdLock[tag];
   for (j = 0; j < arr.length; j++) {
@@ -708,10 +708,8 @@ function drvHoldPick(list, tag, start) {
     if (rp !== null && rp < t) t = rp;
     m = misOf(arr[j].x);
     cc = arr[j].x.c1 || 0;
-    if (lk && arr[j].key === lk) locked = arr[j].x;
-    if (t < pickT || (t === pickT && (cc > pickC || (cc === pickC && m < pickM)))) { pickT = t; pickM = m; pickC = cc; pickKey = arr[j].key; pick = arr[j].x; }
+    if (cc > pickC || (cc === pickC && (t < pickT || (t === pickT && (arr[j].x.pct || 0) > pickP)))) { pickT = t; pickP = arr[j].x.pct || 0; pickM = m; pickC = cc; pickKey = arr[j].key; pick = arr[j].x; }
   }
-  if (locked) return locked;
   DRVT.holdLock[tag] = pickKey;
   return pick;
 }
