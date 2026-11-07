@@ -764,7 +764,7 @@ function drvCheckFire() {
       DRVT.seen[key] = 1;
       DRVT.seenN++;
       up = sig.type === "REV" ? sig.col === "R" : sig.col === "G";
-      DRVT.queue.push({ pair: pair, dir: up ? "CALL" : "PUT", exp: sig.c, key: key, idx: lastI, start: start, type: sig.type, r: sig.r, s1: sig.s1 });
+      DRVT.queue.push({ pair: pair, dir: up ? "CALL" : "PUT", exp: sig.c, key: key, idx: lastI, start: start, type: sig.type, r: sig.r, s1: sig.s1, s2: sig.s2, col: sig.col });
     }
   }
   drvDrain();
@@ -1539,7 +1539,7 @@ const server = http.createServer((req, res) => {
     for (drvK in DRVT.open) {
       drvIt = DRVT.open[drvK];
       if (!drvIt || !drvIt.pair) continue;
-      drvOut.push({ id: drvK, pair: drvIt.pair, dir: drvIt.dir, type: drvIt.type, exp: drvIt.exp, stake: drvIt.stake, payout: drvIt.payout, openAt: drvIt.openAt, entry: drvIt.entry, cur: drvIt.cur, profit: drvIt.profit, r: drvIt.r, s1: drvIt.s1 });
+      drvOut.push({ id: drvK, pair: drvIt.pair, dir: drvIt.dir, type: drvIt.type, exp: drvIt.exp, stake: drvIt.stake, payout: drvIt.payout, openAt: drvIt.openAt, entry: drvIt.entry, cur: drvIt.cur, profit: drvIt.profit, r: drvIt.r, s1: drvIt.s1, s2: drvIt.s2, col: drvIt.col });
     }
     sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut });
     return;
