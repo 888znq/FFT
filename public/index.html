@@ -2510,19 +2510,14 @@
           for (var li = 0; li < locks.length; li++) {
             var L = locks[li];
             var src = (L.type === 'MOM') ? globalMoms : globalRevs;
-            var bp = {}, i, x, s, k;
-            for (i = 0; i < src.length; i++) {
-              x = src[i];
-              if (x.c !== L.c || !(x.pct >= mp) || !/^1HZ/i.test(x.pair)) { continue; }
-              s = scf(x);
-              if (!bp[x.pair] || s > bp[x.pair].s) { bp[x.pair] = { x: x, s: s }; }
+            var i, x, hl = [], arr = [], rank = -1, cx = null;
+            try { hl = (typeof window._holdBuild === 'function') ? window._holdBuild(L.type === 'MOM' ? 'MOM' : 'REV') : []; } catch (eH) { hl = []; }
+            for (i = 0; i < hl.length; i++) {
+              x = hl[i];
+              if (/^1HZ/i.test(String(x.pair)) && x.c === L.c) { arr.push({ x: x }); }
             }
-            var arr = [];
-            for (k in bp) { arr.push(bp[k]); }
-            arr.sort(function (a, b) { return b.s - a.s; });
-            var rank = -1;
             for (i = 0; i < arr.length; i++) { if (arr[i].x.pair === L.pair) { rank = i + 1; break; } }
-            var cx = rank > 0 ? arr[rank - 1].x : null;
+            if (arr.length) { cx = arr[0].x; }
             var l2 = (L.s2 !== undefined ? L.s2 : L.s1);
             var d = [];
             if (!cx) {
@@ -6031,16 +6026,6 @@
           topList.sort(function(a, b) { return _champScore(b) - _champScore(a); });
           top = (window._champTop ? window._champTop(_amMode, topList) : null) || topList[0];
         }
-    try {
-      var _dl = window._drvLocks || [], _dk, _df;
-      for (_dk = 0; _dk < _dl.length; _dk++) {
-        if (_dl[_dk].type === _amMode) {
-          _df = _sigOutFind(_dl[_dk].pair, _dl[_dk].c, _dl[_dk].r, _dl[_dk].s1, (_dl[_dk].s2 !== undefined ? _dl[_dk].s2 : _dl[_dk].s1), _dl[_dk].col, _dl[_dk].type);
-          if (_df) { top = _df; }
-          break;
-        }
-      }
-    } catch (eDl) {}
     if (!allPairData[top.pair] || allPairData[top.pair].times.length === 0) return;
     if (activePair !== top.pair) {
       activePair = top.pair;

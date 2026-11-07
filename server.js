@@ -630,6 +630,93 @@ function drvPlanFired(sig, start, lim) {
   return -1;
 }
 
+function drvHoldReplay(x, tag, start) {
+  var c = x.c, s1 = x.s1, cc = x.col === "G" ? 1 : 2, mom = tag === "MOM";
+  if (!(c > 0) || !(s1 >= 1)) return null;
+  var nowI = nowSec() - start, hi = Math.min(nowI, 3600);
+  while (hi > 0 && drvTickAt(x.pair, start + hi) === -1) hi--;
+  var i = (((x.r - (start % c)) % c) + c) % c;
+  var color = 0, streak = 0, n1 = 0, n2 = 0, since = 0, runStart = -1, lastRun = -1;
+  var p, q, nc, ns, live, l1, l2, pc;
+  for (; i <= hi; i += c) {
+    p = drvTickAt(x.pair, start + i);
+    q = drvTickAt(x.pair, start + i - c);
+    if (q === -1) {
+      if (p === -1 || i < c) { nc = 0; ns = 0; }
+      else { nc = 1; ns = 1; }
+    } else if (p === -1) {
+      nc = 0; ns = 0;
+    } else if (p > q) {
+      nc = 1;
+      ns = (color === 1 && streak > 0) ? streak + 1 : 1;
+    } else if (p < q) {
+      nc = 2;
+      ns = (color === 2 && streak > 0) ? streak + 1 : 1;
+    } else {
+      nc = color; ns = 0;
+    }
+    if (ns === 1 && streak > 0 && color !== 0 && color === cc) {
+      if (streak >= s1) n1++;
+      if (streak > s1) n2++;
+    }
+    color = nc;
+    streak = ns;
+    live = (color === cc && i + c >= 3601) ? streak : 0;
+    l1 = n1 + (live >= s1 ? 1 : 0);
+    l2 = n2 + (live > s1 ? 1 : 0);
+    if (l1 >= 4) {
+      pc = mom ? Math.round((l2 / l1) * 100) : 100 - Math.round((l2 / l1) * 100);
+    } else {
+      pc = -1;
+    }
+    if (l1 >= 4 && pc >= 75) {
+      if (runStart < 0) runStart = i;
+      lastRun = runStart;
+      since = 0;
+    } else {
+      runStart = -1;
+      since++;
+    }
+  }
+  if (lastRun < 0 || since > 3) return null;
+  return (start + lastRun) * 1000;
+}
+
+function drvHoldPick(list, tag, start) {
+  var now = nowSec(), nowMs = Date.now(), i, x, k, key, e, o, best = {}, arr = [], seen;
+  if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; }
+  seen = DRVT.holdSeen;
+  for (i = 0; i < list.length; i++) {
+    x = list[i];
+    if (!x || (x.pct || 0) < 75 || (x.c1 || 0) < 4 || (x.s1 || 0) < 1) continue;
+    key = x.pair + "|" + x.c + "|" + x.r + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + tag;
+    if (!seen[key]) seen[key] = nowMs;
+    k = x.pair + "|" + x.c + "|" + x.s1 + "|" + x.s2 + "|" + x.col;
+    e = (((x.r - (now % x.c)) % x.c) + x.c) % x.c;
+    o = best[k];
+    if (!o || (x.c1 || 0) > (o.x.c1 || 0) || ((x.c1 || 0) === (o.x.c1 || 0) && ((x.pct || 0) > (o.x.pct || 0) || ((x.pct || 0) === (o.x.pct || 0) && e < o.e)))) best[k] = { x: x, e: e, key: key };
+  }
+  for (k in best) arr.push(best[k]);
+  if (!arr.length) return null;
+  var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
+  arr.sort(function (a, b) {
+    return ((b.x.c1 || 0) - (a.x.c1 || 0)) || (misOf(a.x) - misOf(b.x));
+  });
+  var tied = [], j, t, rp, pick = null, pickT = Infinity;
+  for (j = 0; j < arr.length; j++) {
+    if ((arr[j].x.c1 || 0) === (arr[0].x.c1 || 0) && misOf(arr[j].x) === misOf(arr[0].x)) tied.push(arr[j]);
+    else break;
+  }
+  if (tied.length === 1) return tied[0].x;
+  for (j = 0; j < tied.length; j++) {
+    t = seen[tied[j].key];
+    rp = drvHoldReplay(tied[j].x, tag, start);
+    if (rp !== null && rp < t) t = rp;
+    if (t < pickT) { pickT = t; pick = tied[j].x; }
+  }
+  return pick;
+}
+
 async function drvRefreshSignals() {
   if (DRVT.sigBusy) return;
   DRVT.sigBusy = true;
@@ -642,17 +729,14 @@ async function drvRefreshSignals() {
     for (k = 0; k < DRVT.pairs.length; k++) {
       d = data.pairs && data.pairs[DRVT.pairs[k]];
       if (!d) continue;
-      pr = drvPick(d.revs || []);
-      if (pr) revs.push({ pair: DRVT.pairs[k], sig: pr, sc: drvScore(pr) });
-      pr = drvPick(d.moms || []);
-      if (pr) moms.push({ pair: DRVT.pairs[k], sig: pr, sc: drvScore(pr) });
+      Array.prototype.push.apply(revs, d.revs || []);
+      Array.prototype.push.apply(moms, d.moms || []);
     }
-    revs.sort(function (x, y) { return y.sc - x.sc; });
-    moms.sort(function (x, y) { return y.sc - x.sc; });
-    if (revs[0]) map[revs[0].pair] = { rev: revs[0].sig, mom: null };
-    if (moms[0]) {
-      if (!map[moms[0].pair]) map[moms[0].pair] = { rev: null, mom: null };
-      map[moms[0].pair].mom = moms[0].sig;
+    var topRev = drvHoldPick(revs, "REV", start), topMom = drvHoldPick(moms, "MOM", start);
+    if (topRev) map[topRev.pair] = { rev: topRev, mom: null };
+    if (topMom) {
+      if (!map[topMom.pair]) map[topMom.pair] = { rev: null, mom: null };
+      map[topMom.pair].mom = topMom;
     }
     DRVT.signals = map;
     DRVT.sigStart = start;
