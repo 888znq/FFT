@@ -691,13 +691,12 @@ function drvHoldPick(list, tag, start) {
     if (!x || (x.c1 || 0) < 3 || (x.s1 || 0) !== 1 || (x.s2 || 0) !== 2 || (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) > 10) continue;
     key = x.pair + "|" + x.c + "|" + x.r + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + tag;
     if (!seen[key]) seen[key] = nowMs;
-    k = x.pair + "|" + x.c + "|" + x.s1 + "|" + x.s2 + "|" + x.col + "|" + (tag === "MOM" ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-    e = (((x.r - (now % x.c)) % x.c) + x.c) % x.c;
-    o = best[k];
-    if (!o || (x.c1 || 0) > (o.x.c1 || 0) || ((x.c1 || 0) === (o.x.c1 || 0) && ((x.pct || 0) > (o.x.pct || 0) || ((x.pct || 0) === (o.x.pct || 0) && e < o.e)))) best[k] = { x: x, e: e, key: key };
+    arr.push({ x: x, e: 0, key: key });
   }
-  for (k in best) arr.push(best[k]);
-  if (!arr.length) return null;
+  if (!arr.length) {
+    if (DRVT.holdLock) DRVT.holdLock[tag] = "";
+    return null;
+  }
   var misOf = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
   var j, t, rp, ob, best = null, cur = null, lk;
   if (!DRVT.holdLock) DRVT.holdLock = {};
@@ -872,7 +871,7 @@ function drvTick() {
   try {
     var now = nowSec();
     DRVT.tickN++;
-    if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 60000) drvRefreshSignals();
+    if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 30000) drvRefreshSignals();
     if (DRVT.tickN % 60 === 0) drvStatus();
     drvCheckFire();
   } catch (err) {

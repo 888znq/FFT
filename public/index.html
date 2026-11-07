@@ -2510,20 +2510,15 @@
           for (var li = 0; li < locks.length; li++) {
             var L = locks[li];
             var src = (L.type === 'MOM') ? globalMoms : globalRevs;
-            var i, x, hl = [], arr = [], rank = -1, cx = null;
-            try { hl = (typeof window._holdBuild === 'function') ? window._holdBuild(L.type === 'MOM' ? 'MOM' : 'REV') : []; } catch (eH) { hl = []; }
-            for (i = 0; i < hl.length; i++) {
-              x = hl[i];
-              if (/^1HZ/i.test(String(x.pair)) && x.c === L.c) { arr.push({ x: x }); }
-            }
-            for (i = 0; i < arr.length; i++) { if (arr[i].x.pair === L.pair) { rank = i + 1; break; } }
-            if (arr.length) { cx = arr[0].x; }
+            var i, x, rank = -1, cx = null;
+            try { cx = (typeof window._holdKing === 'function') ? window._holdKing(L.type === 'MOM' ? 'MOM' : 'REV', function (z) { return /^1HZ/i.test(String(z.pair)) && z.c === L.c; }) : null; } catch (eH) { cx = null; }
+            if (cx && cx.pair === L.pair) { rank = 1; } else if (cx) { rank = 2; }
             var l2 = (L.s2 !== undefined ? L.s2 : L.s1);
             var d = [];
             if (!cx) {
-              d.push('pair not found on client (C' + L.c + ' pct>=' + mp + ')');
+              d.push('client has no 1HZ king for C' + L.c + ' (pair not scanned, hidden or filtered on screen)');
             } else {
-              if (rank !== 1) { d.push('client rank #' + rank + ' (server locks #1)'); }
+              if (rank !== 1) { d.push('client king is ' + cx.pair + ' R' + cx.r + ' X' + cx.s1 + ' ' + cx.col + ', server king is ' + L.pair); }
               if (cx.r !== L.r) { d.push('R client ' + cx.r + ' vs server ' + L.r); }
               if (cx.s1 !== L.s1) { d.push('X client ' + cx.s1 + ' vs server ' + L.s1); }
               if (cx.s2 !== l2) { d.push('X2 client ' + cx.s2 + ' vs server ' + l2); }
@@ -2553,10 +2548,6 @@
             if (typeof activePairs !== 'undefined' && activePairs !== null && activePairs.indexOf(L.pair) < 0) {
               d.push('lock pair ' + L.pair + ' not in client active pairs');
               fxAdd('Client does not scan the locked pair -> @part116 (handleWorkerMessage _inAp) + @part117 (pairsToScan)');
-            }
-            if (mp !== 85) {
-              d.push('client min% ' + mp + ' vs server default 85');
-              fxAdd('Min % differs -> client minPctInput (@part237 mountMinPct) vs server DRVT.minPct in @part8');
             }
             var tp = window._lastAutoTop;
             if (tp && tp.type === L.type && (tp.pair !== L.pair || tp.r !== L.r || tp.s1 !== L.s1 || tp.col !== L.col)) {
@@ -5457,7 +5448,8 @@
   window._lockTopSignal = function () {
     setTimeout(function () {
       try {
-        var _ltRow = document.querySelector('#peaksTableBodyRev tr.highlight-gem[data-k]') || document.querySelector('#peaksTableBodyMom tr.highlight-gem[data-k]');
+        var _ltM = (window._tcSigMode === 'MOM'), _ltA = _ltM ? 'Mom' : 'Rev', _ltB = _ltM ? 'Rev' : 'Mom';
+        var _ltRow = document.querySelector('#peaksTableBody' + _ltA + ' tr.kingRow[data-k]') || document.querySelector('#peaksTableBody' + _ltB + ' tr.kingRow[data-k]') || document.querySelector('#peaksTableBodyRev tr.highlight-gem[data-k]') || document.querySelector('#peaksTableBodyMom tr.highlight-gem[data-k]');
         if (!_ltRow) return;
         var _ltId = String(_ltRow.getAttribute('data-k')).split('|').join('-');
         if (typeof lastClickedSigId !== 'undefined' && _ltId === lastClickedSigId) return;
@@ -5472,7 +5464,8 @@
     if (typeof scanPending !== 'undefined' && scanPending > 0) return;
     if (window._holdOn && typeof window._holdSettled === 'function' && !window._holdSettled()) return;
     if (typeof lastClickedSigId !== 'undefined' && lastClickedSigId) { window._firstPickDone = true; return; }
-    var fpRow = document.querySelector('#peaksTableBodyRev tr.highlight-gem') || document.querySelector('#peaksTableBodyMom tr.highlight-gem');
+    var fpM = (window._tcSigMode === 'MOM'), fpA = fpM ? 'Mom' : 'Rev', fpB = fpM ? 'Rev' : 'Mom';
+    var fpRow = document.querySelector('#peaksTableBody' + fpA + ' tr.kingRow') || document.querySelector('#peaksTableBody' + fpB + ' tr.kingRow') || document.querySelector('#peaksTableBodyRev tr.highlight-gem') || document.querySelector('#peaksTableBodyMom tr.highlight-gem');
     if (!fpRow) return;
     window._firstPickDone = true;
     fpRow.click();
@@ -6006,9 +5999,13 @@
         return;
       }
       window._holdSelTry = 0;
-      var _holdList = window._holdBuild(_amMode);
-      if (!_holdList.length) { window._autoSelFail(); return; }
-      top = _holdList[0];
+      var _holdKingTop = (typeof window._holdKing === 'function') ? window._holdKing(_amMode) : null;
+      if (!_holdKingTop) {
+        var _holdList = window._holdBuild(_amMode);
+        if (!_holdList.length) { window._autoSelFail(); return; }
+        _holdKingTop = _holdList[0];
+      }
+      top = _holdKingTop;
     }
         if (!top && typeof _wsBuild === 'function') {
               var _wsL = _wsBuild(_allSigs);
@@ -7022,7 +7019,8 @@
       return out;
     };
     var KG = { sess: '', REV: '', MOM: '' };
-    window._holdKing = function (tag) {
+    window._holdKing = function (tag, filt) {
+      var lkTag = filt ? tag + '#f' : tag;
       var hid = (typeof _hiddenPairs !== 'undefined') ? _hiddenPairs : null;
       var r0 = (typeof r0OnlyMode !== 'undefined') && r0OnlyMode;
       var best = null, bestK = '', cur = null, k, e, x, p, o;
@@ -7033,7 +7031,7 @@
         if (misOf(a.x) !== misOf(b.x)) return misOf(a.x) < misOf(b.x);
         return (a.x.pct || 0) > (b.x.pct || 0);
       };
-      if (KG.sess !== S.sess) { KG.sess = S.sess; KG.REV = ''; KG.MOM = ''; }
+      if (KG.sess !== S.sess) { KG.sess = S.sess; KG.REV = ''; KG.MOM = ''; KG['REV#f'] = ''; KG['MOM#f'] = ''; }
       for (k in S.map) {
         e = S.map[k];
         if (e.tag !== tag) continue;
@@ -7045,12 +7043,13 @@
         if (window._fxOnly && /^1HZ/i.test(String(x.pair))) continue;
         if (window._mtlOnly && !/^frx(XAU|XAG)/i.test(String(x.pair))) continue;
         if (+x.s1 !== 1 || +x.s2 !== 2 || (x.c1 || 0) < 3) continue;
-        if (k === KG[tag]) cur = e;
+        if (filt && !filt(x)) continue;
+        if (k === KG[lkTag]) cur = e;
         if (!best || beats(e, best) || (!beats(best, e) && k < bestK)) { best = e; bestK = k; }
       }
-      if (!best) { KG[tag] = ''; return null; }
-      if (cur && !(best.t0 < cur.t0)) { best = cur; bestK = KG[tag]; }
-      KG[tag] = bestK;
+      if (!best) { KG[lkTag] = ''; return null; }
+      if (cur && !(best.t0 < cur.t0)) { best = cur; bestK = KG[lkTag]; }
+      KG[lkTag] = bestK;
       o = {};
       for (p in best.x) o[p] = best.x[p];
       o._holdT = best.t0;
@@ -7495,7 +7494,7 @@
       var d = window._holdKing(tag);
       if (!d) return '';
       var cs = 'font-size:11px;font-weight:700;padding:8px 2px;text-align:center;';
-      return '<tr class="' + (d.col === 'R' ? 'row-red' : 'row-green') + ' kingRow" style="cursor:pointer;" onclick="_wpFocusSet(\'' + d.pair + '\'); manualSelectSignal(\'' + d.pair + '\', ' + d.c + ', ' + d.r + ', ' + d.s1 + ', ' + d.s2 + ', \'' + d.col + '\', \'' + d.type + '\', ' + (d.gap || 0) + ', ' + (d.curGap || 0) + ', ' + (d.c1 || 0) + ', ' + (d.c2 || 0) + ')">' +
+      return '<tr class="' + (d.col === 'R' ? 'row-red' : 'row-green') + ' kingRow" data-k="' + d.pair + '|' + d.c + '|' + d.r + '|' + d.s1 + '|' + d.s2 + '|' + d.col + '|' + d.type + '" style="cursor:pointer;" onclick="_wpFocusSet(\'' + d.pair + '\'); manualSelectSignal(\'' + d.pair + '\', ' + d.c + ', ' + d.r + ', ' + d.s1 + ', ' + d.s2 + ', \'' + d.col + '\', \'' + d.type + '\', ' + (d.gap || 0) + ', ' + (d.curGap || 0) + ', ' + (d.c1 || 0) + ', ' + (d.c2 || 0) + ')">' +
         '<td style="' + cs + 'text-align:left;padding-left:8px;overflow:hidden;white-space:nowrap;box-shadow:inset 4px 0 0 #FFD700 !important;">\u2605 ' + getPairDisplayName(d.pair) + (d._holdT ? window._holdTag(d) : '') + '</td>' +
         '<td style="' + cs + '">C' + d.c + '</td>' +
         '<td style="' + cs + '">R' + d.r + '</td>' +
