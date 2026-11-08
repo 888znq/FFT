@@ -6,7 +6,10 @@
     <meta name="theme-color" content="#000432">
     <title>TRINITY OS & WALLSPECTRUM [OMNI-SYNC EDITION]</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet"></noscript>
     <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -2861,7 +2864,11 @@
   }
   function _cycleOff() { return (currentStartTsUtc || 0) % CYCLE; }
   hScroll.addEventListener('scroll', () => requestDraw(), { passive: true });
-  window.addEventListener('resize', () => { if (timesArray.length > 0) processVisualMatrix(); });
+  var _rzT = 0;
+  window.addEventListener('resize', () => {
+    if (_rzT) clearTimeout(_rzT);
+    _rzT = setTimeout(function () { _rzT = 0; if (timesArray.length > 0) processVisualMatrix(); }, 150);
+  });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) requestDraw(); });
   let isDragging = false;
   let startX, startScrollX;
@@ -3157,15 +3164,23 @@
   const DERIV_WS_URL = `wss://api.derivws.com/trading/v1/options/ws/public?app_id=${safeAppId}`;
   const DB_NAME = 'TrinityAOFS';
   const STORE_NAME = 'matrix_cache';
+  var _dbP = null;
   function initDB() {
-    return new Promise((resolve, reject) => {
+    if (_dbP) return _dbP;
+    _dbP = new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, 1);
         request.onupgradeneeded = (e) => {
           e.target.result.createObjectStore(STORE_NAME);
         };
-        request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => reject(e.target.error);
+        request.onsuccess = (e) => {
+          var db = e.target.result;
+          db.onclose = function () { _dbP = null; };
+          db.onversionchange = function () { try { db.close(); } catch (x) {} _dbP = null; };
+          resolve(db);
+        };
+        request.onerror = (e) => { _dbP = null; reject(e.target.error); };
       });
+    return _dbP;
   }
   function aofs_key(pair, dateStr) { return `aofs_${pair}_${dateStr}`; }
   async function aofs_read(pair, dateStr) {
@@ -3391,13 +3406,14 @@
       return arr;
     }
     async function fetchDerivGrid(pair, dateStr, startTs, endTs) {
+          window._lastGridSrv = false;
           var _rsOk = false;
           try { _rsOk = await _rsPrime(pair, dateStr, startTs, endTs); }
           catch (_rsErr) {
             _rsDownUntil = Date.now() + 60000;
             try { evtLog('WARN', 'SERVER', 'history via Render server failed: ' + (_rsErr && _rsErr.message ? _rsErr.message : _rsErr)); } catch (_rsE2) {}
           }
-          if (_rsOk && _rsOk.prices) return _rsOk;
+          if (_rsOk && _rsOk.prices) { window._lastGridSrv = true; return _rsOk; }
                 if (_rsOk) return _fetchDerivGridOrig(pair, dateStr, startTs, endTs);
       var g = null;
       try {
@@ -3484,9 +3500,9 @@
       var tk = _rsToken();
       var ctl = new AbortController();
       var tmr = setTimeout(function () { ctl.abort(); }, 40000);
-      var resp = null, buf = null, srvDay = 0, preLen = 0;
+      var resp = null, buf = null, srvDay = 0, preLen = 0, srvFrom = 0, _rsFrom = Math.max(0, startTs - dayEpoch - 900);
       try {
-        resp = await fetch('/ticks?pair=' + encodeURIComponent(pair) + '&from=0&pre=1&day=' + dayEpoch + (tk ? '&token=' + encodeURIComponent(tk) : ''), { cache: 'no-store', signal: ctl.signal });
+        resp = await fetch('/ticks?pair=' + encodeURIComponent(pair) + '&from=' + _rsFrom + (_rsFrom === 0 ? '&pre=1' : '') + '&day=' + dayEpoch + (tk ? '&token=' + encodeURIComponent(tk) : ''), { cache: 'no-store', signal: ctl.signal });
         if (resp.status === 400) return false;
         if (!resp.ok) {
           _rsDownUntil = Date.now() + 60000;
@@ -3495,6 +3511,7 @@
         }
         srvDay = parseInt(resp.headers.get('X-Day-Epoch'), 10);
         preLen = parseInt(resp.headers.get('X-Pre-Length'), 10) || 0;
+        srvFrom = parseInt(resp.headers.get('X-From-Index'), 10) || 0;
         buf = await resp.arrayBuffer();
       } catch (_rsF) {
         _rsDownUntil = Date.now() + 60000;
@@ -3502,7 +3519,7 @@
       } finally {
         clearTimeout(tmr);
       }
-      if (srvDay !== dayEpoch || preLen !== 900 || !buf || buf.byteLength % 8 !== 0) return false;
+      if (srvDay !== dayEpoch || (srvFrom === 0 ? preLen !== 900 : (preLen !== 0 || srvFrom !== _rsFrom)) || !buf || buf.byteLength % 8 !== 0) return false;
       var arr = new Float64Array(buf);
       var off = startTs - dayEpoch;
       var times = new Int32Array(len);
@@ -3510,7 +3527,7 @@
       var got = 0, i, k, v;
       for (i = 0; i < len; i++) {
         times[i] = i;
-        k = preLen + off + i;
+        k = preLen + off + i - srvFrom;
         if (k < arr.length) {
           v = arr[k];
           if (v !== -1) { prices[i] = v; got++; }
@@ -3519,7 +3536,8 @@
       if (got === 0) return false;
       var preOk = false;
       if (startTs === currentStartTsUtc) {
-        var preArr = arr.slice(off, off + 900);
+        var _pk0 = preLen + off - 900 - srvFrom;
+        var preArr = (_pk0 >= 0) ? arr.slice(_pk0, _pk0 + 900) : new Float64Array(0);
         if (preArr.length === 900) {
           for (i = 0; i < 900; i++) {
             if (preArr[i] !== -1) { preOk = true; break; }
@@ -3760,6 +3778,7 @@
     if (!_isWithinMappedWindow()) return;
     var pair = activePair;
     if (_edgeSyncBusy[pair]) return;
+    if (Date.now() < ((window._edgeNext || {})[pair] || 0)) return;
     var pData = allPairData[pair];
     if (!pData || !pData.times || pData.times.length === 0) return;
     var nowIdx = Math.floor(Date.now() / 1000) - currentStartTsUtc;
@@ -3775,6 +3794,7 @@
     }
     if (gapStart === -1) return;
     _edgeSyncBusy[pair] = true;
+    (window._edgeNext = window._edgeNext || {})[pair] = Date.now() + (/^frx/i.test(pair) ? 20000 : 4000);
     try {
       var sTs = currentStartTsUtc + gapStart;
       var eTs = currentStartTsUtc + gapEnd;
@@ -4127,7 +4147,7 @@
         dispatchMultiCycleScan();
       }
 
-      if (b + BATCH_SIZE < _pairsToFetch.length) await new Promise(r => setTimeout(r, 500));
+      if (b + BATCH_SIZE < _pairsToFetch.length && !window._lastGridSrv) await new Promise(r => setTimeout(r, 500));
     }
     bootLog(`[PHASE 2 GAP BACKFILL] DONE — All targets synchronized.`, '#00E676');
     document.getElementById('stats').innerHTML = `DNA MATRIX OMNI-SYNC: <span style="color:#00E676;">${_pairsToFetch.length}</span> TARGETS ${ctxState.isLive ? '| <span style="color:#00E676;">🟢 LIVE</span>' : '| <span style="color:#FF2D3A;">🔴 MARKET CLOSED</span>'}`;
@@ -15421,6 +15441,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
         });
 
       setInterval(() => {
+          if (document.hidden) return;
           document.querySelectorAll('select.ctrl-select').forEach(select => {
               const wrapper = select.nextElementSibling;
               if (wrapper && wrapper.classList.contains('custom-select-wrapper')) {
@@ -15431,7 +15452,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
                 }
               }
             });
-        }, 100);
+        }, 400);
     });
     </script>
     <script>

@@ -387,7 +387,7 @@ async function runBackfill(reason, forceFromSec) {
 
       backfillState.doneChunks += batch.length;
       backfillState.pct = Math.min(100, Math.round((backfillState.doneChunks / backfillState.totalChunks) * 100));
-      await sleep(400);
+      if (i + BACKFILL_CONCURRENCY < chunks.length) await sleep(400);
     }
   }
 
@@ -758,8 +758,9 @@ async function drvRefreshSignals() {
   try {
     var now = nowSec();
     var start = now - (now % 3600);
-    var gz = await buildScan(DRVT.pairs, DRVT.cycle, DRVT.cycle, start, 3600);
-    var data = JSON.parse(zlib.gunzipSync(gz).toString());
+    var rawScan = {};
+    await buildScan(DRVT.pairs, DRVT.cycle, DRVT.cycle, start, 3600, rawScan);
+    var data = JSON.parse(rawScan.body);
     var map = {}, k, d, revs = [], moms = [], pr;
     for (k = 0; k < DRVT.pairs.length; k++) {
       d = data.pairs && data.pairs[DRVT.pairs[k]];
@@ -1588,7 +1589,7 @@ function runScanJob(msg, transfer) {
   });
 }
 
-async function buildScan(pairs, minC, maxC, start, dur) {
+async function buildScan(pairs, minC, maxC, start, dur, rawOut) {
   const t0 = Date.now();
   const dayAtStart = activeDayEpoch;
   const len = dur + 1;
@@ -1622,6 +1623,12 @@ async function buildScan(pairs, minC, maxC, start, dur) {
   if (activeDayEpoch !== dayAtStart) throw new Error("day rollover during scan");
   const ms = Date.now() - t0;
   const body = '{"ok":true,"day":' + dayAtStart + ',"start":' + start + ',"dur":' + dur + ',"minC":' + minC + ',"maxC":' + maxC + ',"scanMs":' + ms + ',"pairs":{' + parts.join(",") + "}}";
+  if (rawOut) {
+    rawOut.body = body;
+    scanBusyMsTotal += ms;
+    scanCount++;
+    return null;
+  }
   const gz = await new Promise((resolve, reject) => {
     zlib.gzip(body, { level: 1 }, (err, out) => (err ? reject(err) : resolve(out)));
   });
@@ -2045,7 +2052,7 @@ const server = http.createServer((req, res) => {
     }
 
     const rawBuf = Buffer.from(out.buffer, out.byteOffset, out.byteLength);
-    zlib.gzip(rawBuf, (err, gzBuf) => {
+    zlib.gzip(rawBuf, { level: 1 }, (err, gzBuf) => {
       if (err) {
         sendJson(res, 500, { error: "Compression error" });
         return;
@@ -2105,6 +2112,7 @@ process.on("SIGINT", () => handleShutdown("SIGINT"));
   }
   server.listen(PORT, () => {
     logEvent("HTTP_READY", `HTTP server listening on http://localhost:${PORT}`);
+    loadIndex(function () {});
     connectLiveWs(false);
     runBackfill("startup", null);
   });
