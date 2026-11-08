@@ -2756,6 +2756,17 @@
   let globalDethroned = [];
   let currentMode = 'REV';
   let r0OnlyMode = false;
+  var _r0CbTries = 0, _r0CbTmr = setInterval(function () {
+    _r0CbTries++;
+    try {
+      var _r0b = document.getElementById('r0OnlyBtn');
+      if (_r0b && window.CtlBar && typeof window.CtlBar.adopt === 'function') {
+        window.CtlBar.adopt('PAIRS', 'r0OnlyBtn', { order: 10 });
+        clearInterval(_r0CbTmr);
+      }
+    } catch (eR0) {}
+    if (_r0CbTries > 200) clearInterval(_r0CbTmr);
+  }, 150);
   function toggleR0Only() {
     r0OnlyMode = !r0OnlyMode;
     _lg('FILTER', 'R0 only -> ' + (r0OnlyMode ? 'ON' : 'OFF'));
