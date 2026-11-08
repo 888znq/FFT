@@ -16990,6 +16990,10 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       '\nhtml body ' + _s10 + ' #logBtn{font-size:0 !important;}' +
       '\nhtml[data-sig="G"] body #sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn{display:none !important;}' +
       '\nhtml[data-sig="R"] body #buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn{display:none !important;}';
+    st3.textContent += '\nhtml body ' + _s10 + ' #accountBalance,html body ' + _s10 + ' #r0OnlyBtn{display:none !important;}' +
+      '\nhtml body ' + _s10 + ' .cb-gr > :has(> #accountBalance:only-child){display:none !important;}' +
+      '\nhtml body ' + _s10 + ' .cb-g:has(> .cb-gr > #accountBalance:only-child){display:none !important;}' +
+      '\nhtml body ' + _s10 + ' .cb-g:has(> .cb-gr > :only-child:has(> #accountBalance:only-child)){display:none !important;}';
     document.head.appendChild(st3);
     function darkenWhite() {
       var els, n, e, m, r, g, b, a, mx, mn, hits = [];
@@ -17073,6 +17077,65 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       } catch (e12) {}
     }
     window._cbPaint = paintSignal;
+    function cbHas(e) {
+      var cs, t, k, c, b, a;
+      cs = getComputedStyle(e);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+      t = e.tagName.toLowerCase();
+      if (t === 'input' || t === 'select' || t === 'textarea' || t === 'canvas' || t === 'img' || t === 'svg') return true;
+      b = getComputedStyle(e, '::before').content;
+      a = getComputedStyle(e, '::after').content;
+      if ((b && b !== 'none' && b !== 'normal' && b !== '""') || (a && a !== 'none' && a !== 'normal' && a !== '""')) return true;
+      if (cs.backgroundImage.indexOf('url(') !== -1) return true;
+      for (k = 0; k < e.childNodes.length; k++) {
+        c = e.childNodes[k];
+        if (c.nodeType === 3) {
+          if (c.nodeValue.trim()) return true;
+        } else if (c.nodeType === 1 && cbHas(c)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function cbMark(e) {
+      e.setAttribute('data-cbd', e.style.getPropertyValue('display'));
+      e.setAttribute('data-cbp', e.style.getPropertyPriority('display'));
+      e.setAttribute('data-cbe', '1');
+      e.style.setProperty('display', 'none', 'important');
+    }
+    function cbCollapse() {
+      var marked, gs, g, row, kids, k, n, any, v;
+      try {
+        marked = bar.querySelectorAll('[data-cbe]');
+        for (n = 0; n < marked.length; n++) {
+          v = marked[n].getAttribute('data-cbd');
+          if (v) marked[n].style.setProperty('display', v, marked[n].getAttribute('data-cbp') || '');
+          else marked[n].style.removeProperty('display');
+          marked[n].removeAttribute('data-cbd');
+          marked[n].removeAttribute('data-cbp');
+          marked[n].removeAttribute('data-cbe');
+        }
+        gs = bar.querySelectorAll('#ctlBarInner > .cb-g');
+        for (n = 0; n < gs.length; n++) {
+          g = gs[n];
+          if (getComputedStyle(g).display === 'none') continue;
+          row = g.querySelector('.cb-gr');
+          if (!row) continue;
+          kids = row.children;
+          any = false;
+          for (k = 0; k < kids.length; k++) {
+            if (cbHas(kids[k])) {
+              any = true;
+            } else if (getComputedStyle(kids[k]).display !== 'none') {
+              cbMark(kids[k]);
+            }
+          }
+          if (!any) cbMark(g);
+        }
+      } catch (e13) {}
+    }
+    setTimeout(cbCollapse, 300);
+    setInterval(cbCollapse, 1000);
     function paintSignalLegacy() {
       var els, n, e, t, c;
       try {
