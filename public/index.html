@@ -6921,7 +6921,7 @@
       var d = new Date(t);
       return '\u25B2 ' + dur + ' \u00B7 ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
     }
-    function rpOne(x, tag, pr, pre, hi, lim, mn) {
+    function rpOne(x, tag, pr, pre, hi, lim, mn, any) {
       var c = x.c, s1 = x.s1, cc = x.col === 'G' ? 1 : 2, mom = tag === 'MOM';
       if (!(c > 0) || !(s1 >= 1)) return null;
       var base = (typeof currentStartTsUtc !== 'undefined' ? currentStartTsUtc : 0) || 0;
@@ -6965,7 +6965,7 @@
         } else {
           pc = -1;
         }
-        if (l1 >= (mn || 3) && (mom ? l2 === l1 : l2 === 0)) {
+        if (l1 >= (mn || 3) && (any || (mom ? l2 === l1 : l2 === 0))) {
           if (runStart < 0) runStart = i;
           lastRun = runStart;
           since = 0;
@@ -7022,7 +7022,7 @@
     var HF = { sg: '', m: {}, g: {} };
     window._holdTimeOf = function (x, tg) {
       try {
-        if (!x || ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) return 0;
+        if (!x) return 0;
         var sg = sessSig(), now = Date.now();
         if (HF.sg !== sg) { HF.sg = sg; HF.m = {}; HF.g = {}; }
         var pd = (typeof allPairData !== 'undefined') ? allPairData[x.pair] : null;
@@ -7042,7 +7042,7 @@
           while (hi > 0 && pr[hi] === -1) hi--;
           g = HF.g[x.pair] = { pr: pr, at: now, hi: hi, lim: Math.min(sEnd + 1, pr.length), pre: (typeof window._preArr === 'function') ? window._preArr(x.pair) : null };
         }
-        var t = rpOne(x, tg, pr, g.pre, g.hi, g.lim, tg === 'MOM' ? 2 : 1);
+        var t = rpOne(x, tg, pr, g.pre, g.hi, g.lim, tg === 'MOM' ? 2 : 1, true);
         if (t === null) {
           t = (e && e.pr === pr) ? e.t : now;
           HF.m[k] = { pr: pr, t: t, fb: true, at: now };
