@@ -1067,7 +1067,7 @@
             <button id="settingsBtn" onclick="toggleSettings()"></button>
             <div id="settingsPopup">
               <div id="apiPairDisplay">frxEURUSD</div>
-              <div id="cycleInputDisplay">60</div>
+              <div id="cycleInputDisplay">120</div>
               <div id="liveTickDisplayVisible">0</div>
             </div>
             <input type="number" id="cycleInput" value="120" min="10" readonly class="trinity-input cycle-box" />
@@ -3040,7 +3040,7 @@
   let currentInstanceIndex = -1;
   let liveEdgeCol = -1;
   var CELL_H = 0;
-  let CYCLE = (document.getElementById('cycleInput') ? parseInt(document.getElementById('cycleInput').value) : null) || 60;
+  let CYCLE = (document.getElementById('cycleInput') ? parseInt(document.getElementById('cycleInput').value) : null) || 120;
   const CELL_W = 40, HEADER_H = 20;
   const canvas = document.getElementById('matrixCanvas');
   const ctx = canvas.getContext('2d', {alpha: false});
@@ -3511,7 +3511,7 @@
         if (_w && _w.end > _w.start && _ses >= 60 && _ses <= 86400) { req.winStart = _w.start; req.winEnd = _w.end; req.session = _ses; }
       } catch (e) {}
       try {
-        var mn = parseInt(document.getElementById('scanMin').value) || 60;
+        var mn = parseInt(document.getElementById('scanMin').value) || 120;
         var mx = parseInt(document.getElementById('scanMax').value) || 120;
         if (mn > mx) { var tt = mn; mn = mx; mx = tt; }
         if (mx - mn <= 300) { req.minC = mn; req.maxC = mx; }
@@ -6145,7 +6145,7 @@
         _scanRerunQueued = false;
         setTimeout(function () { dispatchMultiCycleScan(); }, 0);
       } else {
-        var _rjMin = parseInt(document.getElementById('scanMin').value) || 60;
+        var _rjMin = parseInt(document.getElementById('scanMin').value) || 120;
         var _rjMax = parseInt(document.getElementById('scanMax').value) || 120;
         if (_rjMin > _rjMax) { var _rjT = _rjMin; _rjMin = _rjMax; _rjMax = _rjT; }
         if (CYCLE < _rjMin || CYCLE > _rjMax) window._autoSelectAfterScan = true;
@@ -6535,8 +6535,8 @@
     if (_rgA && _rgB) {
       if (window._mtlOnly && !_wasMtl) {
         window._mtlPrev = [_rgA.value, _rgB.value];
-        _rgA.value = 300;
-        _rgB.value = 300;
+        _rgA.value = 120;
+        _rgB.value = 120;
         _rgChanged = true;
       } else if (!window._mtlOnly && _wasMtl && window._mtlPrev) {
         _rgA.value = window._mtlPrev[0];
@@ -6595,7 +6595,7 @@
         { id: 'drvOnlyBtn', m: 'DRV', t: 'Show only Deriv (V10-V100) pairs' },
         { id: 'fxOnlyBtn', m: 'FX', t: 'Show all pairs except Deriv (V10-V100)' },
         { id: 'allPairsBtn', m: 'ALL', t: 'Show all pairs including Deriv' },
-        { id: 'mtlOnlyBtn', m: 'MTL', t: 'Show only XAU and XAG (cycle range 300-300)' },
+        { id: 'mtlOnlyBtn', m: 'MTL', t: 'Show only XAU and XAG (cycle range 120-120)' },
         { id: 'btcOnlyBtn', m: 'BTC', l: 'BTC+ETH', t: 'Show only BTC and ETH' }
       ];
       defs.forEach(function (d, i) {
