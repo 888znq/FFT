@@ -744,14 +744,24 @@ function drvHoldPickOld(list, tag, start) {
   return best.x;
 }
 
+function drvWindow() {
+  var now = nowSec(), s = now - (now % 3600), d = 3600, ws, wd;
+  if (DRVT.smin >= 0 && DRVT.emin > DRVT.smin) {
+    ws = (now - (now % 86400)) + DRVT.smin * 60;
+    wd = (DRVT.emin - DRVT.smin) * 60;
+    if (wd <= 10800 && now >= ws && now < ws + wd) { s = ws; d = wd; }
+  }
+  return { start: s, dur: d };
+}
+
 async function drvRefreshSignals() {
   if (DRVT.sigBusy) return;
   DRVT.sigBusy = true;
   try {
-    var now = nowSec();
-    var start = now - (now % 3600);
+    var win = drvWindow();
+    var start = win.start;
     var rawScan = {};
-    await buildScan(DRVT.pairs, DRVT.cmin || DRVT.cycle, DRVT.cmax || DRVT.cycle, start, 3600, rawScan);
+    await buildScan(DRVT.pairs, DRVT.cmin || DRVT.cycle, DRVT.cmax || DRVT.cycle, start, win.dur, rawScan);
     var data = JSON.parse(rawScan.body);
     var map = {}, k, d, revs = [], moms = [], pr;
     for (k = 0; k < DRVT.pairs.length; k++) {
@@ -768,6 +778,7 @@ async function drvRefreshSignals() {
     }
     DRVT.signals = map;
     DRVT.sigStart = start;
+    DRVT.sigDur = win.dur;
     DRVT.sigAt = Date.now();
   } catch (err) {
     logEvent("DRV_SCAN_ERROR", "DRV signal scan failed: " + (err && err.message ? err.message : String(err)));
@@ -940,9 +951,9 @@ function drvPaperDone(r, win) {
 }
 
 function drvPaperScan() {
-  var start = DRVT.sigStart, nowIdx = nowSec() - start;
-  if (!start || nowIdx < 1 || nowIdx >= 3600 || Date.now() - DRVT.sigAt > 120000) return;
-  var lim = Math.min(nowIdx - 1, 3599), list = [], tags = ["REV", "MOM"];
+  var start = DRVT.sigStart, nowIdx = nowSec() - start, sdur = DRVT.sigDur || 3600;
+  if (!start || nowIdx < 1 || nowIdx >= sdur || Date.now() - DRVT.sigAt > Math.max(120000, (DRVT.sint || 30) * 4000)) return;
+  var lim = Math.min(nowIdx - 1, sdur - 1), list = [], tags = ["REV", "MOM"];
   var pi, ti, ki, m, rn, it, sig, lastI, key, pk, dir, rec;
   for (pi = 0; pi < DRVT.pairs.length; pi++) {
     m = DRVT.signals[DRVT.pairs[pi]];
@@ -1087,7 +1098,7 @@ function drvTick() {
   try {
     var now = nowSec();
     DRVT.tickN++;
-    if (now - (now % 3600) !== DRVT.sigStart || Date.now() - DRVT.sigAt > 30000) drvRefreshSignals();
+    if (drvWindow().start !== DRVT.sigStart || Date.now() - DRVT.sigAt > (DRVT.sint || 30) * 1000) drvRefreshSignals();
     if (DRVT.tickN % 60 === 0) drvStatus();
     try {
       drvPaperScan();
@@ -1967,6 +1978,16 @@ const server = http.createServer((req, res) => {
     if (drvCnMin >= 1 && drvCnMax >= drvCnMin && drvCnMax <= 3600 && drvCnMax - drvCnMin <= 300 && (drvCnMin !== DRVT.cmin || drvCnMax !== DRVT.cmax)) {
       DRVT.cmin = drvCnMin;
       DRVT.cmax = drvCnMax;
+      DRVT.sigAt = 0;
+    }
+    var drvSint = parseInt(urlObj.searchParams.get("sint"), 10);
+    if (drvSint >= 10 && drvSint <= 600 && drvSint !== DRVT.sint) {
+      DRVT.sint = drvSint;
+    }
+    var drvSmin = parseInt(urlObj.searchParams.get("smin"), 10), drvEmin = parseInt(urlObj.searchParams.get("emin"), 10);
+    if (drvSmin >= 0 && drvEmin > drvSmin && drvEmin <= 1440 && (drvSmin !== DRVT.smin || drvEmin !== DRVT.emin)) {
+      DRVT.smin = drvSmin;
+      DRVT.emin = drvEmin;
       DRVT.sigAt = 0;
     }
     var drvOut = [], drvK, drvIt;

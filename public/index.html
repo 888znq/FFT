@@ -2800,7 +2800,14 @@
   }
   var _scanCountdownSec = 0;
   var _scanCountdownMax = 30;
-  _calcScanIntervalMs = function () { return 30000; };
+  _calcScanIntervalMs = function () {
+    var _si = parseInt(window._scanIntervalSec, 10);
+    return (_si >= 5 && _si <= 600 ? _si : 30) * 1000;
+  };
+  try {
+    var _siv = parseInt(localStorage.getItem('scanIntervalSec'), 10);
+    if (_siv >= 5 && _siv <= 600) window._scanIntervalSec = _siv;
+  } catch (eSi) {}
   var _scanCountdownTimer = null;
   var _scanBoxTmr = setInterval(function () {
     try {
@@ -4388,7 +4395,7 @@
     if (isAutoScanOn) {
       autoScanInterval = setInterval(() => {
           dispatchMultiCycleScan();
-        }, (autoScanIntervalMs = 30000));
+        }, (autoScanIntervalMs = _calcScanIntervalMs()));
     } else {
       _stopScanCountdown();
     }
@@ -6051,7 +6058,7 @@
     let minC = parseInt(document.getElementById('scanMin').value) || 60;
     let maxC = parseInt(document.getElementById('scanMax').value) || 60;
     if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
-    try { var _drvCk = minC + '-' + maxC; if (window._drvCycSent !== _drvCk) { window._drvCycSent = _drvCk; fetch('/drv?cmin=' + minC + '&cmax=' + maxC, { cache: 'no-store' }).then(function (r) { if (!r.ok) window._drvCycSent = ''; }).catch(function () { window._drvCycSent = ''; }); } } catch (eCy) {}
+    try { var _drvSi = parseInt(window._scanIntervalSec, 10) || 30, _drvSs = sessionWindowStartMin, _drvSe = sessionWindowEndMin; var _drvCk = minC + '-' + maxC + '-' + _drvSi + '-' + _drvSs + '-' + _drvSe + '-' + Math.floor(Date.now() / 300000); if (window._drvCycSent !== _drvCk) { window._drvCycSent = _drvCk; fetch('/drv?cmin=' + minC + '&cmax=' + maxC + '&sint=' + _drvSi + '&smin=' + _drvSs + '&emin=' + _drvSe, { cache: 'no-store' }).then(function (r) { if (!r.ok) window._drvCycSent = ''; }).catch(function () { window._drvCycSent = ''; }); } } catch (eCy) {}
     var sStart = 0, sEnd = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
 
     var _sessionStartSec = sessionWindowStartMin * 60;
@@ -16224,6 +16231,51 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
                 }
               });
             } catch (eCr) {}
+            try {
+              window.CtlBar.add({
+                id: 'scanIntv',
+                group: 'SCAN',
+                type: 'select',
+                order: 20,
+                title: 'Scan interval (seconds)',
+                options: [
+                  { v: '10', l: '10s' }, { v: '15', l: '15s' }, { v: '20', l: '20s' }, { v: '30', l: '30s' },
+                  { v: '45', l: '45s' }, { v: '60', l: '60s' }, { v: '90', l: '90s' }, { v: '120', l: '120s' }
+                ],
+                get: function () { return String(parseInt(window._scanIntervalSec, 10) || 30); },
+                set: function (v) {
+                  var n = parseInt(v, 10);
+                  if (!(n >= 5 && n <= 600)) return;
+                  window._scanIntervalSec = n;
+                  try { localStorage.setItem('scanIntervalSec', String(n)); } catch (eS1) {}
+                  try { _resyncScanInterval(); } catch (eS2) {}
+                  try { _startScanCountdown(); } catch (eS3) {}
+                }
+              });
+              window.CtlBar.add({
+                id: 'sessLen',
+                group: 'SESSION',
+                type: 'select',
+                order: 10,
+                title: 'Session duration',
+                options: function () {
+                  var s = document.getElementById('sessionLengthSelect'), o = [], n;
+                  if (!s) return o;
+                  for (n = 0; n < s.options.length; n++) o.push({ v: s.options[n].value, l: s.options[n].textContent });
+                  return o;
+                },
+                get: function () {
+                  var s = document.getElementById('sessionLengthSelect');
+                  return s ? s.value : '';
+                },
+                set: function (v) {
+                  var s = document.getElementById('sessionLengthSelect');
+                  if (!s) return;
+                  s.value = v;
+                  onSessionLengthChange();
+                }
+              });
+            } catch (eCs) {}
           } else if (_crTries > 80) {
             clearInterval(_crPoll);
           }
