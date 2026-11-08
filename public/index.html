@@ -5475,6 +5475,77 @@
       _firstPickTry();
       if (window._firstPickDone) clearInterval(window._firstPickTimer);
     }, 500);
+  /* ===== SIGNAL AGE: when each signal FIRST appeared this session, and how long ago =====
+     - first-seen time is kept per signal key and never reset by a gap (counts from the original appearance)
+     - cleared automatically when the session start (currentStartTsUtc) changes, so a new session starts blank
+     - saved in localStorage so a page refresh does not lose it (only restored for the same session) */
+  var _SF_LS = 'ws_sigfirst_v1';
+  var _sf = { start: null, m: {}, dirty: false, saveT: null };
+  function _sfKey(d) { return d.pair + '|' + d.c + '|' + d.r + '|' + d.s1 + '|' + d.s2 + '|' + d.col + '|' + d.type; }
+  function _sfSave() {
+    _sf.saveT = null;
+    if (!_sf.dirty) return;
+    _sf.dirty = false;
+    try { localStorage.setItem(_SF_LS, JSON.stringify({ start: _sf.start, m: _sf.m })); } catch (e) {}
+  }
+  function _sfRecord() {
+    try {
+      var st = currentStartTsUtc || 0;
+      if (!st) return;
+      if (_sf.start !== st) {
+        var keep = null;
+        if (_sf.start === null) {
+          try {
+            var raw = localStorage.getItem(_SF_LS);
+            if (raw) { var o = JSON.parse(raw); if (o && o.start === st && o.m && typeof o.m === 'object') keep = o.m; }
+          } catch (e) {}
+        }
+        _sf.start = st;
+        _sf.m = keep || {};
+        _sf.dirty = true;
+      }
+      var now = Date.now();
+      var lists = [globalRevs, globalMoms];
+      for (var li = 0; li < lists.length; li++) {
+        var L = lists[li];
+        if (!L) continue;
+        for (var i = 0; i < L.length; i++) {
+          var d = L[i];
+          if (!d) continue;
+          var k = _sfKey(d);
+          if (!_sf.m[k]) { _sf.m[k] = now; _sf.dirty = true; }
+        }
+      }
+      if (_sf.dirty && !_sf.saveT) _sf.saveT = setTimeout(_sfSave, 2000);
+    } catch (e) {}
+  }
+  function _sfFmt(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    if (s < 60) return s + 's';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ' + (s % 60 < 10 ? '0' : '') + (s % 60) + 's';
+    var h = Math.floor(m / 60);
+    return h + 'h ' + (m % 60 < 10 ? '0' : '') + (m % 60) + 'm';
+  }
+  function _sfAgeText(d) {
+    var t = _sf.m[_sfKey(d)];
+    return t ? _sfFmt(Date.now() - t) : '';
+  }
+  function _sfTick() {
+    try {
+      var els = document.querySelectorAll('#wall-finder-pane .sfAge[data-sfk]');
+      var now = Date.now();
+      for (var i = 0; i < els.length; i++) {
+        var t = _sf.m[els[i].getAttribute('data-sfk')];
+        if (!t) continue;
+        var tx = _sfFmt(now - t);
+        if (els[i].textContent !== tx) els[i].textContent = tx;
+      }
+    } catch (e) {}
+  }
+  setInterval(_sfTick, 1000);
+  window.addEventListener('pagehide', function () { try { _sf.dirty = true; _sfSave(); } catch (e) {} });
+
   function _wpTmrKey(d) {
     return d.pair + '|' + d.c + '|' + d.r + '|' + d.s1 + '|' + d.s2 + '|' + d.col + '|' + d.type;
   }
@@ -6180,6 +6251,7 @@
   if (!window.trackedSignals) window.trackedSignals = {};
   if (!window.dethronedLog) window.dethronedLog = [];
   function renderFilteredTable() {
+    try { _sfRecord(); } catch (e) {}
     try { if (typeof window._holdUpdate === 'function') window._holdUpdate(); } catch (e) {}
     window.trackedSignals = {};
 
@@ -6280,7 +6352,7 @@
         var gapVal = data.gap || 0;
         var curGapVal = data.curGap || 0;
         html += `<tr class="${rowClass} highlight-gem" ${(function () { var _k = _wpTmrReg(data); var _f = _wpFillInfo(_k); return 'data-k="' + _k + '" data-wpst="' + _f.kind + '" style="--wpf:' + _f.pct + '%;'; })()}${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal}, ${data.c1 || 0}, ${data.c2 || 0})">
-                                                                                            <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span>${data._holdT ? window._holdTag(data) : ''}</td>
+                                                                                            <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span>${data._holdT ? window._holdTag(data) : ''}<div class="sfAge" data-sfk="${_sfKey(data)}" style="display:block;font-size:8px;line-height:9px;font-weight:800;letter-spacing:0;color:inherit;opacity:.85;">${_sfAgeText(data)}</div></td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
                                                                                             <td style="width:18%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
