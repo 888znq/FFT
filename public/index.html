@@ -6309,11 +6309,14 @@
       });
       var best = {};
       var bk = function (x) {
-        return x.pair + '|' + (x.sess || 1) + '|' + x.col + '|' + x.s1 + '|' + x.s2 + '|' + x.pct + '|' + x.c1 + '|' + x.c2;
+        return x.pair + '|' + (x.sess || 1) + '|' + x.s1 + '|' + x.s2 + '|' + x.pct + '|' + x.c1 + '|' + x.c2;
       };
       out.forEach(function (x) {
-        var k = bk(x), b = best[k];
-        if (!b || x.r < b.r || (x.r === b.r && x.c < b.c)) best[k] = x;
+        var k = bk(x), b = best[k], ex, eb;
+        if (!b) { best[k] = x; return; }
+        ex = _btLvlsEta(x);
+        eb = _btLvlsEta(b);
+        if (ex < eb || (ex === eb && (x.c < b.c || (x.c === b.c && x.r < b.r)))) best[k] = x;
       });
       return out.filter(function (x) { return best[bk(x)] === x; }).slice(0, _wsTopLimit);
     }

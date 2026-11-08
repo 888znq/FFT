@@ -675,12 +675,20 @@ function drvHoldPick(list, tag, start) {
     return ((b2.pct || 0) - (a.pct || 0)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0));
   });
   bk = function (z) {
-    return z.pair + "|" + (z.sess || 1) + "|" + z.col + "|" + z.s1 + "|" + z.s2 + "|" + z.pct + "|" + z.c1 + "|" + z.c2;
+    return z.pair + "|" + (z.sess || 1) + "|" + z.s1 + "|" + z.s2 + "|" + z.pct + "|" + z.c1 + "|" + z.c2;
+  };
+  var etaNow = nowSec(), ex, eb;
+  var etaOf = function (z) {
+    var cc = z.c || 60;
+    return (((z.r - (etaNow % cc)) % cc) + cc) % cc;
   };
   for (i = 0; i < rows.length; i++) {
     kb = bk(rows[i]);
     b = bestBy[kb];
-    if (!b || rows[i].r < b.r || (rows[i].r === b.r && rows[i].c < b.c)) bestBy[kb] = rows[i];
+    if (!b) { bestBy[kb] = rows[i]; continue; }
+    ex = etaOf(rows[i]);
+    eb = etaOf(b);
+    if (ex < eb || (ex === eb && (rows[i].c < b.c || (rows[i].c === b.c && rows[i].r < b.r)))) bestBy[kb] = rows[i];
   }
   out = rows.filter(function (z) { return bestBy[bk(z)] === z; });
   if (!out.length) {
