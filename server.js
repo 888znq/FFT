@@ -553,7 +553,7 @@ const DRVT = {
   base: String(process.env.DERIV_API_BASE || "https://api.derivws.com").replace(/\/+$/, ""),
   acct: process.env.DRV_ACCOUNT_TYPE || "demo",
   stake: Number(process.env.DRV_STAKE) || 0.35,
-  cycle: parseInt(process.env.DRV_CYCLE, 10) || 120,
+  cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
   pairs: ALL_PAIRS.filter(p => /^1HZ/i.test(p)),
   ws: null, ready: false, connecting: false, pingTimer: null,
   reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,

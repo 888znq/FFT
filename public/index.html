@@ -1147,11 +1147,11 @@
             <div style="grid-column: span 2; display:flex; align-items:center; gap:3px;">
               <div style="flex:1; display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
                 <span style="display:none;">MIN</span>
-                <input type="number" id="scanMin" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; _resyncScanInterval(); dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                <input type="number" id="scanMin" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; _resyncScanInterval(); dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
               </div>
               <div style="flex:1; display: flex; align-items: center; justify-content: center; background: var(--bg-base); border: 1px solid var(--border); border-radius: 2px; padding: 4px;">
                 <span style="display:none;">MAX</span>
-                <input type="number" id="scanMax" value="120" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; _resyncScanInterval(); dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
+                <input type="number" id="scanMax" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; _resyncScanInterval(); dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
               </div>
               <button id="uiModeToggleBtn" onclick="_userScanRangeLock=true; toggleSignalMode()" style="display:none; flex:1; background: var(--accent-green); color: var(--bg-base); border: 1px solid #FFFFFF; padding: 6px 4px; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; border-radius: 2px; font-family: 'Inter', monospace; white-space: nowrap;">REV</button>
             </div>
@@ -6011,8 +6011,8 @@
     _scanStartedAt = Date.now();
     _scanRerunQueued = false;
     _startScanCountdown();
-    let minC = parseInt(document.getElementById('scanMin').value) || 120;
-    let maxC = parseInt(document.getElementById('scanMax').value) || 120;
+    let minC = parseInt(document.getElementById('scanMin').value) || 60;
+    let maxC = parseInt(document.getElementById('scanMax').value) || 60;
     if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
     var sStart = 0, sEnd = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
 
@@ -6112,7 +6112,7 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-            return _wsBuild(list);
+            return _wsBuild(list, undefined, 1);
             return _buildTop10Core(list);
     }
     function _buildTop10Core(list) {
@@ -15234,10 +15234,8 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
       }
       function wpsApplyState(state) {
         if (!state) { _wpsDrvDefault(); return; }
-        if ((String(state.scanMin) === '300' && String(state.scanMax) === '300') || (String(state.scanMin) === '60' && String(state.scanMax) === '60')) {
-          state.scanMin = '120';
-          state.scanMax = '120';
-        }
+        state.scanMin = '60';
+        state.scanMax = '60';
 
         _wpsForceDefaultCat('24x7');
         _wpsDrvDefault();
