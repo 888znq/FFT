@@ -339,57 +339,50 @@ async function runBackfill(reason, forceFromSec) {
     `Starting backfill (${reason}): ${pairPlans.length} pairs, ${totalChunks} chunks`
   );
 
+  const bfQueue = [];
+  const bfClosed = {};
   for (const plan of pairPlans) {
-    if (activeDayEpoch !== targetDayEpoch) break;
     const { pair, gaps, chunks } = plan;
-    backfillState.currentPair = pair;
-
     const firstStart = gaps[0][0];
     const lastEnd = gaps[gaps.length - 1][1];
     logEvent(
       "BACKFILL_PAIR",
       `BACKFILL ${pair} missing range ${firstStart}..${lastEnd} (${chunks.length} chunk(s), ${gaps.length} gap(s))`
     );
-
-    var marketClosed = false;
-    for (var i = 0; i < chunks.length; i += BACKFILL_CONCURRENCY) {
-      if (activeDayEpoch !== targetDayEpoch) break;
-      const batch = chunks.slice(i, i + BACKFILL_CONCURRENCY);
-
-      if (marketClosed) {
-        backfillState.doneChunks += batch.length;
-        backfillState.pct = Math.min(100, Math.round((backfillState.doneChunks / backfillState.totalChunks) * 100));
-        continue;
-      }
-
-      const results = await Promise.all(
-        batch.map(async (c, idx) => {
-          var res = { ok: false, closedMarket: false, map: {} };
-          var retries = 0;
-          var delay = idx * 250;
-          while (retries <= 3) {
-            if (delay) await sleep(delay);
-            res = await fetchChunk(pair, c[0], c[1]);
-            if (res.ok) break;
-            retries++;
-            delay = 1500 * retries;
-          }
-          return res;
-        })
-      );
-
-      for (const res of results) {
-        if (res.closedMarket) marketClosed = true;
-        for (const ts in res.map) {
-          recordTick(pair, +ts, res.map[ts]);
-        }
-      }
-
-      backfillState.doneChunks += batch.length;
-      backfillState.pct = Math.min(100, Math.round((backfillState.doneChunks / backfillState.totalChunks) * 100));
-      if (i + BACKFILL_CONCURRENCY < chunks.length) await sleep(400);
-    }
+    for (const c of chunks) bfQueue.push({ pair, c });
   }
+
+  var bfCursor = 0;
+  const bfSlot = async slot => {
+    if (slot) await sleep(slot * 250);
+    while (activeDayEpoch === targetDayEpoch) {
+      const task = bfQueue[bfCursor++];
+      if (!task) return;
+      backfillState.currentPair = task.pair;
+      if (!bfClosed[task.pair]) {
+        var res = { ok: false, closedMarket: false, map: {} };
+        var retries = 0;
+        var delay = 0;
+        while (retries <= 3) {
+          if (delay) await sleep(delay);
+          res = await fetchChunk(task.pair, task.c[0], task.c[1]);
+          if (res.ok) break;
+          retries++;
+          delay = 1500 * retries;
+        }
+        if (res.closedMarket) bfClosed[task.pair] = true;
+        for (const ts in res.map) {
+          recordTick(task.pair, +ts, res.map[ts]);
+        }
+        await sleep(300);
+      }
+      backfillState.doneChunks++;
+      backfillState.pct = Math.min(100, Math.round((backfillState.doneChunks / backfillState.totalChunks) * 100));
+    }
+  };
+  const bfSlots = [];
+  for (var bw = 0; bw < BACKFILL_CONCURRENCY; bw++) bfSlots.push(bfSlot(bw));
+  await Promise.all(bfSlots);
 
   const doneCount = backfillState.doneChunks;
   backfillState = {

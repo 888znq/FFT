@@ -5319,6 +5319,7 @@
     try { localStorage.setItem(_SF_LS, JSON.stringify({ start: _sf.start, m: _sf.m })); } catch (e) {}
   }
   function _sfRecord() {
+    if (!window._SF_ON) return;
     try {
       var st = currentStartTsUtc || 0;
       if (!st) return;
@@ -15185,6 +15186,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
         if (!fb) { _wpsSavePending = true; return; }
         try {
           var state = wpsCollectState();
+          try { localStorage.setItem('wpsCache1', JSON.stringify(state)); } catch (eWc) {}
           var updates = {};
           updates[WPS_PATH] = state;
           fb.update(fb.ref(fb.db), updates);
@@ -15326,6 +15328,8 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
             var val = snapshot.val();
             var _wpsLate = !window._wpsBootWaiting, _wpsS0 = sessionWindowStartMin, _wpsE0 = sessionWindowEndMin;
                         wpsApplyState(val);
+            try { if (val) localStorage.setItem('wpsCache1', JSON.stringify(val)); } catch (eWc) {}
+            window._wpsSessionSynced = true;
                         if (_wpsLate && (_wpsS0 !== sessionWindowStartMin || _wpsE0 !== sessionWindowEndMin)) {
                           try { evtLog('INFO', 'BOOT', 'Remote session window differs from loaded data - rebooting session'); } catch (eL) {}
                           _triggerLiveReboot();
@@ -15334,6 +15338,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
             if (_wpsSavePending) wpsSaveNow();
             if (typeof window._wpsBootProceed === 'function') window._wpsBootProceed();
           }).catch(function() {
+            window._wpsSessionSynced = true;
             _wpsDrvDefault();
             _wpsReady = true;
             if (_wpsSavePending) wpsSaveNow();
@@ -15369,6 +15374,10 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
           });
       }
       document.addEventListener('DOMContentLoaded', function() {
+          try {
+            var _wpc = JSON.parse(localStorage.getItem('wpsCache1') || 'null');
+            if (_wpc && typeof _wpc === 'object') { wpsApplyState(_wpc); window._wpsSessionSynced = true; }
+          } catch (eWc2) {}
           wpsInit();
           wpsAttachChangeListeners();
         });
