@@ -6051,6 +6051,7 @@
     let minC = parseInt(document.getElementById('scanMin').value) || 60;
     let maxC = parseInt(document.getElementById('scanMax').value) || 60;
     if (minC > maxC) { let temp = minC; minC = maxC; maxC = temp; }
+    try { var _drvCk = minC + '-' + maxC; if (window._drvCycSent !== _drvCk) { window._drvCycSent = _drvCk; fetch('/drv?cmin=' + minC + '&cmax=' + maxC, { cache: 'no-store' }).then(function (r) { if (!r.ok) window._drvCycSent = ''; }).catch(function () { window._drvCycSent = ''; }); } } catch (eCy) {}
     var sStart = 0, sEnd = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
 
     var _sessionStartSec = sessionWindowStartMin * 60;

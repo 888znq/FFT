@@ -751,7 +751,7 @@ async function drvRefreshSignals() {
     var now = nowSec();
     var start = now - (now % 3600);
     var rawScan = {};
-    await buildScan(DRVT.pairs, DRVT.cycle, DRVT.cycle, start, 3600, rawScan);
+    await buildScan(DRVT.pairs, DRVT.cmin || DRVT.cycle, DRVT.cmax || DRVT.cycle, start, 3600, rawScan);
     var data = JSON.parse(rawScan.body);
     var map = {}, k, d, revs = [], moms = [], pr;
     for (k = 0; k < DRVT.pairs.length; k++) {
@@ -1962,6 +1962,12 @@ const server = http.createServer((req, res) => {
     if (drvC2q !== null) {
       drvC2v = parseInt(drvC2q, 10);
       if (drvC2v >= 0 && drvC2v <= 10 && drvC2v !== DRVT.c2n) { DRVT.c2n = drvC2v; DRVT.sigAt = 0; }
+    }
+    var drvCnMin = parseInt(urlObj.searchParams.get("cmin"), 10), drvCnMax = parseInt(urlObj.searchParams.get("cmax"), 10);
+    if (drvCnMin >= 1 && drvCnMax >= drvCnMin && drvCnMax <= 3600 && drvCnMax - drvCnMin <= 300 && (drvCnMin !== DRVT.cmin || drvCnMax !== DRVT.cmax)) {
+      DRVT.cmin = drvCnMin;
+      DRVT.cmax = drvCnMax;
+      DRVT.sigAt = 0;
     }
     var drvOut = [], drvK, drvIt;
     for (drvK in DRVT.open) {
