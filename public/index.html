@@ -9745,7 +9745,8 @@
           var phG = (phM.rev && phM.rev.c === c0) ? phM.rev : ((phM.mom && phM.mom.c === c0) ? phM.mom : null);
           if (phG) phase = ((phG.r % c0) + c0) % c0;
         }
-        off = (((cycOff - phase) % ce) + ce) % ce;
+        if (typeof r0OnlyMode !== 'undefined' && r0OnlyMode) phase = 0;
+        off = (((((currentStartTsUtc || 0) % ce) - phase) % ce) + ce) % ce;
         var gap = cw >= 6 ? Math.min(3, cw * 0.12) : (cw >= 3 ? 0.5 : 0);
         var UPC = window.accentGreenHex || '#2ED573', DNC = window.accentRedHex || '#E63946';
         var selCols = {};
