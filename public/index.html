@@ -2696,7 +2696,6 @@
     frxGBPAUD: 'GBP/AUD', frxGBPCAD: 'GBP/CAD', frxGBPCHF: 'GBP/CHF', frxGBPJPY: 'GBP/JPY', frxGBPNZD: 'GBP/NZD', frxGBPUSD: 'GBP/USD',
     frxNZDJPY: 'NZD/JPY', frxNZDUSD: 'NZD/USD',
     frxUSDCAD: 'USD/CAD', frxUSDCHF: 'USD/CHF', frxUSDJPY: 'USD/JPY', frxUSDMXN: 'USD/MXN',
-    '1HZ10V': 'V10', '1HZ15V': 'V15', '1HZ25V': 'V25', '1HZ30V': 'V30', '1HZ50V': 'V50', '1HZ75V': 'V75', '1HZ90V': 'V90', '1HZ100V': 'V100',
     frxXAGUSD: 'XAG/USD', frxXAUUSD: 'XAU/USD', frxXPTUSD: 'XPT/USD'
   };
   function getPairDisplayName(pair) {
@@ -2711,7 +2710,6 @@
       "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD",
       "frxNZDJPY", "frxNZDUSD",
       "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN",
-      "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V",
       "frxXAGUSD", "frxXAUUSD", "frxXPTUSD"
     ]
   };
@@ -6356,7 +6354,7 @@
   window._pairSet = function (m) {
     var _wasMtl = !!window._mtlOnly;
     var _wasBtc = !!window._btcOnly;
-    window._drvOnly = m === 'DRV';
+    window._drvOnly = false;
     window._fxOnly = m === 'FX';
     window._mtlOnly = m === 'MTL';
     window._btcOnly = m === 'BTC';
@@ -6432,9 +6430,10 @@
     try {
       if (!window._PAIR_GRP_UI) return;
       if (!window.CtlBar) return;
-      var mode = window._drvOnly ? 'DRV' : (window._fxOnly ? 'FX' : (window._mtlOnly ? 'MTL' : (window._btcOnly ? 'BTC' : 'ALL')));
+      var mode = window._fxOnly ? 'FX' : (window._mtlOnly ? 'MTL' : (window._btcOnly ? 'BTC' : 'ALL'));
+      var _odb = document.getElementById('drvOnlyBtn');
+      if (_odb && _odb.parentNode) _odb.parentNode.removeChild(_odb);
       var defs = [
-        { id: 'drvOnlyBtn', m: 'DRV', t: 'Show only Deriv (V10-V100) pairs' },
         { id: 'fxOnlyBtn', m: 'FX', t: 'Show all pairs except Deriv (V10-V100)' },
         { id: 'allPairsBtn', m: 'ALL', t: 'Show all pairs including Deriv' },
         { id: 'mtlOnlyBtn', m: 'MTL', t: 'Show only XAU and XAG (cycle range 120-120)' },
@@ -6466,12 +6465,11 @@
   setInterval(_drvPaint, 1500);
   (function () {
     var tgDefs = [
-      { id: 'pgDrvBtn', k: 'DRV', l: 'DRV\n05:30 - 05:30\nMON - SUN', t: 'Toggle DRV' },
       { id: 'pgCryBtn', k: 'CRY', l: 'CRY\n05:30 - 05:30\nMON - SUN', t: 'Toggle CRY' },
       { id: 'pgMtlBtn', k: 'MTL', l: 'MTL', t: 'Toggle MTL' },
       { id: 'pgFrxBtn', k: 'FRX', l: 'FRX', t: 'Toggle FRX' },
       { id: 'pgMixBtn', k: 'MIX', l: 'FRX/MTL/CRY\n11:30 - 23:30\nMON - FRI', t: 'Toggle MTL/FRX/CRY' },
-      { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 37 pairs - tap to pick one, several or all' }
+      { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 29 pairs - tap to pick one, several or all' }
     ];
     window._pairTg = window._pairTg || { CRY: false, DRV: false, MTL: false, FRX: false, MIX: false, ALL: false };
     function tgPaint(b, k) {

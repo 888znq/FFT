@@ -26,7 +26,6 @@ const ALL_PAIRS = [
   "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD",
   "frxNZDJPY", "frxNZDUSD",
   "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN",
-  "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V",
   "frxXAGUSD", "frxXAUUSD", "frxXPTUSD"
 ];
 const PAIR_SET = new Set(ALL_PAIRS);
