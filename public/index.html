@@ -448,6 +448,100 @@
     html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane div[style*="letter-spacing:0.4em"]{margin:0 !important;border:0 !important;border-top:1px solid #000432 !important;box-shadow:none !important;outline:none !important;}
     html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane table{border-top:0 !important;border-spacing:0 1px !important;margin:0 !important;background:#000432 !important;}
       </style>
+<script id="perfHasShim">
+(function () {
+  try { if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(*))'))) return; } catch (e0) { return; }
+  if (window.__hasShim) return;
+  var args = [], argIdx = {}, held = [], obsEl = new WeakSet(), q = 0, tmr = 0, SCOPE = { '*': '#trade-console > div' };
+  function spec(a) {
+    var s = a.replace(/"[^"]*"|'[^']*'/g, '').replace(/:(not|is|where|has)\(/g, '('), A = 0, B = 0, C = 0;
+    s = s.replace(/\[[^\]]*\]/g, function () { B++; return ''; });
+    s = s.replace(/#[\w-]+/g, function () { A++; return ''; });
+    s = s.replace(/\.[\w-]+/g, function () { B++; return ''; });
+    s = s.replace(/::?[\w-]+/g, function () { B++; return ''; });
+    s = s.replace(/(^|[\s>+~(,])([a-zA-Z][\w-]*)/g, function (m, p) { C++; return p; });
+    return [A, B, C];
+  }
+  function repl(a) {
+    var k = argIdx[a], sp, r, i;
+    if (k === undefined) { k = args.length; args.push(a); argIdx[a] = k; held.push([]); }
+    sp = spec(a); r = ':where(._h' + k + ')';
+    for (i = 0; i < sp[0]; i++) r += ':not(#_hz)';
+    for (i = 0; i < sp[1]; i++) r += ':not(._hz)';
+    for (i = 0; i < sp[2]; i++) r += ':not(x-hz)';
+    return r;
+  }
+  function tx(css) {
+    var out = '', i = 0, p, d, j, ch;
+    while ((p = css.indexOf(':has(', i)) >= 0) {
+      d = 1; j = p + 5;
+      while (j < css.length && d > 0) { ch = css.charCodeAt(j); if (ch === 40) d++; else if (ch === 41) d--; j++; }
+      out += css.slice(i, p) + repl(css.slice(p + 5, j - 1));
+      i = j;
+    }
+    return out + css.slice(i);
+  }
+  function fixStyle(el) {
+    var t = el.textContent;
+    if (t && t.indexOf(':has(') >= 0) { el.textContent = tx(t); q = 1; }
+  }
+  function refresh() {
+    var k, a, now, old, i, el, set, attrs, ids, m, re;
+    for (k = 0; k < args.length; k++) {
+      a = args[k];
+      try { now = document.querySelectorAll((SCOPE[a] || '') + ':has(' + a + ')'); } catch (e1) { continue; }
+      old = held[k]; set = new Set();
+      for (i = 0; i < now.length; i++) { el = now[i]; set.add(el); if (!el.classList.contains('_h' + k)) el.classList.add('_h' + k); }
+      for (i = 0; i < old.length; i++) if (!set.has(old[i])) old[i].classList.remove('_h' + k);
+      held[k] = Array.prototype.slice.call(now);
+      if (a.indexOf('[') >= 0) {
+        ids = a.match(/#[\w-]+/g); attrs = []; re = /\[\s*([\w-]+)/g;
+        while ((m = re.exec(a))) attrs.push(m[1]);
+        for (i = 0; ids && i < ids.length; i++) {
+          el = document.getElementById(ids[i].slice(1));
+          if (el && !obsEl.has(el)) { obsEl.add(el); amo.observe(el, { attributes: true, attributeFilter: attrs }); }
+        }
+      }
+    }
+  }
+  function run() {
+    tmr = 0; q = 0;
+    var ss = document.getElementsByTagName('style'), i;
+    for (i = 0; i < ss.length; i++) fixStyle(ss[i]);
+    refresh();
+  }
+  function sched() {
+    if (tmr) return;
+    tmr = setTimeout(run, 250);
+    requestAnimationFrame(function () { if (tmr) { clearTimeout(tmr); run(); } });
+  }
+  var amo = new MutationObserver(sched);
+  var mo = new MutationObserver(function (recs) {
+    var dirty = false, i, k, r, t, an, rn, n, ss, x;
+    for (i = 0; i < recs.length; i++) {
+      r = recs[i]; t = r.target;
+      if (t.nodeType === 1 && t.nodeName === 'STYLE') { fixStyle(t); dirty = true; continue; }
+      an = r.addedNodes; rn = r.removedNodes;
+      for (k = 0; k < an.length; k++) {
+        n = an[k];
+        if (n.nodeType !== 1) continue;
+        dirty = true;
+        if (n.nodeName === 'STYLE') fixStyle(n);
+        else if (n.firstChild) { ss = n.getElementsByTagName('style'); for (x = 0; x < ss.length; x++) fixStyle(ss[x]); }
+      }
+      for (k = 0; k < rn.length && !dirty; k++) if (rn[k].nodeType === 1) dirty = true;
+    }
+    if (dirty || q) sched();
+  });
+  window.__hasShim = { run: run, args: args };
+  var ss0 = document.getElementsByTagName('style'), i0;
+  for (i0 = 0; i0 < ss0.length; i0++) fixStyle(ss0[i0]);
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+  refresh();
+  document.addEventListener('DOMContentLoaded', run);
+  window.addEventListener('load', run);
+})();
+</script>
     </head>
   <body>
     <script>
