@@ -2806,11 +2806,11 @@
       var rc = host ? host.getBoundingClientRect() : null;
       var bl = 0, bt = 0, bw = window.innerWidth, bh = Math.round(window.innerHeight * 0.6);
       if (rc && rc.width > 0 && rc.height > 0) { bl = rc.left; bt = rc.top; bw = rc.width; bh = rc.height; }
-      bx.style.left = bl + 'px';
-      bx.style.top = bt + 'px';
-      bx.style.width = bw + 'px';
-      bx.style.height = bh + 'px';
-      bx.style.fontSize = Math.round(Math.min(bh * 0.7, bw * 0.5)) + 'px';
+      bx.style.left = Math.max(0, bl + bw - 170 - 20) + 'px';
+      bx.style.top = (bt + 22) + 'px';
+      bx.style.width = '170px';
+      bx.style.height = '114px';
+      bx.style.fontSize = '90px';
       bx.style.color = window.pairColorHex || '#E2E8F0';
       var sec = (typeof _scanCountdownSec === 'number') ? _scanCountdownSec : 0;
       var txt = _scanCountdownTimer ? String(sec) : '';
