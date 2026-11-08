@@ -6352,7 +6352,7 @@
         var gapVal = data.gap || 0;
         var curGapVal = data.curGap || 0;
         html += `<tr class="${rowClass} highlight-gem" ${(function () { var _k = _wpTmrReg(data); var _f = _wpFillInfo(_k); return 'data-k="' + _k + '" data-wpst="' + _f.kind + '" style="--wpf:' + _f.pct + '%;'; })()}${selStyle}" onclick="_wpFocusSet('${data.pair}'); manualSelectSignal('${data.pair}', ${data.c}, ${data.r}, ${data.s1}, ${data.s2}, '${data.col}', '${data.type}', ${gapVal}, ${curGapVal}, ${data.c1 || 0}, ${data.c2 || 0})">
-                                                                                            <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span>${(function () { var _ht = window._holdTimeOf ? window._holdTimeOf(data, data.type) : 0; return _ht ? window._holdTag({ _holdT: _ht }) : (data._holdT ? window._holdTag(data) : ''); })()}<div class="sfAge" data-sfk="${_sfKey(data)}" style="display:block;font-size:8px;line-height:9px;font-weight:800;letter-spacing:0;color:inherit;opacity:.85;">${_sfAgeText(data)}</div></td>
+                                                                                            <td style="width:28%; font-size:11px; font-weight:700; padding:8px 3px 8px 6px; border-right:1px solid #FFFFFF; overflow:hidden; white-space:nowrap; text-overflow:clip; text-align:left;">${symbolClean}<span class="payTag" data-pay="${data.pair}" style="font-size:inherit; font-weight:inherit; color:inherit; margin:0; padding:0; letter-spacing:0;">${window._payText ? window._payText(data.pair) : ''}</span>${(function () { var _ht = window._holdTimeOf ? window._holdTimeOf(data, data.type) : 0; return _ht ? window._holdTag({ _holdT: _ht }) : (data._holdT ? window._holdTag(data) : ''); })()}<div style="display:none;font-size:8px;line-height:9px;font-weight:800;letter-spacing:0;color:inherit;opacity:.85;">${_sfAgeText(data)}</div></td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">C${data.c}</td>
                                                                                             <td style="width:11%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">R${data.r}</td>
                                                                                             <td style="width:18%; font-size:11px; font-weight:700; padding:8px 2px; border-right:1px solid #FFFFFF; text-align:center;">X${data.s1}-X${data.s2}</td>
@@ -6919,9 +6919,9 @@
       var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
       var dur = h > 0 ? (h + 'h ' + p2(m) + 'm') : (m > 0 ? (m + 'm ' + p2(r) + 's') : (r + 's'));
       var d = new Date(t);
-      return '\u25B2 ' + dur + ' \u00B7 ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+      return '\u25B2 ' + dur + ' \u00B7 ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
     }
-    function rpOne(x, tag, pr, pre, hi, lim) {
+    function rpOne(x, tag, pr, pre, hi, lim, mn) {
       var c = x.c, s1 = x.s1, cc = x.col === 'G' ? 1 : 2, mom = tag === 'MOM';
       if (!(c > 0) || !(s1 >= 1)) return null;
       var base = (typeof currentStartTsUtc !== 'undefined' ? currentStartTsUtc : 0) || 0;
@@ -6965,7 +6965,7 @@
         } else {
           pc = -1;
         }
-        if (l1 >= 3 && (mom ? l2 === l1 : l2 === 0)) {
+        if (l1 >= (mn || 3) && (mom ? l2 === l1 : l2 === 0)) {
           if (runStart < 0) runStart = i;
           lastRun = runStart;
           since = 0;
@@ -7019,7 +7019,39 @@
       setTimeout(function () { rpStep(tok); }, 0);
     }
     window._holdSettled = function () { return S.rpDone === true; };
-    window._holdTimeOf = function (x, tg) { var e = S.map[x.pair + '|' + x.c + '|' + x.r + '|' + x.s1 + '|' + x.s2 + '|' + x.col + '|' + tg]; return (e && e.h) ? e.t0 : 0; };
+    var HF = { sg: '', m: {}, g: {} };
+    window._holdTimeOf = function (x, tg) {
+      try {
+        if (!x || ((tg === 'MOM') ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) !== 0) return 0;
+        var sg = sessSig(), now = Date.now();
+        if (HF.sg !== sg) { HF.sg = sg; HF.m = {}; HF.g = {}; }
+        var pd = (typeof allPairData !== 'undefined') ? allPairData[x.pair] : null;
+        if (!pd || !pd.prices || !pd.prices.length) return 0;
+        var pr = pd.prices;
+        var k = x.pair + '|' + x.c + '|' + x.r + '|' + x.s1 + '|' + x.s2 + '|' + x.col + '|' + tg;
+        var e = HF.m[k];
+        if (e && e.pr === pr && (!e.fb || now - e.at < 3000)) return e.t;
+        var g = HF.g[x.pair];
+        if (!g || g.pr !== pr || now - g.at > 3000) {
+          var base = (typeof currentStartTsUtc !== 'undefined' ? currentStartTsUtc : 0) || 0;
+          var sEnd = (typeof currentDuration !== 'undefined' ? currentDuration : 86400);
+          if (typeof sessionWindowStartMin !== 'undefined' && typeof sessionWindowEndMin !== 'undefined') {
+            sEnd = Math.min(sEnd, (sessionWindowEndMin - sessionWindowStartMin) * 60);
+          }
+          var hi = Math.min(Math.floor(now / 1000) - base, sEnd, pr.length - 1);
+          while (hi > 0 && pr[hi] === -1) hi--;
+          g = HF.g[x.pair] = { pr: pr, at: now, hi: hi, lim: Math.min(sEnd + 1, pr.length), pre: (typeof window._preArr === 'function') ? window._preArr(x.pair) : null };
+        }
+        var t = rpOne(x, tg, pr, g.pre, g.hi, g.lim, tg === 'MOM' ? 2 : 1);
+        if (t === null) {
+          t = (e && e.pr === pr) ? e.t : now;
+          HF.m[k] = { pr: pr, t: t, fb: true, at: now };
+          return t;
+        }
+        HF.m[k] = { pr: pr, t: t, fb: false, at: now };
+        return t;
+      } catch (eHt) { return 0; }
+    };
     window._holdTag = function (d) {
       return '<span data-hold-t="' + d._holdT + '" style="display:block;font-size:8px;font-weight:800;line-height:9px;letter-spacing:0;opacity:0.9;">' + holdText(d._holdT) + '</span>';
     };
