@@ -1320,7 +1320,7 @@
     </div>
     <script>
   var EVT_LOG = [];
-  var EVT_LOG_MAX = 1000;
+  var EVT_LOG_MAX = 300;
   var EVT_STORE_KEY = 'aofs_eventLog_v1';
   var _evtFilter = 'ALL';
   var _evtErrCount = 0;
@@ -1362,7 +1362,7 @@
     try { localStorage.setItem(EVT_STORE_KEY, JSON.stringify(EVT_LOG.slice(-300))); } catch (err) {}
   }
   function _evtSaveSoon() {
-    if (!_evtSaveTimer) _evtSaveTimer = setTimeout(_evtSaveNow, 1500);
+    if (!_evtSaveTimer) _evtSaveTimer = setTimeout(_evtSaveNow, 10000);
   }
   function evtLog(level, cat, msg) {
     try {
@@ -5426,7 +5426,7 @@
         }
       }
     }
-    setInterval(_wpEvTick, 300);
+    setInterval(_wpEvTick, 500);
     function _wpFixColspan() {
       try {
         var pane = document.getElementById('wall-finder-pane');
@@ -13223,7 +13223,7 @@
                 }
               } catch (e) {}
             }
-            setInterval(_tpDock, 250);
+            setInterval(_tpDock, 1000);
             _tpDock();
           })();
         TC.wrap = w;
@@ -14258,7 +14258,6 @@
             D.lastFrame = t;
             requestAnimationFrame(frame);
           }
-          requestAnimationFrame(frame);
           window.addEventListener('pointerdown', function(e) {
               if (e.target && e.target.id === 'tcCanvas') { D.down = true; D.sawDown = true; }
             }, true);
@@ -14280,10 +14279,10 @@
                 var en = list.getEntries();
                 for (var i = 0; i < en.length; i++) { D.longN++; D.longMs += en[i].duration; }
               });
-            po.observe({ entryTypes: ['longtask'] });
+            void po;
           } catch (err) {}
           setInterval(function() {
-              if (!TC.on) return;
+              return;
               D.tick++;
               var dragging = D.sawDown || D.moves > 0;
               if (!dragging && D.tick % 5 !== 0) {
@@ -16676,7 +16675,6 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       'html body #ctlBar#ctlBar .cb-gl,html body #ctlBar#ctlBar .cb-hint{display:none !important;}',
       'html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner > .cb-g{flex:1 1 auto !important;min-width:0 !important;max-width:none !important;padding:2px !important;gap:0 !important;}',
       'html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner > .cb-g:has(#tcBar){flex:5 1 0 !important;}',
-      'html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner > .cb-g:has(#logBtn){flex:0 0 auto !important;}',
       'html body #ctlBar#ctlBar .cb-gr{flex-wrap:nowrap !important;gap:2px !important;width:100% !important;min-width:0 !important;}',
       'html body #ctlBar#ctlBar .cb-gr > *{min-width:0 !important;}',
       'html body #ctlBar#ctlBar .cb-g:not(:has(#logBtn)) .cb-gr > *{flex:1 1 auto !important;}',
@@ -16688,7 +16686,6 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       'html body #ctlBar#ctlBar .cb-gr{gap:1px !important;align-items:stretch !important;}',
       'html body #ctlBar#ctlBar .cb-gr > *{align-self:stretch !important;height:34px !important;min-height:34px !important;margin:0 !important;}',
       'html body #ctlBar#ctlBar .cb-btn,html body #ctlBar#ctlBar .cb-in{height:34px !important;border:none !important;}',
-      'html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner > .cb-g:has(#logBtn){order:999 !important;}',
       'html body #ctlBar#ctlBar#ctlBar{background:#000432 !important;border-top:1px solid #000432 !important;}',
       'html body #ctlBar#ctlBar#ctlBar .cb-gr > .cb-cu{gap:1px !important;column-gap:1px !important;row-gap:0 !important;padding:0 !important;margin:0 !important;background:#000432 !important;}',
       'html body #ctlBar#ctlBar#ctlBar .cb-cu > *{margin:0 !important;border:0 !important;box-shadow:none !important;outline:0 !important;}',
@@ -16713,7 +16710,7 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       '\nhtml[data-sig="R"] body #buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn{display:none !important;}';
     document.head.appendChild(st3);
     function darkenWhite() {
-      var els, n, e, m, r, g, b, a, mx, mn;
+      var els, n, e, m, r, g, b, a, mx, mn, hits = [];
       try {
         els = bar.querySelectorAll('button,input,select,textarea,div,span,a');
         for (n = 0; n < els.length; n++) {
@@ -16728,8 +16725,9 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
           a = m.length > 3 ? +m[3] : 1;
           mx = Math.max(r, g, b);
           mn = Math.min(r, g, b);
-          if (a > 0.5 && mn >= 215 && (mx - mn) < 40) e.setAttribute('data-cbw', '1');
+          if (a > 0.5 && mn >= 215 && (mx - mn) < 40) hits.push(e);
         }
+        for (n = 0; n < hits.length; n++) hits[n].setAttribute('data-cbw', '1');
       } catch (e10) {}
     }
     function paintSignal() {
@@ -16810,10 +16808,11 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
         }
       } catch (e11) {}
     }
-    setInterval(darkenWhite, 500);
+    setInterval(function () { if (!document.hidden) darkenWhite(); }, 3000);
     darkenWhite();
-    setInterval(paintSignal, 500);
+    setInterval(function () { if (!document.hidden) paintSignal(); }, 1000);
     paintSignal();
+    bar.addEventListener('click', function () { setTimeout(darkenWhite, 60); setTimeout(paintSignal, 60); }, true);
     tg.id = 'cbToggle';
     tg.type = 'button';
     function paintTg() {
@@ -16843,7 +16842,8 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
     }
     document.body.appendChild(tg);
     placeTg();
-    setInterval(placeTg, 300);
+    setInterval(placeTg, 1500);
+    try { var _pvo = document.getElementById('canvas-viewport'); if (_pvo && window.ResizeObserver) new ResizeObserver(placeTg).observe(_pvo); } catch (e8) {}
     window.addEventListener('resize', placeTg);
     try {
       if (localStorage.getItem('ctlBarHidden') === '1') document.documentElement.classList.add('cb-off');
