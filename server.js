@@ -779,6 +779,14 @@ async function drvRefreshSignals() {
     DRVT.signals = map;
     DRVT.sigStart = start;
     DRVT.sigDur = win.dur;
+    var scKey = (DRVT.cmin || DRVT.cycle) + "-" + (DRVT.cmax || DRVT.cycle) + "-" + win.dur + "-" + (DRVT.sint || 30);
+    if (scKey !== DRVT.scanKey) { DRVT.scanKey = scKey; DRVT.scanLogN = 0; }
+    DRVT.scanLogN = (DRVT.scanLogN || 0) + 1;
+    DRVT.scanMs = Number(data.scanMs) || 0;
+    var scLim = (DRVT.sint || 30) * 1000;
+    if (DRVT.scanLogN <= 2 || DRVT.scanLogN % 10 === 0 || DRVT.scanMs > scLim * 0.3) {
+      logEvent("DRV_SCAN_TIME", "server scan took " + DRVT.scanMs + "ms | cycles " + (DRVT.cmin || DRVT.cycle) + "-" + (DRVT.cmax || DRVT.cycle) + " | window " + win.dur + "s | interval " + (DRVT.sint || 30) + "s" + (DRVT.scanMs > scLim * 0.5 ? " | TOO SLOW" : (DRVT.scanMs > scLim * 0.3 ? " | HEAVY" : " | ok")));
+    }
     DRVT.sigAt = Date.now();
   } catch (err) {
     logEvent("DRV_SCAN_ERROR", "DRV signal scan failed: " + (err && err.message ? err.message : String(err)));
