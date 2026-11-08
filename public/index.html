@@ -6112,7 +6112,7 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-            return _wsBuild(list, undefined, 1);
+            return _wsBuild(list, 'all', 1);
             return _buildTop10Core(list);
     }
     function _buildTop10Core(list) {
@@ -6214,10 +6214,12 @@
 
   function _wsBuild(list, c2n, lvl) {
       var out = list.filter(function (x) {
-        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0)) === (c2n === undefined ? _wsC2n : c2n) && (lvl === undefined || +x.s1 === lvl);
+        var _ms = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
+        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'all' ? (_ms >= 0 && _ms <= 10) : _ms === (c2n === undefined ? _wsC2n : c2n)) && (lvl === undefined || +x.s1 === lvl);
       });
+      var _mo = function (z) { return z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
       out.sort(function (a, b) {
-        return (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
+        return (c2n === 'all' ? (_mo(a) - _mo(b)) : 0) || (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
       });
       var best = {};
       var bk = function (x) {
@@ -6230,7 +6232,7 @@
         eb = _btLvlsEta(b);
         if (ex < eb || (ex === eb && (x.c < b.c || (x.c === b.c && x.r < b.r)))) best[k] = x;
       });
-      return out.filter(function (x) { return best[bk(x)] === x; }).slice(0, _wsTopLimit);
+      return out.filter(function (x) { return best[bk(x)] === x; }).slice(0, c2n === 'all' ? 300 : _wsTopLimit);
     }
 
   function _wsC2Build(list) {
@@ -6286,11 +6288,11 @@
           }
           var _th = _tbl ? _tbl.querySelector('thead tr th:nth-child(6)') : null;
           if (!_th) return;
-          var _lbl = 'C2=' + (_id === 'peaksTableBodyMom' ? (_wsC2n ? 'C1-' + _wsC2n : 'C1') : _wsC2n);
-          if (_th.getAttribute('data-c2lbl') === _lbl && _th.querySelector('.wsC2dn')) return;
+          var _lbl = 'C2';
+          if (_th.getAttribute('data-c2lbl') === _lbl) return;
           _th.setAttribute('data-c2lbl', _lbl);
           _th.style.whiteSpace = 'nowrap';
-          _th.innerHTML = '<span class="wsC2dn" style="cursor:pointer;padding:2px 4px 2px 0;font-size:.85em;user-select:none;" title="Previous C2 count">&#9664;</span>' + _lbl + '<span class="wsC2up" style="cursor:pointer;padding:2px 0 2px 4px;font-size:.85em;user-select:none;" title="Next C2 count">&#9654;</span>';
+          _th.textContent = _lbl;
         });
         var _pbx = document.querySelectorAll('.wsPaneBtns');
         for (var _pbi = 0; _pbi < _pbx.length; _pbi++) { if (_pbx[_pbi].parentNode) _pbx[_pbi].parentNode.removeChild(_pbx[_pbi]); }
