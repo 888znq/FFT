@@ -15275,8 +15275,6 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
       }
       function wpsApplyState(state) {
         if (!state) { _wpsDrvDefault(); return; }
-        state.scanMin = '60';
-        state.scanMax = '60';
 
         _wpsForceDefaultCat('24x7');
         _wpsDrvDefault();
