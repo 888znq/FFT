@@ -2791,6 +2791,32 @@
   var _scanCountdownMax = 30;
   _calcScanIntervalMs = function () { return 30000; };
   var _scanCountdownTimer = null;
+  var _scanBoxTmr = setInterval(function () {
+    try {
+      var bx = document.getElementById('scanChartTimer');
+      if (!bx) {
+        if (!document.body) return;
+        bx = document.createElement('div');
+        bx.id = 'scanChartTimer';
+        bx.style.cssText = 'position:fixed;display:flex;align-items:center;justify-content:center;z-index:20;pointer-events:none;user-select:none;opacity:0.22;font-family:"JetBrains Mono",monospace;font-weight:800;line-height:1;';
+        document.body.appendChild(bx);
+      }
+      var host = document.getElementById('tcWrap');
+      if (!host || !host.offsetHeight) host = document.getElementById('matrixCanvas');
+      var rc = host ? host.getBoundingClientRect() : null;
+      var bl = 0, bt = 0, bw = window.innerWidth, bh = Math.round(window.innerHeight * 0.6);
+      if (rc && rc.width > 0 && rc.height > 0) { bl = rc.left; bt = rc.top; bw = rc.width; bh = rc.height; }
+      bx.style.left = bl + 'px';
+      bx.style.top = bt + 'px';
+      bx.style.width = bw + 'px';
+      bx.style.height = bh + 'px';
+      bx.style.fontSize = Math.round(Math.min(bh * 0.7, bw * 0.5)) + 'px';
+      bx.style.color = window.pairColorHex || '#E2E8F0';
+      var sec = (typeof _scanCountdownSec === 'number') ? _scanCountdownSec : 0;
+      var txt = _scanCountdownTimer ? String(sec) : '';
+      if (bx.textContent !== txt) bx.textContent = txt;
+    } catch (e) {}
+  }, 250);
   function _startScanCountdown() {
     if (_scanCountdownTimer) clearInterval(_scanCountdownTimer);
     autoScanIntervalMs = _calcScanIntervalMs();
