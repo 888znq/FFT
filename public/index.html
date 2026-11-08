@@ -2733,10 +2733,28 @@
       _refreshSessionSliderUI();
       return;
     }
+    var _pw = window._wpsSessLen ? _sessWinFromLen(window._wpsSessLen) : null;
+    if (_pw) {
+      sessionWindowStartMin = _pw[0];
+      sessionWindowEndMin = _pw[1];
+      _saveSessionWindow();
+      _refreshSessionSliderUI();
+      return;
+    }
     sessionWindowStartMin = Math.min(Math.max(Math.floor(_currentUtcMinuteOfDay() / 60) * 60, win.start), win.end - 60);
     sessionWindowEndMin = sessionWindowStartMin + 60;
     _saveSessionWindow();
     _refreshSessionSliderUI();
+  }
+  function _sessWinFromLen(val) {
+    var w = CAT_SESSION_WINDOWS['24x7'], wl = w.end - w.start;
+    if (val === 'SPECIAL_0530_0530') return [0, 1440];
+    if (val === 'SPECIAL_1030_2230') return [360, 1080];
+    var n = parseInt(val, 10);
+    if (!(n > 0) || wl % n !== 0) return null;
+    var off = ((_currentUtcMinuteOfDay() - w.start) % wl + wl) % wl;
+    var s0 = w.start + Math.floor(off / n) * n;
+    return [s0, s0 + n];
   }
   var activeCat = '24x7';
   var ALL_PAIRS = PAIRS_BY_CAT[activeCat].slice();
@@ -3059,6 +3077,8 @@
     currentInstances = [];
     currentInstanceIndex = -1;
     _saveSessionWindow();
+    window._wpsSessLen = val ? String(val) : '';
+    try { if (window.wpsSaveDebounced) window.wpsSaveDebounced(); } catch (eWs) {}
     scheduleSessionBoundaryWipe();
     _triggerLiveReboot();
   }
@@ -15216,6 +15236,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
                     scanMin: (window._mtlOnly && window._mtlPrev) ? String(window._mtlPrev[0]) : _wpsElVal('scanMin'),
           scanMax: (window._mtlOnly && window._mtlPrev) ? String(window._mtlPrev[1]) : _wpsElVal('scanMax'),
           sessionLen: (window._mtlOnly && window._mtlPrevSess) ? ((window._mtlPrevSess[1] - window._mtlPrevSess[0]) >= 1440 ? 'SPECIAL_0530_0530' : ((window._mtlPrevSess[0] === 360 && window._mtlPrevSess[1] === 1080) ? 'SPECIAL_1030_2230' : String(window._mtlPrevSess[1] - window._mtlPrevSess[0]))) : _wpsElVal('sessionLengthSelect'),
+          scanIntervalSec: (parseInt(window._scanIntervalSec, 10) > 0) ? String(parseInt(window._scanIntervalSec, 10)) : null,
           _updatedAt: Date.now()
         };
       }
@@ -15307,6 +15328,25 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
           var scanMaxEl = document.getElementById('scanMax');
           if (scanMaxEl) { scanMaxEl.value = state.scanMax; _userScanRangeLock = true; _resyncScanInterval(); }
         }
+        if (state.scanIntervalSec !== undefined && state.scanIntervalSec !== null) {
+          var _siApply = parseInt(state.scanIntervalSec, 10);
+          if (_siApply >= 5 && _siApply <= 600) {
+            window._scanIntervalSec = _siApply;
+            try { localStorage.setItem('scanIntervalSec', String(_siApply)); } catch (eSa) {}
+            try { _resyncScanInterval(); } catch (eSb) {}
+            try { if (window._cbPaint) window._cbPaint(); } catch (eSc) {}
+          }
+        }
+        if (state.sessionLen !== undefined && state.sessionLen !== null && state.sessionLen !== '') {
+          var _swApply = _sessWinFromLen(String(state.sessionLen));
+          if (_swApply) {
+            window._wpsSessLen = String(state.sessionLen);
+            sessionWindowStartMin = _swApply[0];
+            sessionWindowEndMin = _swApply[1];
+            _saveSessionWindow();
+            _refreshSessionSliderUI();
+          }
+        }
         if (state.r0Only) {
           r0OnlyMode = true;
           var r0Btn = document.getElementById('r0OnlyBtn');
@@ -15368,6 +15408,10 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
         var stateRef = fb.ref(fb.db, WPS_PATH);
         fb.get(stateRef).then(function(snapshot) {
             var val = snapshot.val();
+            try {
+              var _wpsLoc = JSON.parse(localStorage.getItem('wpsCache1') || 'null');
+              if (_wpsLoc && typeof _wpsLoc === 'object' && (!val || (_wpsLoc._updatedAt || 0) > (val._updatedAt || 0))) { val = _wpsLoc; _wpsSavePending = true; }
+            } catch (eLc) {}
             var _wpsLate = !window._wpsBootWaiting, _wpsS0 = sessionWindowStartMin, _wpsE0 = sessionWindowEndMin;
                         wpsApplyState(val);
             try { if (val) localStorage.setItem('wpsCache1', JSON.stringify(val)); } catch (eWc) {}
@@ -15423,6 +15467,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
           wpsInit();
           wpsAttachChangeListeners();
         });
+      window.wpsSaveDebounced = wpsSaveDebounced;
       setInterval(wpsSaveDebounced, 30000);
       function _wpsSaveOnClose() {
         if (_wpsSaveTimer) { clearTimeout(_wpsSaveTimer); _wpsSaveTimer = null; }
@@ -16207,6 +16252,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
                       var v = parseInt(inp.value, 10);
                       if (!(v > 0)) { inp.value = s.value; return; }
                       if (String(v) !== String(s.value)) {
+                        try { _userScanRangeLock = true; } catch (eLk) {}
                         s.value = String(v);
                         s.dispatchEvent(new Event('input', { bubbles: true }));
                         s.dispatchEvent(new Event('change', { bubbles: true }));
@@ -16250,6 +16296,7 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
                   try { localStorage.setItem('scanIntervalSec', String(n)); } catch (eS1) {}
                   try { _resyncScanInterval(); } catch (eS2) {}
                   try { _startScanCountdown(); } catch (eS3) {}
+                  try { if (window.wpsSaveDebounced) window.wpsSaveDebounced(); } catch (eS4) {}
                 }
               });
               window.CtlBar.add({
