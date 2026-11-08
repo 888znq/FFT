@@ -1801,13 +1801,111 @@ function isAuthorized(req, urlObj) {
   return false;
 }
 
+const crypto = require("crypto");
+const INDEX_PATH = path.join(__dirname, "public", "index.html");
+var indexCache = null;
+var indexWaiters = null;
+
+function acceptsGzip(req) {
+  return /\bgzip\b/i.test(String(req.headers["accept-encoding"] || ""));
+}
+
 function sendJson(res, status, obj) {
-  const body = JSON.stringify(obj);
-  res.writeHead(status, {
+  var body = JSON.stringify(obj);
+  var head = {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store"
-  });
+  };
+  if (body.length > 1024 && res.req && acceptsGzip(res.req)) {
+    zlib.gzip(body, { level: 1 }, (err, gz) => {
+      if (err) {
+        res.writeHead(status, head);
+        res.end(body);
+        return;
+      }
+      head["Content-Encoding"] = "gzip";
+      head["Vary"] = "Accept-Encoding";
+      head["Content-Length"] = String(gz.length);
+      res.writeHead(status, head);
+      res.end(gz);
+    });
+    return;
+  }
+  res.writeHead(status, head);
   res.end(body);
+}
+
+function loadIndex(cb) {
+  fs.stat(INDEX_PATH, (statErr, st) => {
+    if (statErr) {
+      cb(statErr);
+      return;
+    }
+    var sig = st.size + ":" + Math.floor(st.mtimeMs);
+    if (indexCache && indexCache.sig === sig) {
+      cb(null, indexCache);
+      return;
+    }
+    if (indexWaiters) {
+      indexWaiters.push(cb);
+      return;
+    }
+    indexWaiters = [cb];
+    var finish = (err, data) => {
+      var list = indexWaiters;
+      indexWaiters = null;
+      for (var i = 0; i < list.length; i++) list[i](err, data);
+    };
+    fs.readFile(INDEX_PATH, (readErr, raw) => {
+      if (readErr) {
+        finish(readErr);
+        return;
+      }
+      zlib.gzip(raw, { level: 9 }, (zipErr, gz) => {
+        if (zipErr) {
+          finish(zipErr);
+          return;
+        }
+        indexCache = {
+          sig: sig,
+          raw: raw,
+          gz: gz,
+          tag: '"' + crypto.createHash("sha1").update(raw).digest("hex").slice(0, 24) + '"'
+        };
+        finish(null, indexCache);
+      });
+    });
+  });
+}
+
+function sendIndex(req, res) {
+  loadIndex((err, d) => {
+    if (err) {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("public/index.html not found");
+      return;
+    }
+    var head = {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache",
+      "ETag": "W/" + d.tag,
+      "Vary": "Accept-Encoding"
+    };
+    var inm = String(req.headers["if-none-match"] || "");
+    if (inm && inm.split(",").some(t => t.trim().replace(/^W\//, "") === d.tag)) {
+      res.writeHead(304, head);
+      res.end();
+      return;
+    }
+    var body = d.raw;
+    if (acceptsGzip(req)) {
+      head["Content-Encoding"] = "gzip";
+      body = d.gz;
+    }
+    head["Content-Length"] = String(body.length);
+    res.writeHead(200, head);
+    res.end(body);
+  });
 }
 
 const server = http.createServer((req, res) => {
@@ -1967,25 +2065,16 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === "GET" && (pathname === "/" || pathname === "/index.html")) {
-    const filePath = path.join(__dirname, "public", "index.html");
-    fs.readFile(filePath, (err, content) => {
-      if (err) {
-        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-        res.end("public/index.html not found");
-        return;
-      }
-      res.writeHead(200, {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-cache"
-      });
-      res.end(content);
-    });
+    sendIndex(req, res);
     return;
   }
 
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("Not found");
 });
+
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
 
 // ── graceful shutdown ──
 function handleShutdown(sig) {
