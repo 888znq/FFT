@@ -2913,6 +2913,25 @@
   const rowPanel = document.getElementById('row-index-panel');
   const hScroll = document.getElementById('h-scroll-track');
   const hSpacer = document.getElementById('h-spacer');
+  /* PERF: knows when the user is dragging / zooming / pinching so background work can yield */
+  (function () {
+    var down = false, at = 0;
+    function inChart(e) { var t = e.target; return !!(t && t.closest && t.closest('#canvas-viewport')); }
+    function mark() { at = Date.now(); }
+    function dn(e) { if (inChart(e)) { down = true; mark(); } }
+    function mv() { if (down) mark(); }
+    function up() { if (down) { down = false; mark(); } }
+    document.addEventListener('pointerdown', dn, true);
+    document.addEventListener('touchstart', dn, { capture: true, passive: true });
+    document.addEventListener('pointermove', mv, true);
+    document.addEventListener('touchmove', mv, { capture: true, passive: true });
+    document.addEventListener('pointerup', up, true);
+    document.addEventListener('pointercancel', up, true);
+    document.addEventListener('touchend', up, true);
+    document.addEventListener('touchcancel', up, true);
+    document.addEventListener('wheel', function (e) { if (inChart(e)) mark(); }, { capture: true, passive: true });
+    window._chartBusy = function () { var n = Date.now(); return (down && n - at < 3000) || n - at < 350; };
+  })();
   var _drawRafPending = false;
   function requestDraw() {
     if (_drawRafPending || document.hidden) return;
@@ -4937,7 +4956,16 @@
     try { if (window.parent && window.parent !== window) window.parent.postMessage(m, '*'); } catch(e) {}
     try { if (window.opener) window.opener.postMessage(m, '*'); } catch(e) {}
   }
+  var _sofC = {};
   function _sigOutFind(pair, c, r, s1, s2, col, type) {
+    var _k = pair + '|' + c + '|' + r + '|' + s1 + '|' + s2 + '|' + col + '|' + type, _n = Date.now(), _m = _sofC[_k];
+    if (_m && _n - _m.t < 400 && _m.a === globalRevs && _m.b === globalMoms && _m.an === globalRevs.length && _m.bn === globalMoms.length) return _m.v;
+    var _v = _sigOutFindRaw(pair, c, r, s1, s2, col, type);
+    if (Object.keys(_sofC).length > 60) _sofC = {};
+    _sofC[_k] = { t: _n, a: globalRevs, b: globalMoms, an: globalRevs.length, bn: globalMoms.length, v: _v };
+    return _v;
+  }
+  function _sigOutFindRaw(pair, c, r, s1, s2, col, type) {
     var lists = [globalRevs, globalMoms];
     for (var li = 0; li < lists.length; li++) {
       var L = lists[li];
@@ -6156,7 +6184,20 @@
   }
   if (!window.trackedSignals) window.trackedSignals = {};
   if (!window.dethronedLog) window.dethronedLog = [];
+  var _rftT = 0, _rftFirst = 0;
   function renderFilteredTable() {
+    if (window._chartBusy && window._chartBusy()) {
+      if (!_rftFirst) _rftFirst = Date.now();
+      if (Date.now() - _rftFirst < 6000) {
+        if (!_rftT) _rftT = setTimeout(function () { _rftT = 0; renderFilteredTable(); }, 250);
+        return;
+      }
+    }
+    _rftFirst = 0;
+    if (_rftT) { clearTimeout(_rftT); _rftT = 0; }
+    _renderFilteredTableNow();
+  }
+  function _renderFilteredTableNow() {
     try { _sfRecord(); } catch (e) {}
     try { if (typeof window._holdUpdate === 'function') window._holdUpdate(); } catch (e) {}
     window.trackedSignals = {};
@@ -6278,27 +6319,42 @@
       try { window._lockTopSignal(); } catch (e) {}
     }
 
+  var _wsMemo = {};
   function _wsBuild(list, c2n, lvl) {
-      var out = list.filter(function (x) {
-        var _ms = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-        return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'all' ? (_ms >= 0 && _ms <= 10) : _ms === (c2n === undefined ? _wsC2n : c2n)) && (lvl === undefined || +x.s1 === lvl);
-      });
-      var _mo = function (z) { return z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
-      out.sort(function (a, b) {
-        return (c2n === 'all' ? (_mo(a) - _mo(b)) : 0) || (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
-      });
-      var best = {};
+      var n = list.length, hk = '', i;
+      _hiddenPairs.forEach(function (p) { hk += p + ','; });
+      var mk = (c2n === undefined ? 'u' + _wsC2n : String(c2n)) + '|' + lvl + '|' + (r0OnlyMode ? 1 : 0) + '|' + hk;
+      var nowT = Date.now(), m = _wsMemo[mk], out, keys;
       var bk = function (x) {
         return x.pair + '|' + (x.sess || 1) + '|' + x.s1 + '|' + x.s2 + '|' + x.pct + '|' + x.c1 + '|' + x.c2;
       };
-      out.forEach(function (x) {
-        var k = bk(x), b = best[k], ex, eb;
-        if (!b) { best[k] = x; return; }
+      if (m && m.n === n && m.f === list[0] && m.l === list[n - 1] && nowT - m.t < 4000) {
+        out = m.out; keys = m.keys;
+      } else {
+        out = list.filter(function (x) {
+          var _ms = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
+          return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'all' ? (_ms >= 0 && _ms <= 10) : _ms === (c2n === undefined ? _wsC2n : c2n)) && (lvl === undefined || +x.s1 === lvl);
+        });
+        var _mo = function (z) { return z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
+        out.sort(function (a, b) {
+          return (c2n === 'all' ? (_mo(a) - _mo(b)) : 0) || (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
+        });
+        keys = new Array(out.length);
+        for (i = 0; i < out.length; i++) keys[i] = bk(out[i]);
+        if (Object.keys(_wsMemo).length > 40) _wsMemo = {};
+        _wsMemo[mk] = { n: n, f: list[0], l: list[n - 1], t: nowT, out: out, keys: keys };
+      }
+      var best = {}, x, k, b, ex, eb;
+      for (i = 0; i < out.length; i++) {
+        x = out[i]; k = keys[i]; b = best[k];
+        if (!b) { best[k] = x; continue; }
         ex = _btLvlsEta(x);
         eb = _btLvlsEta(b);
         if (ex < eb || (ex === eb && (x.c < b.c || (x.c === b.c && x.r < b.r)))) best[k] = x;
-      });
-      return out.filter(function (x) { return best[bk(x)] === x; }).slice(0, c2n === 'all' ? 300 : _wsTopLimit);
+      }
+      var res = [];
+      for (i = 0; i < out.length; i++) { if (best[keys[i]] === out[i]) res.push(out[i]); }
+      return res.slice(0, c2n === 'all' ? 300 : _wsTopLimit);
     }
 
   function _wsC2Build(list) {
@@ -10273,7 +10329,7 @@
           ctx.textAlign = 'center';
           ctx.fillText(live ? 'NO UPCOMING TRIGGERS' : 'SESSION CLOSED', W / 2, H / 2);
           ctx.textAlign = 'left';
-          if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+          if (TC.mx >= 0 && !(window._chartBusy && window._chartBusy())) tcHoverAt(TC.mx, TC.my);
           return;
         }
         var ax = 0, ay = 0, aw = W, ah = H - ay - 74;
@@ -10522,7 +10578,7 @@
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
         ctx.letterSpacing = '0px';
-        if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+        if (TC.mx >= 0 && !(window._chartBusy && window._chartBusy())) tcHoverAt(TC.mx, TC.my);
       }
       function _drvAutoScan() {
         var dsMap, dsKeys, dsI, dsP, dsD, dsSg, dsK, dsPr, dsNow, dsEnd, dsLast, dsLim, dsPl, dsL;
@@ -13136,7 +13192,7 @@
           tx3 = tcSeg(ctx, (td ? Math.round(tt.w / td * 100) + '%' : '--') + '     ', TXT, tx3, 41);
         }
         window.__lagCk('U_headerText');
-        if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+        if (TC.mx >= 0 && !(window._chartBusy && window._chartBusy())) tcHoverAt(TC.mx, TC.my);
         window.__lagCk('V_tcHoverAt');
       }
       var _tpMemo = {}, _tpMemoN = 0;
@@ -13304,9 +13360,11 @@
           TC.wrap.appendChild(TC.tip);
         }
         var tip = TC.tip;
-        tip.innerHTML = tcTipHtml(best.o);
-        tip.style.display = 'block';
-        var tw = tip.offsetWidth, th = tip.offsetHeight;
+        var _tHtml = tcTipHtml(best.o);
+        if (TC._tipHtml !== _tHtml) { tip.innerHTML = _tHtml; TC._tipHtml = _tHtml; TC._tipW = 0; }
+        if (tip.style.display !== 'block') tip.style.display = 'block';
+        if (!TC._tipW) { TC._tipW = tip.offsetWidth; TC._tipH = tip.offsetHeight; }
+        var tw = TC._tipW, th = TC._tipH;
         var lx = mx + 14, ty = my + 14;
         if (lx + tw > TC.W - 4) lx = mx - tw - 14;
         if (ty + th > TC.H - 4) ty = my - th - 14;
@@ -13317,10 +13375,16 @@
         if (TC.cv) TC.cv.style.cursor = 'pointer';
       }
       function tcHover(e) {
-        var rc = TC.cv.getBoundingClientRect();
-        TC.mx = e.clientX - rc.left;
-        TC.my = e.clientY - rc.top;
-        tcHoverAt(TC.mx, TC.my);
+        TC._hvX = e.clientX; TC._hvY = e.clientY;
+        if (TC._hvRq) return;
+        TC._hvRq = requestAnimationFrame(function () {
+          TC._hvRq = 0;
+          if (!TC.cv) return;
+          var rc = TC.cv.getBoundingClientRect();
+          TC.mx = TC._hvX - rc.left;
+          TC.my = TC._hvY - rc.top;
+          tcHoverAt(TC.mx, TC.my);
+        });
       }
       function tcSyncLiveBtn() {
         var b = document.getElementById('tcLiveBtn');
@@ -14468,7 +14532,7 @@
         }
         ctx.fillStyle = GOLD;
         ctx.fillText(line2, PADL, 27);
-        if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
+        if (TC.mx >= 0 && !(window._chartBusy && window._chartBusy())) tcHoverAt(TC.mx, TC.my);
         var tx3 = PADL;
         ctx.font = 'bold 11px ' + MONO;
         for (k = 0; k < 2; k++) {
@@ -14722,10 +14786,10 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
           TC.follow = true;
           tcCollect();
           if (TC.timer) clearInterval(TC.timer);
-          TC.timer = setInterval(function() { if (!TC.holding) tcDraw(); }, 500);
+          TC.timer = setInterval(function() { if (!TC.holding && !(window._chartBusy && window._chartBusy())) tcDraw(); }, 500);
           if (TC.pulseTimer) clearInterval(TC.pulseTimer);
           TC.pulseTimer = setInterval(function() {
-              if (TC.holding) return;
+              if (TC.holding || (window._chartBusy && window._chartBusy())) return;
               var _pn = Date.now();
               var _pLast = TC.lastDrawAt || 0;
               var _pAct = !!(TC.activeAt && _pn - TC.activeAt < 400);
