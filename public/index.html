@@ -17862,5 +17862,26 @@ html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#w
   setInterval(mountFloat, 1000);
 })();
 </script>
+<script>
+(function () {
+  var CSS = 'html:root{--bar:40px !important;}' +
+    'html body #bar{padding:4px 8px !important;justify-content:flex-end !important;}' +
+    'html body #status{display:none !important;}';
+  function apply() {
+    try {
+      if (window.parent === window) return;
+      var d = window.parent.document;
+      if (!d || !d.head || d.getElementById('fftDevBarCss')) return;
+      var st = d.createElement('style');
+      st.id = 'fftDevBarCss';
+      st.textContent = CSS;
+      d.head.appendChild(st);
+    } catch (e) {}
+  }
+  apply();
+  setTimeout(apply, 500);
+  setTimeout(apply, 2000);
+})();
+</script>
   </body>
 </html>
