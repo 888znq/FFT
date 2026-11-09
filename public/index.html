@@ -9100,14 +9100,17 @@
             processVisualMatrix();
           }
           if (activePairs === null || activePairs.indexOf(pair) >= 0) {
+            var _skipGrpScan = false;
             if (window._grpSwitchAt && (Date.now() - window._grpSwitchAt) < 120000) {
               var _stillLoading = (activePairs !== null ? activePairs : ALL_PAIRS).some(function (q) { return window.pairLiveStatus[q] === 'fetching'; });
               if (!_stillLoading) {
                 window._grpSwitchAt = 0;
                 window._autoSelectAfterScan = true;
+              } else {
+                _skipGrpScan = true;
               }
             }
-            window._scanSoon();
+            if (!_skipGrpScan) window._scanSoon();
           }
           _showPairBootToast(pair, 'live');
         } catch(e) {
