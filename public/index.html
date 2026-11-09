@@ -17261,10 +17261,10 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       'html body #ctlBar#ctlBar .cb-gr{gap:1px !important;align-items:stretch !important;}',
       'html body #ctlBar#ctlBar .cb-gr > *{align-self:stretch !important;height:34px !important;min-height:34px !important;margin:0 !important;}',
       'html body #ctlBar#ctlBar .cb-btn,html body #ctlBar#ctlBar .cb-in{height:34px !important;border:none !important;}',
-      'html body #ctlBar#ctlBar#ctlBar{background:#000432 !important;border-top:1px solid #000432 !important;}',
-      'html body #ctlBar#ctlBar#ctlBar .cb-gr > .cb-cu{gap:1px !important;column-gap:1px !important;row-gap:0 !important;padding:0 !important;margin:0 !important;background:#000432 !important;}',
+      'html body #ctlBar#ctlBar#ctlBar{background:#3B0A57 !important;border-top:1px solid #FFD700 !important;}',
+      'html body #ctlBar#ctlBar#ctlBar .cb-gr > .cb-cu{gap:1px !important;column-gap:1px !important;row-gap:0 !important;padding:0 !important;margin:0 !important;background:#3B0A57 !important;}',
       'html body #ctlBar#ctlBar#ctlBar .cb-cu > *{margin:0 !important;border:0 !important;box-shadow:none !important;outline:0 !important;}',
-      'html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner,html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner > .cb-g,html body #ctlBar#ctlBar .cb-gr,html body #ctlBar#ctlBar #tcBar#tcBar,html body #ctlBar#ctlBar #floatTradePill#floatTradePill#floatTradePill{background:#000432 !important;gap:1px !important;column-gap:1px !important;row-gap:0 !important;}',
+      'html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner,html body #ctlBar#ctlBar #ctlBarInner#ctlBarInner > .cb-g,html body #ctlBar#ctlBar .cb-gr,html body #ctlBar#ctlBar #tcBar#tcBar,html body #ctlBar#ctlBar #floatTradePill#floatTradePill#floatTradePill{background:#3B0A57 !important;gap:1px !important;column-gap:1px !important;row-gap:0 !important;}',
       'html body #ctlBar#ctlBar .cb-gr > *,html body #ctlBar#ctlBar #tcBar#tcBar > *,html body #ctlBar#ctlBar #floatTradePill#floatTradePill#floatTradePill#floatTradePill > *{border:0 !important;margin:0 !important;box-shadow:none !important;outline:0 !important;}'
     ].join('\n');
     document.head.appendChild(st2);
@@ -17323,7 +17323,7 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
             K + ' button:hover{filter:brightness(1.3) !important;}',
             K + ' button:active{filter:brightness(0.85) !important;transform:translateY(1px) !important;}',
             K + ' button:disabled{opacity:0.45 !important;}',
-            K + ' input::placeholder{color:#7F89B8 !important;opacity:1 !important;}',
+            K + ' input::placeholder{color:#C9A8E0 !important;opacity:1 !important;}',
             K + ' #pgFrxBtn,' + K + ' #pgMtlBtn,' + K + ' #pgAllBtn{display:none !important;}',
             K + ' #pgDrvBtn,' + K + ' #pgCryBtn,' + K + ' #pgMixBtn{white-space:pre-line !important;text-align:left !important;line-height:1.1 !important;font-size:8px !important;letter-spacing:0.02em !important;padding:0 3px 0 8px !important;}',
             K + ' input:focus,' + K + ' select:focus{outline:1px solid var(--pair-color,#E2E8F0) !important;outline-offset:-1px !important;}',
@@ -17347,11 +17347,11 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
           id = e.id || '';
           sg = e.getAttribute('data-sig');
           if (id === 'buyBtn') {
-            st = ['color-mix(in srgb, var(--accent-green) 18%, #000432)', 'var(--accent-green)', 'inset 0 -2px 0 var(--accent-green)'];
+            st = ['color-mix(in srgb, var(--accent-green) 22%, #3B0A57)', 'var(--accent-green)', 'inset 0 -2px 0 var(--accent-green)'];
           } else if (id === 'sellBtn') {
-            st = ['color-mix(in srgb, var(--accent-red) 18%, #000432)', 'var(--accent-red)', 'inset 0 -2px 0 var(--accent-red)'];
+            st = ['color-mix(in srgb, var(--accent-red) 22%, #3B0A57)', 'var(--accent-red)', 'inset 0 -2px 0 var(--accent-red)'];
           } else if (id === 'accountBalance') {
-            st = ['linear-gradient(180deg,#0D1660,#080F4A)', '#FFD700', 'inset 0 -2px 0 #FFD700'];
+            st = ['linear-gradient(180deg,#5A1A82,#3B0A57)', '#FFD700', 'inset 0 -2px 0 #FFD700'];
           } else if (e.tagName === 'INPUT' || e.tagName === 'SELECT' || e.tagName === 'TEXTAREA') {
             st = ['#030836', '#FFFFFF', 'inset 0 0 0 1px rgba(255,255,255,0.12)'];
           } else if (sg === 'on' || e.classList.contains('on') || e.classList.contains('tcOn')) {
