@@ -68,6 +68,20 @@
 
   function secret() {
     var s = '';
+    try {
+      var m = /[#&]k=([^&]+)/.exec(location.hash || '');
+      if (m) {
+        s = decodeURIComponent(m[1]).trim();
+        if (s) { localStorage.setItem('dp-secret', s); }
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    } catch (e) {}
+    if (!s) { try { s = localStorage.getItem('dp-secret') || sessionStorage.getItem('dp-secret') || ''; } catch (e) {} }
+    if (!s) { s = String(window.prompt('Dev secret:') || '').trim(); if (s) { try { localStorage.setItem('dp-secret', s); } catch (e) {} } }
+    return s;
+  }
+  function secretOld() {
+    var s = '';
     try { s = sessionStorage.getItem('dp-secret') || ''; } catch (e) {}
     if (!s) { s = String(window.prompt('Dev secret (local: see .devpatch/secret.txt):') || '').trim(); if (s) { try { sessionStorage.setItem('dp-secret', s); } catch (e) {} } }
     return s;
@@ -79,7 +93,7 @@
     } catch (e) { return { ok: false, error: 'Cannot reach the server (it may be restarting).', down: true }; }
     var j = null;
     try { j = await res.json(); } catch (e) { j = { ok: false, error: 'Bad reply (' + res.status + ')' }; }
-    if (res.status === 401) { try { sessionStorage.removeItem('dp-secret'); } catch (e) {} }
+    if (res.status === 401) { try { sessionStorage.removeItem('dp-secret'); localStorage.removeItem('dp-secret'); } catch (e) {} }
     return j;
   }
   function frame() { return $('app'); }
