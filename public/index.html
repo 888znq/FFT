@@ -5640,7 +5640,8 @@
         if (!document.getElementById('wpColCss')) {
           var cs = document.createElement('style');
           cs.id = 'wpColCss';
-          cs.textContent = '#wall-finder-pane thead th:nth-child(8){display:none !important;}';
+          cs.textContent = '#wall-finder-pane thead th:nth-child(8){display:none !important;}' +
+            'html body #wall-finder-pane#wall-finder-pane#wall-finder-pane thead{display:none !important;}';
           document.head.appendChild(cs);
         }
         _wpFixColspan();
