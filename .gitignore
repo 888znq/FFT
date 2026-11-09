@@ -1,3 +1,5 @@
-.devpatch/ node_modules/
 .devpatch/
 node_modules/
+_to_delete/
+overview.txt
+cleanup-audit.txt
