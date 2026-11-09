@@ -10590,7 +10590,7 @@
         var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
         var live = _isWithinMappedWindow() && nowSec >= 0 && nowSec < sEnd;
         var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
-        try { document.documentElement.style.setProperty('--tc-padb', Math.max(0, H - Math.round(pbot) - 1) + 'px'); var _spE1 = document.getElementById('streakPanel'); var _spH1 = _spE1 ? _spE1.clientHeight : 0; if (_spH1 > 0) { var _spF1 = Math.max(5, Math.min(13, Math.floor((_spH1 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF1) { window._spFsLast = _spF1; document.documentElement.style.setProperty('--sp-fs', _spF1); } } } catch (e) {}
+        try { var _padbV = Math.max(0, H - Math.round(pbot) - 1) + 'px'; if (document.documentElement.style.getPropertyValue('--tc-padb') !== _padbV) document.documentElement.style.setProperty('--tc-padb', _padbV); var _spE1 = document.getElementById('streakPanel'); var _spH1 = _spE1 ? _spE1.clientHeight : 0; if (_spH1 > 0) { var _spF1 = Math.max(5, Math.min(13, Math.floor((_spH1 / (typeof CYCLE !== 'undefined' && CYCLE ? CYCLE : 60)) * 0.72))) + 'px'; if (window._spFsLast !== _spF1) { window._spFsLast = _spF1; document.documentElement.style.setProperty('--sp-fs', _spF1); } } } catch (e) {}
         window.__lagCk('A_pairsLoop+padbSetProperty+streakPanelClientHeight');
         if (TC.boxesOnly) {
           if (window._tcBoxesOn) { tcDrawBoxGrid(ctx, W, H, dpr, pairs, sigMap, sEnd, nowSec, live, BG, GOLD, DIM); }
@@ -13105,7 +13105,18 @@
         if (TC.mx >= 0) tcHoverAt(TC.mx, TC.my);
         window.__lagCk('V_tcHoverAt');
       }
+      var _tpMemo = {}, _tpMemoN = 0;
       function tcPlan(sig, prices, lim, sEnd, lastReal) {
+        var mk = sig.pair + '|' + sig.col + '|' + sig.c + '|' + sig.r + '|' + sig.s1 + '|' + lim + '|' + sEnd + '|' + lastReal + '|' + prices.length + '|' + (currentStartTsUtc || 0);
+        var mnow = Date.now();
+        var me = _tpMemo[mk];
+        if (me && me.p === prices && mnow - me.t < 1500) return me.v;
+        var mv = tcPlanRaw(sig, prices, lim, sEnd, lastReal);
+        if (++_tpMemoN > 300) { _tpMemo = {}; _tpMemoN = 1; }
+        _tpMemo[mk] = { p: prices, v: mv, t: mnow };
+        return mv;
+      }
+      function tcPlanRaw(sig, prices, lim, sEnd, lastReal) {
         var hist = [];
         var c = sig.c, r = (((sig.r - ((currentStartTsUtc || 0) % sig.c)) % sig.c) + sig.c) % sig.c;
         var colCode = sig.col === 'G' ? 1 : 2;
@@ -14057,6 +14068,10 @@
           })();
       }
       function tcDraw() {
+        if (TC._rq) return;
+        TC._rq = requestAnimationFrame(function() { TC._rq = 0; tcDrawNow(); });
+      }
+      function tcDrawNow() {
         if (!TC.on || !TC.wrap || !TC.cv) return;
         var _lr0 = performance.now();
         var W = TC.wrap.clientWidth, H = TC.wrap.clientHeight;
