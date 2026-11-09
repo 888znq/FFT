@@ -7132,11 +7132,17 @@
       window._holdOn = !window._holdOn;
       try { renderFilteredTable(); } catch (e) {}
     };
+    window._holdDragBusy = 0;
+    window.addEventListener('pointerdown', function (e) { if (e.target && e.target.id === 'tcCanvas') window._holdDragBusy = Date.now(); }, true);
+    window.addEventListener('pointerup', function () { window._holdDragBusy = 0; }, true);
+    window.addEventListener('pointercancel', function () { window._holdDragBusy = 0; }, true);
     setInterval(function () {
       if (!window._holdOn) return;
+      if (window._holdDragBusy && Date.now() - window._holdDragBusy < 15000) return;
       var els = document.querySelectorAll('[data-hold-t]');
       for (var i = 0; i < els.length; i++) {
-        els[i].textContent = holdText(+els[i].getAttribute('data-hold-t'));
+        var nt = holdText(+els[i].getAttribute('data-hold-t'));
+        if (els[i].textContent !== nt) els[i].textContent = nt;
       }
     }, 1000);
   })();
@@ -16991,7 +16997,7 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
       '\nhtml body ' + _s10 + ' #logBtn{font-size:0 !important;}' +
       '\nhtml[data-sig="G"] body #sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn#sellBtn{display:none !important;}' +
       '\nhtml[data-sig="R"] body #buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn#buyBtn{display:none !important;}';
-    st3.textContent += '\nhtml body ' + _s10 + ' #accountBalance,html body ' + _s10 + ' #r0OnlyBtn{display:none !important;}' +
+    st3.textContent += '\nhtml body ' + _s10 + ' #accountBalance{display:none !important;}' +
       '\nhtml body ' + _s10 + ' .cb-gr > :has(> #accountBalance:only-child){display:none !important;}' +
       '\nhtml body ' + _s10 + ' .cb-g:has(> .cb-gr > #accountBalance:only-child){display:none !important;}' +
       '\nhtml body ' + _s10 + ' .cb-g:has(> .cb-gr > :only-child:has(> #accountBalance:only-child)){display:none !important;}';
