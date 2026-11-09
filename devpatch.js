@@ -26,6 +26,7 @@ const cp = require('child_process');
 const ROOT = __dirname;
 const ENABLED = process.env.DEV_PATCH === '1';
 const ALLOW_REMOTE = process.env.DEV_ALLOW_REMOTE === '1';
+const NO_SECRET = process.env.DEV_NO_SECRET === '1';
 const ON_RENDER = !!process.env.RENDER;
 const SUPERVISED = process.env.DEV_SUPERVISED === '1';
 const BOOT_ID = crypto.randomBytes(6).toString('hex');
@@ -964,7 +965,7 @@ function makeHandler(SECRET) {
     if (req.method !== 'POST' || !routes[name]) { send(res, 404, { ok: false, error: 'Not found' }); return true; }
     const origin = req.headers.origin;
     if (origin) { let oh = ''; try { oh = new URL(origin).host; } catch (e) { /* ignore */ } if (oh !== req.headers.host) { send(res, 403, { ok: false, error: 'Cross-origin request refused' }); return true; } }
-    const sc = secretOk(req, SECRET);
+    const sc = NO_SECRET ? 200 : secretOk(req, SECRET);
     if (sc !== 200) { send(res, sc, { ok: false, error: sc === 429 ? 'Too many wrong secrets: wait a minute.' : 'Wrong or missing dev secret.' }); return true; }
     readBody(req, 3 * 1024 * 1024).then(function (raw) {
       let b = {};
@@ -991,7 +992,7 @@ if (ENABLED) {
       dlog('SECRET', 'local dev secret is in .devpatch/secret.txt: ' + secret);
     } catch (e) { secret = ''; }
   }
-  if (secret.length < 16) {
+  if (secret.length < 16 && !NO_SECRET) {
     dlog('OFF', 'DEV_PATCH=1 but DEV_SECRET is missing or shorter than 16 characters: the patch tool stays OFF.');
   } else {
     handle = makeHandler(secret);

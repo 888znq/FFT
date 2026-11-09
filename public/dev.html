@@ -77,7 +77,7 @@
       }
     } catch (e) {}
     if (!s) { try { s = localStorage.getItem('dp-secret') || sessionStorage.getItem('dp-secret') || ''; } catch (e) {} }
-    if (!s) { s = String(window.prompt('Dev secret:') || '').trim(); if (s) { try { localStorage.setItem('dp-secret', s); } catch (e) {} } }
+    if (!s) { s = 'none'; }
     return s;
   }
   function secretOld() {
