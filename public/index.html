@@ -17866,7 +17866,8 @@ html body #wall-finder-pane#wall-finder-pane#wall-finder-pane#wall-finder-pane#w
 (function () {
   var CSS = 'html:root{--bar:40px !important;}' +
     'html body #bar{padding:4px 8px !important;justify-content:flex-end !important;}' +
-    'html body #status{display:none !important;}';
+    'html body #status{display:none !important;}' +
+    'html body #bUndo,html body #bRedo,html body #bMark,html body #bRestore,html body #bRestart,html body #bErr,html body #bLog{display:none !important;}';
   function apply() {
     try {
       if (window.parent === window) return;
