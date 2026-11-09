@@ -578,7 +578,6 @@
 </style>
 <script id="perfHasShim">
 (function () {
-  if (true) return;
   try { if (!(window.CSS && CSS.supports && CSS.supports('selector(:has(*))'))) return; } catch (e0) { return; }
   if (window.__hasShim) return;
   var args = [], argIdx = {}, held = [], obsEl = new WeakSet(), q = 0, tmr = 0, SCOPE = { '*': '#trade-console > div' };
@@ -7327,12 +7326,23 @@
     window.addEventListener('pointerup', function () { window._holdDragBusy = 0; }, true);
     window.addEventListener('pointercancel', function () { window._holdDragBusy = 0; }, true);
     setInterval(function () {
-      if (!window._holdOn) return;
+      if (!window._holdOn || document.hidden) return;
       if (window._holdDragBusy && Date.now() - window._holdDragBusy < 15000) return;
       var els = document.querySelectorAll('[data-hold-t]');
-      for (var i = 0; i < els.length; i++) {
-        var nt = holdText(+els[i].getAttribute('data-hold-t'));
-        if (els[i].textContent !== nt) els[i].textContent = nt;
+      var vis = [], wraps = [], rects = [], vh = window.innerHeight, i, j, w, wr, r, nt;
+      for (i = 0; i < els.length; i++) {
+        w = els[i].closest('.table-wrapper');
+        wr = null;
+        for (j = 0; j < wraps.length; j++) { if (wraps[j] === w) { wr = rects[j]; break; } }
+        if (!wr) { wr = w ? w.getBoundingClientRect() : { top: 0, bottom: vh, height: vh }; wraps.push(w); rects.push(wr); }
+        if (!(wr.height > 0)) continue;
+        r = els[i].getBoundingClientRect();
+        if (r.bottom < wr.top - 30 || r.top > wr.bottom + 30 || r.bottom < 0 || r.top > vh) continue;
+        vis.push(els[i]);
+      }
+      for (i = 0; i < vis.length; i++) {
+        nt = holdText(+vis[i].getAttribute('data-hold-t'));
+        if (vis[i].textContent !== nt) vis[i].textContent = nt;
       }
     }, 1000);
   })();
