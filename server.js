@@ -1,6 +1,7 @@
 "use strict";
 
 const http = require("http");
+try { require("./devpatch").attach(http); } catch (e) { console.error("[DEVPATCH] not loaded: " + e.message); }
 const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");

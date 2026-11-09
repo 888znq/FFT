@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WALLSPECTRUM - patch tool</title>
+<!-- PROTECTED FILE: devpatch.js refuses to patch this page. It is the recovery layer: change it through git only. -->
+<style>
+  :root { --bg:#000432; --fg:#fff; --bar:70px; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); font:13px system-ui,-apple-system,"Segoe UI",sans-serif; }
+  #app { position:fixed; left:0; top:0; right:0; bottom:var(--bar); width:100%; height:calc(100% - var(--bar)); border:0; background:#fff; }
+  #bar { position:fixed; left:0; right:0; bottom:0; height:var(--bar); padding:6px 8px; background:var(--bg); border-top:1px solid #fff; display:flex; flex-direction:column; gap:4px; z-index:10; }
+  .row { display:flex; gap:5px; align-items:center; min-width:0; }
+  #ins { flex:1 1 auto; min-width:0; height:30px; padding:0 10px; background:#0a0f5a; color:#fff; border:1px solid #fff; border-radius:8px; font:inherit; }
+  button { height:30px; min-width:34px; padding:0 8px; background:transparent; color:#fff; border:1px solid #fff; border-radius:999px; font:14px system-ui,"Segoe UI Emoji",sans-serif; cursor:pointer; }
+  button:disabled { opacity:.35; cursor:default; }
+  button.on { background:#7df5c0; color:#000432; }
+  button.warn { background:#ff4d4d; }
+  #status { font-size:11px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #toast { position:fixed; right:10px; bottom:calc(var(--bar) + 8px); max-width:min(520px,92vw); padding:8px 12px; background:#000432; border:1px solid #fff; border-radius:10px; opacity:0; transition:opacity .2s; z-index:20; pointer-events:none; }
+  #toast.show { opacity:1; }
+  #pop { position:fixed; right:8px; bottom:calc(var(--bar) + 8px); width:min(560px,calc(100vw - 16px)); padding:8px; background:var(--bg); border:1px solid #fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:30; display:none; }
+  #pop pre { margin:6px 0 0; max-height:42vh; overflow:auto; white-space:pre-wrap; word-break:break-word; user-select:text; font:12px/1.4 ui-monospace,Menlo,Consolas,monospace; }
+  #pop .h { display:flex; gap:6px; align-items:center; } #pop .h b { flex:1; }
+</style></head>
+<body>
+<iframe id="app" src="/" title="dashboard preview"></iframe>
+<div id="bar">
+  <div class="row">
+    <input id="ins" type="text" placeholder="What should change? (add @part3 / @name to pick parts)" aria-label="AI instructions">
+    <button id="bPay" title="Copy the prompt payload (index or lite parts)">&#9650;</button>
+    <button id="bAuto" title="Auto mode: watches the clipboard (page must be focused)">&#9889;</button>
+    <button id="bApply" title="Apply the patch from the clipboard">&#8984;</button>
+    <button id="bUndo" title="Undo" disabled>&#8630;</button>
+    <button id="bRedo" title="Redo" disabled>&#8631;</button>
+    <button id="bPush" title="Push changed files to GitHub in one commit">&#11014;</button>
+    <button id="bMark" title="Mark the running version as stable">&#10004;</button>
+    <button id="bRestore" title="Restore the stable version (new commit)">&#10226;</button>
+    <button id="bRestart" title="Restart the server (local, supervised)">&#128260;</button>
+    <button id="bErr" title="Copy a runtime-error report for the AI">&#129519;</button>
+    <button id="bLog" title="Show log">&#9776;</button>
+  </div>
+  <div id="status">connecting...</div>
+</div>
+<div id="toast"></div>
+<div id="pop"><div class="h"><b id="popT"></b><button id="popC">Copy</button><button id="popX">&#10005;</button></div><pre id="popP"></pre></div>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { auto: false, tries: 0, req: '', tags: [], boot: '', errs: [], busy: false, seen: null, reading: false, st: null };
+  try { S.auto = sessionStorage.getItem('dp-auto') !== '0'; S.req = sessionStorage.getItem('dp-req') || ''; S.tries = Number(sessionStorage.getItem('dp-tries') || 0) || 0; } catch (e) {}
+
+  function toast(m, ms) { var t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('show'); }, ms || 3000); }
+  function pop(title, text) { $('popT').textContent = title; $('popP').textContent = text; $('pop').style.display = 'block'; }
+  $('popX').onclick = function () { $('pop').style.display = 'none'; };
+  $('popC').onclick = function () { copy($('popP').textContent).then(function () { toast('Copied'); }); };
+  function copy(text) {
+    S.seen = text;   // our own copy must not trigger the clipboard watcher
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(function () { return fb(text); });
+    return fb(text);
+  }
+  function fb(text) {
+    return new Promise(function (res) { var ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); res(); });
+  }
+  function setReq(r) { S.req = r; try { sessionStorage.setItem('dp-req', r); } catch (e) {} }
+  function setTries(n) { S.tries = n; try { sessionStorage.setItem('dp-tries', String(n)); } catch (e) {} }
+
+  function secret() {
+    var s = '';
+    try { s = sessionStorage.getItem('dp-secret') || ''; } catch (e) {}
+    if (!s) { s = String(window.prompt('Dev secret (local: see .devpatch/secret.txt):') || '').trim(); if (s) { try { sessionStorage.setItem('dp-secret', s); } catch (e) {} } }
+    return s;
+  }
+  async function api(name, body) {
+    var res;
+    try {
+      res = await fetch('/dev/api/' + name, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-dev-secret': secret() }, body: JSON.stringify(body || {}), cache: 'no-store' });
+    } catch (e) { return { ok: false, error: 'Cannot reach the server (it may be restarting).', down: true }; }
+    var j = null;
+    try { j = await res.json(); } catch (e) { j = { ok: false, error: 'Bad reply (' + res.status + ')' }; }
+    if (res.status === 401) { try { sessionStorage.removeItem('dp-secret'); } catch (e) {} }
+    return j;
+  }
+  function frame() { return $('app'); }
+  function reloadFrame() { try { frame().contentWindow.location.reload(); } catch (e) { frame().src = '/'; } }
+
+  // errors thrown inside the preview (so a broken dashboard can be reported to the AI)
+  function hook() {
+    try {
+      var w = frame().contentWindow;
+      S.errs = [];
+      paintErr();
+      w.addEventListener('error', function (ev) {
+        if (!ev || !ev.message || /ResizeObserver loop/i.test(ev.message)) return;
+        var f = String(ev.filename || '').split('?')[0];
+        S.errs.push({ m: ev.message, f: /\.js$/i.test(f) ? f.split('/').pop() : 'public/index.html', l: ev.lineno || 0, c: ev.colno || 0 });
+        paintErr();
+      });
+      w.addEventListener('unhandledrejection', function (ev) {
+        var r = ev && ev.reason, m = String(r && r.message ? r.message : r).split('\n')[0];
+        S.errs.push({ m: 'Unhandled promise rejection: ' + m, f: '', l: 0, c: 0 });
+        paintErr();
+      });
+    } catch (e) {}
+  }
+  frame().addEventListener('load', hook);
+  function paintErr() { $('bErr').classList.toggle('warn', S.errs.length > 0); $('bErr').title = S.errs.length ? S.errs.length + ' error(s) in the preview: copy a report for the AI' : 'No errors in the preview'; }
+
+  async function refresh() {
+    var s = await api('state');
+    if (!s.ok) { $('status').textContent = s.error || 'no state'; return s; }
+    S.st = s;
+    if (S.boot && S.boot !== s.boot) { toast('Server restarted: reloading the preview', 3000); reloadFrame(); }
+    S.boot = s.boot;
+    var up = s.uptime >= 120 ? Math.round(s.uptime / 60) + ' min' : s.uptime + ' s';
+    $('status').textContent = s.mode.toUpperCase() + ' | up ' + up + (s.commit ? ' | ' + s.commit.slice(0, 7) : '') + ' | undo ' + s.undoCount + ' redo ' + s.redoCount + ' | ' + (s.gh.configured ? s.gh.repo + '@' + s.gh.branch : 'GitHub not set') + (S.auto ? ' | AUTO' : '');
+    $('bUndo').disabled = !s.undoCount; $('bRedo').disabled = !s.redoCount;
+    $('bPush').disabled = !s.gh.configured; $('bMark').disabled = !s.gh.configured; $('bRestore').disabled = !s.gh.configured;
+    $('bRestart').disabled = !s.canRestart;
+    $('bAuto').classList.toggle('on', S.auto);
+    if (s.lastError) { pop('AUTO-ROLLBACK', s.lastError.msg); api('ackerror'); }
+    return s;
+  }
+  async function waitRestart(prevBoot) {
+    toast('Restarting the server...', 6000);
+    for (var i = 0; i < 45; i++) {
+      await new Promise(function (r) { setTimeout(r, 1000); });
+      var s = await api('state');
+      if (s && s.ok && s.boot !== prevBoot) { S.boot = s.boot; reloadFrame(); await refresh(); toast('Server is back (' + s.boot.slice(0, 4) + ')', 4000); return; }
+    }
+    toast('The server did not come back in 45 s: check the console / start it again', 8000);
+  }
+
+  async function doPayload() {
+    var ins = $('ins').value.trim();
+    var r = await api('payload', { instruction: ins, errors: S.errs });
+    if (!r.ok) { toast(r.error || 'Payload failed', 5000); return; }
+    await copy(r.text);
+    toast(r.idx ? (S.auto ? 'Index copied: paste it to the AI, then copy its reply: auto mode does the rest' : 'Index copied (no code): paste to the AI, copy its reply, press the apply button') : 'Payload copied', 4000);
+    if (r.hasTags) $('ins').value = $('ins').value.replace(/\s*@[\w$-]+/g, '').trim();
+    if (r.idx && S.auto) { setReq(ins); S.tags = []; } else if (!r.hasTags) { setReq(''); S.tags = []; }
+    setTries(0);
+  }
+  async function doApply(text) {
+    if (S.busy) return;
+    S.busy = true;
+    try {
+      var prev = S.boot;
+      var r = await api('apply', { patch: text });
+      if (r.ok) {
+        setTries(0); setReq(''); S.tags = [];
+        toast('Patched: ' + r.changed.join(', ') + '. ' + (r.note || ''), 6000);
+        if (r.kind === 'page') reloadFrame();
+        if (r.kind === 'restarting') { await waitRestart(prev); }
+        else await refresh();
+      } else if (r.noop) { toast(r.error, 4000); }
+      else {
+        pop('PATCH ERROR', r.error || 'failed');
+        if (S.auto && r.report) {
+          if (S.tries < 3) { setTries(S.tries + 1); await copy(r.report); toast('Error report copied (try ' + S.tries + '/3): paste it to the AI', 6000); }
+          else toast('Auto-fix stopped after 3 tries: fix it by hand', 8000);
+        }
+      }
+    } finally { S.busy = false; }
+  }
+  async function applyClipboard() {
+    var text = '';
+    try { text = await navigator.clipboard.readText(); } catch (e) {}
+    if (!text || text.indexOf('===SPLIT===') < 0) { toast('The clipboard has no patch: copy the AI reply first', 4000); return; }
+    await doApply(text);
+  }
+  async function step(mode, force) {
+    var prev = S.boot;
+    var r = await api(mode, { force: !!force });
+    if (r.needConfirm) { if (window.confirm(r.error + '\n\nOverwrite anyway?')) return step(mode, true); return; }
+    if (!r.ok) { toast(r.error, 5000); return; }
+    toast((mode === 'undo' ? 'Undone: ' : 'Redone: ') + String(r.label).slice(0, 70), 4000);
+    if (r.kind === 'page') reloadFrame();
+    if (r.kind === 'restarting') await waitRestart(prev); else await refresh();
+  }
+  async function simple(name, body, okLabel, btn) {
+    if (btn) btn.disabled = true;
+    var r = await api(name, body);
+    if (btn) btn.disabled = false;
+    if (r.ok) toast(r.msg || okLabel || 'Done', 6000); else pop(name.toUpperCase() + ' ERROR', r.error || 'failed');
+    await refresh();
+    return r;
+  }
+
+  // auto mode: copy the AI reply -> the next step runs by itself
+  async function watch() {
+    if (!S.auto || S.busy || S.reading || document.hidden) return;
+    S.reading = true;
+    try {
+      var text = await navigator.clipboard.readText();
+      text = text || '';
+      if (S.seen === null) { S.seen = text; return; }
+      if (text === S.seen) return;
+      S.seen = text;
+      if (!text.trim()) return;
+      var c = await api('classify', { text: text });
+      if (!c.ok) return;
+      if (c.kind === 'patch') { await doApply(text); return; }
+      if (c.kind === 'tags') {
+        if (c.req) setReq(c.req);
+        c.tags.forEach(function (t) { if (S.tags.indexOf(t) < 0) S.tags.push(t); });
+        var r = await api('payload', { instruction: (S.req + ' ' + S.tags.join(' ')).trim(), errors: S.errs });
+        if (r.ok) { await copy(r.text); toast('Auto: ' + S.tags.length + ' part(s) tagged, payload copied', 3500); }
+      }
+    } catch (e) { /* clipboard not readable right now (page not focused) */ }
+    finally { S.reading = false; }
+  }
+  setInterval(watch, 700);
+
+  $('bPay').onclick = doPayload;
+  $('bApply').onclick = applyClipboard;
+  $('bAuto').onclick = function () { S.auto = !S.auto; S.seen = null; try { sessionStorage.setItem('dp-auto', S.auto ? '1' : '0'); } catch (e) {} $('bAuto').classList.toggle('on', S.auto); toast(S.auto ? 'Auto mode ON' : 'Auto mode OFF', 2500); refresh(); };
+  $('bUndo').onclick = function () { step('undo'); };
+  $('bRedo').onclick = function () { step('redo'); };
+  $('bPush').onclick = function () { toast('Pushing to GitHub...', 4000); simple('push', {}, 'Pushed', $('bPush')); };
+  $('bMark').onclick = function () { if (window.confirm('Mark the version that is running now as STABLE?')) simple('stable', { action: 'mark' }, 'Marked', $('bMark')); };
+  $('bRestore').onclick = function () { if (window.confirm('Restore the STABLE version?\n\nThis makes a new commit on the main branch (history is kept) and Render redeploys.')) simple('stable', { action: 'restore' }, 'Restored', $('bRestore')); };
+  $('bRestart').onclick = async function () { if (!window.confirm('Restart the server now?')) return; var prev = S.boot; var r = await api('restart'); if (r.ok) waitRestart(prev); else toast(r.error, 6000); };
+  $('bErr').onclick = async function () {
+    if (!S.errs.length) { toast('No errors recorded in the preview', 3000); return; }
+    var r = await api('errreport', { errors: S.errs });
+    if (r.ok) { await copy(r.text); toast('Runtime-error report copied: paste it to the AI', 4000); } else toast(r.error, 4000);
+  };
+  $('bLog').onclick = function () { pop('LOG', ((S.st && S.st.log) || []).join('\n') || '(empty)'); };
+  $('ins').addEventListener('keydown', function (e) { if (e.key === 'Enter') doPayload(); });
+
+  refresh();
+  setInterval(refresh, 5000);
+})();
+</script>
+</body></html>
