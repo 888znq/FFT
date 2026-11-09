@@ -1,6 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+<script id="perfProbe">
+(function () {
+  if (window.__perfProbe) return; window.__perfProbe = 1;
+  var P = { rec: false, t0: 0, t1: 0, cb: {}, sec: {}, ck: 0, d0: 0, frames: [], lastF: 0, lt: { n: 0, ms: 0, max: 0 }, draw: { n: 0, ms: 0, max: 0 } };
+  var now = function () { return performance.now(); };
+  var oRAF = window.requestAnimationFrame.bind(window);
+  var labels = new WeakMap();
+  function lab(fn) {
+    var l = labels.get(fn);
+    if (!l) {
+      try { l = (fn.name ? fn.name + ': ' : '') + Function.prototype.toString.call(fn).replace(/\s+/g, ' ').slice(0, 110); } catch (e) { l = '?'; }
+      labels.set(fn, l);
+    }
+    return l;
+  }
+  function add(key, d) {
+    var o = P.cb[key];
+    if (!o) o = P.cb[key] = { n: 0, ms: 0, max: 0 };
+    o.n++; o.ms += d; if (d > o.max) o.max = d;
+  }
+  function wrapFn(fn, pre) {
+    if (typeof fn !== 'function') return fn;
+    return function () {
+      if (!P.rec) return fn.apply(this, arguments);
+      var t = now();
+      try { return fn.apply(this, arguments); } finally { add(pre + ' ' + lab(fn), now() - t); }
+    };
+  }
+  var oST = window.setTimeout, oSI = window.setInterval;
+  window.setTimeout = function (fn) { var a = Array.prototype.slice.call(arguments); a[0] = wrapFn(fn, 'timeout'); return oST.apply(window, a); };
+  window.setInterval = function (fn) { var a = Array.prototype.slice.call(arguments); a[0] = wrapFn(fn, 'interval'); return oSI.apply(window, a); };
+  window.requestAnimationFrame = function (fn) { return oRAF(wrapFn(fn, 'raf')); };
+  var EP = EventTarget.prototype, oAdd = EP.addEventListener, oRem = EP.removeEventListener, wmap = new WeakMap();
+  EP.addEventListener = function (type, fn, opt) {
+    if (typeof fn !== 'function') return oAdd.call(this, type, fn, opt);
+    var w = wmap.get(fn);
+    if (!w) {
+      w = function (e) {
+        if (!P.rec) return fn.call(this, e);
+        var t = now();
+        try { return fn.call(this, e); } finally { add('on:' + (e && e.type) + ' ' + lab(fn), now() - t); }
+      };
+      wmap.set(fn, w);
+    }
+    return oAdd.call(this, type, w, opt);
+  };
+  EP.removeEventListener = function (type, fn, opt) { return oRem.call(this, type, (typeof fn === 'function' && wmap.get(fn)) || fn, opt); };
+  [window.WebSocket, window.Worker].forEach(function (C) {
+    try {
+      var d = C && Object.getOwnPropertyDescriptor(C.prototype, 'onmessage');
+      if (!d || !d.set) return;
+      Object.defineProperty(C.prototype, 'onmessage', { configurable: true, enumerable: d.enumerable, get: d.get, set: function (v) { d.set.call(this, typeof v === 'function' ? wrapFn(v, 'onmessage') : v); } });
+    } catch (e) {}
+  });
+  try {
+    new PerformanceObserver(function (l) {
+      if (!P.rec) return;
+      l.getEntries().forEach(function (e) { P.lt.n++; P.lt.ms += e.duration; if (e.duration > P.lt.max) P.lt.max = e.duration; });
+    }).observe({ entryTypes: ['longtask'] });
+  } catch (e) {}
+  window.__lagSec = function (name, ms) { if (P.rec) P.sec[name] = (P.sec[name] || 0) + ms; };
+  window.__lagCk = function (name) { if (!P.rec) return; var t = now(); if (P.ck) P.sec[name] = (P.sec[name] || 0) + (t - P.ck); P.ck = t; };
+  window.__perfBegin = function () { if (!P.rec) return; P.ck = P.d0 = now(); };
+  window.__perfEnd = function () {
+    if (!P.rec) return;
+    var t = now(), d = t - P.d0;
+    if (P.ck) P.sec['(after last checkpoint)'] = (P.sec['(after last checkpoint)'] || 0) + (t - P.ck);
+    P.draw.n++; P.draw.ms += d; if (d > P.draw.max) P.draw.max = d; P.ck = 0;
+  };
+  function frameLoop(t) {
+    if (!P.rec) return;
+    if (P.lastF) P.frames.push(t - P.lastF);
+    P.lastF = t;
+    oRAF(frameLoop);
+  }
+  function report() {
+    var dur = (P.t1 - P.t0) / 1000, f = P.frames.slice().sort(function (a, b) { return a - b; });
+    var pc = function (q) { return f.length ? f[Math.min(f.length - 1, Math.floor(f.length * q))] : 0; };
+    var L = ['PERF REPORT ' + dur.toFixed(1) + 's'];
+    try { L.push('ctx ' + JSON.stringify(window.__perfCtx ? window.__perfCtx() : {})); } catch (e) {}
+    L.push('frames ' + f.length + ' | median ' + pc(0.5).toFixed(1) + 'ms | p95 ' + pc(0.95).toFixed(1) + 'ms | max ' + (f[f.length - 1] || 0).toFixed(0) + 'ms | slow>33ms ' + f.filter(function (x) { return x > 33; }).length);
+    L.push('longtasks ' + P.lt.n + ' | total ' + P.lt.ms.toFixed(0) + 'ms | max ' + P.lt.max.toFixed(0) + 'ms');
+    L.push('chart draw: ' + P.draw.n + ' calls | avg ' + (P.draw.n ? P.draw.ms / P.draw.n : 0).toFixed(2) + 'ms | max ' + P.draw.max.toFixed(1) + 'ms');
+    var sk = Object.keys(P.sec).sort(function (a, b) { return P.sec[b] - P.sec[a]; }).slice(0, 8);
+    if (sk.length) { L.push('-- chart draw sections (avg ms per draw) --'); sk.forEach(function (k) { L.push((P.sec[k] / Math.max(1, P.draw.n)).toFixed(2) + '  ' + k); }); }
+    var ck = Object.keys(P.cb).sort(function (a, b) { return P.cb[b].ms - P.cb[a].ms; }).slice(0, 14);
+    L.push('-- top callbacks: totalMs | calls | maxMs | what --');
+    ck.forEach(function (k) { var o = P.cb[k]; L.push(o.ms.toFixed(0) + ' | ' + o.n + ' | ' + o.max.toFixed(1) + ' | ' + k); });
+    return L.join('\n');
+  }
+  function show(txt) {
+    try { console.log(txt); } catch (e) {}
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,4,50,.92);display:flex;flex-direction:column;gap:8px;padding:16px;box-sizing:border-box';
+    var ta = document.createElement('textarea');
+    ta.readOnly = true; ta.value = txt;
+    ta.style.cssText = 'flex:1;background:#000432;color:#E2E8F0;font:12px monospace;border:1px solid #fff;padding:8px';
+    var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px';
+    var cp = document.createElement('button'), cl = document.createElement('button');
+    cp.textContent = 'COPY'; cl.textContent = 'CLOSE';
+    [cp, cl].forEach(function (b) { b.style.cssText = 'padding:8px 16px;font:700 12px monospace;cursor:pointer;background:#FFD700;color:#000432;border:0;border-radius:3px'; });
+    cp.onclick = function () { ta.select(); try { document.execCommand('copy'); cp.textContent = 'COPIED'; } catch (e) {} try { navigator.clipboard.writeText(txt); cp.textContent = 'COPIED'; } catch (e) {} };
+    cl.onclick = function () { ov.remove(); };
+    row.appendChild(cp); row.appendChild(cl); ov.appendChild(ta); ov.appendChild(row); document.body.appendChild(ov);
+  }
+  function mount() {
+    if (!document.body || document.getElementById('perfBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'perfBtn'; b.textContent = 'PERF';
+    b.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:2147483646;font:700 10px monospace;padding:2px 6px;opacity:.55;background:#FFD700;color:#000432;border:0;border-radius:3px;cursor:pointer';
+    b.onclick = function () {
+      if (P.rec) return;
+      P.cb = {}; P.sec = {}; P.frames = []; P.lastF = 0; P.lt = { n: 0, ms: 0, max: 0 }; P.draw = { n: 0, ms: 0, max: 0 };
+      P.rec = true; P.t0 = now(); oRAF(frameLoop);
+      var left = 12;
+      b.textContent = 'REC ' + left + 's - DRAG / ZOOM THE CHART NOW';
+      var iv = oSI(function () {
+        left--;
+        if (left > 0) { b.textContent = 'REC ' + left + 's - DRAG / ZOOM THE CHART NOW'; return; }
+        clearInterval(iv); P.rec = false; P.t1 = now(); b.textContent = 'PERF';
+        show(report());
+      }, 1000);
+    };
+    document.body.appendChild(b);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+})();
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000432">
@@ -2932,6 +3060,12 @@
     document.addEventListener('wheel', function (e) { if (inChart(e)) mark(); }, { capture: true, passive: true });
     window._chartBusy = function () { var n = Date.now(); return (down && n - at < 3000) || n - at < 350; };
   })();
+  window.__perfCtx = function () {
+    var o = { cat: activeCat, pairs: (activePairs !== null && activePairs ? activePairs : ALL_PAIRS).length, revSignals: globalRevs.length, momSignals: globalMoms.length, cycle: CYCLE, domNodes: document.getElementsByTagName('*').length };
+    var T = window.__perfTC;
+    if (T) { o.candle = !!T.candle; o.spp = T.spp; o.multi = !!T.multi; o.boxesOnly = !!T.boxesOnly; o.all = !!T.all; }
+    return o;
+  };
   var _drawRafPending = false;
   function requestDraw() {
     if (_drawRafPending || document.hidden) return;
@@ -14197,7 +14331,10 @@
           TC.cv.style.width = W + 'px';
           TC.cv.style.height = H + 'px';
         }
+        window.__perfTC = TC;
+        if (window.__perfBegin) window.__perfBegin();
         tcDrawAll();
+        if (window.__perfEnd) window.__perfEnd();
         TC.lastDrawAt = Date.now();
         try {
           var _tz = window._tmState;
