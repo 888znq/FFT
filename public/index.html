@@ -6506,7 +6506,7 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-            return _wsBuild(list, 'all', undefined);
+            return _wsBuild(list, undefined, undefined);
             return _buildTop10Core(list);
     }
     function _buildTop10Core(list) {
@@ -6536,6 +6536,15 @@
     window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice(), undefined, 1); };
     try { if (window._drvC2Sent !== _wsC2n) { window._drvC2Sent = _wsC2n; fetch('/drv?c2=' + _wsC2n, { cache: 'no-store' }).then(function (r) { if (!r.ok) window._drvC2Sent = -1; }).catch(function () { window._drvC2Sent = -1; }); } } catch (eC2) {}
     window._holdKing = function (tg) { var _hl = window._holdBuild(tg); return _hl.length ? _hl[0] : null; };
+    try {
+      var _c2h = window._wsC2Has();
+      if (!_c2h[_wsC2n]) {
+        for (var _c2i = 1; _c2i <= 10; _c2i++) {
+          var _c2k = (_wsC2n + _c2i) % 11;
+          if (_c2h[_c2k]) { _wsC2n = _c2k; try { _wsPaintPaneBtns(); } catch (eSp) {} break; }
+        }
+      }
+    } catch (eSn) {}
     var revTop10 = _buildTop10(globalRevs.slice(), 'REV');
     var momTop10 = _buildTop10(globalMoms.slice(), 'MOM');
     if (false && window._tcSigMode === 'MIX') {
@@ -6600,6 +6609,23 @@
     return html;
   }
   var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = Infinity, _wsC2On = false, _wsC2n = 0;
+  window._wsC2Has = function () {
+    var h = {}, ls, a, b, L, x, m;
+    try {
+      ls = [typeof globalRevs !== 'undefined' ? globalRevs : [], typeof globalMoms !== 'undefined' ? globalMoms : []];
+      for (a = 0; a < ls.length; a++) {
+        L = ls[a] || [];
+        for (b = 0; b < L.length; b++) {
+          x = L[b];
+          if (!x || _hiddenPairs.has(x.pair)) continue;
+          if (r0OnlyMode && x.r !== 0) continue;
+          m = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
+          if (m >= 0 && m <= 10) h[m] = 1;
+        }
+      }
+    } catch (eH) {}
+    return h;
+  };
     function _wsStepC2(dir) {
       var _d = (dir || 1) < 0 ? -1 : 1;
       var _hs = {}, _lists, _li, _xi, _L, _x, _m, _t, _n = _wsC2n;
@@ -6611,7 +6637,6 @@
             _x = _L[_xi];
             if (!_x || _hiddenPairs.has(_x.pair)) continue;
             if (r0OnlyMode && _x.r !== 0) continue;
-            if (+_x.s1 !== 1) continue;
             _m = (_x.type === 'MOM' ? ((_x.c1 || 0) - (_x.c2 || 0)) : (_x.c2 || 0));
             if (_m >= 0 && _m <= 10) _hs[_m] = 1;
           }
