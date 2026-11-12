@@ -28,7 +28,7 @@
 <div id="bar">
   <div class="row">
     <input id="ins" type="text" placeholder="What should change? (add @part3 / @name to pick parts)" aria-label="AI instructions">
-    <button id="bPay" title="Copy the prompt payload (index or lite parts)">&#9650;</button>
+    <button id="bPay" title="Copy the prompt payload (index or lite parts). Later rounds send only the new parts. Shift+click = full payload again (new AI chat)">&#9650;</button>
     <button id="bAuto" title="Auto mode: watches the clipboard (page must be focused)">&#9889;</button>
     <button id="bApply" title="Apply the patch from the clipboard">&#8984;</button>
     <button id="bUndo" title="Undo" disabled>&#8630;</button>
@@ -48,7 +48,7 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var S = { auto: false, tries: 0, req: '', tags: [], boot: '', errs: [], busy: false, seen: null, reading: false, st: null };
+  var S = { auto: false, tries: 0, req: '', tags: [], sent: [], boot: '', errs: [], busy: false, seen: null, reading: false, st: null };
   try { S.auto = sessionStorage.getItem('dp-auto') !== '0'; S.req = sessionStorage.getItem('dp-req') || ''; S.tries = Number(sessionStorage.getItem('dp-tries') || 0) || 0; } catch (e) {}
 
   function toast(m, ms) { var t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('show'); }, ms || 3000); }
@@ -146,14 +146,25 @@
     toast('The server did not come back in 45 s: check the console / start it again', 8000);
   }
 
-  async function doPayload() {
+  // tags already sent to the AI in this request: a follow-up round sends ONLY the new ones (no repeated parts, no repeated prompt)
+  function addSent(list) { list.forEach(function (t) { if (S.sent.indexOf(t) < 0) S.sent.push(t); }); }
+  var DELTA = { prompt: false, user: false, delta: true };
+
+  async function doPayload(ev) {
     var ins = $('ins').value.trim();
-    var r = await api('payload', { instruction: ins, errors: S.errs });
+    var typed = (ins.match(/@[\w$-]+/g) || []).filter(function (t) { return t.toLowerCase() !== '@auto'; });
+    var force = !!(ev && ev.shiftKey);   // Shift + click = full payload again (use it when you start a NEW AI chat)
+    var fresh = typed.filter(function (t) { return S.sent.indexOf(t) < 0; });
+    var followUp = !force && S.sent.length > 0 && typed.length > 0;
+    var r = followUp
+      ? await api('payload', { instruction: (fresh.length ? fresh : typed).join(' '), flags: DELTA, errors: S.errs })
+      : await api('payload', { instruction: ins, errors: S.errs });
     if (!r.ok) { toast(r.error || 'Payload failed', 5000); return; }
     await copy(r.text);
-    toast(r.idx ? (S.auto ? 'Index copied: paste it to the AI, then copy its reply: auto mode does the rest' : 'Index copied (no code): paste to the AI, copy its reply, press the apply button') : 'Payload copied', 4000);
+    toast(r.idx ? (S.auto ? 'Index copied: paste it to the AI, then copy its reply: auto mode does the rest' : 'Index copied (no code): paste to the AI, copy its reply, press the apply button') : (followUp ? 'Payload copied: only the new parts' : 'Payload copied'), 4000);
     if (r.hasTags) $('ins').value = $('ins').value.replace(/\s*@[\w$-]+/g, '').trim();
-    if (r.idx && S.auto) { setReq(ins); S.tags = []; } else if (!r.hasTags) { setReq(''); S.tags = []; }
+    if (r.idx && S.auto) { setReq(ins); S.tags = []; S.sent = []; } else if (!r.hasTags) { setReq(''); S.tags = []; S.sent = []; }
+    else addSent(typed);
     setTries(0);
   }
   async function doApply(text) {
@@ -163,7 +174,7 @@
       var prev = S.boot;
       var r = await api('apply', { patch: text });
       if (r.ok) {
-        setTries(0); setReq(''); S.tags = [];
+        setTries(0); setReq(''); S.tags = []; S.sent = [];
         toast('Patched: ' + r.changed.join(', ') + '. ' + (r.note || ''), 6000);
         if (r.kind === 'page') reloadFrame();
         if (r.kind === 'restarting') { await waitRestart(prev); }
@@ -219,8 +230,14 @@
       if (c.kind === 'tags') {
         if (c.req) setReq(c.req);
         c.tags.forEach(function (t) { if (S.tags.indexOf(t) < 0) S.tags.push(t); });
-        var r = await api('payload', { instruction: (S.req + ' ' + S.tags.join(' ')).trim(), errors: S.errs });
-        if (r.ok) { await copy(r.text); toast('Auto: ' + S.tags.length + ' part(s) tagged, payload copied', 3500); }
+        // first parts round: full payload (prompt + request + parts). Later rounds: ONLY the newly asked parts.
+        var fresh = c.tags.filter(function (t) { return S.sent.indexOf(t) < 0; });
+        var ask = fresh.length ? fresh : c.tags;   // the AI asked again for a part it already had: send just that one
+        var followUp = S.sent.length > 0;
+        var r = followUp
+          ? await api('payload', { instruction: ask.join(' '), flags: DELTA, errors: S.errs })
+          : await api('payload', { instruction: (S.req + ' ' + S.tags.join(' ')).trim(), errors: S.errs });
+        if (r.ok) { addSent(ask); await copy(r.text); toast('Auto: ' + ask.length + ' ' + (followUp ? 'new ' : '') + 'part(s), payload copied', 3500); }
       }
     } catch (e) { /* clipboard not readable right now (page not focused) */ }
     finally { S.reading = false; }
