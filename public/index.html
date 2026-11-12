@@ -3876,6 +3876,7 @@
   })();
   window._rsScanOK = function (pairs) {
     if (_scanModeIsLocal()) return false;
+    if (sessionWindowEndMin - sessionWindowStartMin > 60) return false;
     if (Date.now() < _rsScanBadUntil || Date.now() < _rsDownUntil) return false;
     if (!/^https?:$/.test(window.location.protocol)) return false;
     if (!pairs || !pairs.length) return false;
