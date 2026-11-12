@@ -6539,10 +6539,10 @@
     try {
       var _c2h = window._wsC2Has();
       if (!_c2h[_wsC2n]) {
-        for (var _c2i = 1; _c2i <= 10; _c2i++) {
-          var _c2k = (_wsC2n + _c2i) % 11;
-          if (_c2h[_c2k]) { _wsC2n = _c2k; try { _wsPaintPaneBtns(); } catch (eSp) {} break; }
-        }
+        var _c2ks = Object.keys(_c2h).map(Number).sort(function (a, b) { return a - b; }), _c2p = -1, _c2i;
+        for (_c2i = 0; _c2i < _c2ks.length; _c2i++) { if (_c2ks[_c2i] > _wsC2n) { _c2p = _c2i; break; } }
+        if (_c2p < 0 && _c2ks.length) _c2p = 0;
+        if (_c2p >= 0) { _wsC2n = _c2ks[_c2p]; try { _wsPaintPaneBtns(); } catch (eSp) {} }
       }
     } catch (eSn) {}
     var revTop10 = _buildTop10(globalRevs.slice(), 'REV');
@@ -6620,7 +6620,7 @@
           if (!x || _hiddenPairs.has(x.pair)) continue;
           if (r0OnlyMode && x.r !== 0) continue;
           m = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-          if (m >= 0 && m <= 10) h[m] = 1;
+          if (m >= 0) h[m] = 1;
         }
       }
     } catch (eH) {}
@@ -6638,15 +6638,22 @@
             if (!_x || _hiddenPairs.has(_x.pair)) continue;
             if (r0OnlyMode && _x.r !== 0) continue;
             _m = (_x.type === 'MOM' ? ((_x.c1 || 0) - (_x.c2 || 0)) : (_x.c2 || 0));
-            if (_m >= 0 && _m <= 10) _hs[_m] = 1;
+            if (_m >= 0) _hs[_m] = 1;
           }
         }
       } catch (eHs) { _hs = {}; }
-      for (_t = 0; _t < 11; _t++) {
-        _n = (_n + _d + 11) % 11;
-        if (_hs[_n]) break;
+      var _ks = Object.keys(_hs).map(Number).sort(function (a, b) { return a - b; });
+      if (_ks.length) {
+        var _pos = -1, _q;
+        if (_d > 0) {
+          for (_q = 0; _q < _ks.length; _q++) { if (_ks[_q] > _wsC2n) { _pos = _q; break; } }
+          if (_pos < 0) _pos = 0;
+        } else {
+          for (_q = _ks.length - 1; _q >= 0; _q--) { if (_ks[_q] < _wsC2n) { _pos = _q; break; } }
+          if (_pos < 0) _pos = _ks.length - 1;
+        }
+        _n = _ks[_pos];
       }
-      if (!_hs[_n]) _n = (_wsC2n + _d + 11) % 11;
       _wsC2n = _n;
       try { _wsPaintPaneBtns(); } catch (e) {}
       try { renderFilteredTable(); } catch (e) {}
