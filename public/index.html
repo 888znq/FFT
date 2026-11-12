@@ -2524,7 +2524,13 @@
         var hdr2 = {};
         var tk2 = lvToken();
         if (tk2) { hdr2['x-api-token'] = tk2; }
-        fetch('/drv', { cache: 'no-store', headers: hdr2 })
+        var drvQs = '';
+        try {
+          if (typeof sessionWindowStartMin === 'number' && typeof sessionWindowEndMin === 'number' && sessionWindowEndMin > sessionWindowStartMin) {
+            drvQs = '?smin=' + sessionWindowStartMin + '&emin=' + sessionWindowEndMin;
+          }
+        } catch (eQs) { drvQs = ''; }
+        fetch('/drv' + drvQs, { cache: 'no-store', headers: hdr2 })
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; try { var _dkey = JSON.stringify(window._drvLocks.map(function (q) { return [q.pair, q.type, q.c, q.r, q.s1, q.s2, q.col]; })); if (_dkey !== window._drvLockKey) { window._drvLockKey = _dkey; if (typeof _autoSelectTopSignal === 'function') { setTimeout(_autoSelectTopSignal, 0); } } } catch (eLk) {} _drvChk(window._drvLocks); } else if (!j) { _drvBtnSet('bad', 'DRV: SERVER ERROR', '/drv returned no data'); } })
           .catch(function () { _drvBtnSet('bad', 'DRV: NO SERVER', '/drv unreachable'); })
