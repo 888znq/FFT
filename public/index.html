@@ -1281,7 +1281,9 @@
                 <span style="display:none;">MAX</span>
                 <input type="number" id="scanMax" value="60" oninput="_userScanRangeLock=true;" onchange="_userScanRangeLock=true; _resyncScanInterval(); dispatchMultiCycleScan()" style="background: transparent; border: none; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; width: 100%; outline: none; text-align: center;">
               </div>
+              <button id="scanModeBtn" onclick="toggleScanMode()" title="Scan mode" style="flex:0 0 34px; background: var(--bg-base); color: var(--text-primary); border: 1px solid var(--border); padding: 6px 0; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; border-radius: 2px; font-family: 'JetBrains Mono', monospace;">SRV</button>
               <button id="uiModeToggleBtn" onclick="_userScanRangeLock=true; toggleSignalMode()" style="display:none; flex:1; background: var(--accent-green); color: var(--bg-base); border: 1px solid #FFFFFF; padding: 6px 4px; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; border-radius: 2px; font-family: 'Inter', monospace; white-space: nowrap;">REV</button>
+              <button id="srvScanBtn" type="button" onclick="_srvScanToggle()" title="Server scan on/off. OFF = scan in this browser, no limit from the small server" style="flex:1; background: var(--accent-green); color: var(--bg-base); border: 1px solid #FFFFFF; padding: 6px 4px; font-size: 9px; font-weight: 800; letter-spacing: 0.5px; cursor: pointer; border-radius: 2px; font-family: 'Inter', monospace; white-space: nowrap;">SRV ON</button>
             </div>
 
             <input type="number" id="autoScanIntervalInput" value="30" min="1" onchange="updateAutoScanInterval()" style="display:none;">
@@ -3804,6 +3806,10 @@
   window._srvScanRun = _srvScanRun;
   var _rsScanBadUntil = 0;
   function _rsScanFallback(why) {
+    if (/disabled/i.test(String(why))) {
+      try { window.localStorage.setItem('fft_scan_mode', 'local'); } catch (_smE) {}
+      _scanModePaint();
+    }
     _rsScanBadUntil = Date.now() + ((why === 'busy' || /back-?filling|feed is down/i.test(String(why))) ? 20000 : 60000);
     try { evtLog('WARN', 'SERVER', 'Render scan unavailable (' + why + ') - scanning in the browser'); } catch (e) {}
     var q = _scanRerunQueued;
@@ -3812,7 +3818,33 @@
     try { dispatchMultiCycleScan(); } finally { window._rsBypass = false; }
     if (q) _scanRerunQueued = true;
   }
+  function _scanModeIsLocal() {
+    try { return window.localStorage.getItem('fft_scan_mode') === 'local'; } catch (e) { return false; }
+  }
+  function _scanModePaint() {
+    var b = document.getElementById('scanModeBtn');
+    if (!b) return;
+    var loc = _scanModeIsLocal();
+    b.textContent = loc ? 'LOC' : 'SRV';
+    b.title = loc
+      ? 'LOCAL scan: this device scans, Render only sends ticks. Click for server scan.'
+      : 'SERVER scan: Render scans when it can. Click to scan on this device.';
+    b.style.background = loc ? 'var(--accent-green)' : 'var(--bg-base)';
+    b.style.color = loc ? 'var(--bg-base)' : 'var(--text-primary)';
+  }
+  window.toggleScanMode = function () {
+    var toLocal = !_scanModeIsLocal();
+    try { window.localStorage.setItem('fft_scan_mode', toLocal ? 'local' : 'server'); } catch (e) {}
+    _rsScanBadUntil = 0;
+    _scanModePaint();
+    try { evtLog('INFO', 'SERVER', 'Scan mode: ' + (toLocal ? 'LOCAL (this device scans, server sends ticks only)' : 'SERVER (Render scans when it can)')); } catch (e2) {}
+    scanPending = 0;
+    try { dispatchMultiCycleScan(); } catch (e3) {}
+  };
+  _scanModePaint();
+  document.addEventListener('DOMContentLoaded', _scanModePaint);
   window._rsScanOK = function (pairs) {
+    if (_scanModeIsLocal()) return false;
     if (Date.now() < _rsScanBadUntil || Date.now() < _rsDownUntil) return false;
     if (!/^https?:$/.test(window.location.protocol)) return false;
     if (!pairs || !pairs.length) return false;
