@@ -6601,6 +6601,7 @@
   var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = Infinity, _wsC2On = false, _wsC2n = 0;
     function _wsStepC2(dir) {
       _wsC2n = (_wsC2n + (dir || 1) + 11) % 11;
+      try { _wsPaintPaneBtns(); } catch (e) {}
       try { renderFilteredTable(); } catch (e) {}
       try { window._lockTopSignal(); } catch (e) {}
     }
@@ -6696,11 +6697,13 @@
           }
           var _th = _tbl ? _tbl.querySelector('thead tr th:nth-child(6)') : null;
           if (!_th) return;
-          var _lbl = 'C2';
+          var _lbl = 'C2=' + _wsC2n;
           if (_th.getAttribute('data-c2lbl') === _lbl) return;
           _th.setAttribute('data-c2lbl', _lbl);
           _th.style.whiteSpace = 'nowrap';
-          _th.textContent = _lbl;
+          _th.style.overflow = 'visible';
+          _th.style.letterSpacing = '0';
+          _th.innerHTML = '<span class="wsC2dn" style="cursor:pointer;padding:2px 4px;">\u25C0</span>' + _lbl + '<span class="wsC2up" style="cursor:pointer;padding:2px 4px;">\u25B6</span>';
         });
         var _pbx = document.querySelectorAll('.wsPaneBtns');
         for (var _pbi = 0; _pbi < _pbx.length; _pbi++) { if (_pbx[_pbi].parentNode) _pbx[_pbi].parentNode.removeChild(_pbx[_pbi]); }
