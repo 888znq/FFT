@@ -11,6 +11,9 @@ const { Worker } = require("worker_threads");
 
 const PORT = Number(process.env.PORT) || 3000;
 const API_TOKEN = (process.env.API_TOKEN || process.env.ACCESS_TOKEN || "").trim();
+// SERVER_SCAN=0 (or off/false/no): this server never runs /scan, it only collects and serves ticks.
+// Every browser then scans on its own CPU. Default is on (old behaviour).
+const SERVER_SCAN = !/^(0|off|false|no)$/i.test(String(process.env.SERVER_SCAN || "1").trim());
 const WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public?app_id=1089";
 
 const IST_OFFSET = 19800;
@@ -1666,6 +1669,10 @@ async function handleScan(req, res, urlObj) {
     sendJson(res, 401, { error: "Unauthorized" });
     return;
   }
+  if (!SERVER_SCAN) {
+    sendJson(res, 200, { ok: false, reason: "server scan is disabled" });
+    return;
+  }
   checkRollover();
   const sp = urlObj.searchParams;
   const pairs = Array.from(new Set((sp.get("pairs") || "").split(",").filter(p => PAIR_SET.has(p)))).sort();
@@ -1966,6 +1973,7 @@ const server = http.createServer((req, res) => {
       backfill: backfillState,
       backfillSeq,
       scan: lastScanInfo,
+      serverScan: SERVER_SCAN,
       load: getLoadInfo(),
       lastTickTime,
       recentEvents
