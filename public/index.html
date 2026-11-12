@@ -5955,7 +5955,8 @@
           var cs = document.createElement('style');
           cs.id = 'wpColCss';
           cs.textContent = '#wall-finder-pane thead th:nth-child(8){display:none !important;}' +
-            'html body #wall-finder-pane#wall-finder-pane#wall-finder-pane thead{display:none !important;}';
+            'html body #wall-finder-pane#wall-finder-pane#wall-finder-pane thead{display:table-header-group !important;}' +
+            'html body #wall-finder-pane#wall-finder-pane#wall-finder-pane thead th{height:18px !important;line-height:18px !important;padding-top:0 !important;padding-bottom:0 !important;}';
           document.head.appendChild(cs);
         }
         _wpFixColspan();
@@ -6600,7 +6601,28 @@
   }
   var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = Infinity, _wsC2On = false, _wsC2n = 0;
     function _wsStepC2(dir) {
-      _wsC2n = (_wsC2n + (dir || 1) + 11) % 11;
+      var _d = (dir || 1) < 0 ? -1 : 1;
+      var _hs = {}, _lists, _li, _xi, _L, _x, _m, _t, _n = _wsC2n;
+      try {
+        _lists = [typeof globalRevs !== 'undefined' ? globalRevs : [], typeof globalMoms !== 'undefined' ? globalMoms : []];
+        for (_li = 0; _li < _lists.length; _li++) {
+          _L = _lists[_li] || [];
+          for (_xi = 0; _xi < _L.length; _xi++) {
+            _x = _L[_xi];
+            if (!_x || _hiddenPairs.has(_x.pair)) continue;
+            if (r0OnlyMode && _x.r !== 0) continue;
+            if (+_x.s1 !== 1) continue;
+            _m = (_x.type === 'MOM' ? ((_x.c1 || 0) - (_x.c2 || 0)) : (_x.c2 || 0));
+            if (_m >= 0 && _m <= 10) _hs[_m] = 1;
+          }
+        }
+      } catch (eHs) { _hs = {}; }
+      for (_t = 0; _t < 11; _t++) {
+        _n = (_n + _d + 11) % 11;
+        if (_hs[_n]) break;
+      }
+      if (!_hs[_n]) _n = (_wsC2n + _d + 11) % 11;
+      _wsC2n = _n;
       try { _wsPaintPaneBtns(); } catch (e) {}
       try { renderFilteredTable(); } catch (e) {}
       try { window._lockTopSignal(); } catch (e) {}
