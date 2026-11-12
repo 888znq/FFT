@@ -17575,6 +17575,40 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
 <script>
 window.LogPop = { addTab: function () { return null; }, open: function () {}, close: function () {}, setTab: function () {}, refresh: function () {}, list: function () { return []; } };
 </script>
+<script>
+(function () {
+  var _psTries = 0;
+  function _psLabel() {
+    try {
+      var all = (typeof ALL_PAIRS !== 'undefined') ? ALL_PAIRS : [];
+      if (typeof activePairs === 'undefined' || activePairs === null || activePairs.length === all.length) return 'PAIRS: ALL';
+      if (activePairs.length === 1) return 'PAIRS: ' + getPairDisplayName(activePairs[0]);
+      return 'PAIRS: ' + activePairs.length;
+    } catch (ePs) { return 'PAIRS'; }
+  }
+  var _psPoll = setInterval(function () {
+    _psTries++;
+    if (window.CtlBar && window.CtlBar.add) {
+      clearInterval(_psPoll);
+      try {
+        window.CtlBar.add({
+          id: 'pairSelectBtn',
+          group: 'PAIRS',
+          order: 5,
+          label: 'PAIRS',
+          title: 'Select one, several or all pairs shown in the table',
+          text: _psLabel,
+          onClick: function () {
+            try { if (typeof openPairPicker === 'function') openPairPicker(); } catch (ePo) {}
+          }
+        });
+      } catch (ePa) {}
+    } else if (_psTries > 80) {
+      clearInterval(_psPoll);
+    }
+  }, 500);
+})();
+</script>
 
 
 
