@@ -3845,6 +3845,29 @@
   };
   _scanModePaint();
   document.addEventListener('DOMContentLoaded', _scanModePaint);
+  (function () {
+    var _smTries = 0;
+    var _smPoll = setInterval(function () {
+      _smTries++;
+      if (window.CtlBar && window.CtlBar.add) {
+        clearInterval(_smPoll);
+        try {
+          window.CtlBar.add({
+            id: 'scanMode',
+            group: 'SCAN',
+            order: 30,
+            label: _scanModeIsLocal() ? 'LOC' : 'SRV',
+            title: 'SRV = Render server scans. LOC = this device scans (use this for long cycle ranges).',
+            text: function () { return _scanModeIsLocal() ? 'LOC' : 'SRV'; },
+            get: function () { return _scanModeIsLocal(); },
+            onClick: function () { window.toggleScanMode(); }
+          });
+        } catch (eSm) {}
+      } else if (_smTries > 80) {
+        clearInterval(_smPoll);
+      }
+    }, 500);
+  })();
   window._rsScanOK = function (pairs) {
     if (_scanModeIsLocal()) return false;
     if (Date.now() < _rsScanBadUntil || Date.now() < _rsDownUntil) return false;
