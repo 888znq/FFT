@@ -337,7 +337,7 @@ function liteIndex() {
   return 'INDEX MODE: the code is NOT included, only a map of its parts. Read the request, then reply with ONLY the @names of the parts you need to see (for example @part3 @part7, or a function name such as @renderRows), nothing else and NO patch. Ask for every part the cause could pass through: the code that produces the behaviour, whatever calls, overrides, saves or restores it, the startup code, and the other side of any server.js / page pair.\n\nPARTS:\n' + outline(ch);
 }
 // arg = the instruction (with @tags) or, for the error report, the OLD code that failed to match
-function liteSource(arg, compact) {
+function liteSource(arg) {
   const ch = buildChunks();
   if (!ch.length) return '(no project files)';
   arg = String(arg || '');
@@ -357,12 +357,7 @@ function liteSource(arg, compact) {
   }
   let out = 'LITE MODE: only the requested parts are shown in full. Line numbers are those of the file.\n\n' + sel.map(function (c) { return partHeader(c) + '\n' + c.t; }).join('\n\n');
   const rest = ch.filter(function (c) { return sel.indexOf(c) < 0; });
-  if (rest.length) {
-    // compact (follow-up round in the same AI chat): the AI already has the full part index, so do not send it again
-    out += compact
-      ? '\n\n(These are only the NEW parts you asked for; the parts shown earlier in this chat are unchanged. The other parts are in the index above. If the cause may pass through a part that is still not shown, reply with ONLY its @name and NO patch.)'
-      : '\n\nOTHER PARTS (not shown):\n' + outline(rest) + '\nIf the cause may pass through a part that is not shown, reply with ONLY its @name and NO patch.';
-  }
+  if (rest.length) out += '\n\nOTHER PARTS (not shown):\n' + outline(rest) + '\nIf the cause may pass through a part that is not shown, reply with ONLY its @name and NO patch.';
   return out;
 }
 function devFmtErr(e, chunks) {
@@ -751,7 +746,6 @@ function makePayload(instruction, flags, errors) {
   devWorkspace = scanWorkspace().ws;
   devHist = histView();
   const wantUser = flags.user !== false, wantSuper = flags.prompt !== false, wantSource = flags.source !== false, wantLite = flags.lite !== false;
-  const delta = flags.delta === true;   // follow-up round: only the newly asked parts, no extras (the AI chat already has the rest)
   if (!Object.keys(devWorkspace).length && wantSource) return { ok: false, error: 'No project files found.' };
   const parts = [];
   const tg = liteTags(instruction || '');
@@ -764,13 +758,13 @@ function makePayload(instruction, flags, errors) {
   if (wantUser && instruction) parts.push('User Instruction: ' + instruction);
   if (wantSource) {
     if (idx) parts.push(liteIndex(instruction));
-    else if (big) parts.push(liteSource(instruction || '', delta && hasTags));
+    else if (big) parts.push(liteSource(instruction || ''));
     else {
       let all = '';
       Object.keys(devWorkspace).forEach(function (f) { all += '==== FILE: ' + f + ' ====\n' + devWorkspace[f] + '\n\n'; });
       parts.push(all.trim());
     }
-    if (!(delta && hasTags)) devExtras(idx, instruction, chunks.length ? devLinks(chunks) : []).forEach(function (x) { if (x) parts.push(x); });
+    devExtras(idx, instruction, chunks.length ? devLinks(chunks) : []).forEach(function (x) { if (x) parts.push(x); });
   }
   if (!parts.length) return { ok: false, error: 'Nothing to copy.' };
   return { ok: true, text: parts.join('\n\n'), idx: idx, big: big, hasTags: hasTags || isAuto };
