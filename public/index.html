@@ -3241,6 +3241,7 @@
     currentInstanceIndex = -1;
     _saveSessionWindow();
     window._wpsSessLen = val ? String(val) : '';
+    window._sessUserPick = !(sessionWindowStartMin === 0 && sessionWindowEndMin === 1440);
     try { if (window.wpsSaveDebounced) window.wpsSaveDebounced(); } catch (eWs) {}
     scheduleSessionBoundaryWipe();
     _triggerLiveReboot();
@@ -3358,7 +3359,7 @@
         _refreshSessionSliderUI();
       }
     }
-    if (!window._mtlOnly && activeCat === '24x7' && sessionWindowEndMin - sessionWindowStartMin > 60 && !(sessionWindowStartMin === 0 && sessionWindowEndMin === 1440) && now.getUTCHours() * 60 + now.getUTCMinutes() >= sessionWindowEndMin) {
+    if (!window._mtlOnly && !window._sessUserPick && activeCat === '24x7' && sessionWindowEndMin - sessionWindowStartMin > 60 && !(sessionWindowStartMin === 0 && sessionWindowEndMin === 1440) && now.getUTCHours() * 60 + now.getUTCMinutes() >= sessionWindowEndMin) {
       sessionWindowStartMin = 0;
       sessionWindowEndMin = 1440;
       window._lastSessionKey = '';
@@ -4808,6 +4809,93 @@
   }
   window.autoTradedInstances = {};
   window.gridTrades = [];
+  (function () {
+    var box = null, open = false, lastKey = '', lastSt = '';
+    function mk() {
+      if (box || !document.body) return;
+      box = document.createElement('div');
+      box.id = 'syncBadge';
+      box.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:60;display:flex;flex-direction:column-reverse;align-items:flex-start;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:800;letter-spacing:0.05em;max-width:94vw;';
+      box.innerHTML = '<div id="syncBadgePill" style="padding:5px 10px;border-radius:12px;cursor:pointer;user-select:none;border:1px solid #FFFFFF;line-height:1.3;"></div><div id="syncBadgePanel" style="display:none;margin-bottom:6px;padding:6px;background:var(--bg-base);border:1px solid #FFFFFF;border-radius:4px;max-height:40vh;overflow-y:auto;width:340px;max-width:92vw;line-height:1.6;"></div>';
+      document.body.appendChild(box);
+      document.getElementById('syncBadgePill').addEventListener('click', function (e) {
+        e.stopPropagation();
+        open = !open;
+        lastKey = '';
+        paint();
+      });
+    }
+    function paint() {
+      try {
+        mk();
+        if (!box) return;
+        var pill = document.getElementById('syncBadgePill');
+        var pn = document.getElementById('syncBadgePanel');
+        if (!pill || !pn) return;
+        var list = (activePairs !== null ? activePairs : ALL_PAIRS).filter(function (p) { return !_pairMarketClosed(p); });
+        var now = Date.now(), nowS = Math.floor(now / 1000);
+        var isLive = (_getReferenceDayOffset() === 0) && _isWithinMappedWindow();
+        var sockOk = !!(derivWs && derivWs.readyState === 1);
+        var total = list.length, nDone = 0, nErr = 0, nLive = 0, chips = '';
+        list.forEach(function (p) {
+          var d = allPairData[p], st = _bootPairState[p];
+          var ready = (st === 'done' && d && d.prices && d.prices.length > 0);
+          var fresh = false, i, ni, lo, hi, cc, ic;
+          if (ready) {
+            nDone++;
+            if (isLive) {
+              ni = nowS - currentStartTsUtc;
+              hi = Math.min(d.prices.length - 1, ni);
+              lo = Math.max(0, ni - 30);
+              for (i = hi; i >= lo; i--) { if (d.prices[i] !== -1) { fresh = true; break; } }
+              if (fresh && sockOk) nLive++;
+            }
+          } else if (st === 'err') {
+            nErr++;
+          }
+          if (open) {
+            if (st === 'err') { cc = '#E63946'; ic = '\u2715'; }
+            else if (!ready) { cc = '#9AA8DA'; ic = '\u25D4'; }
+            else if (!isLive) { cc = '#00B0FF'; ic = '\u25CF'; }
+            else if (fresh && sockOk) { cc = '#2ED573'; ic = '\u25CF'; }
+            else { cc = '#FFD166'; ic = '\u25D0'; }
+            chips += '<span style="display:inline-block;margin:2px;padding:2px 6px;border-radius:3px;background:' + cc + ';color:' + (st === 'err' ? '#FFFFFF' : '#000432') + ';">' + ic + ' ' + getPairDisplayName(p) + '</span>';
+          }
+        });
+        var sess = _fmtIstMin(sessionWindowStartMin) + '-' + _fmtIstMin(sessionWindowEndMin === 1440 ? 0 : sessionWindowEndMin) + ' IST';
+        var st2, txt, bg, fg = '#000432';
+        if (total === 0) {
+          st2 = 'none'; txt = 'NO ACTIVE PAIRS'; bg = '#9AA8DA';
+        } else if (nErr > 0) {
+          st2 = 'err'; txt = '\u2715 BACKFILL ' + nDone + '/' + total + ' \u00B7 ' + nErr + ' FAILED'; bg = '#E63946'; fg = '#FFFFFF';
+        } else if (nDone < total) {
+          st2 = 'load'; txt = '\u25D4 BACKFILLING ' + nDone + '/' + total; bg = '#FFD166';
+        } else if (!isLive) {
+          st2 = 'hist'; txt = '\u2714 BACKFILL COMPLETE ' + total + '/' + total + ' \u00B7 SESSION CLOSED'; bg = '#00B0FF';
+        } else if (sockOk && nLive === total) {
+          st2 = 'live'; txt = '\u2714 BACKFILL COMPLETE ' + total + '/' + total + ' \u00B7 LIVE SYNCED'; bg = '#2ED573';
+        } else {
+          st2 = 'wait'; txt = '\u2714 BACKFILL COMPLETE ' + total + '/' + total + ' \u00B7 ' + (sockOk ? 'LIVE ' + nLive + '/' + total : 'LIVE FEED CONNECTING'); bg = '#FFD166';
+        }
+        txt += ' \u00B7 ' + sess;
+        var key = st2 + '|' + txt + '|' + (open ? chips : '');
+        if (key !== lastKey) {
+          lastKey = key;
+          pill.textContent = txt + (open ? '  \u25BE' : '  \u25B4');
+          pill.style.setProperty('background', bg, 'important');
+          pill.style.setProperty('color', fg, 'important');
+          pill.style.setProperty('-webkit-text-fill-color', fg, 'important');
+          pn.style.display = open ? 'block' : 'none';
+          if (open) pn.innerHTML = '<div style="color:#FFFFFF;font-size:9px;margin-bottom:4px;">\u25CF live &nbsp;\u25D0 no recent tick &nbsp;\u25D4 pending &nbsp;\u2715 failed &nbsp;(blue = closed session)</div>' + chips;
+        }
+        if ((st2 === 'live' || st2 === 'hist') && st2 !== lastSt) {
+          try { evtLog('INFO', 'SYNC', txt); } catch (e1) {}
+        }
+        lastSt = st2;
+      } catch (e) {}
+    }
+    setInterval(paint, 1000);
+  })();
 
   function processVisualMatrix() {
     if (timesArray.length === 0) return;
@@ -9843,6 +9931,7 @@
           return;
         }
         if (activeCat === '24x7' && !enteringWindow && sessionWindowEndMin - sessionWindowStartMin > 60 && !(sessionWindowStartMin === 0 && sessionWindowEndMin === 1440)) {
+          window._sessUserPick = false;
           sessionWindowStartMin = 0;
           sessionWindowEndMin = 1440;
           window._lastSessionKey = '';
