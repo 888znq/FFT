@@ -6416,7 +6416,7 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-            return _wsBuild(list, 'all', 1);
+            return _wsBuild(list, 'all', undefined);
             return _buildTop10Core(list);
     }
     function _buildTop10Core(list) {
