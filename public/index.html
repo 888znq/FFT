@@ -3795,7 +3795,7 @@
           var rsUpto = Math.min(len - 1, Math.floor(Date.now() / 1000) - startTs);
           var rsThr = Math.min(/^cry/i.test(pair) ? 120 : 900, CYCLE);
           var rsRun = 0, rsHole = (rsUpto < 0);
-          var rsFloorI = (nowS >= startTs && nowS < endTs) ? Math.max(0, Math.floor(nowS / 3600) * 3600 - PRE_ROLL_SECS - startTs) : 0;
+          var rsFloorI = 0;
           for (i = rsFloorI; i <= rsUpto && !rsHole; i++) {
             if (prices[i] === -1) {
               rsRun++;
@@ -3930,7 +3930,7 @@
     }
     const nowTs = Math.floor(Date.now() / 1000);
     const fetchEnd = Math.min(endTs, nowTs);
-    var fetchFloor = (nowTs >= startTs && nowTs < endTs) ? Math.max(startTs, Math.floor(nowTs / 3600) * 3600 - PRE_ROLL_SECS) : startTs;
+    var fetchFloor = startTs;
 
     let chunksToFetch = [];
     let gapStart = -1;
