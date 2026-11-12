@@ -6506,7 +6506,7 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-            return _wsBuild(list, undefined, _wsS1n > 0 ? _wsS1n : undefined);
+            return _wsBuild(list, _wsC2All ? 'all' : undefined, _wsS1n > 0 ? _wsS1n : undefined);
             return _buildTop10Core(list);
     }
     function _buildTop10Core(list) {
@@ -6539,7 +6539,7 @@
     try {
       var _c2h = window._wsC2Has();
       if (_wsS1n > 0 && !Object.keys(_c2h).length) { _wsS1n = 0; _c2h = window._wsC2Has(); }
-      if (!_c2h[_wsC2n]) {
+      if (!_wsC2All && !_c2h[_wsC2n]) {
         var _c2ks = Object.keys(_c2h).map(Number).sort(function (a, b) { return a - b; }), _c2p = -1, _c2i;
         for (_c2i = 0; _c2i < _c2ks.length; _c2i++) { if (_c2ks[_c2i] > _wsC2n) { _c2p = _c2i; break; } }
         if (_c2p < 0 && _c2ks.length) _c2p = 0;
@@ -6611,6 +6611,7 @@
   }
   var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = Infinity, _wsC2On = false, _wsC2n = 0;
   var _wsS1n = 0;
+  var _wsC2All = true;
   window._wsS1Has = function () {
     var h = {}, ls, a, b, L, x, m, s;
     try {
@@ -6622,7 +6623,7 @@
           if (!x || _hiddenPairs.has(x.pair)) continue;
           if (r0OnlyMode && x.r !== 0) continue;
           m = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-          if (m !== _wsC2n) continue;
+          if (!_wsC2All && m !== _wsC2n) continue;
           s = +x.s1;
           if (s >= 1) h[s] = 1;
         }
@@ -6680,17 +6681,19 @@
           }
         }
       } catch (eHs) { _hs = {}; }
-      var _ks = Object.keys(_hs).map(Number).sort(function (a, b) { return a - b; });
-      if (_ks.length) {
-        var _pos = -1, _q;
-        if (_d > 0) {
-          for (_q = 0; _q < _ks.length; _q++) { if (_ks[_q] > _wsC2n) { _pos = _q; break; } }
-          if (_pos < 0) _pos = 0;
-        } else {
-          for (_q = _ks.length - 1; _q >= 0; _q--) { if (_ks[_q] < _wsC2n) { _pos = _q; break; } }
-          if (_pos < 0) _pos = _ks.length - 1;
-        }
-        _n = _ks[_pos];
+      var _sl = [-1].concat(Object.keys(_hs).map(Number).sort(function (a, b) { return a - b; }));
+      var _sc = _wsC2All ? -1 : _wsC2n, _si = _sl.indexOf(_sc), _sp;
+      if (_si < 0) {
+        _sp = 0;
+        for (var _sj = 0; _sj < _sl.length; _sj++) { if (_sl[_sj] > _sc) { _sp = _sj; break; } }
+      } else {
+        _sp = (_si + _d + _sl.length) % _sl.length;
+      }
+      if (_sl[_sp] < 0) {
+        _wsC2All = true;
+      } else {
+        _wsC2All = false;
+        _n = _sl[_sp];
       }
       _wsC2n = _n;
       try { _wsPaintPaneBtns(); } catch (e) {}
@@ -6712,7 +6715,7 @@
       } else {
         out = list.filter(function (x) {
           var _ms = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-          return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'all' ? (_ms >= 0 && _ms <= 10) : _ms === (c2n === undefined ? _wsC2n : c2n)) && (lvl === undefined || +x.s1 === lvl);
+          return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'all' ? (_ms >= 0) : _ms === (c2n === undefined ? _wsC2n : c2n)) && (lvl === undefined || +x.s1 === lvl);
         });
         var _mo = function (z) { return z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
         out.sort(function (a, b) {
@@ -6733,7 +6736,7 @@
       }
       var res = [];
       for (i = 0; i < out.length; i++) { if (best[keys[i]] === out[i]) res.push(out[i]); }
-      return res.slice(0, c2n === 'all' ? 300 : _wsTopLimit);
+      return res.slice(0, _wsTopLimit);
     }
 
   function _wsC2Build(list) {
@@ -6802,7 +6805,7 @@
           }
           var _th = _tbl ? _tbl.querySelector('thead tr th:nth-child(6)') : null;
           if (!_th) return;
-          var _lbl = 'C2=' + _wsC2n;
+          var _lbl = 'C2=' + (_wsC2All ? 'ALL' : _wsC2n);
           if (_th.getAttribute('data-c2lbl') === _lbl) return;
           _th.setAttribute('data-c2lbl', _lbl);
           _th.style.whiteSpace = 'nowrap';
