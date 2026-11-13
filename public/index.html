@@ -6506,7 +6506,7 @@
     var _levelEl = document.getElementById('levelFilterSelect');
     var _levelVal = _levelEl ? (parseInt(_levelEl.value) || 0) : 0;
     function _buildTop10(list, tag) {
-            return _wsBuild(list, _wsC2All ? 'all' : undefined, _wsS1n > 0 ? _wsS1n : undefined);
+            return _wsBuild(list, 'lvl', _wsS1n > 0 ? _wsS1n : undefined);
             return _buildTop10Core(list);
     }
     function _buildTop10Core(list) {
@@ -6695,6 +6695,7 @@
     return h;
   };
     function _wsStepC2(dir) {
+      return;
       var _d = (dir || 1) < 0 ? -1 : 1;
       var _hs = {}, _lists, _li, _xi, _L, _x, _m, _t, _n = _wsC2n;
       try {
@@ -6737,6 +6738,16 @@
       _hiddenPairs.forEach(function (p) { hk += p + ','; });
       var mk = (c2n === undefined ? 'u' + _wsC2n : String(c2n)) + '|' + lvl + '|' + (r0OnlyMode ? 1 : 0) + '|' + hk;
       var nowT = Date.now(), m = _wsMemo[mk], out, keys;
+      var _aMin = {};
+      if (c2n === 'auto') {
+        list.forEach(function (z) {
+          if (!z || _hiddenPairs.has(z.pair) || (r0OnlyMode && z.r !== 0) || (z.c1 || 0) < 1) return;
+          var v = z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0);
+          if (v < 0) return;
+          var s = +z.s1;
+          if (_aMin[s] === undefined || v < _aMin[s]) _aMin[s] = v;
+        });
+      }
       var bk = function (x) {
         return x.pair + '|' + (x.sess || 1) + '|' + x.s1 + '|' + x.s2 + '|' + x.pct + '|' + x.c1 + '|' + x.c2;
       };
@@ -6745,10 +6756,24 @@
       } else {
         out = list.filter(function (x) {
           var _ms = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-          return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'all' ? (_ms >= 0) : _ms === (c2n === undefined ? _wsC2n : c2n)) && (lvl === undefined || +x.s1 === lvl);
+          return !_hiddenPairs.has(x.pair) && (!r0OnlyMode || x.r === 0) && (c2n === 'lvl' ? (_ms >= 0 && (x.c1 || 0) >= 1) : (c2n === 'auto' ? (_ms >= 0 && _ms === _aMin[+x.s1]) : (c2n === 'all' ? (_ms >= 0) : _ms === (c2n === undefined ? _wsC2n : c2n)))) && (lvl === undefined || +x.s1 === lvl);
         });
         var _mo = function (z) { return z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
+        var _tpMx = {}, _tpBand = 5, _tpi;
+        if (c2n === 'lvl') {
+          for (_tpi = 0; _tpi < out.length; _tpi++) {
+            if ((out[_tpi].c1 || 0) > (_tpMx[+out[_tpi].s1] || 0)) _tpMx[+out[_tpi].s1] = out[_tpi].c1 || 0;
+          }
+        }
+        var _tpTop = function (z) { return (z.c1 || 0) >= (_tpMx[+z.s1] || 0) - _tpBand ? 1 : 0; };
         out.sort(function (a, b) {
+          if (c2n === 'lvl') {
+            var _ta = _tpTop(a), _tb = _tpTop(b);
+            if (_ta !== _tb) return _tb - _ta;
+            if (_ta) return (b.pct - a.pct) || (b.c1 - a.c1) || (_mo(a) - _mo(b)) || (a.c - b.c) || (a.r - b.r);
+            return (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r);
+          }
+          if (c2n === 'auto') return (a.s1 - b.s1) || (_mo(a) - _mo(b)) || (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r);
           return (c2n === 'all' ? (_mo(a) - _mo(b)) : 0) || (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
         });
         keys = new Array(out.length);
@@ -6835,7 +6860,13 @@
           }
           var _th = _tbl ? _tbl.querySelector('thead tr th:nth-child(6)') : null;
           if (!_th) return;
-          var _lbl = 'C2=' + (_wsC2All ? 'ALL' : _wsC2n);
+          var _lbl = 'C2=AUTO';
+          if (!document.getElementById('wsC2LockCss')) {
+            var _c2s = document.createElement('style');
+            _c2s.id = 'wsC2LockCss';
+            _c2s.textContent = 'html body #wall-finder-pane .wsC2dn, html body #wall-finder-pane .wsC2up{pointer-events:none !important;opacity:0.35 !important;}';
+            document.head.appendChild(_c2s);
+          }
           if (_th.getAttribute('data-c2lbl') === _lbl) return;
           _th.setAttribute('data-c2lbl', _lbl);
           _th.style.whiteSpace = 'nowrap';
@@ -17805,6 +17836,259 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid var(--pair-color, #E2E8F
 </script>
 <script>
 window.LogPop = { addTab: function () { return null; }, open: function () {}, close: function () {}, setTab: function () {}, refresh: function () {}, list: function () { return []; } };
+</script>
+<script>
+(function () {
+  if (window._evtLogUi) return;
+  window._evtLogUi = true;
+  var S = { el: null, open: false, tab: 'sync', flt: 'ALL', last: '', t: null };
+  var GRN = '#2ED573', RED = '#E63946', YEL = '#FFD700', CYN = '#00B0FF', DIM = '#9AA3B5';
+  function tv(fn, d) { try { var v = fn(); return v === undefined ? d : v; } catch (e) { return d; } }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  function stamp(t) {
+    var d = new Date(t);
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+  }
+  function fd(s) {
+    s = Math.max(0, Math.round(Number(s) || 0));
+    if (s >= 3600) return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+    return s >= 60 ? Math.floor(s / 60) + 'm' + (s % 60 ? ' ' + (s % 60) + 's' : '') : s + 's';
+  }
+  function pname(p) { return String(tv(function () { return getPairDisplayName(p); }, p) || p); }
+  function syncData() {
+    var all = tv(function () { return ALL_PAIRS.slice(); }, []);
+    var nowS = Math.floor(Date.now() / 1000);
+    var st0 = tv(function () { return currentStartTsUtc; }, 0);
+    var nLive = 0, nFail = 0, nClosed = 0, nOther = 0, nOff = 0;
+    var rows = [];
+    all.sort(function (a, b) { return pname(a).localeCompare(pname(b), undefined, { numeric: true, sensitivity: 'base' }); });
+    all.forEach(function (p) {
+      var bs = tv(function () { return _bootPairState[p]; }, 'wait');
+      var lv = tv(function () { return window.pairLiveStatus ? window.pairLiveStatus[p] : ''; }, '');
+      var closed = !!tv(function () { return _pairMarketClosed(p); }, false);
+      var sel = !!tv(function () { return activePairs === null || activePairs.indexOf(p) !== -1; }, true);
+      var pd = tv(function () { return allPairData[p]; }, null);
+      var pr = pd && pd.prices ? pd.prices : null;
+      var age = null, n = 0, lastPx = null, i, lim, idx;
+      if (pr && pr.length && st0 > 0) {
+        lim = Math.min(pr.length - 1, nowS - st0);
+        for (i = 0; i <= lim; i++) { if (pr[i] !== -1) n++; }
+        idx = lim;
+        while (idx >= 0 && pr[idx] === -1) idx--;
+        if (idx >= 0) { age = nowS - st0 - idx; lastPx = pr[idx]; }
+      }
+      var label, color, maxAge = /^frx/.test(p) ? 120 : 30;
+      if (!sel) { label = 'NOT SELECTED'; color = DIM; nOff++; }
+      else if (closed) { label = 'MARKET CLOSED'; color = CYN; nClosed++; }
+      else if (bs === 'err') { label = 'FAILED'; color = RED; nFail++; }
+      else if (bs === 'wait') { label = 'PENDING'; color = DIM; nOther++; }
+      else if (bs === 'fetching') { label = 'FETCHING'; color = CYN; nOther++; }
+      else if (age !== null && age <= maxAge) { label = 'LIVE'; color = GRN; nLive++; }
+      else if (bs === 'cache') { label = 'CACHED - NO LIVE TICK'; color = YEL; nOther++; }
+      else { label = 'SYNCED - NO RECENT TICK'; color = YEL; nOther++; }
+      rows.push({
+        name: pname(p), label: label, color: color,
+        detail: 'boot ' + bs + ' | feed ' + (lv || '-') + ' | ticks ' + n + ' | last tick ' + (age === null ? 'none' : fd(age) + ' ago' + (lastPx !== null ? ' @ ' + lastPx : ''))
+      });
+    });
+    var sock = tv(function () { return ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][derivWs.readyState]; }, 'none');
+    var sum = [
+      ['PAIRS LIVE', nLive + ' / ' + all.length, nLive === all.length - nOff - nClosed && nLive > 0 ? GRN : YEL],
+      ['FAILED', String(nFail), nFail ? RED : GRN],
+      ['WAITING / STALE', String(nOther), nOther ? YEL : GRN],
+      ['MARKET CLOSED', String(nClosed), CYN],
+      ['NOT SELECTED', String(nOff), DIM],
+      ['LIVE SOCKET', String(sock), sock === 'OPEN' ? GRN : RED],
+      ['LIVE TICKS RECEIVED', String(tv(function () { return globalTickCount; }, '?')), '#FFFFFF'],
+      ['SESSION START (UTC)', st0 > 0 ? new Date(st0 * 1000).toISOString().replace('T', ' ').slice(0, 19) : '--', '#FFFFFF']
+    ];
+    return { sum: sum, rows: rows, total: all.length, live: nLive };
+  }
+  function evtData() {
+    var ev = tv(function () { return EVT_LOG; }, []);
+    var out = [], i, x, c;
+    for (i = ev.length - 1; i >= 0 && out.length < 300; i--) {
+      x = ev[i];
+      if (S.flt === 'ERROR' && x.l !== 'ERROR') continue;
+      if (S.flt === 'WARN' && x.l !== 'ERROR' && x.l !== 'WARN') continue;
+      c = x.l === 'ERROR' ? RED : (x.l === 'WARN' ? YEL : '#E2E8F0');
+      out.push({ t: '[' + stamp(x.t) + '] ' + (x.old ? '(prev) ' : '') + x.l + ' ' + x.c + ': ' + x.m + (x.n > 1 ? '  (x' + x.n + ')' : ''), c: c });
+    }
+    return out;
+  }
+  function bodyHtml(sd) {
+    var h = '', i;
+    if (S.tab === 'sync') {
+      h += '<div class="elSec"><div class="elH">SUMMARY</div>';
+      for (i = 0; i < sd.sum.length; i++) {
+        h += '<div class="elLine"><span class="elK">' + esc(sd.sum[i][0]) + '</span><span style="color:' + sd.sum[i][2] + ' !important;">' + esc(sd.sum[i][1]) + '</span></div>';
+      }
+      h += '</div><div class="elSec"><div class="elH">ALL PAIRS (' + sd.total + ')</div>';
+      for (i = 0; i < sd.rows.length; i++) {
+        h += '<div class="elRow"><div class="elLine"><span style="font-weight:800;">' + esc(sd.rows[i].name) + '</span><span style="color:' + sd.rows[i].color + ' !important;font-weight:800;">' + esc(sd.rows[i].label) + '</span></div><div class="elSub">' + esc(sd.rows[i].detail) + '</div></div>';
+      }
+      return h + '</div>';
+    }
+    var ed = evtData();
+    h += '<div class="elSec"><div class="elH">EVENT LOG - NEWEST FIRST (' + ed.length + ')</div>';
+    if (!ed.length) h += '<div class="elRow"><span style="color:' + DIM + ' !important;">NO EVENTS</span></div>';
+    for (i = 0; i < ed.length; i++) h += '<div class="elRow elEv" style="color:' + ed[i].c + ' !important;">' + esc(ed[i].t) + '</div>';
+    return h + '</div>';
+  }
+  function fullText() {
+    var sd = syncData(), o = ['=== PAIR SYNC STATUS ==='], i, ed;
+    for (i = 0; i < sd.sum.length; i++) o.push(sd.sum[i][0] + ': ' + sd.sum[i][1]);
+    o.push('');
+    for (i = 0; i < sd.rows.length; i++) o.push(sd.rows[i].name + ' - ' + sd.rows[i].label + ' | ' + sd.rows[i].detail);
+    o.push('');
+    o.push('=== EVENT LOG (' + S.flt + ') ===');
+    ed = evtData();
+    for (i = 0; i < ed.length; i++) o.push(ed[i].t);
+    return o.join('\n');
+  }
+  function copyTxt(txt, done) {
+    var fb = function () {
+      var ok = false;
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e0) {}
+      done(!!ok);
+    };
+    try {
+      if (window.AndroidClipboard) { window.AndroidClipboard.write(txt); done(true); return; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () { done(true); }, fb);
+        return;
+      }
+    } catch (e1) {}
+    fb();
+  }
+  function render(force) {
+    if (!S.open || !S.el) return;
+    var body = document.getElementById('elBody');
+    if (!body) return;
+    var sd = syncData();
+    var html = bodyHtml(sd);
+    var key = S.tab + '|' + S.flt + '|' + html;
+    var btns = S.el.querySelectorAll('[data-a="tab"]'), i, fl;
+    for (i = 0; i < btns.length; i++) btns[i].className = 'elBtn' + (btns[i].getAttribute('data-v') === S.tab ? ' on' : '');
+    btns = S.el.querySelectorAll('[data-a="flt"]');
+    for (i = 0; i < btns.length; i++) btns[i].className = 'elBtn' + (btns[i].getAttribute('data-v') === S.flt ? ' on' : '');
+    fl = document.getElementById('elFlt');
+    if (fl) fl.style.display = S.tab === 'events' ? 'flex' : 'none';
+    var ttl = document.getElementById('elTtl');
+    if (ttl) ttl.textContent = 'LOG | LIVE ' + sd.live + '/' + sd.total + ' PAIRS';
+    if (key === S.last && !force) return;
+    S.last = key;
+    var st = body.scrollTop;
+    body.innerHTML = html;
+    body.scrollTop = st;
+  }
+  function onKey(ev) { if (ev.key === 'Escape') closeLog(); }
+  function closeLog() {
+    S.open = false;
+    if (S.el) S.el.style.display = 'none';
+    if (S.t) { clearInterval(S.t); S.t = null; }
+    document.removeEventListener('keydown', onKey, true);
+  }
+  function build() {
+    if (S.el) return;
+    var P = 'html body #evtLogPop#evtLogPop';
+    var st = document.createElement('style');
+    st.id = 'evtLogCss';
+    st.textContent = [
+      P + '{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;align-items:center !important;justify-content:center !important;background:rgba(0,4,50,0.88) !important;z-index:2147483100 !important;padding:8px !important;box-sizing:border-box !important;}',
+      P + ' .elBox{width:100% !important;max-width:560px !important;height:88vh !important;display:flex !important;flex-direction:column !important;background:#000432 !important;border:1px solid #FFFFFF !important;border-radius:14px !important;overflow:hidden !important;font-family:"JetBrains Mono",monospace !important;color:#FFFFFF !important;box-sizing:border-box !important;}',
+      P + ' .elHead{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:6px !important;padding:8px 10px !important;border-bottom:1px solid #FFFFFF !important;flex-shrink:0 !important;}',
+      P + ' .elTtl{color:#FFD700 !important;font-size:11px !important;font-weight:800 !important;letter-spacing:0.14em !important;}',
+      P + ' .elHb{display:flex !important;gap:4px !important;}',
+      P + ' .elTabs,' + P + ' .elFlt{display:flex !important;gap:3px !important;padding:6px 8px !important;border-bottom:1px solid #333333 !important;flex-shrink:0 !important;}',
+      P + ' .elBtn{flex:1 1 0 !important;min-width:0 !important;height:auto !important;padding:6px 8px !important;border:1px solid #E2E8F0 !important;border-radius:6px !important;background:#000432 !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-family:"JetBrains Mono",monospace !important;font-size:10px !important;font-weight:800 !important;letter-spacing:0.5px !important;cursor:pointer !important;text-align:center !important;box-shadow:none !important;}',
+      P + ' .elBtn.on{background:#FFD700 !important;border-color:#FFD700 !important;color:#000432 !important;-webkit-text-fill-color:#000432 !important;}',
+      P + ' .elHb .elBtn{flex:0 0 auto !important;}',
+      P + ' .elBody{flex:1 1 auto !important;min-height:0 !important;overflow-y:auto !important;padding:8px !important;display:block !important;}',
+      P + ' .elSec{display:block !important;margin:0 0 8px 0 !important;border:1px solid #333333 !important;border-radius:8px !important;overflow:hidden !important;}',
+      P + ' .elH{display:block !important;padding:5px 8px !important;background:rgba(255,255,255,0.08) !important;color:#FFD700 !important;font-size:10px !important;font-weight:800 !important;letter-spacing:0.16em !important;}',
+      P + ' .elRow{display:block !important;padding:3px 8px !important;border-top:1px solid rgba(255,255,255,0.08) !important;font-size:10px !important;font-weight:700 !important;line-height:1.4 !important;}',
+      P + ' .elEv{white-space:pre-wrap !important;word-break:break-word !important;}',
+      P + ' .elSec > .elLine{padding:3px 8px !important;border-top:1px solid rgba(255,255,255,0.08) !important;}',
+      P + ' .elLine{display:flex !important;justify-content:space-between !important;gap:8px !important;font-size:10px !important;font-weight:700 !important;line-height:1.4 !important;}',
+      P + ' .elK{color:#9AA3B5 !important;}',
+      P + ' .elSub{display:block !important;color:#7C86A0 !important;font-size:9px !important;word-break:break-word !important;}'
+    ].join('\n');
+    document.head.appendChild(st);
+    var ov = document.createElement('div');
+    ov.id = 'evtLogPop';
+    ov.style.display = 'none';
+    ov.innerHTML =
+      '<div class="elBox">' +
+      '<div class="elHead"><span class="elTtl" id="elTtl">LOG</span>' +
+      '<span class="elHb"><button type="button" class="elBtn" data-a="copy">COPY</button><button type="button" class="elBtn" data-a="close">&#10005;</button></span></div>' +
+      '<div class="elTabs"><button type="button" class="elBtn" data-a="tab" data-v="sync">PAIR SYNC</button><button type="button" class="elBtn" data-a="tab" data-v="events">EVENTS</button></div>' +
+      '<div class="elFlt" id="elFlt" style="display:none;"><button type="button" class="elBtn" data-a="flt" data-v="ALL">ALL</button><button type="button" class="elBtn" data-a="flt" data-v="WARN">WARN + ERROR</button><button type="button" class="elBtn" data-a="flt" data-v="ERROR">ERRORS</button></div>' +
+      '<div class="elBody" id="elBody"></div></div>';
+    ov.addEventListener('click', function (e) {
+      if (e.target === ov) { closeLog(); return; }
+      var b = e.target && e.target.closest ? e.target.closest('[data-a]') : null;
+      if (!b) return;
+      var a = b.getAttribute('data-a'), v = b.getAttribute('data-v');
+      if (a === 'close') { closeLog(); return; }
+      if (a === 'tab') {
+        S.tab = v;
+        render(true);
+        document.getElementById('elBody').scrollTop = 0;
+        return;
+      }
+      if (a === 'flt') { S.flt = v; render(true); return; }
+      if (a === 'copy') {
+        copyTxt(fullText(), function (ok) {
+          b.textContent = ok ? 'COPIED' : 'FAILED';
+          setTimeout(function () { b.textContent = 'COPY'; }, 1500);
+        });
+      }
+    });
+    document.body.appendChild(ov);
+    S.el = ov;
+  }
+  function openLog() {
+    build();
+    S.open = true;
+    S.el.style.display = 'flex';
+    document.addEventListener('keydown', onKey, true);
+    S.last = '';
+    render(true);
+    if (S.t) clearInterval(S.t);
+    S.t = setInterval(function () { render(false); }, 1000);
+  }
+  window.openEvtLog = openLog;
+  var tries = 0;
+  var poll = setInterval(function () {
+    tries++;
+    var cb = window.CtlBar;
+    if (!cb || !cb.add) { if (tries > 120) clearInterval(poll); return; }
+    var l = tv(function () { return cb.list(); }, []), hasSet = false, i;
+    for (i = 0; i < l.length; i++) { if (/^PAIRSET:/.test(l[i])) hasSet = true; }
+    if (!hasSet && tries < 40) return;
+    clearInterval(poll);
+    try {
+      cb.add({
+        id: 'evtLogBtn',
+        group: 'LOG',
+        order: 1,
+        label: 'LOG',
+        title: 'Pair sync status and event log',
+        onClick: function () { openLog(); }
+      });
+    } catch (eAdd) {}
+  }, 500);
+})();
 </script>
 <script>
 (function () {
