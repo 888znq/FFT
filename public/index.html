@@ -6768,10 +6768,7 @@
         var _tpTop = function (z) { return (z.c1 || 0) >= (_tpMx[+z.s1] || 0) - _tpBand ? 1 : 0; };
         out.sort(function (a, b) {
           if (c2n === 'lvl') {
-            var _ta = _tpTop(a), _tb = _tpTop(b);
-            if (_ta !== _tb) return _tb - _ta;
-            if (_ta) return (b.pct - a.pct) || (b.c1 - a.c1) || (_mo(a) - _mo(b)) || (a.c - b.c) || (a.r - b.r);
-            return (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r);
+            return (b.pct - a.pct) || (b.c1 - a.c1) || (_mo(a) - _mo(b)) || (a.c - b.c) || (a.r - b.r);
           }
           if (c2n === 'auto') return (a.s1 - b.s1) || (_mo(a) - _mo(b)) || (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r);
           return (c2n === 'all' ? (_mo(a) - _mo(b)) : 0) || (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);
