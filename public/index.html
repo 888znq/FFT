@@ -6538,8 +6538,11 @@
     window._holdKing = function (tg) { var _hl = window._holdBuild(tg); return _hl.length ? _hl[0] : null; };
     try {
       var _c2h = window._wsC2Has();
-      if (_wsS1n > 0 && !Object.keys(_c2h).length) { _wsS1n = 0; _c2h = window._wsC2Has(); }
-      if (!_wsC2All && !_c2h[_wsC2n]) {
+      if (_wsS1n > 0 && !Object.keys(_c2h).length && (typeof scanPending === 'undefined' || scanPending === 0) && (globalRevs.length + globalMoms.length) > 0) { _wsS1n = 0; _c2h = window._wsC2Has(); }
+      if (!_wsC2All && !_c2h[_wsC2n] && _wsS1n > 0 && window._wsBestC2(_wsS1n) >= 0) {
+        _wsC2n = window._wsBestC2(_wsS1n);
+        try { _wsPaintPaneBtns(); } catch (eSb) {}
+      } else if (!_wsC2All && !_c2h[_wsC2n]) {
         var _c2ks = Object.keys(_c2h).map(Number).sort(function (a, b) { return a - b; }), _c2p = -1, _c2i;
         for (_c2i = 0; _c2i < _c2ks.length; _c2i++) { if (_c2ks[_c2i] > _wsC2n) { _c2p = _c2i; break; } }
         if (_c2p < 0 && _c2ks.length) _c2p = 0;
@@ -6610,9 +6613,9 @@
     return html;
   }
   var _wsHide100 = false, _wsPctDesc = true, _wsTopLimit = Infinity, _wsC2On = false, _wsC2n = 0;
-  var _wsS1n = 0;
+  var _wsS1n = 1;
   var _wsC2All = true;
-  window._wsS1Has = function () {
+  window._wsS1Has = function (anyC2) {
     var h = {}, ls, a, b, L, x, m, s;
     try {
       ls = [typeof globalRevs !== 'undefined' ? globalRevs : [], typeof globalMoms !== 'undefined' ? globalMoms : []];
@@ -6623,7 +6626,7 @@
           if (!x || _hiddenPairs.has(x.pair)) continue;
           if (r0OnlyMode && x.r !== 0) continue;
           m = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
-          if (!_wsC2All && m !== _wsC2n) continue;
+          if (!anyC2 && !_wsC2All && m !== _wsC2n) continue;
           s = +x.s1;
           if (s >= 1) h[s] = 1;
         }
@@ -6631,9 +6634,32 @@
     } catch (eS) {}
     return h;
   };
+  window._wsBestC2 = function (s1) {
+    var best = null, bm = -1, ls, a, b, L, x, m;
+    try {
+      ls = [typeof globalRevs !== 'undefined' ? globalRevs : [], typeof globalMoms !== 'undefined' ? globalMoms : []];
+      for (a = 0; a < ls.length; a++) {
+        L = ls[a] || [];
+        for (b = 0; b < L.length; b++) {
+          x = L[b];
+          if (!x || _hiddenPairs.has(x.pair)) continue;
+          if (r0OnlyMode && x.r !== 0) continue;
+          if (s1 > 0 && +x.s1 !== s1) continue;
+          if ((x.c1 || 0) < 1) continue;
+          m = (x.type === 'MOM' ? ((x.c1 || 0) - (x.c2 || 0)) : (x.c2 || 0));
+          if (m < 0) continue;
+          if (!best || (x.pct || 0) > (best.pct || 0) || ((x.pct || 0) === (best.pct || 0) && ((x.c1 || 0) > (best.c1 || 0) || ((x.c1 || 0) === (best.c1 || 0) && m < bm)))) {
+            best = x;
+            bm = m;
+          }
+        }
+      }
+    } catch (eBc) {}
+    return best ? bm : -1;
+  };
   function _wsStepS1(dir) {
     var _d = (dir || 1) < 0 ? -1 : 1, _ks, _q, _p = -1, _n = _wsS1n;
-    _ks = [0].concat(Object.keys(window._wsS1Has()).map(Number).sort(function (a, b) { return a - b; }));
+    _ks = [0].concat(Object.keys(window._wsS1Has(true)).map(Number).sort(function (a, b) { return a - b; }));
     if (_d > 0) {
       for (_q = 0; _q < _ks.length; _q++) { if (_ks[_q] > _n) { _p = _q; break; } }
       if (_p < 0) _p = 0;
@@ -6642,6 +6668,10 @@
       if (_p < 0) _p = _ks.length - 1;
     }
     _wsS1n = _ks[_p];
+    if (!_wsC2All && _wsS1n > 0 && !window._wsC2Has()[_wsC2n]) {
+      var _bcS = window._wsBestC2(_wsS1n);
+      if (_bcS >= 0) { _wsC2n = _bcS; try { _lg('FILTER', 'S=' + _wsS1n + ' auto C2=' + _bcS); } catch (eLg) {} }
+    }
     try { _wsPaintPaneBtns(); } catch (e) {}
     try { renderFilteredTable(); } catch (e) {}
     try { window._lockTopSignal(); } catch (e) {}
