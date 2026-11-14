@@ -606,7 +606,8 @@ function drvPlanFired(sig, start, lim) {
 function drvHoldReplay(x, tag, start) {
   var c = x.c, s1 = x.s1, cc = x.col === "G" ? 1 : 2, mom = tag === "MOM";
   if (!(c > 0) || !(s1 >= 1)) return null;
-  var nowI = nowSec() - start, hi = Math.min(nowI, 3600);
+  var winDur = DRVT.sigDur || 3600;
+  var nowI = nowSec() - start, hi = Math.min(nowI, winDur);
   while (hi > 0 && drvTickAt(x.pair, start + hi) === -1) hi--;
   var i = (((x.r - (start % c)) % c) + c) % c;
   var color = 0, streak = 0, n1 = 0, n2 = 0, since = 0, runStart = -1, lastRun = -1;
@@ -634,7 +635,7 @@ function drvHoldReplay(x, tag, start) {
     }
     color = nc;
     streak = ns;
-    live = (color === cc && i + c >= 3601) ? streak : 0;
+    live = (color === cc && i + c >= winDur + 1) ? streak : 0;
     l1 = n1 + (live >= s1 ? 1 : 0);
     l2 = n2 + (live > s1 ? 1 : 0);
     if (l1 >= 4) {
@@ -806,11 +807,13 @@ function drvHoldPickOld(list, tag, start) {
 }
 
 function drvWindow() {
-  var now = nowSec(), s = now - (now % 3600), d = 3600, ws, wd;
+  var now = nowSec(), s = now - (now % 3600), d = 3600, ws, wd, nCyc, nPairs;
   if (DRVT.smin >= 0 && DRVT.emin > DRVT.smin) {
     ws = (now - (now % 86400)) + DRVT.smin * 60;
     wd = (DRVT.emin - DRVT.smin) * 60;
-    if (wd <= 10800 && now >= ws && now < ws + wd) { s = ws; d = wd; }
+    nCyc = Math.max(1, (DRVT.cmax || DRVT.cycle) - (DRVT.cmin || DRVT.cycle) + 1);
+    nPairs = DRVT.pairs.length;
+    if (now >= ws && now < ws + wd && nCyc * nPairs * wd <= 50000000) { s = ws; d = wd; }
   }
   return { start: s, dur: d };
 }
