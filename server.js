@@ -683,9 +683,7 @@ function drvHoldPick(list, tag, start) {
     k = keyOf(rows[i]);
     b = bestBy[k];
     if (!b) { bestBy[k] = rows[i]; continue; }
-    ex = etaOf(rows[i]);
-    eb = etaOf(b);
-    if (ex < eb || (ex === eb && (rows[i].c < b.c || (rows[i].c === b.c && rows[i].r < b.r)))) bestBy[k] = rows[i];
+    if (rows[i].c < b.c || (rows[i].c === b.c && rows[i].r < b.r)) bestBy[k] = rows[i];
   }
   rows = rows.filter(function (z) { return bestBy[keyOf(z)] === z; });
   rows.sort(function (a, b2) {

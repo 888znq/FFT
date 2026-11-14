@@ -6813,9 +6813,7 @@
       for (i = 0; i < out.length; i++) {
         x = out[i]; k = keys[i]; b = best[k];
         if (!b) { best[k] = x; continue; }
-        ex = _btLvlsEta(x);
-        eb = _btLvlsEta(b);
-        if (ex < eb || (ex === eb && (x.c < b.c || (x.c === b.c && x.r < b.r)))) best[k] = x;
+        if (x.c < b.c || (x.c === b.c && x.r < b.r)) best[k] = x;
       }
       var res = [];
       for (i = 0; i < out.length; i++) { if (best[keys[i]] === out[i]) res.push(out[i]); }
