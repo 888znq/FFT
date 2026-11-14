@@ -2461,7 +2461,7 @@
             var L = locks[li];
             var src = (L.type === 'MOM') ? globalMoms : globalRevs;
             var i, x, rank = -1, cx = null;
-            try { cx = (typeof window._holdKing === 'function') ? window._holdKing(L.type === 'MOM' ? 'MOM' : 'REV', function (z) { return /^1HZ/i.test(String(z.pair)) && z.c === L.c; }) : null; } catch (eH) { cx = null; }
+            try { cx = (typeof window._holdKing === 'function') ? window._holdKing(L.type === 'MOM' ? 'MOM' : 'REV') : null; } catch (eH) { cx = null; }
             if (cx && cx.pair === L.pair) { rank = 1; } else if (cx) { rank = 2; }
             var l2 = (L.s2 !== undefined ? L.s2 : L.s1);
             var d = [];
@@ -2469,6 +2469,7 @@
               d.push('client has no 1HZ king for C' + L.c + ' (pair not scanned, hidden or filtered on screen)');
             } else {
               if (rank !== 1) { d.push('client king is ' + cx.pair + ' R' + cx.r + ' X' + cx.s1 + ' ' + cx.col + ', server king is ' + L.pair); }
+              if (cx.c !== L.c) { d.push('C client ' + cx.c + ' vs server ' + L.c); }
               if (cx.r !== L.r) { d.push('R client ' + cx.r + ' vs server ' + L.r); }
               if (cx.s1 !== L.s1) { d.push('X client ' + cx.s1 + ' vs server ' + L.s1); }
               if (cx.s2 !== l2) { d.push('X2 client ' + cx.s2 + ' vs server ' + l2); }
@@ -2476,14 +2477,15 @@
               if (L.c1 !== undefined && cx.c1 !== L.c1) { d.push('c1 client ' + cx.c1 + ' vs server ' + L.c1); }
               if (L.c2 !== undefined && cx.c2 !== L.c2) { d.push('c2 client ' + cx.c2 + ' vs server ' + L.c2); }
               if (L.pct !== undefined && cx.pct !== L.pct) { d.push('pct client ' + cx.pct + ' vs server ' + L.pct); }
-              if (rank !== 1 || cx.r !== L.r || cx.s1 !== L.s1 || cx.s2 !== l2 || cx.col !== L.col || (L.c1 !== undefined && cx.c1 !== L.c1) || (L.c2 !== undefined && cx.c2 !== L.c2) || (L.pct !== undefined && cx.pct !== L.pct)) {
+              if (rank !== 1 || cx.c !== L.c || cx.r !== L.r || cx.s1 !== L.s1 || cx.s2 !== l2 || cx.col !== L.col || (L.c1 !== undefined && cx.c1 !== L.c1) || (L.c2 !== undefined && cx.c2 !== L.c2) || (L.pct !== undefined && cx.pct !== L.pct)) {
                 fxAdd('Scan result/pick differs -> server @part19 (buildScan) + @part17 (scanOne) + @part9 (drvScore/drvPick) + @part10 (drvRefreshSignals) vs client @part117 (dispatchMultiCycleScan) + @part116 (handleWorkerMessage) + @part105 (_champScore) + @part64 (_drvChk)');
               }
             }
-            var hs = Math.floor(Date.now() / 1000);
-            hs = hs - (hs % 3600);
-            if (typeof currentStartTsUtc !== 'undefined' && (currentStartTsUtc !== hs || (typeof currentDuration !== 'undefined' && currentDuration !== 3600))) {
-              d.push('scan window differs: client start ' + currentStartTsUtc + ' dur ' + (typeof currentDuration !== 'undefined' ? currentDuration : '?') + ' vs server hour start ' + hs + ' dur 3600');
+            var sw = window._drvSigWin;
+            var cdur = (typeof currentDuration !== 'undefined') ? currentDuration : 86400;
+            if (typeof sessionWindowStartMin === 'number' && typeof sessionWindowEndMin === 'number' && sessionWindowEndMin > sessionWindowStartMin) { cdur = Math.min(cdur, (sessionWindowEndMin - sessionWindowStartMin) * 60); }
+            if (sw && typeof currentStartTsUtc !== 'undefined' && (currentStartTsUtc !== sw.start || cdur !== sw.dur)) {
+              d.push('scan window differs: client start ' + currentStartTsUtc + ' dur ' + cdur + ' vs server start ' + sw.start + ' dur ' + sw.dur);
             }
             for (var dw = 0; dw < d.length; dw++) {
               if (d[dw].indexOf('scan window differs') === 0) { fxAdd('Scan window differs -> client must scan current hour 3600s: @part117 (dispatchMultiCycleScan sStart/sEnd, session window) vs server @part10 (drvRefreshSignals start/3600) + @part19 (buildScan)'); }
@@ -2530,9 +2532,13 @@
             drvQs = '?smin=' + sessionWindowStartMin + '&emin=' + sessionWindowEndMin;
           }
         } catch (eQs) { drvQs = ''; }
+        try {
+          var _dqp = (typeof activePairs !== 'undefined' && activePairs !== null ? activePairs : ALL_PAIRS).filter(function (p) { return typeof _hiddenPairs === 'undefined' || !_hiddenPairs.has(p); });
+          if (_dqp.length) { drvQs += (drvQs ? '&' : '?') + 'pairs=' + _dqp.slice().sort().join(',') + '&r0=' + ((typeof r0OnlyMode !== 'undefined' && r0OnlyMode) ? 1 : 0); }
+        } catch (eQp) {}
         fetch('/drv' + drvQs, { cache: 'no-store', headers: hdr2 })
           .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; try { var _dkey = JSON.stringify(window._drvLocks.map(function (q) { return [q.pair, q.type, q.c, q.r, q.s1, q.s2, q.col]; })); if (_dkey !== window._drvLockKey) { window._drvLockKey = _dkey; if (typeof _autoSelectTopSignal === 'function') { setTimeout(_autoSelectTopSignal, 0); } } } catch (eLk) {} _drvChk(window._drvLocks); } else if (!j) { _drvBtnSet('bad', 'DRV: SERVER ERROR', '/drv returned no data'); } })
+          .then(function (j) { if (j && j.open) { window._drvOpen = j.open; window._drvClosed = j.closed || []; window._drvSess = j.sess || null; window._drvLocks = j.locks || []; window._drvKings = j.kings || []; window._drvSigWin = (j.sigStart ? { start: j.sigStart, dur: j.sigDur } : null); try { var _dkey = JSON.stringify(window._drvLocks.map(function (q) { return [q.pair, q.type, q.c, q.r, q.s1, q.s2, q.col]; })); if (_dkey !== window._drvLockKey) { window._drvLockKey = _dkey; if (typeof _autoSelectTopSignal === 'function') { setTimeout(_autoSelectTopSignal, 0); } } } catch (eLk) {} _drvChk(window._drvKings); } else if (!j) { _drvBtnSet('bad', 'DRV: SERVER ERROR', '/drv returned no data'); } })
           .catch(function () { _drvBtnSet('bad', 'DRV: NO SERVER', '/drv unreachable'); })
           .then(function () { lvDrvBusy = false; });
       }
@@ -6734,7 +6740,7 @@
     var mm = function (z) { return z.type === 'MOM' ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
     var dir = window._wsLvlDir === -1 ? -1 : 1;
     var arr = list.slice().sort(function (a, b) {
-      return (mm(a) - mm(b)) || ((b.c1 || 0) - (a.c1 || 0)) || ((b.pct || 0) - (a.pct || 0)) || ((a.c || 0) - (b.c || 0)) || ((a.r || 0) - (b.r || 0));
+      return (mm(a) - mm(b)) || ((b.c1 || 0) - (a.c1 || 0)) || ((b.pct || 0) - (a.pct || 0)) || ((a.c || 0) - (b.c || 0)) || ((a.r || 0) - (b.r || 0)) || (a.pair < b.pair ? -1 : (a.pair > b.pair ? 1 : 0)) || ((a.s1 || 0) - (b.s1 || 0)) || (a.col < b.col ? -1 : (a.col > b.col ? 1 : 0));
     });
     var seenC = {}, seenP = {}, top = {};
     arr = arr.filter(function (z) {
@@ -6793,7 +6799,7 @@
         var _tpTop = function (z) { return (z.c1 || 0) >= (_tpMx[+z.s1] || 0) - _tpBand ? 1 : 0; };
         out.sort(function (a, b) {
           if (c2n === 'lvl') {
-            return (a.s1 - b.s1) || (_mo(a) - _mo(b)) || (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r);
+            return (a.s1 - b.s1) || (_mo(a) - _mo(b)) || (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r) || (a.col < b.col ? -1 : (a.col > b.col ? 1 : 0));
           }
           if (c2n === 'auto') return (a.s1 - b.s1) || (_mo(a) - _mo(b)) || (b.c1 - a.c1) || (b.pct - a.pct) || (a.c - b.c) || (a.r - b.r);
           return (c2n === 'all' ? (_mo(a) - _mo(b)) : 0) || (b.pct - a.pct) || (b.c1 - a.c1) || (a.c - b.c) || (a.r - b.r);

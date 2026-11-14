@@ -558,7 +558,7 @@ const DRVT = {
   acct: process.env.DRV_ACCOUNT_TYPE || "demo",
   stake: Number(process.env.DRV_STAKE) || 0.35,
   cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
-  pairs: ALL_PAIRS.filter(p => /^1HZ/i.test(p)),
+  pairs: ALL_PAIRS.slice().sort(), r0: false,
   ws: null, ready: false, connecting: false, pingTimer: null,
   reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,
   signals: {}, sigStart: 0, sigAt: 0, sigBusy: false,
@@ -673,8 +673,12 @@ function drvHoldPick(list, tag, start) {
   for (i = 0; i < list.length; i++) {
     x = list[i];
     if (!x || (x.c1 || 0) < 1 || mm(x) < 0) continue;
+    if (DRVT.r0 && x.r !== 0) continue;
     rows.push(x);
   }
+  rows.sort(function (a, b2) {
+    return ((a.s1 || 0) - (b2.s1 || 0)) || (mm(a) - mm(b2)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((b2.pct || 0) - (a.pct || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0)) || (a.col < b2.col ? -1 : (a.col > b2.col ? 1 : 0));
+  });
   for (i = 0; i < rows.length; i++) {
     k = keyOf(rows[i]);
     b = bestBy[k];
@@ -685,7 +689,7 @@ function drvHoldPick(list, tag, start) {
   }
   rows = rows.filter(function (z) { return bestBy[keyOf(z)] === z; });
   rows.sort(function (a, b2) {
-    return (mm(a) - mm(b2)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((b2.pct || 0) - (a.pct || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0));
+    return (mm(a) - mm(b2)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((b2.pct || 0) - (a.pct || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0)) || (a.pair < b2.pair ? -1 : (a.pair > b2.pair ? 1 : 0)) || ((a.s1 || 0) - (b2.s1 || 0)) || (a.col < b2.col ? -1 : (a.col > b2.col ? 1 : 0));
   });
   for (i = 0; i < rows.length; i++) {
     x = rows[i];
@@ -1314,7 +1318,7 @@ if (process.env.DRV_AUTO === "0") {
   logEvent("DRV_DISABLED", "Server DRV trader refused account type " + DRVT.acct + " (set DRV_ALLOW_REAL=1 to allow)");
 } else {
   setTimeout(function () {
-    logEvent("DRV_START", "Server DRV trader on: " + DRVT.pairs.length + " 1HZ pairs, cycle " + DRVT.cycle + ", king pick = hold logic (REV + MOM), stake $" + DRVT.stake + ", acct " + DRVT.acct);
+    logEvent("DRV_START", "Server DRV trader on: " + DRVT.pairs.length + " pairs (follows the page pair list), cycle " + DRVT.cycle + ", king pick = hold logic (REV + MOM), stake $" + DRVT.stake + ", acct " + DRVT.acct);
     drvLoadLog();
     drvConnect();
     drvRefreshSignals();
@@ -2067,6 +2071,19 @@ const server = http.createServer((req, res) => {
       DRVT.emin = drvEmin;
       DRVT.sigAt = 0;
     }
+    var drvPq = urlObj.searchParams.get("pairs");
+    if (drvPq !== null) {
+      var drvPl = Array.from(new Set(drvPq.split(",").filter(function (p) { return PAIR_SET.has(p); }))).sort();
+      if (drvPl.length && drvPl.join(",") !== DRVT.pairs.join(",")) {
+        DRVT.pairs = drvPl;
+        DRVT.sigAt = 0;
+      }
+    }
+    var drvR0q = urlObj.searchParams.get("r0");
+    if (drvR0q !== null && (drvR0q === "1") !== !!DRVT.r0) {
+      DRVT.r0 = drvR0q === "1";
+      DRVT.sigAt = 0;
+    }
     var drvOut = [], drvK, drvIt;
     for (drvK in DRVT.open) {
       drvIt = DRVT.open[drvK];
@@ -2086,10 +2103,10 @@ const server = http.createServer((req, res) => {
       for (drvLt = 0; drvLt < 2; drvLt++) {
         drvLs = drvLt === 0 ? drvLm.rev : drvLm.mom;
         if (!drvLs) continue;
-        drvLk.push({ pair: drvLp, type: drvLs.type, c: drvLs.c, r: drvLs.r, s1: drvLs.s1, s2: drvLs.s2, col: drvLs.col, pct: drvLs.pct, held: drvLocked(drvLp) });
+        drvLk.push({ pair: drvLp, type: drvLs.type, c: drvLs.c, r: drvLs.r, s1: drvLs.s1, s2: drvLs.s2, col: drvLs.col, pct: drvLs.pct, c1: drvLs.c1, c2: drvLs.c2, held: drvLocked(drvLp) });
       }
     }
-    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: [], sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl }, score: drvScoreboard() });
+    sendJson(res, 200, { ok: true, acct: DRVT.acct, open: drvOut, closed: drvCl, locks: [], kings: drvLk, sigStart: DRVT.sigStart, sigDur: DRVT.sigDur, sess: { buys: DRVT.buys, wins: DRVT.wins, losses: DRVT.losses, pnl: DRVT.pnl }, score: drvScoreboard() });
     return;
   }
 
