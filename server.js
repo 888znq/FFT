@@ -656,6 +656,63 @@ function drvHoldReplay(x, tag, start) {
 }
 
 function drvHoldPick(list, tag, start) {
+  var i, x, k, b, ex, eb, ck, pk, king = null, rest, rows = [], bestBy = {}, seenC = {}, seenP = {}, x1 = [];
+  var etaNow = nowSec();
+  var mm = function (z) { return tag === "MOM" ? ((z.c1 || 0) - (z.c2 || 0)) : (z.c2 || 0); };
+  var keyOf = function (z) {
+    return z.pair + "|" + (z.sess || 1) + "|" + z.s1 + "|" + z.s2 + "|" + z.pct + "|" + z.c1 + "|" + z.c2;
+  };
+  var etaOf = function (z) {
+    var cc = z.c || 60;
+    return (((z.r - (etaNow % cc)) % cc) + cc) % cc;
+  };
+  if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
+  if (!DRVT.holdLock) DRVT.holdLock = {};
+  if (!DRVT.runners) DRVT.runners = {};
+  for (i = 0; i < list.length; i++) {
+    x = list[i];
+    if (!x || (x.c1 || 0) < 1 || mm(x) < 0) continue;
+    rows.push(x);
+  }
+  for (i = 0; i < rows.length; i++) {
+    k = keyOf(rows[i]);
+    b = bestBy[k];
+    if (!b) { bestBy[k] = rows[i]; continue; }
+    ex = etaOf(rows[i]);
+    eb = etaOf(b);
+    if (ex < eb || (ex === eb && (rows[i].c < b.c || (rows[i].c === b.c && rows[i].r < b.r)))) bestBy[k] = rows[i];
+  }
+  rows = rows.filter(function (z) { return bestBy[keyOf(z)] === z; });
+  rows.sort(function (a, b2) {
+    return (mm(a) - mm(b2)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((b2.pct || 0) - (a.pct || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0));
+  });
+  for (i = 0; i < rows.length; i++) {
+    x = rows[i];
+    ck = (x.sess || 1) + "|" + mm(x);
+    pk = (x.sess || 1) + "|" + x.s1 + "|" + x.pair;
+    if (seenC[ck] || seenP[pk]) continue;
+    seenC[ck] = 1;
+    seenP[pk] = 1;
+    if ((+x.s1 || 0) === 1) x1.push(x);
+  }
+  for (i = 0; i < x1.length; i++) {
+    if (!king || x1[i].pct > king.pct || (x1[i].pct === king.pct && (x1[i].c1 || 0) > (king.c1 || 0))) king = x1[i];
+  }
+  if (!king) {
+    DRVT.holdLock[tag] = "";
+    DRVT.runners[tag] = [];
+    return null;
+  }
+  rest = x1.filter(function (z) { return z !== king; });
+  rest.sort(function (a, b2) {
+    return ((b2.pct || 0) - (a.pct || 0)) || ((b2.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (b2.c || 0)) || ((a.r || 0) - (b2.r || 0));
+  });
+  DRVT.holdLock[tag] = king.pair + "|" + king.c + "|" + king.r + "|" + king.s1 + "|" + king.s2 + "|" + king.col + "|" + tag;
+  DRVT.runners[tag] = rest.slice(0, 2);
+  return king;
+}
+
+function drvHoldPickV1(list, tag, start) {
   var i, x, miss, rows = [], bestBy = {}, out, bk, kb, b;
   if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
   if (!DRVT.holdLock) DRVT.holdLock = {};

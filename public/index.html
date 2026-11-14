@@ -6300,7 +6300,7 @@
       top = _holdKingTop;
     }
         if (!top && typeof _wsBuild === 'function') {
-              var _wsL = _wsBuild(_allSigs, undefined, 1);
+              var _wsL = _wsBuild(_allSigs, 'lvl', undefined).filter(function (z) { return +z.s1 === 1; });
               if (!_wsL.length) { window._autoSelFail(); return; }
               top = _wsL[0];
             }
@@ -6531,7 +6531,7 @@
               })())
             .slice(0, 100);
     }
-    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice(), undefined, 1); };
+    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice(), 'lvl', undefined).filter(function (z) { return +z.s1 === 1; }); };
     try { if (window._drvC2Sent !== _wsC2n) { window._drvC2Sent = _wsC2n; fetch('/drv?c2=' + _wsC2n, { cache: 'no-store' }).then(function (r) { if (!r.ok) window._drvC2Sent = -1; }).catch(function () { window._drvC2Sent = -1; }); } } catch (eC2) {}
     window._holdKing = function (tg) { var _hl = window._holdBuild(tg); return _hl.length ? _hl[0] : null; };
     try {
@@ -7509,7 +7509,7 @@
           while (hi > 0 && pr[hi] === -1) hi--;
           g = HF.g[x.pair] = { pr: pr, at: now, hi: hi, lim: Math.min(sEnd + 1, pr.length), pre: (typeof window._preArr === 'function') ? window._preArr(x.pair) : null };
         }
-        var t = rpOne(x, tg, pr, g.pre, g.hi, g.lim, tg === 'MOM' ? 2 : 1, true);
+        var t = rpOne(x, tg, pr, g.pre, g.hi, g.lim, 1, true);
         if (t === null) {
           t = (e && e.pr === pr) ? e.t : now;
           HF.m[k] = { pr: pr, t: t, fb: true, at: now };
