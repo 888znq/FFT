@@ -24,6 +24,7 @@ const BACKFILL_CONCURRENCY = 6;
 const MAX_EVENTS = 100;
 
 const ALL_PAIRS = [
+  "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V",
   "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
   "cryBTCUSD", "cryETHUSD",
   "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD",
@@ -558,7 +559,7 @@ const DRVT = {
   acct: process.env.DRV_ACCOUNT_TYPE || "demo",
   stake: Number(process.env.DRV_STAKE) || 0.35,
   cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
-  pairs: ALL_PAIRS.slice().sort(), r0: false,
+  pairs: ALL_PAIRS.filter(function (p) { return !/^1HZ/.test(p); }).sort(), r0: false,
   ws: null, ready: false, connecting: false, pingTimer: null,
   reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,
   signals: {}, sigStart: 0, sigAt: 0, sigBusy: false,

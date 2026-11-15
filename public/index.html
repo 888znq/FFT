@@ -2834,6 +2834,7 @@
     return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
   }
   var DRV_DISPLAY = {
+    '1HZ10V': 'V10', '1HZ15V': 'V15', '1HZ25V': 'V25', '1HZ30V': 'V30', '1HZ50V': 'V50', '1HZ75V': 'V75', '1HZ90V': 'V90', '1HZ100V': 'V100',
     frxAUDCAD: 'AUD/CAD', frxAUDCHF: 'AUD/CHF', frxAUDJPY: 'AUD/JPY', frxAUDNZD: 'AUD/NZD', frxAUDUSD: 'AUD/USD',
     cryBTCUSD: 'BTC/USD', cryETHUSD: 'ETH/USD',
     frxEURAUD: 'EUR/AUD', frxEURCAD: 'EUR/CAD', frxEURCHF: 'EUR/CHF', frxEURGBP: 'EUR/GBP', frxEURJPY: 'EUR/JPY', frxEURNZD: 'EUR/NZD', frxEURUSD: 'EUR/USD',
@@ -2848,6 +2849,7 @@
   }
   var PAIRS_BY_CAT = {
     '24x7': [
+      "1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V",
       "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
       "cryBTCUSD", "cryETHUSD",
       "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD",
@@ -2910,7 +2912,7 @@
   if (_fireBtnAnchor && _fireBtnAnchor.parentElement) _fireBtnAnchor.parentElement.style.display = 'none';
   var allPairData = {};
   var activePair = "cryBTCUSD";
-  var DEFAULT_PAIRS = PAIRS_BY_CAT['24x7'].slice();
+  var DEFAULT_PAIRS = PAIRS_BY_CAT['24x7'].filter(function (p) { return !/^1HZ/.test(p); });
   var activePairs = DEFAULT_PAIRS.slice();
   window.pairLiveStatus = window.pairLiveStatus || {};
   let globalRevs = [];
@@ -7097,10 +7099,11 @@
   (function () {
     var tgDefs = [
       { id: 'pgCryBtn', k: 'CRY', l: 'CRY\n05:30 - 05:30\nMON - SUN', t: 'Toggle CRY' },
+      { id: 'pgDrvBtn', k: 'DRV', l: 'DRV\n05:30 - 05:30\nMON - SUN', t: 'Toggle DRV' },
       { id: 'pgMtlBtn', k: 'MTL', l: 'MTL', t: 'Toggle MTL' },
       { id: 'pgFrxBtn', k: 'FRX', l: 'FRX', t: 'Toggle FRX' },
       { id: 'pgMixBtn', k: 'MIX', l: 'FRX/MTL/CRY\n11:30 - 23:30\nMON - FRI', t: 'Toggle MTL/FRX/CRY' },
-      { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 29 pairs - tap to pick one, several or all' }
+      { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 37 pairs - tap to pick one, several or all' }
     ];
     window._pairTg = window._pairTg || { CRY: false, DRV: false, MTL: false, FRX: false, MIX: false, ALL: false };
     function tgPaint(b, k) {
