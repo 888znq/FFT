@@ -6899,6 +6899,8 @@
             _hd.innerHTML = '<tr><th style="' + _ths + 'text-align:left;padding-left:14px;">PAIR</th><th style="' + _ths + '">CYCLE</th><th style="' + _ths + '">ROW</th><th style="' + _ths + '">STREAK</th><th style="' + _ths + '">C1</th><th style="' + _ths + '">C2</th><th style="' + _ths + 'padding-right:12px;">PROB%</th></tr>';
             _tbl.insertBefore(_hd, _tb);
           }
+          var _hdHide = _tbl ? _tbl.querySelector('thead') : null;
+          if (_hdHide) _hdHide.style.setProperty('display', 'none', 'important');
           var _sth = _tbl ? _tbl.querySelector('thead tr th:nth-child(4)') : null;
           if (_sth) {
             var _slb = 'STREAK ' + (window._wsLvlDir === -1 ? '\u25BC' : '\u25B2');
