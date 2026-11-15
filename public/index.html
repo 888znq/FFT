@@ -2913,7 +2913,8 @@
   var allPairData = {};
   var activePair = "cryBTCUSD";
   var DEFAULT_PAIRS = PAIRS_BY_CAT['24x7'].filter(function (p) { return !/^1HZ/.test(p); });
-  var activePairs = DEFAULT_PAIRS.slice();
+  var activePairs = DEFAULT_PAIRS.filter(function (p) { return /^cry/.test(p); });
+  DEFAULT_PAIRS = activePairs.slice();
   window.pairLiveStatus = window.pairLiveStatus || {};
   let globalRevs = [];
   let globalMoms = [];
@@ -7105,7 +7106,7 @@
       { id: 'pgMixBtn', k: 'MIX', l: 'FRX/MTL/CRY\n11:30 - 23:30\nMON - FRI', t: 'Toggle MTL/FRX/CRY' },
       { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 37 pairs - tap to pick one, several or all' }
     ];
-    window._pairTg = window._pairTg || { CRY: false, DRV: false, MTL: false, FRX: false, MIX: false, ALL: false };
+    window._pairTg = window._pairTg || { CRY: true, DRV: false, MTL: false, FRX: false, MIX: false, ALL: false };
     function tgPaint(b, k) {
       var on = !!window._pairTg[k];
       b.setAttribute('data-sig', on ? 'on' : 'off');
