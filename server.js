@@ -559,7 +559,7 @@ const DRVT = {
   acct: process.env.DRV_ACCOUNT_TYPE || "demo",
   stake: Number(process.env.DRV_STAKE) || 0.35,
   cycle: parseInt(process.env.DRV_CYCLE, 10) || 60,
-  pairs: ALL_PAIRS.filter(function (p) { return /^cry/.test(p); }).sort(), r0: false,
+  pairs: ["cryBTCUSD", "cryETHUSD"].filter(function (p) { return PAIR_SET.has(p); }).sort(), r0: false,
   ws: null, ready: false, connecting: false, pingTimer: null,
   reqId: 0, pending: {}, open: {}, seen: {}, seenN: 0,
   signals: {}, sigStart: 0, sigAt: 0, sigBusy: false,
