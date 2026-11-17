@@ -16549,14 +16549,14 @@ _dgw('_evtRender', function() { return _evtRender; }, function(f) { _evtRender =
         if (apiPairInput) apiPairInput.value = activePair;
       }
       function _wpsDrvDefault() {
-        var dl = ALL_PAIRS.filter(function (p) { return /^cry/.test(p); });
+        var dl = DEFAULT_PAIRS.filter(function (p) { return ALL_PAIRS.indexOf(p) !== -1; });
         var ks = ['CRY', 'DRV', 'MTL', 'FRX', 'MIX', 'ALL'];
         var ids = { CRY: 'pgCryBtn', DRV: 'pgDrvBtn', MTL: 'pgMtlBtn', FRX: 'pgFrxBtn', MIX: 'pgMixBtn', ALL: 'pgAllBtn' };
         var ki, kb, kon;
         if (!dl.length) return;
         window._pairTg = window._pairTg || {};
         for (ki = 0; ki < ks.length; ki++) {
-          kon = (ks[ki] === 'CRY');
+          kon = (ks[ki] === 'ALL');
           window._pairTg[ks[ki]] = kon;
           kb = document.getElementById(ids[ks[ki]]);
           if (kb) {
