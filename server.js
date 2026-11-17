@@ -659,14 +659,36 @@ function drvHoldReplay(x, tag, start) {
   return (start + lastRun) * 1000;
 }
 
+function drvPipeDedupe(list) {
+  var c2k = function (x) { return x.type === "MOM" ? (x.c1 || 0) - (x.c2 || 0) : (x.c2 || 0); };
+  var pc = function (a, b) { return a.pair < b.pair ? -1 : (a.pair > b.pair ? 1 : 0); };
+  var src = list.slice().sort(function (a, b) {
+    return pc(a, b) || (a.c - b.c) || (c2k(a) - c2k(b)) || ((b.c1 || 0) - (a.c1 || 0)) || (b.pct - a.pct) || (a.r - b.r);
+  });
+  var seen = {}, seenP = {}, out = [], i, x, k, pk;
+  for (i = 0; i < src.length; i++) {
+    x = src[i];
+    k = x.pair + "|" + x.c + "|" + c2k(x);
+    pk = x.pair + "|" + x.c + "|" + x.s1;
+    if (seen[k] || seenP[pk]) continue;
+    seen[k] = 1;
+    seenP[pk] = 1;
+    out.push(x);
+  }
+  return out.sort(function (a, b) {
+    return pc(a, b) || (a.c - b.c) || (a.s1 - b.s1) || (c2k(a) - c2k(b)) || ((b.c1 || 0) - (a.c1 || 0)) || (b.pct - a.pct) || (a.r - b.r);
+  });
+}
+
 function drvPrimePick(list, tag, start) {
-  var i, x, has = false, cand = [], king = null;
+  var i, x, has = false, cand = [], king = null, rawDd;
   if (DRVT.r0) {
     if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
     if (!DRVT.holdLock) DRVT.holdLock = {};
     if (!DRVT.runners) DRVT.runners = {};
-    for (i = 0; i < list.length; i++) {
-      x = list[i];
+    rawDd = drvPipeDedupe(list.filter(function (z) { return z && !z._isPrimeWinner; }));
+    for (i = 0; i < rawDd.length; i++) {
+      x = rawDd[i];
       if (!x || x._isPrimeWinner || x.r !== 0) continue;
       if ((+x.s1 || 0) !== 1 || (x.c1 || 0) < 1) continue;
       cand.push(x);
