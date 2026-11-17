@@ -7210,7 +7210,41 @@
     }
 
   function _primeBuildR0(list, lvl) {
-    if (!r0OnlyMode) return _primeBuild(list, lvl);
+    if (!r0OnlyMode) {
+      var hasP = false, psrc = [], pb = {}, pout = [], pi, px, pk, po, pxd, pod;
+      var pdir = (window._wsLvlDir === -1 ? -1 : 1);
+      var plfEl = document.getElementById('levelFilterSelect');
+      var plf = plfEl ? (parseInt(plfEl.value) || 0) : 0;
+      for (pi = 0; pi < list.length; pi++) {
+        if (list[pi] && list[pi]._isPrimeWinner) { hasP = true; break; }
+      }
+      if (!hasP) return null;
+      for (pi = 0; pi < list.length; pi++) {
+        px = list[pi];
+        if (!px || !px._isPrimeWinner || _hiddenPairs.has(px.pair)) continue;
+        if (plf > 0 && +px.s1 !== plf) continue;
+        if ((px.s1 || 0) < 1 || (px.c1 || 0) < 1) continue;
+        if (lvl !== undefined && +px.s1 !== +lvl) continue;
+        psrc.push(px);
+      }
+      psrc.sort(function (a, bb) {
+        return (pdir === 1 ? a.s1 - bb.s1 : bb.s1 - a.s1) || ((bb.pct || 0) - (a.pct || 0)) || ((bb.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (bb.c || 0)) || ((a.r || 0) - (bb.r || 0)) || (a.pair < bb.pair ? -1 : (a.pair > bb.pair ? 1 : 0));
+      });
+      for (pi = 0; pi < psrc.length; pi++) {
+        px = psrc[pi];
+        pk = (px.sess || 1) + '|' + px.s1;
+        po = pb[pk];
+        if (!po) { pb[pk] = px; continue; }
+        pxd = String(px.primeReason || '').indexOf('EARLY_DURABLE_PRIME') === 0 ? 1 : 0;
+        pod = String(po.primeReason || '').indexOf('EARLY_DURABLE_PRIME') === 0 ? 1 : 0;
+        if (pxd !== pod) { if (pxd > pod) pb[pk] = px; continue; }
+        if (px.pct > po.pct || (px.pct === po.pct && (px.c1 || 0) > (po.c1 || 0))) pb[pk] = px;
+      }
+      for (pi = 0; pi < psrc.length; pi++) {
+        if (pb[(psrc[pi].sess || 1) + '|' + psrc[pi].s1] === psrc[pi]) pout.push(psrc[pi]);
+      }
+      return pout;
+    }
     var i, x, k, o, src = [], out = [], b = {};
     var dir = (window._wsLvlDir === -1 ? -1 : 1);
     var mpEl = document.getElementById('minPctInput');
