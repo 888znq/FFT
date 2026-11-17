@@ -4234,7 +4234,7 @@
       const totalGapSecs = finalChunks.reduce((acc, c) => acc + (c.e - c.s), 0);
       bootLog(`${name} — found ${finalChunks.length} gap(s) totalling ~${totalGapSecs}s. Backfilling...`, '#FFD700');
 
-      const WORKERS = 16;
+      const WORKERS = 8;
       for (let i = 0; i < finalChunks.length; i += WORKERS) {
         const batch = finalChunks.slice(i, i + WORKERS);
         bootLog(`${name} — fetching chunks ${i+1}-${i+batch.length}`, '#00B0FF');
@@ -4303,6 +4303,75 @@
     if (_edgeSyncTimer) { clearInterval(_edgeSyncTimer); _edgeSyncTimer = null; }
     _edgeSyncBusy = {};
   }
+  var _holeBusy = false, _holeTry = {}, _holeRot = 0;
+  function _holeFind(pair) {
+    var pd = allPairData[pair];
+    if (!pd || !pd.prices || pd.prices.length < 2) return null;
+    if (_bootPairState[pair] !== 'done') return null;
+    var P = pd.prices;
+    var nowIdx = Math.min(P.length - 1, Math.floor(Date.now() / 1000) - currentStartTsUtc - 5);
+    if (nowIdx < 1) return null;
+    var thr = Math.min(/^cry/i.test(pair) ? 120 : 900, CYCLE);
+    if (!(thr >= 1)) thr = 60;
+    var i, gs = -1, cs, k;
+    for (i = 0; i <= nowIdx + 1; i++) {
+      if (i <= nowIdx && P[i] === -1) {
+        if (gs === -1) gs = i;
+        continue;
+      }
+      if (gs !== -1) {
+        if (i - gs >= thr) {
+          for (cs = gs; cs < i; cs += 900) {
+            k = pair + '|' + currentStartTsUtc + '|' + cs;
+            if ((_holeTry[k] || 0) < 4) return { pair: pair, key: k, s: cs, e: Math.min(i - 1, cs + 899) };
+          }
+        }
+        gs = -1;
+      }
+    }
+    return null;
+  }
+  async function _holeRepairTick() {
+    if (_holeBusy || document.hidden) return;
+    if (typeof window._chartBusy === 'function' && window._chartBusy()) return;
+    _holeBusy = true;
+    var st0 = currentStartTsUtc;
+    try {
+      var list = [activePair];
+      var others = (activePairs !== null ? activePairs : ALL_PAIRS).filter(function (p) { return p !== activePair; });
+      if (others.length) list.push(others[_holeRot++ % others.length]);
+      var h = null, li;
+      for (li = 0; li < list.length && !h; li++) {
+        if (!list[li] || _pairMarketClosed(list[li])) continue;
+        h = _holeFind(list[li]);
+      }
+      if (!h) return;
+      _holeTry[h.key] = (_holeTry[h.key] || 0) + 1;
+      var map = await fetchChunk(h.pair, st0 + h.s, st0 + h.e);
+      if (st0 !== currentStartTsUtc) return;
+      var pd = allPairData[h.pair];
+      if (!pd || !pd.prices) return;
+      var n = 0, ts, ix;
+      for (ts in map) {
+        ix = parseInt(ts, 10) - st0;
+        if (ix >= 0 && ix < pd.prices.length && pd.prices[ix] === -1) {
+          pd.prices[ix] = map[ts];
+          n++;
+        }
+      }
+      if (n > 0) {
+        try {
+          var cx = getTradingContext();
+          if (cx.startTsUtc === st0) await aofs_write(h.pair, cx.dateStr, pd.times, pd.prices);
+        } catch (eW) {}
+        if (st0 === currentStartTsUtc && h.pair === activePair) processVisualMatrix();
+      }
+    } catch (eH) {
+    } finally {
+      _holeBusy = false;
+    }
+  }
+  setInterval(_holeRepairTick, 6000);
   async function _edgeSyncTick() {
     if (!_isWithinMappedWindow()) return;
     var pair = activePair;
