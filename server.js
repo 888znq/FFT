@@ -257,7 +257,7 @@ function fetchChunk(pair, t0, t1) {
 
 function findPairGaps(pair, dayEpoch, endSec, forceFromSec) {
   const gapMin = /^(cry|1HZ)/i.test(pair) ? 120 : 900;
-  const scanFromIdx = Math.max(0, (endSec - (endSec % 3600)) - PRE_ROLL_SECS - dayEpoch);
+  const scanFromIdx = 0;
   const gaps = [];
 
   // Pre-roll reference: fetch once per day for every pair that still has any empty second in it
