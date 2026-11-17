@@ -659,10 +659,33 @@ function drvHoldReplay(x, tag, start) {
 
 function drvPrimePick(list, tag, start) {
   var i, x, has = false, cand = [], king = null;
+  if (DRVT.r0) {
+    if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
+    if (!DRVT.holdLock) DRVT.holdLock = {};
+    if (!DRVT.runners) DRVT.runners = {};
+    for (i = 0; i < list.length; i++) {
+      x = list[i];
+      if (!x || x._isPrimeWinner || x.r !== 0) continue;
+      if ((+x.s1 || 0) !== 1 || (x.c1 || 0) < 1) continue;
+      cand.push(x);
+    }
+    cand.sort(function (a, b) {
+      return ((b.pct || 0) - (a.pct || 0)) || ((b.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (b.c || 0)) || ((a.r || 0) - (b.r || 0)) || (a.pair < b.pair ? -1 : (a.pair > b.pair ? 1 : 0));
+    });
+    if (!cand.length) {
+      DRVT.holdLock[tag] = "";
+      DRVT.runners[tag] = [];
+      return null;
+    }
+    king = cand[0];
+    DRVT.holdLock[tag] = king.pair + "|" + king.c + "|" + king.r + "|" + king.s1 + "|" + king.s2 + "|" + king.col + "|" + tag;
+    DRVT.runners[tag] = cand.slice(1, 3);
+    return king;
+  }
   for (i = 0; i < list.length; i++) {
     if (list[i] && list[i]._isPrimeWinner) { has = true; break; }
   }
-  if (!has || DRVT.r0) return undefined;
+  if (!has) return undefined;
   if (DRVT.holdStart !== start || !DRVT.holdSeen) { DRVT.holdStart = start; DRVT.holdSeen = {}; DRVT.holdLock = {}; }
   if (!DRVT.holdLock) DRVT.holdLock = {};
   if (!DRVT.runners) DRVT.runners = {};
