@@ -6524,7 +6524,7 @@
       top = _holdKingTop;
     }
         if (!top && typeof _wsBuild === 'function') {
-              var _wsL = _wsBuild(_allSigs, 'lvl', undefined).filter(function (z) { return +z.s1 === 1; });
+              var _wsL = _wsBuild(_allSigs, 'lvl', undefined, true).filter(function (z) { return +z.s1 === 1; });
               if (!_wsL.length) { window._autoSelFail(); return; }
               top = _wsL[0];
             }
@@ -6904,7 +6904,7 @@
               })())
             .slice(0, 100);
     }
-    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice(), 'lvl', undefined).filter(function (z) { return +z.s1 === 1; }); };
+    window._holdBuild = function (tg) { return _wsBuild(tg === 'MOM' ? globalMoms.slice() : globalRevs.slice(), 'lvl', undefined, true).filter(function (z) { return +z.s1 === 1; }); };
     try { if (window._drvC2Sent !== _wsC2n) { window._drvC2Sent = _wsC2n; fetch('/drv?c2=' + _wsC2n, { cache: 'no-store' }).then(function (r) { if (!r.ok) window._drvC2Sent = -1; }).catch(function () { window._drvC2Sent = -1; }); } } catch (eC2) {}
     window._holdKing = function (tg) { var _hl = window._holdBuild(tg); return _hl.length ? _hl[0] : null; };
     try {
@@ -7131,12 +7131,12 @@
     try { renderFilteredTable(); } catch (e) {}
   };
   var _wsMemo = {};
-  function _wsBuild(list, c2n, lvl) {
+  function _wsBuild(list, c2n, lvl, nui) {
       var _pfMpEl2 = document.getElementById('minPctInput');
-      var _pfMp2 = _pfMpEl2 ? (parseFloat(_pfMpEl2.value) || 0) : 0;
+      var _pfMp2 = (!nui && _pfMpEl2) ? (parseFloat(_pfMpEl2.value) || 0) : 0;
       var _pfLfEl2 = document.getElementById('levelFilterSelect');
-      var _pfLf2 = _pfLfEl2 ? (parseInt(_pfLfEl2.value) || 0) : 0;
-      if (c2n === 'lvl') { var _pbr = _primeBuildR0(list, lvl); if (_pbr) return _pbr; }
+      var _pfLf2 = (!nui && _pfLfEl2) ? (parseInt(_pfLfEl2.value) || 0) : 0;
+      if (c2n === 'lvl') { var _pbr = _primeBuildR0(list, lvl, nui); if (_pbr) return _pbr; }
       var n = list.length, hk = '', i;
       _hiddenPairs.forEach(function (p) { hk += p + ','; });
       var mk = (c2n === undefined ? 'u' + _wsC2n : String(c2n)) + '|' + lvl + '|' + (r0OnlyMode ? 1 : 0) + '|' + hk + '|' + _pfMp2 + '|' + _pfLf2;
@@ -7244,12 +7244,12 @@
     memo[tg] = { n: n, f: list[0], l: list[n - 1], out: out };
     return out;
   }
-  function _primeBuildR0(list, lvl) {
+  function _primeBuildR0(list, lvl, nui) {
     if (!r0OnlyMode) {
       var hasP = false, psrc = [], pb = {}, pout = [], pi, px, pk, po, pxd, pod;
       var pdir = (window._wsLvlDir === -1 ? -1 : 1);
       var plfEl = document.getElementById('levelFilterSelect');
-      var plf = plfEl ? (parseInt(plfEl.value) || 0) : 0;
+      var plf = (!nui && plfEl) ? (parseInt(plfEl.value) || 0) : 0;
       for (pi = 0; pi < list.length; pi++) {
         if (list[pi] && list[pi]._isPrimeWinner) { hasP = true; break; }
       }
@@ -7283,9 +7283,9 @@
     var i, x, k, o, src = [], out = [], b = {};
     var dir = (window._wsLvlDir === -1 ? -1 : 1);
     var mpEl = document.getElementById('minPctInput');
-    var mp = mpEl ? (parseFloat(mpEl.value) || 0) : 0;
+    var mp = (!nui && mpEl) ? (parseFloat(mpEl.value) || 0) : 0;
     var lfEl = document.getElementById('levelFilterSelect');
-    var lf = lfEl ? (parseInt(lfEl.value) || 0) : 0;
+    var lf = (!nui && lfEl) ? (parseInt(lfEl.value) || 0) : 0;
     var _rawDd = _wsPipeRaw(list);
     for (i = 0; i < _rawDd.length; i++) {
       x = _rawDd[i];
