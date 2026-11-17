@@ -3705,7 +3705,7 @@
         cws.onopen = () => {
           if (!done) {
 
-            cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 1000, style: "ticks" }));
+            cws.send(JSON.stringify({ ticks_history: pair, start: segStart, end: segEnd, count: 5000, style: "ticks" }));
           }
         };
         cws.onmessage = (ev) => {
@@ -3988,8 +3988,14 @@
           }
           if (preOk) window._preRoll[pair] = { ts: startTs, a: preArr };
         }
-        if (!preOk && (!(nowS >= startTs && nowS < endTs) || Math.floor(nowS / 3600) * 3600 - PRE_ROLL_SECS <= startTs)) {
-          try { window._preRoll[pair] = { ts: startTs, a: await fetchPreRoll(pair, startTs) }; } catch (_rsP) {}
+        if (startTs <= nowS) {
+          try {
+            var _dPre = await fetchPreRoll(pair, startTs), _dHas = false;
+            for (i = 0; i < 900; i++) {
+              if (_dPre[i] !== -1) { _dHas = true; break; }
+            }
+            if (_dHas || !preOk) window._preRoll[pair] = { ts: startTs, a: _dPre };
+          } catch (_rsP) {}
         }
       }
       try {
