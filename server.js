@@ -1673,6 +1673,25 @@ function scanWorkerMain() {
     }
     return { kings: kings, fb: fb };
   }
+  function wsDedupe(list) {
+    function c2k(x) { return x.type === 'MOM' ? (x.c1 || 0) - (x.c2 || 0) : (x.c2 || 0); }
+    var src = list.slice().sort(function (a, b) {
+      return (a.c - b.c) || (c2k(a) - c2k(b)) || ((b.c1 || 0) - (a.c1 || 0)) || (b.pct - a.pct) || (a.r - b.r);
+    });
+    var seen = {}, seenP = {}, out = [], i, x, k, pk;
+    for (i = 0; i < src.length; i++) {
+      x = src[i];
+      k = x.c + '|' + c2k(x);
+      pk = x.c + '|' + x.s1;
+      if (seen[k] || seenP[pk]) continue;
+      seen[k] = 1;
+      seenP[pk] = 1;
+      out.push(x);
+    }
+    return out.sort(function (a, b) {
+      return (a.c - b.c) || (a.s1 - b.s1) || (c2k(a) - c2k(b)) || ((b.c1 || 0) - (a.c1 || 0)) || (b.pct - a.pct) || (a.r - b.r);
+    });
+  }
   function primeSelect(kings, fb, pair, rawRevs, rawMoms) {
     var res = { rev: [], mom: [] }, gi = [{}, {}], srcs = [rawRevs || [], rawMoms || []];
     var t, i, j, x, s, kk, pool, byL, fbL, lvls, keys, ent, g, maxC1, minS, dur, reason;
@@ -1696,8 +1715,9 @@ function scanWorkerMain() {
         byL[kk[4]].push(kk);
         lvls[kk[4]] = 1;
       }
-      for (i = 0; i < srcs[t].length; i++) {
-        x = srcs[t][i];
+      var _fbDd = wsDedupe(srcs[t].filter(function (z) { return z && z.pair === pair && !z._isPrimeWinner; }));
+      for (i = 0; i < _fbDd.length; i++) {
+        x = _fbDd[i];
         if (!x || x.pair !== pair || x._isPrimeWinner) continue;
         kk = [t, x.c, x.r, x.col === 'R' ? 1 : 0, x.s1, 0, x.c1, x.c2, x.pct];
         var prevFb = fbL[x.s1];
