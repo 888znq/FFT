@@ -11835,15 +11835,6 @@
           fr = live ? (nowF % B) / B : 0;
         }
         arr = tcBoxCandles(pair, pr, B, sEnd);
-        pw = W - 2 * M;
-        ph = H - 12 - 2 * M;
-        if (n === 288 && W >= H) { cols = 24; }
-        else { cols = Math.max(1, Math.min(n, Math.round(Math.sqrt(n * pw / Math.max(1, ph))))); }
-        rows = Math.ceil(n / cols);
-        tw = (pw + gp) / cols;
-        th = (ph + gp) / rows;
-        bw = Math.max(1, tw - gp);
-        bh = Math.max(1, th - gp);
         ctx.beginPath();
         if (ctx.roundRect) { ctx.roundRect(6, 6, W - 12, H - 12, 16); } else { ctx.rect(6, 6, W - 12, H - 12); }
         ctx.strokeStyle = '#1b222a';
@@ -11895,13 +11886,117 @@
             }
           }
         } catch (eBx) { bxMap = {}; }
+        var rkY = new Array(n), rkCur = 0, rkPrevDir = 0, rkMin = 0, rkMax = 0, rkLastJ = -1;
         for (j = 0; j < n; j++) {
+          var rkHc = bxCells ? bxCells[j] : null;
+          var rkC = arr[j];
+          var rkDir = 0;
+          if (j === cj) {
+            var rkPrevP = bxCells ? ((j > 0 && bxCells[j - 1]) ? bxCells[j - 1].p : (window._preRef ? window._preRef(pair, j * B + bxR0 - B) : -1)) : (rkC ? rkC[0] : -1);
+            var rkLp = bxCells ? lp : (rkC ? rkC[3] : -1);
+            rkDir = (rkPrevP > 0 && rkLp > 0 && rkLp < rkPrevP) ? -1 : 1;
+            rkLastJ = j;
+          } else if (bxCells) {
+            if (rkHc) { rkDir = (rkHc.col === 1) ? 1 : -1; rkLastJ = j; }
+          } else if (rkC) {
+            rkDir = (rkC[3] >= rkC[0]) ? 1 : -1;
+            rkLastJ = j;
+          }
+          if (rkDir === 0 && bxMap[j] && bxMap[j].fut) {
+            rkDir = bxMap[j].fut.up ? 1 : -1;
+            rkLastJ = j;
+          }
+          if (rkDir !== 0) {
+            if (rkPrevDir !== 0) rkCur += rkDir;
+            rkPrevDir = rkDir;
+          }
+          rkY[j] = rkCur;
+          if (rkDir !== 0 || (bxMap[j] && (bxMap[j].sig || bxMap[j].resW || bxMap[j].fut))) {
+            if (rkCur < rkMin) rkMin = rkCur;
+            if (rkCur > rkMax) rkMax = rkCur;
+            if (j > rkLastJ) rkLastJ = j;
+          }
+        }
+        var rkTop = Math.max(26, M + 10);
+        var rkBot = H - PADB;
+        pw = W - PADL - PADR;
+        ph = Math.max(40, rkBot - rkTop);
+        var rkSpp = TC.spp || 3;
+        var rkNowSec = live ? Math.floor(nowF) : Math.min(li >= 0 ? li : 0, sEnd);
+        var rkOcSig = lastClickedSigId + '|' + clickCycleIndex + '|' + currentInstanceIndex;
+        if (TC.ocSig !== rkOcSig) {
+          if (clickCycleIndex === -1) {
+            TC.ocSig = rkOcSig;
+            TC.follow = true;
+          } else if (currentInstanceIndex >= 0 && currentInstanceIndex < currentInstances.length) {
+            TC.ocSig = rkOcSig;
+            var rkOcJ = currentInstances[currentInstanceIndex];
+            TC.follow = false;
+            TC.left = (rkOcJ.col * CYCLE + rkOcJ.row - _cycleOff()) - pw * rkSpp / 2;
+          }
+        }
+        if (TC.follow) TC.left = rkNowSec - pw * rkSpp * 0.4;
+        else tcClamp(pw);
+        var rkLeft = TC.left, rkRight = rkLeft + pw * rkSpp;
+        var rkXOf = function(ix2) { return PADL + (ix2 - rkLeft) / rkSpp; };
+        var rkColS = function(idx) { return bxCells ? ((idx - 1) * B + bxR0) : (idx * B); };
+        var rkColE = function(idx) { return bxCells ? (idx * B + bxR0) : ((idx + 1) * B); };
+        var rkVis0 = Math.max(0, Math.floor((rkLeft - bxR0) / B) - 1);
+        var rkVis1 = Math.min(n - 1, Math.ceil((rkRight - bxR0) / B) + 1);
+        var rkSpan = Math.max(1, rkMax - rkMin + 1);
+        tw = Math.max(2, B / rkSpp);
+        gp = tw >= 8 ? Math.min(3, tw * 0.12) : (tw >= 4 ? 0.5 : 0);
+        bw = Math.max(1, tw - gp);
+        var rkYz = TC.yZ || 1, rkYo = TC.yOff || 0;
+        var rkPlotH = Math.max(40, TC.H - PADT - PADB);
+        var rkStepY = Math.max(4, (ph / rkSpan) * rkYz);
+        bh = Math.max(2, rkStepY - gp);
+        var rkCenterVal = (rkMin + rkMax) / 2 + rkYo * rkYz * (rkPlotH / rkStepY);
+        var rkY0 = rkTop + ph / 2 - (rkMax - rkCenterVal + 0.5) * rkStepY + gp / 2;
+        var rkPosY = function(idx) { return rkY0 + (rkMax - rkY[idx]) * rkStepY; };
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(PADL, rkTop, pw, ph);
+        ctx.clip();
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.lineWidth = 1;
+        for (var rkGr = rkMin; rkGr <= rkMax; rkGr++) {
+          var rkGy = Math.round(rkY0 + (rkMax - rkGr) * rkStepY + bh / 2) + 0.5;
+          if (rkGy < rkTop || rkGy > rkBot) continue;
+          ctx.beginPath();
+          ctx.moveTo(PADL, rkGy);
+          ctx.lineTo(W - PADR, rkGy);
+          ctx.stroke();
+        }
+        var rkXe = rkXOf(sEnd);
+        if (rkXe >= PADL && rkXe <= W - PADR) {
+          ctx.strokeStyle = DIM; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+          ctx.beginPath(); ctx.moveTo(Math.round(rkXe) + 0.5, rkTop); ctx.lineTo(Math.round(rkXe) + 0.5, rkBot); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        for (j = rkVis0; j <= rkVis1; j++) {
           var hcCell = bxCells ? bxCells[j] : null;
           c = arr[j];
-          px = M + (j % cols) * tw;
-          py = M + ((j / cols) | 0) * th;
+          var hasDat = bxCells ? (!!hcCell || j === cj) : (!!c || j === cj);
+          if (!hasDat && !bxMap[j]) continue;
+          var bxX0 = rkXOf(rkColS(j)), bxX1 = rkXOf(rkColE(j));
+          if (bxX1 < PADL || bxX0 > W - PADR) continue;
+          px = bxX0 + gp / 2;
+          bw = Math.max(1, (bxX1 - bxX0) - gp);
+          py = rkPosY(j);
+          if (j > 0 && (hasDat || bxMap[j])) {
+            var prevPy = rkPosY(j - 1);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(bxX0 - gp / 2, prevPy + (py >= prevPy ? bh : 0));
+            ctx.lineTo(px, py + (py >= prevPy ? 0 : bh));
+            ctx.stroke();
+            ctx.restore();
+          }
           ctx.beginPath();
-          if (ctx.roundRect) { ctx.roundRect(px, py, bw, bh, Math.min(bw, bh) * 0.16); } else { ctx.rect(px, py, bw, bh); }
+          if (ctx.roundRect && bw >= 6 && bh >= 6) { ctx.roundRect(px, py, bw, bh, Math.min(bw, bh) * 0.14); } else { ctx.rect(px, py, bw, bh); }
           if (bxCells) {
             ctx.fillStyle = (!hcCell || j === cj) ? '#11161b' : (hcCell.col === 1 ? GREEN : RED);
           } else {
@@ -11930,27 +12025,32 @@
             ctx.lineWidth = 1.5;
             ctx.stroke();
             rm = bxCells ? Math.max(0, Math.ceil((j * B + bxR0) - nowF)) : Math.max(0, Math.ceil(B - nowF % B));
-            tfs = Math.max(9, Math.min(bw, bh) * 0.28);
-            ctx.font = 'bold ' + tfs + 'px ' + MONO;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = '#000000';
-            ctx.shadowBlur = 4;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(((rm / 60) | 0) + ':' + ('0' + rm % 60).slice(-2), px + bw / 2, py + bh / 2);
-            ctx.shadowBlur = 0;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
+            if (bw >= 18 && bh >= 12) {
+              tfs = Math.max(8, Math.min(bw, bh) * 0.28);
+              ctx.font = 'bold ' + tfs + 'px ' + MONO;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.shadowColor = '#000000';
+              ctx.shadowBlur = 4;
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(((rm / 60) | 0) + ':' + ('0' + rm % 60).slice(-2), px + bw / 2, py + bh / 2);
+              ctx.shadowBlur = 0;
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'alphabetic';
+            }
             TC.pulseOn = true;
           }
         }
         var bxPcol = tcPairColor(pair);
-        for (j = 0; j < n; j++) {
+        for (j = rkVis0; j <= rkVis1; j++) {
           var hcC2 = bxCells ? bxCells[j] : null;
           bxO = bxMap[j];
           if (!hcC2 && !bxO) continue;
-          px = M + (j % cols) * tw;
-          py = M + ((j / cols) | 0) * th;
+          var bx2X0 = rkXOf(rkColS(j)), bx2X1 = rkXOf(rkColE(j));
+          if (bx2X1 < PADL || bx2X0 > W - PADR) continue;
+          px = bx2X0 + gp / 2;
+          bw = Math.max(1, (bx2X1 - bx2X0) - gp);
+          py = rkPosY(j);
           var bxEmpty = bxCells ? (!hcC2 || j === cj) : (!arr[j] || j === cj);
           var bxTx = bxEmpty ? '#FFFFFF' : '#000432';
           var bxIsSig = !!(bxO && bxO.sig);
@@ -11958,7 +12058,7 @@
           var bxUp2 = bxIsFut ? bxO.fut.up : (bxO ? bxO.up : true);
           var bxTxt = hcC2 ? ('X' + hcC2.s) : (bxIsFut ? ('X' + bxO.fut.s1) : '');
           var bxHasSub = (bxIsSig || bxIsFut);
-          var bxFs = Math.max(7, Math.min(bh * (bxHasSub ? 0.36 : 0.42), 18));
+          var bxFs = Math.max(7, Math.min(bh * 0.42, 18));
           ctx.save();
           ctx.beginPath();
           ctx.rect(px, py, bw, bh);
@@ -11973,7 +12073,7 @@
             ctx.setLineDash([]);
             bxTx = bxPcol;
           }
-          if (bxTxt && j !== cj) {
+          if (bxTxt && j !== cj && bw >= 12 && bh >= 10) {
             ctx.font = 'bold ' + bxFs + 'px ' + MONO;
             while (bxFs > 7 && ctx.measureText(bxTxt).width > bw - 6) {
               bxFs -= 1;
@@ -11983,50 +12083,45 @@
             ctx.textBaseline = 'middle';
             if (bxEmpty) { ctx.shadowColor = '#000000'; ctx.shadowBlur = 3; }
             ctx.fillStyle = bxTx;
-            ctx.fillText(bxTxt, px + bw / 2, bxHasSub ? (py + bh * 0.38) : (py + bh * 0.52));
+            ctx.fillText(bxTxt, px + bw / 2, py + bh * 0.52);
           }
+          ctx.restore();
+          var bxMx = px + bw / 2;
           if (bxHasSub) {
-            var bxDt = (bh >= 28 && bw >= 34) ? (bxUp2 ? 'BUY' : 'SELL') : (bxUp2 ? '\u25B2' : '\u25BC');
-            var bxFs2 = Math.max(7, Math.round(bxFs * 0.62));
-            ctx.font = 'bold ' + bxFs2 + 'px ' + MONO;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            var bxSubY = py + bh - bxFs2 * 0.9 - 2;
-            var bxDw = Math.min(bw - 4, ctx.measureText(bxDt).width + 8), bxDh = bxFs2 + 4;
+            var bxDt = bxUp2 ? 'BUY' : 'SELL';
+            ctx.save();
+            ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
+            ctx.setLineDash([]);
+            ctx.font = 'bold 10px ' + MONO;
+            var bxDw = ctx.measureText(bxDt).width + 10, bxDh = 14;
+            var bxCy = bxUp2 ? Math.min(rkBot - 10, py + bh + 12) : Math.max(rkTop + 10, py - 12);
             ctx.beginPath();
-            if (ctx.roundRect) { ctx.roundRect(px + (bw - bxDw) / 2, bxSubY - bxDh / 2, bxDw, bxDh, bxDh / 2); } else { ctx.rect(px + (bw - bxDw) / 2, bxSubY - bxDh / 2, bxDw, bxDh); }
+            if (ctx.roundRect) { ctx.roundRect(bxMx - bxDw / 2, bxCy - bxDh / 2, bxDw, bxDh, bxDh / 2); } else { ctx.rect(bxMx - bxDw / 2, bxCy - bxDh / 2, bxDw, bxDh); }
             ctx.fillStyle = bxPcol;
             ctx.fill();
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1.5;
             ctx.strokeStyle = BG;
             ctx.stroke();
             ctx.fillStyle = BG;
-            ctx.fillText(bxDt, px + bw / 2, bxSubY + 0.5);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(bxDt, bxMx, bxCy + 0.5);
+            ctx.restore();
           }
-          ctx.shadowBlur = 0;
-          if (bxO && bxO.resW) {
-            var bxR = Math.max(5, Math.min(bw, bh) * 0.15), bxBx = px + bw - bxR - 2, bxBy = py + bxR + 2;
-            ctx.beginPath();
-            ctx.arc(bxBx, bxBy, bxR, 0, 6.2832);
-            if (bxO.resW === 'pending') {
-              ctx.lineWidth = 1.5;
-              ctx.strokeStyle = bxPcol;
-              ctx.stroke();
-            } else {
-              ctx.fillStyle = BG;
-              ctx.fill();
-              ctx.lineWidth = 1.2;
-              ctx.strokeStyle = bxPcol;
-              ctx.stroke();
-              ctx.font = 'bold ' + Math.round(bxR * 1.4) + 'px ' + MONO;
-              ctx.fillStyle = bxPcol;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(bxO.resW === 'win' ? '\u2713' : '\u2717', bxBx, bxBy + 0.5);
-            }
+          if (bxO && (bxO.resW === 'win' || bxO.resW === 'loss')) {
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            ctx.setLineDash([]);
+            ctx.font = 'bold ' + window._tcTkFs() + 'px ' + MONO;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = bxPcol;
+            var bxTkY = Math.max(rkTop + 24, py - 26);
+            ctx.fillText(bxO.resW === 'win' ? '\u2713' : '\u2717', bxMx, bxTkY);
+            ctx.restore();
           }
-          ctx.restore();
         }
         nm = getPairDisplayName(pair) + '  |  BOX ' + (B % 60 === 0 ? (B / 60) + 'm' : B + 's') + (bxMain ? ' R' + bxMain.r : '') + '  |  DOUBLE-CLICK = SWITCH MODE';
         ctx.font = 'bold 9px ' + MONO;
@@ -12045,6 +12140,58 @@
           bxTx3 = tcSeg(ctx, '\u25CB' + bxTt.p + ' ', DIM, bxTx3, 15);
           bxTx3 = tcSeg(ctx, (bxTd ? Math.round(bxTt.w / bxTd * 100) + '%' : '--') + '   ', '#E2E8F0', bxTx3, 15);
         }
+        ctx.restore();
+        var rkSteps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400];
+        var rkTstep = rkSteps[rkSteps.length - 1];
+        for (var rkSk = 0; rkSk < rkSteps.length; rkSk++) {
+          if (rkSteps[rkSk] / rkSpp >= 78) { rkTstep = rkSteps[rkSk]; break; }
+        }
+        var rkOff = tcOffset();
+        var rkFirstT = Math.ceil((rkLeft + rkOff) / rkTstep) * rkTstep - rkOff;
+        ctx.save();
+        ctx.fillStyle = window.CHART_BG || BG;
+        ctx.fillRect(W - PADR, 0, PADR, H);
+        ctx.fillRect(0, rkBot + 1, W, H - rkBot - 1);
+        ctx.strokeStyle = 'rgba(226,232,240,0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(W - PADR + 0.5, rkTop);
+        ctx.lineTo(W - PADR + 0.5, rkBot + 0.5);
+        ctx.moveTo(0, rkBot + 0.5);
+        ctx.lineTo(W, rkBot + 0.5);
+        ctx.stroke();
+        ctx.font = '10px ' + MONO;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        var rkStepV = Math.max(1, Math.ceil(rkSpan / (6 * rkYz)));
+        for (var rkAv = Math.ceil(rkMin / rkStepV) * rkStepV; rkAv <= rkMax; rkAv += rkStepV) {
+          var rkAy = Math.round(rkY0 + (rkMax - rkAv) * rkStepY + bh / 2) + 0.5;
+          if (rkAy < rkTop + 10 || rkAy > rkBot - 10) continue;
+          ctx.fillStyle = bxPcol;
+          ctx.fillText((rkAv > 0 ? '+' : '') + rkAv, W - PADR + 6, rkAy);
+        }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var rkTbY = rkBot + 3, rkTbH = Math.max(14, H - rkBot - 5), rkTbM = rkTbY + rkTbH / 2;
+        for (var rkTm = rkFirstT; rkTm <= rkRight; rkTm += rkTstep) {
+          if (rkTm < 0 || rkTm > sEnd) continue;
+          var rkTx = rkXOf(rkTm);
+          if (rkTx < PADL + 28 || rkTx > W - PADR - 28) continue;
+          ctx.fillStyle = bxPcol;
+          ctx.fillText(tcFmt(rkTm, rkTstep < 60), rkTx, rkTbM + 0.5);
+        }
+        var rkNx = rkXOf(rkNowSec);
+        if (rkNx >= PADL && rkNx <= W - PADR) {
+          var rkNt = tcFmt(rkNowSec, true);
+          ctx.font = 'bold 10px ' + MONO;
+          var rkNw = ctx.measureText(rkNt).width + 12;
+          var rkNl = Math.max(PADL + 3, Math.min(W - PADR - 4 - rkNw, rkNx - rkNw / 2));
+          ctx.fillStyle = bxPcol;
+          _calmFill(ctx, rkNl, rkTbY + 1, rkNw, rkTbH - 2);
+          ctx.fillStyle = BG;
+          ctx.fillText(rkNt, rkNl + rkNw / 2, rkTbM + 0.5);
+        }
+        ctx.restore();
         ctx.shadowBlur = 0;
         if (TC.mx >= 0 && !(window._chartBusy && window._chartBusy())) tcHoverAt(TC.mx, TC.my);
       }
