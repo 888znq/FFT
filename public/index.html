@@ -3933,7 +3933,7 @@
         return window.localStorage.getItem('ws_token') || '';
       } catch (_rsT) { return ''; }
     }
-    async function _rsPrime(pair, dateStr, startTs, endTs) {
+    async function _rsPrime(pair, dateStr, startTs, endTs, quiet) {
       if (Date.now() < _rsDownUntil) return false;
       if (!/^https?:$/.test(window.location.protocol)) return false;
       var nowS = Math.floor(Date.now() / 1000);
@@ -3979,6 +3979,7 @@
       }
       if (got === 0) return false;
       var preOk = false;
+      var _preKnown = !!(startTs === currentStartTsUtc && window._preDeriv && window._preDeriv[pair] === startTs && window._preRoll[pair] && window._preRoll[pair].ts === startTs);
       if (startTs === currentStartTsUtc) {
         var _pk0 = preLen + off - 900 - srvFrom;
         var preArr = (_pk0 >= 0) ? arr.slice(_pk0, _pk0 + 900) : new Float64Array(0);
@@ -3986,15 +3987,16 @@
           for (i = 0; i < 900; i++) {
             if (preArr[i] !== -1) { preOk = true; break; }
           }
-          if (preOk) window._preRoll[pair] = { ts: startTs, a: preArr };
+          if (preOk && !_preKnown) window._preRoll[pair] = { ts: startTs, a: preArr };
         }
-        if (startTs <= nowS) {
+        if (startTs <= nowS && !_preKnown) {
           try {
             var _dPre = await fetchPreRoll(pair, startTs), _dHas = false;
             for (i = 0; i < 900; i++) {
               if (_dPre[i] !== -1) { _dHas = true; break; }
             }
             if (_dHas || !preOk) window._preRoll[pair] = { ts: startTs, a: _dPre };
+            if (_dHas) { (window._preDeriv = window._preDeriv || {})[pair] = startTs; }
           } catch (_rsP) {}
         }
       }
@@ -4008,7 +4010,7 @@
         }
         await aofs_write(pair, dateStr, times, prices);
       } catch (_rsC) { return false; }
-      try { bootLog(getPairDisplayName(pair) + ' \u2014 history from Render server: ' + got + ' ticks', '#00E676'); } catch (_rsL2) {}
+      if (!quiet) try { bootLog(getPairDisplayName(pair) + ' \u2014 history from Render server: ' + got + ' ticks', '#00E676'); } catch (_rsL2) {}
           var rsLb = window.liveTickBuffer ? window.liveTickBuffer[pair] : null;
           var rsTs, rsIx;
           if (rsLb) {
@@ -4031,11 +4033,34 @@
           }
           if (!rsHole) {
             try { await aofs_write(pair, dateStr, times, prices); } catch (_rsW) {}
-            try { bootLog(getPairDisplayName(pair) + ' \u2014 server data complete, Deriv backfill skipped', '#00E676'); } catch (_rsL3) {}
+            if (!quiet) try { bootLog(getPairDisplayName(pair) + ' \u2014 server data complete, Deriv backfill skipped', '#00E676'); } catch (_rsL3) {}
             return { times: times, prices: prices };
           }
       return true;
     }
+  var _bgWarmDone = {};
+  async function _bgWarmPairs(gen, dateStr, startTs, endTs, skip) {
+    window._bgWarmArgs = [gen, dateStr, startTs, endTs, skip];
+    if (!window._bgWarmTmr) {
+      window._bgWarmTmr = setInterval(function () {
+        var a = window._bgWarmArgs;
+        if (a && a[0] === window._bootGen) _bgWarmPairs(a[0], a[1], a[2], a[3], a[4]);
+      }, 120000);
+    }
+    var tok = (window._bgWarmTok = (window._bgWarmTok || 0) + 1);
+    var list = ALL_PAIRS.filter(function (p) { return (skip || []).indexOf(p) === -1 && !_pairMarketClosed(p); });
+    for (var bi = 0; bi < list.length; bi++) {
+      if (tok !== window._bgWarmTok || gen !== window._bootGen) return;
+      var bp = list[bi], bk = bp + '|' + dateStr;
+      if (_bgWarmDone[bk] && Date.now() - _bgWarmDone[bk] < 100000) continue;
+      if (Date.now() < _rsDownUntil) return;
+      try {
+        var bres = await _rsPrime(bp, dateStr, startTs, endTs, true);
+        if (bres) _bgWarmDone[bk] = Date.now();
+      } catch (eBg) {}
+      await new Promise(function (r) { setTimeout(r, 400); });
+    }
+  }
   window._srvScanRun = _srvScanRun;
   var _rsScanBadUntil = 0;
   function _rsScanFallback(why) {
@@ -4654,6 +4679,7 @@
       if (b + BATCH_SIZE < _pairsToFetch.length && !window._lastGridSrv) await new Promise(r => setTimeout(r, 500));
     }
     bootLog(`[PHASE 2 GAP BACKFILL] DONE — All targets synchronized.`, '#00E676');
+    try { _bgWarmPairs(_bootGen, ctxState.dateStr, startTs, endTs, _pairsToFetch); } catch (_bgE) {}
     document.getElementById('stats').innerHTML = `DNA MATRIX OMNI-SYNC: <span style="color:#00E676;">${_pairsToFetch.length}</span> TARGETS ${ctxState.isLive ? '| <span style="color:#00E676;">🟢 LIVE</span>' : '| <span style="color:#FF2D3A;">🔴 MARKET CLOSED</span>'}`;
 
     processVisualMatrix();
