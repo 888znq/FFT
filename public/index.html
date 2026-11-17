@@ -6637,7 +6637,6 @@
   }
   function _primeBuild(list, lvl) {
     var i, x, k, o, xd, od, has = false, src = [], out = [], b = {}, dir = (window._wsLvlDir === -1 ? -1 : 1);
-    if (r0OnlyMode) return null;
     var _pfMpEl = document.getElementById('minPctInput');
     var _pfMp = _pfMpEl ? (parseFloat(_pfMpEl.value) || 0) : 0;
     var _pfLfEl = document.getElementById('levelFilterSelect');
@@ -6648,7 +6647,9 @@
     if (!has) return null;
     for (i = 0; i < list.length; i++) {
       x = list[i];
-      if (!x || !x._isPrimeWinner || _hiddenPairs.has(x.pair)) continue;
+      if (!x || _hiddenPairs.has(x.pair)) continue;
+      if (r0OnlyMode ? !!x._isPrimeWinner : !x._isPrimeWinner) continue;
+      if (r0OnlyMode && x.r !== 0) continue;
       if (_pfMp > 0 && (x.pct || 0) < _pfMp) continue;
       if (_pfLf > 0 && +x.s1 !== _pfLf) continue;
       if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
@@ -7128,7 +7129,7 @@
       var _pfMp2 = _pfMpEl2 ? (parseFloat(_pfMpEl2.value) || 0) : 0;
       var _pfLfEl2 = document.getElementById('levelFilterSelect');
       var _pfLf2 = _pfLfEl2 ? (parseInt(_pfLfEl2.value) || 0) : 0;
-      if (c2n === 'lvl') { var _pbr = _primeBuild(list, lvl); if (_pbr) return _pbr; }
+      if (c2n === 'lvl') { var _pbr = _primeBuildR0(list, lvl); if (_pbr) return _pbr; }
       var n = list.length, hk = '', i;
       _hiddenPairs.forEach(function (p) { hk += p + ','; });
       var mk = (c2n === undefined ? 'u' + _wsC2n : String(c2n)) + '|' + lvl + '|' + (r0OnlyMode ? 1 : 0) + '|' + hk + '|' + _pfMp2 + '|' + _pfLf2;
@@ -7208,6 +7209,36 @@
       return res.slice(0, _wsTopLimit);
     }
 
+  function _primeBuildR0(list, lvl) {
+    if (!r0OnlyMode) return _primeBuild(list, lvl);
+    var i, x, k, o, src = [], out = [], b = {};
+    var dir = (window._wsLvlDir === -1 ? -1 : 1);
+    var mpEl = document.getElementById('minPctInput');
+    var mp = mpEl ? (parseFloat(mpEl.value) || 0) : 0;
+    var lfEl = document.getElementById('levelFilterSelect');
+    var lf = lfEl ? (parseInt(lfEl.value) || 0) : 0;
+    for (i = 0; i < list.length; i++) {
+      x = list[i];
+      if (!x || x._isPrimeWinner || _hiddenPairs.has(x.pair)) continue;
+      if (x.r !== 0) continue;
+      if (mp > 0 && (x.pct || 0) < mp) continue;
+      if (lf > 0 && +x.s1 !== lf) continue;
+      if ((x.s1 || 0) < 1 || (x.c1 || 0) < 1) continue;
+      if (lvl !== undefined && +x.s1 !== +lvl) continue;
+      src.push(x);
+    }
+    for (i = 0; i < src.length; i++) {
+      x = src[i];
+      k = (x.sess || 1) + '|' + x.s1;
+      o = b[k];
+      if (!o || (x.pct || 0) > (o.pct || 0) || ((x.pct || 0) === (o.pct || 0) && (x.c1 || 0) > (o.c1 || 0))) b[k] = x;
+    }
+    for (k in b) out.push(b[k]);
+    out.sort(function (a, c) {
+      return (dir === 1 ? a.s1 - c.s1 : c.s1 - a.s1) || ((c.pct || 0) - (a.pct || 0)) || ((c.c1 || 0) - (a.c1 || 0)) || ((a.c || 0) - (c.c || 0)) || ((a.r || 0) - (c.r || 0));
+    });
+    return out;
+  }
   function _wsC2Build(list) {
       var rows = [], seen = {}, maxC1 = 0, i, x, rk;
           for (i = 0; i < list.length; i++) {
