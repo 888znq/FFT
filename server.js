@@ -194,6 +194,7 @@ var backfillState = {
 };
 var backfillQueuedReason = null;
 var backfillSeq = 0; // bumps each time a backfill finishes, so pages know to re-pull the day
+var preBackfillDay = {}; // pair -> day epoch whose pre-roll was already fetched from Deriv
 
 function fetchChunk(pair, t0, t1) {
   return new Promise(resolve => {
@@ -259,13 +260,13 @@ function findPairGaps(pair, dayEpoch, endSec, forceFromSec) {
   const scanFromIdx = Math.max(0, (endSec - (endSec % 3600)) - PRE_ROLL_SECS - dayEpoch);
   const gaps = [];
 
-  // Check 900s pre-roll reference if completely empty
-  var hasPre = false;
+  // Pre-roll reference: fetch once per day for every pair that still has any empty second in it
+  var preMiss = 0;
   const preArr = preTicks[pair];
   for (var pi = 0; pi < PRE_ROLL_SECS; pi++) {
-    if (preArr[pi] !== -1) { hasPre = true; break; }
+    if (preArr[pi] === -1) preMiss++;
   }
-  if (!hasPre && endSec >= dayEpoch && scanFromIdx === 0) {
+  if (preMiss > 0 && preBackfillDay[pair] !== dayEpoch) {
     gaps.push([dayEpoch - PRE_ROLL_SECS, dayEpoch - 1]);
   }
 
@@ -378,6 +379,7 @@ async function runBackfill(reason, forceFromSec) {
         for (const ts in res.map) {
           recordTick(task.pair, +ts, res.map[ts]);
         }
+        if (res.ok && task.c[1] < targetDayEpoch) preBackfillDay[task.pair] = targetDayEpoch;
         await sleep(300);
       }
       backfillState.doneChunks++;
