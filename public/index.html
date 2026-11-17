@@ -3121,8 +3121,8 @@
   if (_fireBtnAnchor && _fireBtnAnchor.parentElement) _fireBtnAnchor.parentElement.style.display = 'none';
   var allPairData = {};
   var activePair = "cryBTCUSD";
-  var DEFAULT_PAIRS = PAIRS_BY_CAT['24x7'].filter(function (p) { return !/^1HZ/.test(p); });
-  var activePairs = DEFAULT_PAIRS.filter(function (p) { return /^cry/.test(p); });
+  var DEFAULT_PAIRS = PAIRS_BY_CAT['24x7'].filter(function (p) { return p === 'cryBTCUSD'; });
+  var activePairs = DEFAULT_PAIRS.slice();
   DEFAULT_PAIRS = activePairs.slice();
   window.pairLiveStatus = window.pairLiveStatus || {};
   let globalRevs = [];
@@ -4644,6 +4644,7 @@
     for (var p of ALL_PAIRS) {
       allPairData[p] = { times: new Int32Array(0), prices: new Float64Array(0) };
       window.liveTickBuffer[p] = {};
+      if (window.pairLiveStatus) window.pairLiveStatus[p] = '';
     }
     var _pairsToFetch = activePairs !== null ? activePairs.slice() : ALL_PAIRS.slice();
     var _fxSkipCount = _pairsToFetch.length;
@@ -4749,6 +4750,27 @@
     }
     bootLog(`[PHASE 2 GAP BACKFILL] DONE — All targets synchronized.`, '#00E676');
     try { _bgWarmPairs(_bootGen, ctxState.dateStr, startTs, endTs, _pairsToFetch); } catch (_bgE) {}
+    (async function _restLoadAll() {
+      var _rl = ALL_PAIRS.filter(function (p) { return _pairsToFetch.indexOf(p) === -1 && !_pairMarketClosed(p); });
+      for (var _ri = 0; _ri < _rl.length; _ri++) {
+        var _rp = _rl[_ri];
+        if (_bootGen !== window._bootGen) return;
+        try {
+          if (window.pairLiveStatus[_rp] === 'fetching') continue;
+          if (allPairData[_rp] && allPairData[_rp].times && allPairData[_rp].times.length > 0) continue;
+          var _rg = await _rsPrime(_rp, ctxState.dateStr, startTs, endTs, true);
+          if (_bootGen !== window._bootGen) return;
+          if (!_rg || !_rg.prices) continue;
+          if (window.pairLiveStatus[_rp] === 'fetching') continue;
+          if (allPairData[_rp] && allPairData[_rp].times && allPairData[_rp].times.length > 0) continue;
+          allPairData[_rp] = { times: _rg.times, prices: _rg.prices };
+          _bootPairState[_rp] = 'done';
+          window.pairLiveStatus[_rp] = 'live';
+        } catch (_reE) {}
+        await new Promise(function (r) { setTimeout(r, 150); });
+      }
+      bootLog('[RENDER PRELOAD] All other pairs loaded in memory - pair select is instant.', '#00E676');
+    })();
     document.getElementById('stats').innerHTML = `DNA MATRIX OMNI-SYNC: <span style="color:#00E676;">${_pairsToFetch.length}</span> TARGETS ${ctxState.isLive ? '| <span style="color:#00E676;">🟢 LIVE</span>' : '| <span style="color:#FF2D3A;">🔴 MARKET CLOSED</span>'}`;
 
     processVisualMatrix();
@@ -4771,7 +4793,8 @@
     var _thisWs = derivWs;
     let liveAuthorized = false;
     const subscribeToTicks = () => {
-      var _lsActivePairs = (activePairs !== null ? activePairs.slice() : PAIRS_BY_CAT[activeCat].slice()).filter(function(p) { return !_pairMarketClosed(p); });
+      var _lsSel = activePairs !== null ? activePairs.slice() : [];
+      var _lsActivePairs = _lsSel.concat(PAIRS_BY_CAT[activeCat].filter(function(p) { return _lsSel.indexOf(p) === -1; })).filter(function(p) { return !_pairMarketClosed(p); });
       _lsActivePairs.forEach(function(pair, idx) {
           setTimeout(function() {
               if (derivWs && derivWs.readyState === WebSocket.OPEN)
@@ -7668,15 +7691,26 @@
       { id: 'pgMtlBtn', k: 'MTL', l: 'MTL', t: 'Toggle MTL' },
       { id: 'pgFrxBtn', k: 'FRX', l: 'FRX', t: 'Toggle FRX' },
       { id: 'pgMixBtn', k: 'MIX', l: 'FRX/MTL/CRY\n11:30 - 23:30\nMON - FRI', t: 'Toggle MTL/FRX/CRY' },
-      { id: 'pgAllBtn', k: 'ALL', l: 'ALL', t: 'All 37 pairs - tap to pick one, several or all' }
+      { id: 'pgAllBtn', k: 'ALL', l: 'PAIRS', t: 'Pick one, several or all pairs' }
     ];
-    window._pairTg = window._pairTg || { CRY: true, DRV: false, MTL: false, FRX: false, MIX: false, ALL: false };
+    window._pairTg = window._pairTg || { CRY: false, DRV: false, MTL: false, FRX: false, MIX: false, ALL: true };
     function tgPaint(b, k) {
       var on = !!window._pairTg[k];
+      if (k === 'ALL') {
+        var _tn = (activePairs === null) ? ALL_PAIRS.length : activePairs.length;
+        var _tt = (_tn === 1 && activePairs !== null) ? getPairDisplayName(activePairs[0]) : (_tn >= ALL_PAIRS.length ? 'ALL PAIRS' : _tn + ' PAIRS');
+        if (b.textContent !== _tt) b.textContent = _tt;
+      }
       b.setAttribute('data-sig', on ? 'on' : 'off');
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
       try { if (window._cbPaint) window._cbPaint(); } catch (e) {}
     }
+    setInterval(function () {
+      try {
+        var _ab = document.getElementById('pgAllBtn');
+        if (_ab) tgPaint(_ab, 'ALL');
+      } catch (eAb) {}
+    }, 1500);
     var tgMtl = ['frxXAGUSD', 'frxXAUUSD', 'frxXPTUSD'];
     function tgPairs(k) {
       return ALL_PAIRS.filter(function (p) {
@@ -7714,6 +7748,7 @@
     }
     function tgApplyList(list) {
       activePairs = list.slice();
+      try { tgRepaint(); } catch (eRp) {}
       try { _hiddenPairs.clear(); } catch (e) {}
       activePairs.forEach(function (p) { try { ensurePairFetched(p); } catch (e) {} });
       try { window._grpPreSelect(true); } catch (e) {}
@@ -18325,8 +18360,7 @@ html body #ctlBar#ctlBar#ctlBar{border-bottom:1px solid #000432 !important;borde
             K + ' button:active{filter:brightness(0.85) !important;transform:translateY(1px) !important;}',
             K + ' button:disabled{opacity:0.45 !important;}',
             K + ' input::placeholder{color:rgba(0,3,28,0.6) !important;opacity:1 !important;}',
-            K + ' #pgFrxBtn,' + K + ' #pgMtlBtn,' + K + ' #pgAllBtn{display:none !important;}',
-            K + ' #pgDrvBtn,' + K + ' #pgCryBtn,' + K + ' #pgMixBtn{white-space:pre-line !important;text-align:left !important;line-height:1.1 !important;font-size:8px !important;letter-spacing:0.02em !important;padding:0 3px 0 8px !important;}',
+            K + ' #pgFrxBtn,' + K + ' #pgMtlBtn,' + K + ' #pgDrvBtn,' + K + ' #pgCryBtn,' + K + ' #pgMixBtn,' + K + ' #fxOnlyBtn,' + K + ' #allPairsBtn,' + K + ' #mtlOnlyBtn,' + K + ' #btcOnlyBtn,' + K + ' #drvOnlyBtn{display:none !important;}',
             K + ' input:focus,' + K + ' select:focus{outline:1px solid var(--pair-color,#E2E8F0) !important;outline-offset:-1px !important;}',
             K + ' div:has(> input),' + K + ' div:has(> select){background:transparent !important;}',
             K + ' #ctlBarInner > .cb-g:has(#scanMin),' + K + ' #ctlBarInner > .cb-g:has(#scanMax){display:none !important;}',
