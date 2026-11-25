@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WALLSPECTRUM - patch tool</title>
+<!-- PROTECTED FILE: devpatch.js refuses to patch this page. It is the recovery layer: change it through git only. -->
+<style>
+  :root { --bg:#000432; --fg:#fff; --bar:70px; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); font:13px system-ui,-apple-system,"Segoe UI",sans-serif; }
+  #app { position:fixed; left:0; top:0; right:0; bottom:var(--bar); width:100%; height:calc(100% - var(--bar)); border:0; background:#fff; }
+  #bar { position:fixed; left:0; right:0; bottom:0; height:var(--bar); padding:6px 8px; background:var(--bg); border-top:1px solid #fff; display:flex; flex-direction:column; gap:4px; z-index:10; }
+  .row { display:flex; gap:5px; align-items:center; min-width:0; }
+  #ins { flex:1 1 auto; min-width:0; height:30px; padding:0 10px; background:#0a0f5a; color:#fff; border:1px solid #fff; border-radius:8px; font:inherit; }
+  button { height:30px; min-width:34px; padding:0 8px; background:transparent; color:#fff; border:1px solid #fff; border-radius:999px; font:14px system-ui,"Segoe UI Emoji",sans-serif; cursor:pointer; }
+  button:disabled { opacity:.35; cursor:default; }
+  button.on { background:#7df5c0; color:#000432; }
+  button.warn { background:#ff4d4d; }
+  #status { font-size:11px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #pop { position:fixed; right:8px; bottom:calc(var(--bar) + 8px); width:min(560px,calc(100vw - 16px)); padding:8px; background:var(--bg); border:1px solid #fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:30; display:none; }
+  #pop pre { margin:6px 0 0; max-height:42vh; overflow:auto; white-space:pre-wrap; word-break:break-word; user-select:text; font:12px/1.4 ui-monospace,Menlo,Consolas,monospace; }
+  #pop .h { display:flex; gap:6px; align-items:center; } #pop .h b { flex:1; }
+
+  /* Full-app visual flash banner (uses #flash so index.html #toast overrides never affect it) */
+  #flash {
+    --fc:#00E5FF;
+    --fc-rgb:0,229,255;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .2s ease-out;
+    background:radial-gradient(circle at center, rgba(var(--fc-rgb),.22) 0%, rgba(0,4,50,.55) 70%, rgba(var(--fc-rgb),.28) 100%);
+    box-shadow:inset 0 0 0 5px var(--fc), inset 0 0 70px rgba(var(--fc-rgb),.45);
+  }
+  #flash.show { opacity:1; }
+  #flash.pulse { animation:dpFlashEdge .45s ease-out; }
+  #flash[data-tone="ok"]   { --fc:#00FF85; --fc-rgb:0,255,133; }
+  #flash[data-tone="info"] { --fc:#00E5FF; --fc-rgb:0,229,255; }
+  #flash[data-tone="warn"] { --fc:#FFD400; --fc-rgb:255,212,0; }
+  #flash[data-tone="err"]  { --fc:#FF3D5A; --fc-rgb:255,61,90; }
+  #flashBox {
+    max-width:min(88vw, 760px);
+    padding:18px 28px;
+    border:2px solid var(--fc);
+    border-radius:14px;
+    background:rgba(0,4,50,.94);
+    box-shadow:0 0 36px rgba(var(--fc-rgb),.45), 0 12px 36px rgba(0,0,0,.65);
+    text-align:center;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    transform:scale(.94);
+    transition:transform .16s ease-out;
+  }
+  #flash.show #flashBox { transform:scale(1); }
+  #flashTitle {
+    color:var(--fc);
+    font-size:clamp(22px, 4.2vw, 46px);
+    font-weight:800;
+    letter-spacing:.08em;
+    line-height:1.15;
+    text-transform:uppercase;
+    text-shadow:0 0 18px rgba(var(--fc-rgb),.55);
+  }
+  #flashSub {
+    margin-top:8px;
+    color:#ffffff;
+    font-size:clamp(12px, 1.7vw, 19px);
+    font-weight:600;
+    line-height:1.35;
+    word-break:break-word;
+    opacity:.95;
+  }
+  #flashSub:empty { display:none; }
+  @keyframes dpFlashEdge {
+    0%   { box-shadow:inset 0 0 0 16px var(--fc), inset 0 0 140px rgba(var(--fc-rgb),.85); }
+    100% { box-shadow:inset 0 0 0 5px var(--fc), inset 0 0 70px rgba(var(--fc-rgb),.45); }
+  }
+</style></head>
+<body>
+<iframe id="app" src="/" title="dashboard preview"></iframe>
+<div id="bar">
+  <div class="row">
+    <input id="ins" type="text" placeholder="What should change? (add @part3 / @name to pick parts)" aria-label="AI instructions">
+    <button id="bPay" title="Copy the prompt payload (index or lite parts). Later rounds send only the new parts. Shift+click = full payload again (new AI chat)">&#9650;</button>
+    <button id="bAuto" title="Auto mode: watches the clipboard (page must be focused)">&#9889;</button>
+    <button id="bApply" title="Apply the patch from the clipboard">&#8984;</button>
+    <button id="bUndo" title="Undo" disabled>&#8630;</button>
+    <button id="bRedo" title="Redo" disabled>&#8631;</button>
+    <button id="bPush" title="Push changed files to GitHub in one commit">&#11014;</button>
+    <button id="bMark" title="Mark the running version as stable">&#10004;</button>
+    <button id="bRestore" title="Restore the stable version (new commit)">&#10226;</button>
+    <button id="bRestart" title="Restart the server (local, supervised)">&#128260;</button>
+    <button id="bErr" title="Copy a runtime-error report for the AI">&#129519;</button>
+    <button id="bLog" title="Show log">&#9776;</button>
+  </div>
+  <div id="status">connecting...</div>
+</div>
+<div id="flash" data-tone="info" aria-live="polite"><div id="flashBox"><div id="flashTitle"></div><div id="flashSub"></div></div></div>
+<div id="pop"><div class="h"><b id="popT"></b><button id="popC">Copy</button><button id="popX">&#10005;</button></div><pre id="popP"></pre></div>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { auto: false, tries: 0, req: '', tags: [], sent: [], boot: '', errs: [], busy: false, seen: null, reading: false, st: null };
+  try { S.auto = sessionStorage.getItem('dp-auto') !== '0'; S.req = sessionStorage.getItem('dp-req') || ''; S.tries = Number(sessionStorage.getItem('dp-tries') || 0) || 0; } catch (e) {}
+
+  function flash(title, sub, tone, ms) {
+    var el = $('flash');
+    if (!el) return;
+    el.setAttribute('data-tone', tone || 'info');
+    $('flashTitle').textContent = String(title || '');
+    $('flashSub').textContent = String(sub || '');
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('show', 'pulse');
+    clearTimeout(flash.h);
+    flash.h = setTimeout(function () { el.classList.remove('show', 'pulse'); }, ms || 2200);
+  }
+  function toast(m, ms, tone, title) {
+    flash(title || m, title ? m : '', tone || 'info', ms || 2400);
+  }
+  function pop(title, text) { $('popT').textContent = title; $('popP').textContent = text; $('pop').style.display = 'block'; }
+  $('popX').onclick = function () { $('pop').style.display = 'none'; };
+  $('popC').onclick = function () { copy($('popP').textContent).then(function () { flash('COPIED', 'Popup text copied to clipboard', 'info', 1600); }); };
+  function copy(text) {
+    S.seen = text;   // our own copy must not trigger the clipboard watcher
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(function () { return fb(text); });
+    return fb(text);
+  }
+  function fb(text) {
+    return new Promise(function (res) { var ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); res(); });
+  }
+  function setReq(r) { S.req = r; try { sessionStorage.setItem('dp-req', r); } catch (e) {} }
+  function setTries(n) { S.tries = n; try { sessionStorage.setItem('dp-tries', String(n)); } catch (e) {} }
+
+  function secret() {
+    var s = '';
+    try {
+      var m = /[#&]k=([^&]+)/.exec(location.hash || '');
+      if (m) {
+        s = decodeURIComponent(m[1]).trim();
+        if (s) { localStorage.setItem('dp-secret', s); }
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    } catch (e) {}
+    if (!s) { try { s = localStorage.getItem('dp-secret') || sessionStorage.getItem('dp-secret') || ''; } catch (e) {} }
+    if (!s) { s = 'none'; }
+    return s;
+  }
+  async function api(name, body) {
+    var res;
+    try {
+      res = await fetch('/dev/api/' + name, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-dev-secret': secret() }, body: JSON.stringify(body || {}), cache: 'no-store' });
+    } catch (e) { return { ok: false, error: 'Cannot reach the server (it may be restarting).', down: true }; }
+    var j = null;
+    try { j = await res.json(); } catch (e) { j = { ok: false, error: 'Bad reply (' + res.status + ')' }; }
+    if (res.status === 401) { try { sessionStorage.removeItem('dp-secret'); localStorage.removeItem('dp-secret'); } catch (e) {} }
+    return j;
+  }
+  function frame() { return $('app'); }
+  function reloadFrame() { try { frame().contentWindow.location.reload(); } catch (e) { frame().src = '/'; } }
+
+  // errors thrown inside the preview (so a broken dashboard can be reported to the AI)
+  function hook() {
+    try {
+      var w = frame().contentWindow;
+      S.errs = [];
+      paintErr();
+      w.addEventListener('error', function (ev) {
+        if (!ev || !ev.message || /ResizeObserver loop/i.test(ev.message)) return;
+        var f = String(ev.filename || '').split('?')[0];
+        S.errs.push({ m: ev.message, f: /\.js$/i.test(f) ? f.split('/').pop() : 'public/index.html', l: ev.lineno || 0, c: ev.colno || 0 });
+        paintErr();
+      });
+      w.addEventListener('unhandledrejection', function (ev) {
+        var r = ev && ev.reason, m = String(r && r.message ? r.message : r).split('\n')[0];
+        S.errs.push({ m: 'Unhandled promise rejection: ' + m, f: '', l: 0, c: 0 });
+        paintErr();
+      });
+    } catch (e) {}
+  }
+  frame().addEventListener('load', hook);
+  function paintErr() { $('bErr').classList.toggle('warn', S.errs.length > 0); $('bErr').title = S.errs.length ? S.errs.length + ' error(s) in the preview: copy a report for the AI' : 'No errors in the preview'; }
+
+  async function refresh() {
+    var s = await api('state');
+    if (!s.ok) { $('status').textContent = s.error || 'no state'; return s; }
+    S.st = s;
+    if (S.boot && S.boot !== s.boot) { flash('SERVER RESTARTED', 'Reloading live dashboard preview', 'ok', 2600); reloadFrame(); }
+    S.boot = s.boot;
+    var up = s.uptime >= 120 ? Math.round(s.uptime / 60) + ' min' : s.uptime + ' s';
+    var ap = (s.autoPush && s.gh && s.gh.configured) ? ' | AUTO-PUSH' : '';
+    $('status').textContent = s.mode.toUpperCase() + ' | up ' + up + (s.commit ? ' | ' + s.commit.slice(0, 7) : '') + ' | undo ' + s.undoCount + ' redo ' + s.redoCount + ' | ' + (s.gh.configured ? s.gh.repo + '@' + s.gh.branch : 'GitHub not set') + (S.auto ? ' | AUTO' : '') + ap;
+    $('bUndo').disabled = !s.undoCount; $('bRedo').disabled = !s.redoCount;
+    $('bPush').disabled = !s.gh.configured; $('bMark').disabled = !s.gh.configured; $('bRestore').disabled = !s.gh.configured;
+    $('bRestart').disabled = !s.canRestart;
+    $('bAuto').classList.toggle('on', S.auto);
+    if (s.lastError) { flash('AUTO-ROLLBACK', 'Server crashed after patch — reverted automatically', 'err', 4500); pop('AUTO-ROLLBACK', s.lastError.msg); api('ackerror'); }
+    return s;
+  }
+  async function waitRestart(prevBoot) {
+    flash('RESTARTING SERVER', 'Waiting for new boot...', 'warn', 8000);
+    for (var i = 0; i < 45; i++) {
+      await new Promise(function (r) { setTimeout(r, 1000); });
+      var s = await api('state');
+      if (s && s.ok && s.boot !== prevBoot) { S.boot = s.boot; reloadFrame(); await refresh(); flash('SERVER BACK ONLINE', 'Boot ' + s.boot.slice(0, 4) + ' — preview reloaded', 'ok', 2800); return; }
+    }
+    flash('RESTART TIMEOUT', 'Server did not respond within 45s', 'err', 5000);
+  }
+
+  // tags already sent to the AI in this request: a follow-up round sends ONLY the new ones (no repeated parts, no repeated prompt)
+  function addSent(list) { list.forEach(function (t) { if (S.sent.indexOf(t) < 0) S.sent.push(t); }); }
+  var DELTA = { prompt: false, user: false, delta: true };
+
+  async function doPayload(ev) {
+    var ins = $('ins').value.trim();
+    var typed = (ins.match(/@[\w$-]+/g) || []).filter(function (t) { return t.toLowerCase() !== '@auto'; });
+    var force = !!(ev && ev.shiftKey);   // Shift + click = full payload again (use it when you start a NEW AI chat)
+    var fresh = typed.filter(function (t) { return S.sent.indexOf(t) < 0; });
+    var followUp = !force && S.sent.length > 0 && typed.length > 0;
+    var r = followUp
+      ? await api('payload', { instruction: (fresh.length ? fresh : typed).join(' '), flags: DELTA, errors: S.errs })
+      : await api('payload', { instruction: ins, errors: S.errs });
+    if (!r.ok) { flash('PAYLOAD FAILED', r.error || 'Could not build payload', 'err', 3500); return; }
+    await copy(r.text);
+    if (r.idx) {
+      flash('INDEX COPIED', S.auto ? 'Paste to AI & copy reply — Auto handles the rest' : 'Paste to AI, copy reply, then press Apply', 'info', 2400);
+    } else if (followUp) {
+      var sentList = fresh.length ? fresh : typed;
+      flash('NEW PARTS COPIED', sentList.join(' '), 'info', 2200);
+    } else {
+      flash('PAYLOAD COPIED', typed.length ? typed.join(' ') : 'Full prompt ready to paste into AI', 'info', 2200);
+    }
+    if (r.hasTags) $('ins').value = $('ins').value.replace(/\s*@[\w$-]+/g, '').trim();
+    if (r.idx && S.auto) { setReq(ins); S.tags = []; S.sent = []; } else if (!r.hasTags) { setReq(''); S.tags = []; S.sent = []; }
+    else addSent(typed);
+    setTries(0);
+  }
+  async function doApply(text) {
+    if (S.busy) return;
+    S.busy = true;
+    try {
+      var prev = S.boot;
+      flash('VALIDATING PATCH', 'Running syntax, parity & canary guards...', 'warn', 15000);
+      var r = await api('apply', { patch: text });
+      if (r.ok) {
+        setTries(0); setReq(''); S.tags = []; S.sent = [];
+        var filesTxt = (r.changed || []).join(', ');
+        if (r.stage === 'pushed') {
+          var shaTxt = (r.push && r.push.sha) ? ' (' + r.push.sha.slice(0, 7) + ')' : '';
+          flash('PATCHED & PUSHED', filesTxt + shaTxt + (r.note ? ' — ' + r.note : ''), 'ok', 3400);
+        } else if (r.stage === 'push_failed') {
+          var pErr = (r.push && r.push.error) ? r.push.error : 'unknown error';
+          flash('AUTO-PUSH FAILED', 'Saved locally: ' + filesTxt, 'err', 4000);
+          pop('AUTO-PUSH FAILED', 'Local patch succeeded for: ' + filesTxt + '\n\nGitHub auto-push error:\n' + pErr + '\n\nYou can retry with the Push button.');
+        } else {
+          flash('PATCH APPLIED', filesTxt + (r.note ? ' — ' + r.note : ''), 'ok', 3000);
+        }
+        if (r.kind === 'page') reloadFrame();
+        if (r.kind === 'restarting') { await waitRestart(prev); }
+        else await refresh();
+      } else if (r.noop) {
+        flash('NO CHANGES', r.error || 'NEW equals OLD', 'warn', 2600);
+      } else {
+        var title = 'PATCH REJECTED' + (r.reasonCode ? ' [' + r.reasonCode + ']' : '');
+        pop(title, r.error || 'failed');
+        if (S.auto && r.report) {
+          if (S.tries < 3) {
+            setTries(S.tries + 1);
+            await copy(r.report);
+            flash('ERROR REPORT COPIED', 'Try ' + S.tries + '/3 [' + (r.reasonCode || 'ERROR') + '] — paste to AI', 'err', 3600);
+          } else {
+            flash('AUTO-FIX STOPPED', 'Failed after 3 tries — fix manually', 'err', 4500);
+          }
+        } else {
+          flash('PATCH REJECTED', (r.reasonCode ? '[' + r.reasonCode + '] ' : '') + 'Nothing was changed', 'err', 3400);
+        }
+      }
+    } finally { S.busy = false; }
+  }
+  async function applyClipboard() {
+    var text = '';
+    try { text = await navigator.clipboard.readText(); } catch (e) {}
+    if (!text || text.indexOf('===SPLIT===') < 0) { flash('NO PATCH FOUND', 'Copy an AI patch reply to clipboard first', 'warn', 2400); return; }
+    await doApply(text);
+  }
+  async function step(mode, force) {
+    var prev = S.boot;
+    var r = await api(mode, { force: !!force });
+    if (r.needConfirm) { if (window.confirm(r.error + '\n\nOverwrite anyway?')) return step(mode, true); return; }
+    if (!r.ok) { flash(mode.toUpperCase() + ' FAILED', r.error || 'Failed', 'err', 3200); return; }
+    flash(mode === 'undo' ? 'UNDONE' : 'REDONE', String(r.label).slice(0, 90), 'ok', 2600);
+    if (r.kind === 'page') reloadFrame();
+    if (r.kind === 'restarting') await waitRestart(prev); else await refresh();
+  }
+  async function simple(name, body, okLabel, btn) {
+    if (btn) btn.disabled = true;
+    var r = await api(name, body);
+    if (btn) btn.disabled = false;
+    if (r.ok) flash((okLabel || name).toUpperCase(), r.msg || 'Done', 'ok', 3000);
+    else { flash(name.toUpperCase() + ' FAILED', r.error || 'Failed', 'err', 3600); pop(name.toUpperCase() + ' ERROR', r.error || 'failed'); }
+    await refresh();
+    return r;
+  }
+
+  // auto mode: copy the AI reply -> the next step runs by itself
+  async function watch() {
+    if (!S.auto || S.busy || S.reading || document.hidden) return;
+    S.reading = true;
+    try {
+      var text = await navigator.clipboard.readText();
+      text = text || '';
+      if (S.seen === null) { S.seen = text; return; }
+      if (text === S.seen) return;
+      S.seen = text;
+      if (!text.trim()) return;
+      var c = await api('classify', { text: text });
+      if (!c.ok) return;
+      if (c.kind === 'patch') { await doApply(text); return; }
+      if (c.kind === 'tags') {
+        if (c.req) setReq(c.req);
+        c.tags.forEach(function (t) { if (S.tags.indexOf(t) < 0) S.tags.push(t); });
+        // first parts round: full payload (prompt + request + parts). Later rounds: ONLY the newly asked parts.
+        var fresh = c.tags.filter(function (t) { return S.sent.indexOf(t) < 0; });
+        var ask = fresh.length ? fresh : c.tags;   // the AI asked again for a part it already had: send just that one
+        var followUp = S.sent.length > 0;
+        var r = followUp
+          ? await api('payload', { instruction: ask.join(' '), flags: DELTA, errors: S.errs })
+          : await api('payload', { instruction: (S.req + ' ' + S.tags.join(' ')).trim(), errors: S.errs });
+        if (r.ok) {
+          addSent(ask);
+          await copy(r.text);
+          flash('AUTO: ' + ask.length + (followUp ? ' NEW ' : ' ') + 'PART' + (ask.length === 1 ? '' : 'S') + ' COPIED', ask.join(' '), 'info', 2500);
+        }
+      }
+    } catch (e) { /* clipboard not readable right now (page not focused) */ }
+    finally { S.reading = false; }
+  }
+  setInterval(watch, 700);
+
+  $('bPay').onclick = doPayload;
+  $('bApply').onclick = applyClipboard;
+  $('bAuto').onclick = function () { S.auto = !S.auto; S.seen = null; try { sessionStorage.setItem('dp-auto', S.auto ? '1' : '0'); } catch (e) {} $('bAuto').classList.toggle('on', S.auto); flash(S.auto ? 'AUTO MODE ON' : 'AUTO MODE OFF', S.auto ? 'Watching clipboard for AI replies' : 'Manual apply mode', S.auto ? 'ok' : 'warn', 1800); refresh(); };
+  $('bUndo').onclick = function () { step('undo'); };
+  $('bRedo').onclick = function () { step('redo'); };
+  $('bPush').onclick = function () { flash('PUSHING TO GITHUB', 'Comparing files & creating commit...', 'warn', 8000); simple('push', {}, 'Pushed', $('bPush')); };
+  $('bMark').onclick = function () { if (window.confirm('Mark the version that is running now as STABLE?')) simple('stable', { action: 'mark' }, 'Marked Stable', $('bMark')); };
+  $('bRestore').onclick = function () { if (window.confirm('Restore the STABLE version?\n\nThis makes a new commit on the main branch (history is kept) and Render redeploys.')) simple('stable', { action: 'restore' }, 'Restored Stable', $('bRestore')); };
+  $('bRestart').onclick = async function () { if (!window.confirm('Restart the server now?')) return; var prev = S.boot; var r = await api('restart'); if (r.ok) waitRestart(prev); else flash('RESTART FAILED', r.error || 'Failed', 'err', 3500); };
+  $('bErr').onclick = async function () {
+    if (!S.errs.length) { flash('NO ERRORS', 'Preview has zero runtime errors', 'ok', 1800); return; }
+    var r = await api('errreport', { errors: S.errs });
+    if (r.ok) { await copy(r.text); flash('ERROR REPORT COPIED', 'Paste the runtime-error report to AI', 'err', 2600); } else flash('REPORT FAILED', r.error || 'Failed', 'err', 3000);
+  };
+  $('bLog').onclick = function () { pop('LOG', ((S.st && S.st.log) || []).join('\n') || '(empty)'); };
+  $('ins').addEventListener('keydown', function (e) { if (e.key === 'Enter') doPayload(); });
+
+  refresh();
+  setInterval(refresh, 5000);
+})();
+</script>
+</body></html>

@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>WALLSPECTRUM SERVER — LIVE</title>
+<style>
+:root{color-scheme:dark;--bw:1px;--sp:2px;--ac:#00FF85;--ln:var(--ac);--pf-bg:#000432;--pf-bg2:#000432;--pf-ctl:#000432;--pf-line:var(--ac);--pf-line2:var(--ac);--pf-text:var(--ac);--pf-soft:var(--ac);--pf-mute:var(--ac);--pf-fill:#000432;--pf-up:#00FF85;--pf-dn:#FF3D5A;--pf-gold:var(--ac);--pf-up-rgb:0,255,133;--pf-dn-rgb:255,61,90;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;height:100dvh;background:#000432;color:var(--pf-text);font-family:'Roboto Mono',monospace;overflow:hidden;user-select:none;-webkit-user-select:none;}
+#main-container{height:100%;display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,622fr) minmax(0,254fr);gap:3px;padding:3px;overflow:hidden;position:relative;background:#000432;}
+body.tc-solo #main-container{grid-template-rows:1fr 0px;gap:0;}
+body.tc-solo #wall-finder-pane{display:none!important;}
+.pillFrame{position:absolute;z-index:20;pointer-events:none;display:none;border:var(--bw) solid;border-radius:10px;}
+#pillBuy{border-color:var(--pf-up);}
+#pillSell{border-color:var(--pf-dn);}
+#canvas-viewport{border-color:transparent!important;background:var(--pf-bg);grid-column:1;grid-row:1;position:relative;overflow:hidden;touch-action:none;border-radius:10px;}
+.table-col::after{border-color:transparent!important;}
+#rangePill{--ac:#00E5FF;--ln:#00E5FF;}
+.table-col{border-top:var(--bw) solid var(--ln)!important;border-radius:0 0 10px 10px!important;}
+#tcWrap{position:absolute;inset:0;z-index:6;background:var(--pf-bg);border-radius:0;touch-action:none;overflow:hidden;}
+#tcCanvas{display:block;position:absolute;top:0;left:0;touch-action:none;}
+#tradeCard{position:absolute;left:14px;top:12px;z-index:8;display:none;flex-direction:column;gap:4px;pointer-events:none;font:700 11px 'Roboto Mono',monospace;}
+.tcRow{display:flex;align-items:center;gap:10px;padding:4px 12px;border-radius:8px;background:var(--pf-fill);border:1px solid var(--pf-line2);color:var(--pf-text);font-weight:600;white-space:nowrap;}
+.tcRow b[style*="00B85A" i]{background:#000432;color:var(--pf-up)!important;border:1px solid var(--pf-up);padding:1px 6px;border-radius:4px;}
+.tcRow b[style*="DC2640" i]{background:#000432;color:var(--pf-dn)!important;border:1px solid var(--pf-dn);padding:1px 6px;border-radius:4px;}
+#wall-finder-pane{grid-column:1;grid-row:2;padding:0;display:flex;flex-direction:column;gap:3px;overflow:hidden;z-index:10;background:var(--pf-bg);}
+.tables-split{display:flex;flex:1;min-height:0;overflow:hidden;gap:3px;padding:0;}
+.table-col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;position:relative;background:var(--pf-bg2);border:0;border-radius:10px;padding:0;}
+.table-col:first-child{--ac:var(--pf-up);--ln:var(--pf-up);}
+.table-col:last-child{--ac:var(--pf-dn);--ln:var(--pf-dn);}
+.table-wrapper{flex:1;overflow-y:auto;scrollbar-width:none;}
+.table-wrapper::-webkit-scrollbar{display:none;}
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:11px;font-variant-numeric:tabular-nums;}
+td{height:23px;padding:1px 6px;font-size:11px;font-weight:600;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:clip;vertical-align:middle;color:var(--ac);}
+td:first-child{padding-left:14px!important;line-height:1.2;}
+td[colspan]{color:var(--pf-mute)!important;letter-spacing:.18em;}
+tr.highlight-gem{cursor:default;}
+body.vm-all tr.highlight-gem{cursor:pointer;}
+body.vm-all tr.row-green:hover>td{background:rgba(var(--pf-up-rgb),.10);}
+body.vm-all tr.row-red:hover>td{background:rgba(var(--pf-dn-rgb),.10);}
+tr.row-green>td,tr.row-red>td{border:none;background:transparent;}
+tr.row-green>td{color:var(--pf-up);}
+tr.row-red>td{color:var(--pf-dn);}
+tr.highlight-gem>td{border-bottom:1px solid var(--ac);}
+tr.highlight-gem>td+td{border-left:1px solid var(--ac);}
+tr.row-green>td:first-child,tr.row-red>td:first-child{font-weight:700;}
+tr.row-green>td:last-child,tr.row-red>td:last-child{font-weight:800;}
+tr.highlight-gem>td:nth-child(4){font-weight:700;}
+tr.highlight-gem[data-sel="1"]>td:first-child{border-left:0!important;box-shadow:inset 5px 0 0 var(--ac)!important;}
+tr.highlight-gem[data-wpe][data-wph="1"]>td:nth-child(4){position:relative;color:transparent!important;}
+tr.highlight-gem[data-wpe][data-wph="1"]>td:nth-child(4)::after{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.06em;}
+tr.row-green[data-wph="1"]>td:nth-child(4)::after{color:var(--pf-up);}
+tr.row-red[data-wph="1"]>td:nth-child(4)::after{color:var(--pf-dn);}
+tr.highlight-gem[data-wpe="WARN"][data-wph="1"]>td:nth-child(4)::after{content:"HIT SOON";}
+tr.highlight-gem[data-wpe="HIT"][data-wph="1"]>td:nth-child(4)::after{content:"HIT";}
+tr.highlight-gem[data-wpe="MISS"][data-wph="1"]>td:nth-child(4)::after{content:"MISSED";}
+td:first-child .pyP{color:inherit!important;display:inline;margin-left:2px;font-size:inherit;font-weight:inherit;}
+#rangePill{--ac:#00E5FF;--ln:#00E5FF;flex-shrink:0;display:flex;flex-wrap:nowrap;align-items:stretch;justify-content:stretch;gap:0;margin-top:0;padding:0;height:30px;background:var(--pf-bg2);border:var(--bw) solid var(--ln);border-radius:10px;overflow:hidden;font:700 11px 'Roboto Mono',monospace;white-space:nowrap;}
+#tradePill{display:flex;flex:1 1 0;flex-wrap:nowrap;align-items:stretch;justify-content:stretch;gap:0;width:100%;min-width:0;height:28px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;font:700 11px 'Roboto Mono',monospace;white-space:nowrap;}
+#tradePill::-webkit-scrollbar{display:none;}
+#tradePill.ucReordering{touch-action:none;cursor:grabbing;}
+#tradePill>*{flex:1 1 0;min-width:0;width:0;height:28px;padding:0 2px;overflow:hidden;white-space:nowrap;text-overflow:clip;text-align:center;background:#000432;border:none;color:var(--ac);font:700 clamp(9px,.78vw,11px) 'Roboto Mono',monospace;letter-spacing:.02em;outline:none;cursor:pointer;box-shadow:inset -1px 0 0 var(--ac);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+#tradePill>*:last-child{box-shadow:none;}
+#tradePill>.ucBtn:hover,#tradePill>.ucSel:hover{background:rgba(0,229,255,.10);}
+#tradePill>.ucSel{appearance:none;-webkit-appearance:none;text-align-last:center;}
+#tradePill>.ucSel option{background:#000432;color:var(--ac);font-weight:700;}
+#tradePill>.ucIn{background:rgba(0,229,255,.15);color:var(--ac);caret-color:var(--ac);-webkit-text-fill-color:var(--ac);user-select:text;-webkit-user-select:text;cursor:text;box-shadow:inset 0 0 0 1px var(--ac),inset -1px 0 0 var(--ac);}
+#tradePill>.ucIn:last-child{box-shadow:inset 0 0 0 1px var(--ac);}
+#tradePill>.ucIn::-webkit-outer-spin-button,#tradePill>.ucIn::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+#tradePill>.ucBtn.on{background:var(--ac);color:#000432;}
+#tradePill>.ucBtn.vmBtn{color:#00FF85;}
+#tradePill>.ucBtn.vmBtn.vm-MTL{color:#FFD400;}
+#tradePill>.ucBtn.vmBtn.vm-ALL{color:#00E5FF;}
+#tradePill>.ucBtn.lgSyncOk{color:#00FF85;}
+#tradePill>.ucBtn.lgSyncWarn{color:#FFD400;}
+#tradePill>.ucBtn.lgSyncDown{color:#FF3D5A;}
+#tradePill>.ucBtn.ucErr{background:#FF3D5A;color:#000432;}
+#tradePill>.ucBtn.ucDrag{background:#FFD400;color:#000432;cursor:grabbing;box-shadow:inset 0 0 0 1px #FFD400;}
+@media(max-width:760px){
+  #tradePill>*{flex:0 0 64px;width:64px;min-width:64px;font-size:10px;}
+}
+@keyframes psIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+#logPanel{display:none;position:fixed;inset:10px 10px 44px 10px;z-index:9000;flex-direction:column;background:#000432;border:var(--bw) solid var(--ac);border-radius:10px;box-shadow:0 0 0 100vmax rgba(0,2,20,.78);overflow:hidden;color:var(--ac);font:600 11px 'Roboto Mono',monospace;}
+#logPanel.open{display:flex;animation:psIn .12s ease-out;}
+#logPanel .lpTop{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--ac);background:#000432;}
+#logPanel .lpTitle{font-size:12px;font-weight:800;letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#logPanel .lpTopR{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+#logPanel .lpPill{padding:2px 8px;border:1px solid var(--ac);border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.06em;white-space:nowrap;}
+#logPanel .lpPill.up{border-color:var(--pf-up);color:var(--pf-up);}
+#logPanel .lpPill.dn{border-color:var(--pf-dn);color:var(--pf-dn);}
+#logPanel .lpBtn{height:22px;padding:0 8px;background:#000432;border:1px solid var(--ac);border-radius:6px;color:var(--ac);font:700 10px 'Roboto Mono',monospace;letter-spacing:.06em;cursor:pointer;outline:none;}
+#logPanel .lpBtn.on{background:var(--ac);color:#000432;}
+#logPanel .lpBtn.dn{border-color:var(--pf-dn);color:var(--pf-dn);}
+#logPanel .lpSummary{flex:0 0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:4px;padding:8px 12px;border-bottom:1px solid var(--ac);}
+#logPanel .lpKv{padding:5px 7px;border:1px solid var(--ac);border-radius:6px;display:flex;flex-direction:column;gap:2px;min-width:0;}
+#logPanel .lpK{font-size:9px;letter-spacing:.1em;opacity:.72;white-space:nowrap;}
+#logPanel .lpV{font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#logPanel .lpLocks{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 12px;border-bottom:1px solid var(--ac);}
+#logPanel .lpLock{padding:6px 8px;border:1px solid var(--ac);border-radius:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+#logPanel .lpLock.up{border-color:var(--pf-up);color:var(--pf-up);}
+#logPanel .lpLock.dn{border-color:var(--pf-dn);color:var(--pf-dn);}
+#logPanel .lpMain{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);overflow:hidden;}
+#logPanel .lpSec{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;}
+#logPanel .lpSec+.lpSec{border-left:1px solid var(--ac);}
+#logPanel .lpSecH{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 10px;border-bottom:1px solid var(--ac);font-size:10px;font-weight:800;letter-spacing:.1em;}
+#logPanel .lpSecB{flex:1 1 0;min-height:0;overflow-y:auto;scrollbar-width:none;padding:4px 10px 8px;}
+#logPanel .lpSecB::-webkit-scrollbar{display:none;}
+#logPanel .lpRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,255,133,.22);font-variant-numeric:tabular-nums;}
+#logPanel .lpRow.up{color:var(--pf-up);}
+#logPanel .lpRow.dn{color:var(--pf-dn);}
+#logPanel .lpEv{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,255,133,.22);line-height:1.35;}
+#logPanel .lpEvT{flex:0 0 auto;opacity:.75;font-variant-numeric:tabular-nums;}
+#logPanel .lpEvC{flex:0 0 auto;padding:0 5px;border:1px solid currentColor;border-radius:4px;font-size:9px;font-weight:800;}
+#logPanel .lpEvM{flex:1 1 0;min-width:0;white-space:pre-wrap;word-break:break-word;}
+#logPanel .lpEv.up{color:var(--pf-up);}
+#logPanel .lpEv.dn{color:var(--pf-dn);}
+#logPanel .lpEmpty{padding:18px 8px;text-align:center;opacity:.65;letter-spacing:.12em;}
+#logPanel .lpSyncRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(0,255,133,.22);font-variant-numeric:tabular-nums;white-space:nowrap;}
+#logPanel .lpSyncRow.up{color:var(--pf-up);}
+#logPanel .lpSyncRow.dn{color:var(--pf-dn);}
+#logPanel .lpSyncRow.wrap{white-space:normal;flex-wrap:wrap;}
+#logPanel .lpSyncRow span:last-child{overflow:hidden;text-overflow:ellipsis;text-align:right;}
+#logPanel .lpSyncRow.wrap span:last-child{text-align:left;}
+#logPanel .lpSyncH{padding:8px 0 3px;font-size:10px;font-weight:800;letter-spacing:.1em;border-bottom:1px solid var(--ac);}
+#logPanel .lpSyncG{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:4px;padding:4px 0;}
+#logPanel .lpBar{flex:0 0 auto;display:flex;align-items:stretch;height:34px;margin:6px 10px 8px;border:1px solid var(--ac);border-radius:10px;overflow:hidden;background:#000432;}
+#logPanel .lpBar .lpBtn{flex:1 1 0;min-width:0;height:auto;padding:0 6px;border:0;border-left:1px solid var(--ac);border-radius:0;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;}
+#logPanel .lpBar .lpBtn:first-child{border-left:0;}
+#logPanel .lpBar .lpBtn.dn{border:0;border-left:1px solid var(--ac);}
+#logPanel .lpBar .lpBtn[data-lf="ERR"]{color:var(--pf-dn);}
+#logPanel .lpBar .lpBtn[data-lf="SYS"]{color:#FFD400;}
+#logPanel .lpBar .lpBtn[data-lf="ERR"].on{background:var(--pf-dn);color:#000432;}
+#logPanel .lpBar .lpBtn[data-lf="SYS"].on{background:#FFD400;color:#000432;}
+#logPanel .lpBadge{padding:0 5px;border:1px solid currentColor;border-radius:8px;font-size:9px;font-weight:800;line-height:14px;font-variant-numeric:tabular-nums;}
+#logPanel .lpTop,#logPanel .lpSummary,#logPanel .lpLocks,#logPanel .lpSecH{display:none;}
+#logPanel .lpSettings,#logPanel .lpEditor{display:none;}
+#logPanel .lpKv.ed{cursor:pointer;position:relative;transition:background .12s,box-shadow .12s;}
+#logPanel .lpKv.ed:hover{background:rgba(0,255,133,.08);}
+#logPanel .lpKv.ed.editing{background:rgba(0,255,133,.16);box-shadow:inset 0 0 0 1px var(--ac);}
+#logPanel .lpKv.ed .lpK{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+#logPanel .lpKv.ed .lpK::after{content:"EDIT";font-size:8px;letter-spacing:.08em;opacity:.85;}
+#logPanel[data-view="INFO"] .lpTop{display:block;padding:8px 12px 0;border-bottom:0;}
+#logPanel[data-view="INFO"] .lpTopR{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px;width:100%;}
+#logPanel[data-view="INFO"] .lpTopR>*{min-width:0;height:40px;padding:0 7px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:11px;font-weight:800;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+#logPanel[data-view="INFO"] .lpSummary{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));padding:4px 12px 6px;border-bottom:0;}
+#logPanel[data-view="INFO"] .lpSettings{display:grid;flex:1 1 0;min-height:0;overflow-y:auto;scrollbar-width:none;align-content:start;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px;padding:0 12px 8px;}
+#logPanel[data-view="INFO"] .lpSettings::-webkit-scrollbar{display:none;}
+#logPanel[data-view="INFO"] .lpEditor.open{display:flex;flex:0 0 auto;flex-wrap:wrap;align-items:center;gap:6px;margin:0 12px 6px;padding:7px 10px;border:1px solid #FFD400;border-radius:8px;background:#000432;color:#FFD400;}
+#logPanel .lpEdLbl{font-size:10px;font-weight:800;letter-spacing:.08em;white-space:nowrap;}
+#logPanel .lpEdIn,#logPanel .lpEdSel{height:26px;min-width:74px;max-width:130px;padding:0 8px;background:#000432;border:1px solid var(--ac);border-radius:6px;color:var(--ac);font:700 11px 'Roboto Mono',monospace;outline:none;}
+#logPanel .lpEdMsg{font-size:10px;font-weight:700;letter-spacing:.05em;margin-left:auto;}
+#logPanel .lpEdMsg.err{color:var(--pf-dn);}
+#logPanel .lpEdMsg.ok{color:var(--pf-up);}
+#logPanel[data-view="INFO"] .lpMain{display:none;}
+@media(max-width:760px){
+  #logPanel[data-view="INFO"] .lpTopR,#logPanel[data-view="INFO"] .lpSummary,#logPanel[data-view="INFO"] .lpSettings{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+#logPanel[data-view="INFO"] .lpSecB{display:none;}
+#logPanel .lpTitle,#logPanel .lpBtn[data-lp="close"]{display:none;}
+#logPanel .lpBar .lpBtn[data-lf="INFO"]{color:var(--ac);}
+#logPanel .lpBar .lpBtn[data-lf="INFO"].on{color:#000432;}
+#bootOverlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;background:#000432;}
+#bootOverlay>div:first-child{width:min(540px,94vw);text-align:center;font-size:11px;font-weight:600;letter-spacing:.2em;color:var(--ac);background:#000432;border:1px solid var(--ac);padding:6px 12px;border-radius:10px;}
+#bootLogBox{width:min(540px,94vw);height:150px;padding:10px;overflow-y:auto;background:#000432;border:1px solid var(--ac);border-radius:10px;color:var(--ac);font-size:10px;line-height:1.5;scrollbar-width:none;}
+#bootLogBox::-webkit-scrollbar{display:none;}
+@media(max-width:760px){
+  #logPanel{inset:6px 6px 44px 6px;}
+  #logPanel .lpMain{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);}
+  #logPanel .lpSec+.lpSec{border-left:0;border-top:1px solid var(--ac);}
+  #logPanel .lpLocks{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  #main-container{padding:3px;gap:3px;}
+  .tables-split{gap:3px;}
+  td:first-child{padding-left:8px!important;}
+}
+@media(orientation:portrait){
+  #main-container{grid-template-rows:minmax(0,576fr) minmax(0,300fr);}
+  #tradeCard{left:8px;right:8px;top:8px;}
+  .tcRow{gap:6px;padding:3px 8px;font-size:11px;overflow:hidden;}
+  td{height:23px;padding:1px 4px;font-size:11px;}
+  table{font-size:11px;}
+}
+</style>
+</head>
+<body>
+  <div id="main-container">
+    <div id="canvas-viewport">
+      <div id="tcWrap">
+        <canvas id="tcCanvas"></canvas>
+      </div>
+      <div id="tradeCard"></div>
+    </div>
+    <div id="wall-finder-pane">
+      <div class="tables-split">
+        <div class="table-col">
+          <div class="table-wrapper"><table><tbody id="peaksTableBodyRev"></tbody></table></div>
+        </div>
+        <div class="table-col">
+          <div class="table-wrapper"><table><tbody id="peaksTableBodyMom"></tbody></table></div>
+        </div>
+      </div>
+      <div id="rangePill">
+        <div id="tradePill">
+          <button type="button" id="tpBal" title="Click to toggle server Demo / Real">D 0.00</button>
+          <button type="button" id="logBtn" title="Server Console" onclick="_logToggle()">LOG</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="bootOverlay">
+    <div>⬡ WALLSPECTRUM SERVER ENGINE (CONNECTING...)</div>
+    <div id="bootLogBox"><div id="bootLogLines"></div></div>
+  </div>
+<script>
+// If hosted directly on Render, use same origin; otherwise point to your Render server URL
+var TICK_SERVER = (/^https?:/.test(location.protocol) && !/github\.io|localhost|127\.0\.0\.1/i.test(location.hostname))
+  ? location.origin
+  : "https://tck-iy0g.onrender.com";
+
+var DRV_PAIRS = ["1HZ10V", "1HZ15V", "1HZ25V", "1HZ30V", "1HZ50V", "1HZ75V", "1HZ90V", "1HZ100V"];
+var MTL_PAIRS = ["frxXAUUSD", "frxXAGUSD"];
+var ALL_PAIRS = DRV_PAIRS.concat(MTL_PAIRS, [
+  "frxAUDCAD", "frxAUDCHF", "frxAUDJPY", "frxAUDNZD", "frxAUDUSD",
+  "cryBTCUSD", "cryETHUSD",
+  "frxEURAUD", "frxEURCAD", "frxEURCHF", "frxEURGBP", "frxEURJPY", "frxEURNZD", "frxEURUSD",
+  "frxGBPAUD", "frxGBPCAD", "frxGBPCHF", "frxGBPJPY", "frxGBPNZD", "frxGBPUSD",
+  "frxNZDJPY", "frxNZDUSD",
+  "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN",
+  "frxXPTUSD"
+]);
+var _viewModes = ["DRV", "MTL", "ALL"];
+var _viewMode = "DRV";
+var _allView = { buy: null, sell: null };
+var PRE_ROLL_SECS = 900;
+var currentStartTsUtc = Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 86400);
+var CYCLE = 132, _ssMin = 60, _ssSel = 1;
+var allPairData = {};
+var _lmx = {}, _preRoll = {}, _srvBp = {}, _srvFp = {};
+var srvState = {
+  feedState: "CONNECTING",
+  wsConnected: false,
+  backfill: { active: true, pct: 0 },
+  pairs: DRV_PAIRS,
+  allPairs: ALL_PAIRS,
+  pairGroups: { DRV: DRV_PAIRS, MTL: MTL_PAIRS, ALL: ALL_PAIRS },
+  readyPairs: [],
+  trader: {
+    ready: false, mode: "demo", auto: true, stake: 0.35,
+    groups: {
+      DRV: { canTrade: true, auto: true, stake: 0.35 },
+      MTL: { canTrade: true, auto: false, stake: 0.50 },
+      ALL: { canTrade: false, auto: false, stake: 0 }
+    },
+    bal: { demo: null, real: null }, cur: { demo: "USD", real: "USD" }
+  },
+  scan: { group: "DRV", cycle: 60, minC: 60, maxC: 60, scanInt: 30, ssMin: 60, ssSel: 1, lvl: 1, lockMinPct: 60, lockMinC1: 10, topLimit: 16, lockSlots: 8, countdownSec: 30, pending: false, buyTop: [], sellTop: [], lock: { buy: null, sell: null, buys: [], sells: [] } },
+  scans: {},
+  settings: {},
+  settingsByGroup: {},
+  settingsSchema: [],
+  settingsSchemas: {},
+  payouts: {},
+  trades: [],
+  logs: []
+};
+window._AC = "#00FF85";
+window._wpTmrMap = {};
+
+function _curPairs() {
+  var pg = srvState.pairGroups || {};
+  if (Array.isArray(pg[_viewMode]) && pg[_viewMode].length) return pg[_viewMode];
+  if (_viewMode === "MTL") return MTL_PAIRS;
+  if (_viewMode === "ALL") return ALL_PAIRS;
+  return DRV_PAIRS;
+}
+function _curScan() {
+  var scs = srvState.scans || {};
+  return scs[_viewMode] || srvState.scan || {};
+}
+function _curSettings() {
+  var sbg = srvState.settingsByGroup || {};
+  return sbg[_viewMode] || srvState.settings || {};
+}
+function _curSchema() {
+  var schs = srvState.settingsSchemas || {};
+  return schs[_viewMode] || srvState.settingsSchema || [];
+}
+function _curTraderGroup() {
+  var tg = srvState.trader && srvState.trader.groups;
+  if (tg && tg[_viewMode]) return tg[_viewMode];
+  if (_viewMode === "ALL") return { canTrade: false, auto: false, stake: 0 };
+  if (_viewMode === "MTL") return { canTrade: true, auto: false, stake: 0.50 };
+  var tr = srvState.trader || {};
+  return { canTrade: true, auto: !!tr.auto, stake: Number(tr.stake || 0.35) };
+}
+function _syncViewParams() {
+  var sc = _curScan();
+  CYCLE = sc.minC || sc.cycle || (_viewMode === "MTL" ? 300 : 60);
+  _ssMin = (sc.ssMin !== undefined && sc.ssMin !== null) ? +sc.ssMin : (_viewMode === "MTL" ? 120 : 60);
+  _ssSel = (sc.ssSel !== undefined && sc.ssSel !== null) ? +sc.ssSel : 1;
+}
+function _setViewMode(m) {
+  var next = (m === "MTL" || m === "ALL") ? m : "DRV";
+  if (next === _viewMode) return;
+  _viewMode = next;
+  if (document.body) document.body.classList.toggle("vm-all", _viewMode === "ALL");
+  _syncViewParams();
+  if (typeof _lpCloseEditor === "function") _lpCloseEditor();
+  updateBalBtn();
+  renderTables();
+  syncActiveChartPairs();
+  if (window.tcRedraw) window.tcRedraw();
+  var lp = document.getElementById("logPanel");
+  if (lp && lp.classList.contains("open") && typeof _logRender === "function") _logRender();
+}
+window._setViewMode = _setViewMode;
+
+function initBuffers() {
+  _allView.buy = null;
+  _allView.sell = null;
+  ALL_PAIRS.forEach(function (p) {
+    allPairData[p] = { prices: new Float64Array(86401).fill(-1.0) };
+    _preRoll[p] = { ts: currentStartTsUtc, a: new Float64Array(PRE_ROLL_SECS).fill(-1.0) };
+    _lmx[p] = 0;
+    _srvFp[p] = 0;
+  });
+}
+initBuffers();
+
+function _preArr(p) { return (_preRoll[p] && _preRoll[p].ts === currentStartTsUtc) ? _preRoll[p].a : null; }
+function _preRef(p, k) { var a = _preArr(p); if (!a) return -1; var j = a.length + k; return (j >= 0 && j < a.length) ? a[j] : -1; }
+function getPairDisplayName(p) { var m = /^(frx|cry)([A-Z]{3})([A-Z]{3})$/.exec(String(p)), v = /^1HZ(\d+)V$/.exec(String(p)); return v ? "V" + v[1] + "/USD" : (m ? m[2] + "/" + m[3] : String(p)); }
+function _pxDec(p) { p = String(p); if (/JPY$/.test(p)) return 3; if (/^frx(XAU|XPT)/.test(p)) return 2; if (/^frxXAG/.test(p)) return 4; if (/^frx/.test(p)) return 5; return 2; }
+function _esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+function _ssBounds(sess) {
+  var n = _ssMin > 0 ? Math.max(1, Math.round(1440 / _ssMin)) : 1, s = sess === undefined ? _ssSel : sess;
+  if (_ssMin <= 0 || s < 1 || s > n) return { a: 0, b: 86401, n: n };
+  var ss = Math.round(86400 / n);
+  return { a: (s - 1) * ss, b: s === n ? 86401 : s * ss + 1, n: n };
+}
+function _ssRow(r, c, sess) {
+  var a = _ssBounds(sess).a;
+  return a + ((((r - ((currentStartTsUtc || 0) + a)) % c) + c) % c);
+}
+
+function bootLog(msg) {
+  var b = document.getElementById("bootLogLines");
+  if (!b) return;
+  var d = document.createElement("div");
+  d.textContent = "[" + new Date().toLocaleTimeString("en-GB", { hour12: false }) + "] " + msg;
+  b.appendChild(d);
+  b.parentElement.scrollTop = b.parentElement.scrollHeight;
+}
+
+// ── Server /control helper ──
+async function srvControl(payload) {
+  var rp = document.getElementById("rangePill");
+  try {
+    var r = await fetch(TICK_SERVER + "/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    var j = await r.json();
+    if (rp) {
+      rp.style.borderColor = j.ok ? "#00FF85" : "#FF3D5A";
+      setTimeout(function () { rp.style.borderColor = ""; }, 900);
+    }
+    await pollState();
+    return j;
+  } catch (e) {
+    if (rp) {
+      rp.style.borderColor = "#FF3D5A";
+      setTimeout(function () { rp.style.borderColor = ""; }, 900);
+    }
+    return { ok: false };
+  }
+}
+
+document.getElementById("tpBal").onclick = function () {
+  srvControl({ action: "toggle_mode" });
+};
+
+// ── Poll /state every 1s ──
+function updateBalBtn() {
+  var e = document.getElementById("tpBal");
+  if (e) {
+    var tr = srvState.trader || {};
+    var m = tr.mode === "real" ? "real" : "demo";
+    var v = tr.bal ? tr.bal[m] : null;
+    e.textContent = (m === "real" ? "R " : "D ") + (v === null || v === undefined ? "0.00" : Number(v).toFixed(2));
+  }
+  if (window._ucRender) window._ucRender();
+}
+
+async function pollState() {
+  try {
+    var r = await fetch(TICK_SERVER + "/state", { cache: "no-store" });
+    if (!r.ok) return false;
+    var j = await r.json();
+    if (j.dayEpoch && j.dayEpoch !== currentStartTsUtc) {
+      currentStartTsUtc = j.dayEpoch;
+      initBuffers();
+    }
+    var srvAllPairs = (Array.isArray(j.allPairs) && j.allPairs.length) ? j.allPairs : ((Array.isArray(j.pairs) && j.pairs.length) ? j.pairs : null);
+    if (srvAllPairs) {
+      ALL_PAIRS = srvAllPairs;
+      ALL_PAIRS.forEach(function (p) {
+        if (!allPairData[p]) {
+          allPairData[p] = { prices: new Float64Array(86401).fill(-1.0) };
+          _preRoll[p] = { ts: currentStartTsUtc, a: new Float64Array(PRE_ROLL_SECS).fill(-1.0) };
+          _lmx[p] = 0; _srvFp[p] = 0;
+        }
+      });
+    }
+    srvState = j;
+    window._rxAt = Date.now();
+    _syncViewParams();
+    updateBalBtn();
+    renderTables();
+    if (window.tcRedraw) window.tcRedraw();
+    var lp = document.getElementById("logPanel");
+    if (lp && lp.classList.contains("open")) _logRender();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ── Tick sync from Render /ticks (prioritizing locked BUY/SELL pairs for chart) ──
+async function srvGet(pair, from, pre) {
+  var r = await fetch(TICK_SERVER + "/ticks?pair=" + encodeURIComponent(pair) + "&from=" + from + "&day=" + currentStartTsUtc + (pre ? "&pre=1" : ""), { cache: "no-store" });
+  if (!r.ok || +r.headers.get("X-Day-Epoch") !== currentStartTsUtc) return null;
+  var ab = await r.arrayBuffer();
+  return { buf: new Float64Array(ab), pl: +r.headers.get("X-Pre-Length") || 0, from: +r.headers.get("X-From-Index") || 0 };
+}
+
+async function syncPair(pair) {
+  if (_srvBp[pair] || !allPairData[pair]) return;
+  _srvBp[pair] = true;
+  try {
+    var pd = allPairData[pair];
+    var full = !_srvFp[pair] || (Date.now() - _srvFp[pair] > 300000);
+    var mx0 = _lmx[pair] || 0;
+    var g = await srvGet(pair, full ? 0 : Math.max(0, mx0 - 20), full);
+    if (!g) return;
+    if (full) {
+      _srvFp[pair] = Date.now();
+      if (g.pl > 0) {
+        var pre = new Float64Array(PRE_ROLL_SECS).fill(-1.0);
+        for (var i = 0; i < g.pl && i < PRE_ROLL_SECS; i++) pre[i] = g.buf[i];
+        _preRoll[pair] = { ts: currentStartTsUtc, a: pre };
+      }
+    }
+    var changed = false;
+    for (var j = g.pl; j < g.buf.length; j++) {
+      var v = g.buf[j], ix = g.from + j - g.pl;
+      if (v === -1 || ix < 0 || ix >= pd.prices.length) continue;
+      if (pd.prices[ix] !== v) { pd.prices[ix] = v; changed = true; }
+      if (ix > _lmx[pair]) _lmx[pair] = ix;
+    }
+    if (changed && window.tcRedraw) window.tcRedraw();
+  } catch (e) {} finally {
+    _srvBp[pair] = false;
+  }
+}
+
+function syncActiveChartPairs() {
+  var sc = _curScan();
+  var lk = sc.lock || {};
+  var lim = +sc.lockSlots || 8;
+  var curP = _curPairs();
+  var needed = [];
+  var addP = function (p) { if (p && needed.indexOf(p) < 0) needed.push(p); };
+  if (_viewMode === "ALL") {
+    if (_allView.buy) addP(_allView.buy.pair);
+    if (_allView.sell) addP(_allView.sell.pair);
+  } else {
+    (Array.isArray(lk.buys) ? lk.buys.slice(0, lim) : [lk.buy]).forEach(function (x) { if (x) addP(x.pair); });
+    (Array.isArray(lk.sells) ? lk.sells.slice(0, lim) : [lk.sell]).forEach(function (x) { if (x) addP(x.pair); });
+  }
+  var topCap = _viewMode === "ALL" ? 12 : 16;
+  (sc.buyTop || []).slice(0, topCap).forEach(function (x) { if (x) addP(x.pair); });
+  (sc.sellTop || []).slice(0, topCap).forEach(function (x) { if (x) addP(x.pair); });
+  var scsAll = srvState.scans || {};
+  ["DRV", "MTL"].forEach(function (g) {
+    var gl = (scsAll[g] && scsAll[g].lock) || {};
+    (Array.isArray(gl.buys) ? gl.buys.slice(0, lim) : []).forEach(function (x) { if (x) addP(x.pair); });
+    (Array.isArray(gl.sells) ? gl.sells.slice(0, lim) : []).forEach(function (x) { if (x) addP(x.pair); });
+  });
+  var allScanSt = scsAll.ALL || {};
+  (allScanSt.buyTop || []).slice(0, 1).forEach(function (x) { if (x) addP(x.pair); });
+  (allScanSt.sellTop || []).slice(0, 1).forEach(function (x) { if (x) addP(x.pair); });
+  if (!needed.length) needed = curP.slice(0, 2);
+  needed.forEach(syncPair);
+}
+
+// ── Tables (BUY left, SELL right) ──
+function _sigKey(d) {
+  return d ? (d.pair + "|" + d.c + "|" + d.r + "|" + d.s1 + "|" + d.s2 + "|" + d.col + "|" + d.type + "|S" + (d.sess || 0)) : "";
+}
+
+function _fmtFirst(t) {
+  if (!t) return "--:--:--";
+  var d = new Date((+t + 19800) * 1000);
+  function z(n) { return n < 10 ? "0" + n : "" + n; }
+  return z(d.getUTCHours()) + ":" + z(d.getUTCMinutes()) + ":" + z(d.getUTCSeconds());
+}
+
+function _fmtAge(s) {
+  s = Math.max(0, Math.floor(+s || 0));
+  var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+  return (h ? h + ":" + (m < 10 ? "0" : "") + m : "" + m) + ":" + (ss < 10 ? "0" : "") + ss;
+}
+
+function buildRowsHtml(list, lockSigs, isBuy) {
+  var sc0 = _curScan();
+  if (!list || !list.length) {
+    var bf = srvState.backfill;
+    var curP = _curPairs();
+    var rdy = srvState.readyPairs || [];
+    var rdyMap = {};
+    for (var ri = 0; ri < rdy.length; ri++) rdyMap[rdy[ri]] = 1;
+    var grpRdy = 0;
+    for (var ci = 0; ci < curP.length; ci++) if (rdyMap[curP[ci]]) grpRdy++;
+    var msg = (bf && bf.active && grpRdy < curP.length)
+      ? ("SERVER BACKFILL " + bf.pct + "% (" + grpRdy + "/" + curP.length + ") ...")
+      : ((+sc0.scannedPairs || 0) > 0 ? "NO SIGNAL FOUND" : "WAITING FOR SERVER SCAN...");
+    return '<tr><td colspan="7" style="text-align:center;padding:16px;">' + msg + '</td></tr>';
+  }
+  var lockArr = Array.isArray(lockSigs) ? lockSigs : (lockSigs ? [lockSigs] : []);
+  var lockMap = {};
+  for (var li = 0; li < lockArr.length; li++) {
+    if (lockArr[li]) lockMap[_sigKey(lockArr[li])] = 1;
+  }
+  var topLimit = +sc0.topLimit || (_viewMode === "ALL" ? 37 : 16);
+  var pyMap = srvState.payouts || {};
+  var rows = list.slice(0, topLimit);
+  return rows.map(function (d) {
+    var k = _sigKey(d);
+    window._wpTmrMap[k] = d;
+    var isLocked = !!lockMap[k];
+    var py = pyMap[d.pair] ? '<span class="pyP">' + _esc(pyMap[d.pair]) + '</span>' : "";
+    return '<tr class="' + (isBuy ? "row-green" : "row-red") + ' highlight-gem" data-k="' + k + '" data-sel="' + (isLocked ? "1" : "0") + '">' +
+      '<td style="width:30%;text-align:left;padding-left:8px;white-space:nowrap;"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px;"><div style="line-height:12px;white-space:nowrap;">' + _esc(getPairDisplayName(d.pair)) + py + '</div><b class="ageT" style="font-size:14px;line-height:14px;font-weight:800;padding-right:4px;white-space:nowrap;" data-age="' + (+d.age || 0) + '">' + _fmtAge(d.age) + '</b></div></td>' +
+      '<td style="width:9%;text-align:center;">C' + d.c + '</td>' +
+      '<td style="width:9%;text-align:center;">R' + d.r + '</td>' +
+      '<td style="width:17%;text-align:center;">X' + d.s1 + '-X' + d.s2 + '</td>' +
+      '<td style="width:11%;text-align:center;">' + d.c1 + '</td>' +
+      '<td style="width:11%;text-align:center;">' + d.c2 + '</td>' +
+      '<td style="width:13%;text-align:center;">' + d.pct + '%</td></tr>';
+  }).join("");
+}
+
+function renderTables() {
+  var sc = _curScan();
+  var lk = sc.lock || {};
+  var lvl = 1;
+  var topLimit = +sc.topLimit || (_viewMode === "ALL" ? 37 : 16);
+  var lockSlots = 8;
+  window._wpTmrMap = {};
+  var sigFirst = function (x) { return (x && (x.first || x.fs)) ? (+(x.first || x.fs)) : Number.MAX_SAFE_INTEGER; };
+  var winKey = function (x) {
+    return x.type === "MOM" ? (+x.c2 || 0) : Math.max(0, (+x.c1 || 0) - (+x.c2 || 0));
+  };
+  var c2Key = function (x) {
+    return x.type === "MOM" ? Math.max(0, (+x.c1 || 0) - (+x.c2 || 0)) : (+x.c2 || 0);
+  };
+  var netKey = function (x) {
+    return winKey(x) - c2Key(x);
+  };
+  var rankSig = function (a, b) {
+    return ((+b.pct || 0) - (+a.pct || 0))
+      || (netKey(b) - netKey(a))
+      || (c2Key(a) - c2Key(b))
+      || (winKey(b) - winKey(a))
+      || (sigFirst(a) - sigFirst(b));
+  };
+  var isBuySig = function (x) {
+    return !!x && ((x.type === "REV" && x.col === "R") || (x.type === "MOM" && x.col === "G"));
+  };
+  var pickBestPerPair = function (list) {
+    var src = Array.isArray(list) ? list.filter(function (x) {
+      return x && x.pair && +x.s1 === lvl && (x.type === "REV" || x.type === "MOM") && winKey(x) > 0 && netKey(x) >= 0 && (+x.pct || 0) >= 80;
+    }) : [];
+    src.sort(rankSig);
+    var seenPair = {};
+    var out = [];
+    for (var i = 0; i < src.length; i++) {
+      var k = src[i].pair;
+      if (seenPair[k]) continue;
+      seenPair[k] = 1;
+      out.push(src[i]);
+    }
+    return out;
+  };
+  var pinLocksTop = function (list, locks) {
+    if (!locks || !locks.length) return list.slice(0, topLimit);
+    var lockedKeys = {};
+    for (var i = 0; i < locks.length; i++) {
+      if (locks[i]) lockedKeys[locks[i].pair] = 1;
+    }
+    var head = locks.slice(), rest = [];
+    for (var j = 0; j < list.length; j++) {
+      if (!lockedKeys[list[j].pair]) rest.push(list[j]);
+    }
+    return head.concat(rest).slice(0, topLimit);
+  };
+  var bestPerPair = pickBestPerPair((sc.buyTop || []).concat(sc.sellTop || []));
+  var buyRows = bestPerPair.filter(isBuySig).slice(0, topLimit);
+  var sellRows = bestPerPair.filter(function (x) { return !isBuySig(x); }).slice(0, topLimit);
+  if (_viewMode === "ALL") {
+    if (!_allView.buy && buyRows.length) { _allView.buy = buyRows[0]; syncPair(buyRows[0].pair); }
+    if (!_allView.sell && sellRows.length) { _allView.sell = sellRows[0]; syncPair(sellRows[0].pair); }
+    if (_allView.buy) {
+      var bk = _sigKey(_allView.buy), foundB = null;
+      for (var bi = 0; bi < buyRows.length; bi++) {
+        if (_sigKey(buyRows[bi]) === bk) { foundB = buyRows[bi]; break; }
+      }
+      if (foundB) _allView.buy = foundB;
+      else if ((sc.minC && _allView.buy.c < sc.minC) || (sc.maxC && _allView.buy.c > sc.maxC) || (sc.ssSel && _allView.buy.sess && _allView.buy.sess !== sc.ssSel)) _allView.buy = null;
+    }
+    if (_allView.sell) {
+      var sk = _sigKey(_allView.sell), foundS = null;
+      for (var si = 0; si < sellRows.length; si++) {
+        if (_sigKey(sellRows[si]) === sk) { foundS = sellRows[si]; break; }
+      }
+      if (foundS) _allView.sell = foundS;
+      else if ((sc.minC && _allView.sell.c < sc.minC) || (sc.maxC && _allView.sell.c > sc.maxC) || (sc.ssSel && _allView.sell.sess && _allView.sell.sess !== sc.ssSel)) _allView.sell = null;
+    }
+    var buySel = _allView.buy ? [_allView.buy] : [];
+    var sellSel = _allView.sell ? [_allView.sell] : [];
+    document.getElementById("peaksTableBodyRev").innerHTML = buildRowsHtml(buyRows, buySel, true);
+    document.getElementById("peaksTableBodyMom").innerHTML = buildRowsHtml(sellRows, sellSel, false);
+    return;
+  }
+  var buyLocks = ((Array.isArray(lk.buys) && lk.buys.length) ? lk.buys : [lk.buy]).filter(function (x) { return x && +x.s1 === lvl && (x.type === "REV" || x.type === "MOM"); }).slice(0, lockSlots);
+  var sellLocks = ((Array.isArray(lk.sells) && lk.sells.length) ? lk.sells : [lk.sell]).filter(function (x) { return x && +x.s1 === lvl && (x.type === "REV" || x.type === "MOM"); }).slice(0, lockSlots);
+  var allLocks = buyLocks.concat(sellLocks);
+  var buyDir = allLocks.filter(function (x) { return isBuySig(x); });
+  var sellDir = allLocks.filter(function (x) { return !isBuySig(x); });
+  var buyDirPairs = {}, sellDirPairs = {};
+  buyDir.forEach(function (x) { buyDirPairs[x.pair] = 1; });
+  sellDir.forEach(function (x) { sellDirPairs[x.pair] = 1; });
+  sellRows = sellRows.filter(function (x) { return !buyDirPairs[x.pair]; });
+  buyRows = buyRows.filter(function (x) { return !sellDirPairs[x.pair]; });
+  if (buyRows.length || buyDir.length) buyRows = pinLocksTop(buyRows, buyDir);
+  if (sellRows.length || sellDir.length) sellRows = pinLocksTop(sellRows, sellDir);
+  document.getElementById("peaksTableBodyRev").innerHTML = buildRowsHtml(buyRows, buyDir, true);
+  document.getElementById("peaksTableBodyMom").innerHTML = buildRowsHtml(sellRows, sellDir, false);
+}
+
+(function () {
+  function bindAllRowClick(tbodyId, isBuy) {
+    var tb = document.getElementById(tbodyId);
+    if (!tb) return;
+    tb.addEventListener("click", function (ev) {
+      if (_viewMode !== "ALL") return;
+      var tr = ev.target && ev.target.closest ? ev.target.closest("tr.highlight-gem[data-k]") : null;
+      if (!tr) return;
+      var k = tr.getAttribute("data-k");
+      var sig = k && window._wpTmrMap ? window._wpTmrMap[k] : null;
+      if (!sig) return;
+      _allView[isBuy ? "buy" : "sell"] = sig;
+      syncPair(sig.pair);
+      renderTables();
+      if (window.tcFocusPane) window.tcFocusPane(isBuy ? 0 : 1);
+      else if (window.tcRedraw) window.tcRedraw();
+      var lp = document.getElementById("logPanel");
+      if (lp && lp.classList.contains("open") && typeof _logRender === "function") _logRender();
+    });
+  }
+  bindAllRowClick("peaksTableBodyRev", true);
+  bindAllRowClick("peaksTableBodyMom", false);
+})();
+
+function _champPlan(sig) {
+  var pd = allPairData[sig.pair]; if (!pd || !pd.prices.length) return null;
+  var SB = _ssBounds(sig.sess), prices = pd.prices, len = prices.length, c = sig.c, nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+  var lim = Math.min(nowSec - 1, len - 1, SB.b - 1, 86399); if (lim < 0) return null;
+  var rr = _ssRow(sig.r, c, sig.sess), colCode = sig.col === "G" ? 1 : 2, color = 0, streak = 0, lastI = -1;
+  for (var i = rr; i <= lim; i += c) {
+    var p = prices[i], q = i >= c ? prices[i - c] : _preRef(sig.pair, i - c), nc, ns;
+    if (q === -1) nc = ns = (p === -1 || i - SB.a < c) ? 0 : 1;
+    else if (p === -1) nc = ns = 0;
+    else if (p > q) { nc = 1; ns = (color === 1 && streak > 0) ? streak + 1 : 1; }
+    else if (p < q) { nc = 2; ns = (color === 2 && streak > 0) ? streak + 1 : 1; }
+    else { nc = color; ns = 0; }
+    color = nc; streak = ns; lastI = i;
+  }
+  var kind = "NONE", need = 0, idx = -1;
+  if (color === colCode && streak === sig.s1 && lastI >= 0) { kind = "FIRED"; idx = lastI; }
+  else if (!(color === colCode && streak > sig.s1)) {
+    need = Math.max(1, sig.s1 - (color === colCode ? streak : 0));
+    var iNext = lastI < 0 ? rr : lastI + c;
+    if (iNext + (need - 1) * c < Math.min(86400, SB.b)) { kind = "FUT"; idx = iNext + (need - 1) * c; }
+  }
+  return { kind: kind, need: need, idx: idx, missed: (kind === "NONE" && color === colCode && streak > sig.s1), nowSec: nowSec };
+}
+
+setInterval(function () {
+  var base = window._rxAt || Date.now();
+  var el = (Date.now() - base) / 1000;
+  document.querySelectorAll("b.ageT").forEach(function (b) {
+    b.textContent = _fmtAge((+b.getAttribute("data-age") || 0) + el);
+  });
+}, 500);
+
+var _wpEvPh = false;
+setInterval(function () {
+  if (document.hidden) return;
+  _wpEvPh = !_wpEvPh;
+  document.querySelectorAll("tr.highlight-gem[data-k]").forEach(function (row) {
+    var d = window._wpTmrMap[row.getAttribute("data-k")], pl = d ? _champPlan(d) : null, ev = "";
+    if (pl) {
+      var c = d.c || 60, rem = pl.kind === "FIRED" ? pl.idx + c - pl.nowSec : (pl.kind === "FUT" ? pl.idx - pl.nowSec : 0);
+      if (pl.kind === "FIRED" && c - rem <= 10) ev = "HIT";
+      else if (pl.missed) ev = "MISS";
+      else if (pl.kind === "FUT" && rem <= 10) ev = "WARN";
+    }
+    if (ev) { row.setAttribute("data-wpe", ev); row.setAttribute("data-wph", _wpEvPh ? "1" : "0"); }
+    else { row.removeAttribute("data-wpe"); row.removeAttribute("data-wph"); }
+  });
+}, 1000);
+
+// ── Server Console Modal ──
+var _logFilt = "TRADE";
+var _lpSyncOn = false;
+var _lpEditKey = null;
+var _lpEditState = {};
+var _lpSummaryKeys = { mode: 1, auto: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, stake: 1 };
+
+function _lpFindField(key) {
+  var sc = _curSchema();
+  for (var i = 0; i < sc.length; i++) if (sc[i].key === key) return sc[i];
+  return null;
+}
+function _lpSettingVal(key) {
+  var s = _curSettings(), sc = _curScan(), tg = _curTraderGroup(), tr = srvState.trader || {};
+  if (key === "auto") return !!tg.auto;
+  if (key === "stake") return s.stake !== undefined ? s.stake : tg.stake;
+  if (key === "mode") return tr.mode || "demo";
+  if (s[key] !== undefined) return s[key];
+  if (sc[key] !== undefined) return sc[key];
+  var f = _lpFindField(key);
+  return f ? f.default : "";
+}
+function _lpFmtVal(f, v) {
+  if (!f) return String(v == null ? "--" : v);
+  if (f.type === "bool") return v ? "ON" : "OFF";
+  if (f.type === "select" && Array.isArray(f.options)) {
+    for (var i = 0; i < f.options.length; i++) {
+      if (String(f.options[i].value) === String(v)) return f.options[i].label;
+    }
+  }
+  if (f.zeroLabel && Number(v) === 0) return f.zeroLabel;
+  var txt = (f.type === "number" && typeof f.decimals === "number") ? Number(v).toFixed(f.decimals) : String(v);
+  if (f.prefix) txt = f.prefix + txt;
+  if (f.unit) txt += (f.unit.length > 1 ? " " + f.unit : f.unit);
+  return txt;
+}
+function _lpCloseEditor() {
+  _lpEditKey = null;
+  _lpEditState = {};
+  var ed = document.getElementById("lpEditor");
+  if (ed) { ed.classList.remove("open"); ed.innerHTML = ""; }
+}
+function _lpOpenEditor(key) {
+  var ed = document.getElementById("lpEditor");
+  if (!ed) return;
+  if (_lpEditKey === key) { _lpCloseEditor(); _logRender(); return; }
+  _lpEditKey = key;
+  _lpEditState = {};
+  var html = "";
+  if (key === "cycle") {
+    var fMin = _lpFindField("minC") || { min: 15, max: 900, step: 1 };
+    var fMax = _lpFindField("maxC") || { min: 15, max: 900, step: 1 };
+    var vMin = _lpSettingVal("minC"), vMax = _lpSettingVal("maxC");
+    html = '<span class="lpEdLbl">CYCLE RANGE (' + fMin.min + '-' + fMax.max + 's)</span>' +
+      '<input id="lpEdMinC" class="lpEdIn" type="number" min="' + fMin.min + '" max="' + fMin.max + '" step="' + (fMin.step || 1) + '" value="' + _esc(vMin) + '" placeholder="MIN">' +
+      '<span class="lpEdLbl">TO</span>' +
+      '<input id="lpEdMaxC" class="lpEdIn" type="number" min="' + fMax.min + '" max="' + fMax.max + '" step="' + (fMax.step || 1) + '" value="' + _esc(vMax) + '" placeholder="MAX">' +
+      '<button type="button" class="lpBtn on" data-ed="apply">APPLY</button>' +
+      '<button type="button" class="lpBtn dn" data-ed="cancel">CANCEL</button>' +
+      '<span id="lpEdMsg" class="lpEdMsg"></span>';
+  } else if (key === "mode") {
+    _lpEditState.mode = String(_lpSettingVal("mode") || "demo");
+    _lpEditState.auto = !!_lpSettingVal("auto");
+    html = '<span class="lpEdLbl">TRADER MODE</span>' +
+      '<button type="button" class="lpBtn' + (_lpEditState.mode === "demo" ? " on" : "") + '" data-ed-mode="demo">DEMO</button>' +
+      '<button type="button" class="lpBtn' + (_lpEditState.mode === "real" ? " on" : "") + '" data-ed-mode="real">REAL</button>' +
+      '<button type="button" class="lpBtn' + (_lpEditState.auto ? " on" : "") + '" data-ed-auto="1">' + (_lpEditState.auto ? "AUTO ON" : "AUTO OFF") + '</button>' +
+      '<button type="button" class="lpBtn on" data-ed="apply">APPLY</button>' +
+      '<button type="button" class="lpBtn dn" data-ed="cancel">CANCEL</button>' +
+      '<span id="lpEdMsg" class="lpEdMsg"></span>';
+  } else {
+    var f = _lpFindField(key);
+    if (!f) { _lpCloseEditor(); return; }
+    var val = _lpSettingVal(key);
+    var hint = (typeof f.min === "number" && typeof f.max === "number") ? (" (" + f.min + "-" + f.max + (f.unit ? f.unit : "") + ")") : "";
+    html = '<span class="lpEdLbl">' + _esc(f.label) + _esc(hint) + '</span>';
+    if (f.type === "bool") {
+      _lpEditState.boolVal = !!val;
+      html += '<button type="button" class="lpBtn' + (val ? " on" : "") + '" data-ed-bool="1">ON</button>' +
+        '<button type="button" class="lpBtn' + (!val ? " on" : "") + '" data-ed-bool="0">OFF</button>';
+    } else if (f.type === "select" && Array.isArray(f.options)) {
+      html += '<select id="lpEdVal" class="lpEdSel">' + f.options.map(function (o) {
+        return '<option value="' + _esc(o.value) + '"' + (String(o.value) === String(val) ? ' selected' : '') + '>' + _esc(o.label) + '</option>';
+      }).join("") + '</select>';
+    } else if (f.type === "int" || f.type === "number") {
+      html += '<input id="lpEdVal" class="lpEdIn" type="number"' +
+        (typeof f.min === "number" ? ' min="' + f.min + '"' : '') +
+        (typeof f.max === "number" ? ' max="' + f.max + '"' : '') +
+        (typeof f.step === "number" ? ' step="' + f.step + '"' : '') +
+        ' value="' + _esc(val) + '">';
+    } else {
+      html += '<input id="lpEdVal" class="lpEdIn" type="text" value="' + _esc(val) + '">';
+    }
+    html += '<button type="button" class="lpBtn on" data-ed="apply">APPLY</button>' +
+      '<button type="button" class="lpBtn dn" data-ed="cancel">CANCEL</button>' +
+      '<span id="lpEdMsg" class="lpEdMsg"></span>';
+  }
+  ed.innerHTML = html;
+  ed.classList.add("open");
+  var inp = ed.querySelector("input,select");
+  if (inp) { inp.focus(); if (inp.select) inp.select(); }
+  _logRender();
+}
+async function _lpApplyEditor() {
+  if (!_lpEditKey) return;
+  var msgEl = document.getElementById("lpEdMsg");
+  var patch = {};
+  if (_lpEditKey === "cycle") {
+    var i1 = document.getElementById("lpEdMinC"), i2 = document.getElementById("lpEdMaxC");
+    var v1 = i1 ? Number(i1.value) : NaN, v2 = (i2 && String(i2.value).trim() !== "") ? Number(i2.value) : v1;
+    patch = { minC: v1, maxC: v2 };
+  } else if (_lpEditKey === "mode") {
+    patch = { mode: _lpEditState.mode, auto: !!_lpEditState.auto };
+  } else {
+    var f = _lpFindField(_lpEditKey);
+    if (!f) return;
+    if (f.type === "bool") patch[_lpEditKey] = !!_lpEditState.boolVal;
+    else {
+      var elVal = document.getElementById("lpEdVal");
+      if (!elVal) return;
+      patch[_lpEditKey] = (f.type === "int" || f.type === "number" || f.valueType === "int") ? Number(elVal.value) : elVal.value;
+    }
+  }
+  if (msgEl) { msgEl.className = "lpEdMsg"; msgEl.textContent = "SAVING..."; }
+  var res = await srvControl({ action: "set_settings", group: _viewMode, patch: patch });
+  if (res && res.ok) {
+    if (msgEl) { msgEl.className = "lpEdMsg ok"; msgEl.textContent = "SYNCED TO SERVER"; }
+    setTimeout(function () { _lpCloseEditor(); _logRender(); }, 450);
+  } else if (msgEl) {
+    msgEl.className = "lpEdMsg err";
+    msgEl.textContent = (res && res.error) ? res.error : "UPDATE FAILED";
+  }
+}
+
+function _istSod(sec) { return (((Math.floor(sec) + 19800) % 86400) + 86400) % 86400; }
+function _istT(sec) {
+  var s = _istSod(sec), h = (s / 3600) | 0, m = ((s % 3600) / 60) | 0, x = s % 60;
+  return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (x < 10 ? "0" : "") + x;
+}
+function _logEnsure() {
+  var el = document.getElementById("logPanel");
+  if (!el) { el = document.createElement("div"); el.id = "logPanel"; document.body.appendChild(el); }
+  if (el._init) return el;
+  el._init = true;
+  el.innerHTML =
+    '<div class="lpTop"><span class="lpTitle">WALLSPECTRUM SERVER CONSOLE</span><div class="lpTopR"><span id="lpWs" class="lpPill">--</span><span id="lpScan" class="lpPill">--</span><button type="button" class="lpBtn" data-lp="sync">SYNC</button><button type="button" class="lpBtn" data-lp="rescan">SCAN</button><button type="button" class="lpBtn" data-lp="auto">AUTO</button><button type="button" class="lpBtn dn" data-lp="close">CLOSE</button></div></div>' +
+    '<div id="lpSummary" class="lpSummary"></div>' +
+    '<div id="lpEditor" class="lpEditor"></div>' +
+    '<div id="lpSettings" class="lpSettings"></div>' +
+    '<div id="lpLocks" class="lpLocks"></div>' +
+    '<div class="lpMain">' +
+      '<div class="lpSec"><div class="lpSecH"><span id="lpSecT">TRADE SUMMARY</span><span id="lpTrStat">--</span></div><div id="lpEvents" class="lpSecB"></div></div>' +
+    '</div>' +
+    '<div class="lpBar">' +
+      '<button type="button" class="lpBtn" data-lf="INFO"><span>INFO</span></button>' +
+      '<button type="button" class="lpBtn on" data-lf="TRADE"><span>TRADE</span><span class="lpBadge" id="lpCnTrade">0</span></button>' +
+      '<button type="button" class="lpBtn" data-lf="ERR"><span>ERR</span><span class="lpBadge" id="lpCnErr">0</span></button>' +
+      '<button type="button" class="lpBtn" data-lf="SYS"><span>SYS</span><span class="lpBadge" id="lpCnSys">0</span></button>' +
+      '<button type="button" class="lpBtn dn" data-lp="clr"><span>CLR</span></button>' +
+    '</div>';
+  el.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && ev.target && ev.target.closest && ev.target.closest("#lpEditor")) {
+      ev.preventDefault();
+      _lpApplyEditor();
+    }
+  });
+  el.addEventListener("click", function (ev) {
+    var sr = ev.target && ev.target.closest ? ev.target.closest("[data-ses]") : null;
+    if (sr) { var sk2 = +sr.getAttribute("data-ses"); _sesSel = (_sesSel === sk2) ? 0 : sk2; _logRender(); return; }
+    var ek = ev.target && ev.target.closest ? ev.target.closest("[data-edit-key]") : null;
+    if (ek) { _lpOpenEditor(ek.getAttribute("data-edit-key")); return; }
+    var b = ev.target && ev.target.closest ? ev.target.closest("button") : null;
+    if (!b) return;
+    var edAct = b.getAttribute("data-ed");
+    if (edAct === "apply") { _lpApplyEditor(); return; }
+    if (edAct === "cancel") { _lpCloseEditor(); _logRender(); return; }
+    var edMode = b.getAttribute("data-ed-mode");
+    if (edMode) {
+      _lpEditState.mode = edMode;
+      el.querySelectorAll("[data-ed-mode]").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-ed-mode") === edMode); });
+      return;
+    }
+    if (b.getAttribute("data-ed-auto")) {
+      _lpEditState.auto = !_lpEditState.auto;
+      b.classList.toggle("on", _lpEditState.auto);
+      b.textContent = _lpEditState.auto ? "AUTO ON" : "AUTO OFF";
+      return;
+    }
+    var edBool = b.getAttribute("data-ed-bool");
+    if (edBool !== null) {
+      _lpEditState.boolVal = edBool === "1";
+      el.querySelectorAll("[data-ed-bool]").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-ed-bool") === edBool); });
+      return;
+    }
+    var act = b.getAttribute("data-lp"), f = b.getAttribute("data-lf");
+    if (act === "close") { _lpCloseEditor(); el.classList.remove("open"); return; }
+    if (act === "clr") { srvControl({ action: "clear_logs" }); return; }
+    if (act === "sync") { _lpSyncOn = !_lpSyncOn; _logRender(); return; }
+    if (act === "rescan") { srvControl({ action: "rescan", group: _viewMode }); return; }
+    if (act === "auto") {
+      var tg0 = _curTraderGroup();
+      if (!tg0.canTrade) return;
+      srvControl({ action: "set_auto", group: _viewMode, auto: !tg0.auto });
+      return;
+    }
+    if (f) {
+      if (f !== "INFO") _lpCloseEditor();
+      _lpSyncOn = false;
+      _logFilt = f;
+      el.querySelectorAll("[data-lf]").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-lf") === f); });
+      _logRender();
+    }
+  });
+  return el;
+}
+
+var _lpSyncSum = "";
+function _lpGrpTxt(g) {
+  var sb = srvState.settingsByGroup || {}, sc = (srvState.scans || {})[g] || {}, s = sb[g] || {};
+  var tgs = (srvState.trader && srvState.trader.groups) || {}, tg = tgs[g] || {};
+  var pick = function (k, d) {
+    if (s[k] !== undefined && s[k] !== null) return s[k];
+    if (sc[k] !== undefined && sc[k] !== null) return sc[k];
+    return d;
+  };
+  var mn = +pick("minC", 60), mx = +pick("maxC", mn), sm = +pick("ssMin", 60);
+  var ssT = sm <= 0 ? "24h" : ((sm % 60 === 0 ? (sm / 60) : (Math.round(sm / 6) / 10)) + "h");
+  var parts = [
+    "CYC " + (mn === mx ? (mn + "s") : (mn + "-" + mx + "s")),
+    "SCAN " + pick("scanInt", 30) + "s",
+    "SESS " + ssT + " (S" + (sc.ssSel || 1) + ")",
+    "LVL X" + pick("lvl", 1)
+  ];
+  if (g !== "ALL") {
+    parts.push("LOCK>=" + pick("lockMinPct", 60) + "% C1>=" + pick("lockMinC1", 10));
+    parts.push("SLOTS " + (sc.lockSlots || 0));
+  }
+  parts.push("R0 " + (pick("r0Only", false) ? "ON" : "OFF"));
+  parts.push("TOP " + pick("topLimit", 16));
+  parts.push(tg.canTrade ? ("AUTO " + (tg.auto ? "ON" : "OFF") + " $" + Number(tg.stake || 0).toFixed(2)) : "VIEW ONLY");
+  return parts.join(" · ");
+}
+function _lpSyncH() {
+  var sy = srvState.sync;
+  if (!sy) { _lpSyncSum = "--"; return '<div class="lpEmpty">WAITING FOR SERVER SYNC DATA...</div>'; }
+  var tr = srvState.trader || {}, bf = srvState.backfill || {};
+  var list = (Array.isArray(srvState.allPairs) && srvState.allPairs.length) ? srvState.allPairs : ALL_PAIRS;
+  var pg = srvState.pairGroups || {};
+  var fil = sy.filled || {}, pend = sy.bfPending || {}, lt = sy.lastTickTime || {}, ln = sy.liveN || {}, bn = sy.bfN || {};
+  var drift = (Date.now() - (window._rxAt || Date.now())) / 1000, base = +sy.nowSec || Math.floor(Date.now() / 1000);
+  var ws = !!srvState.wsConnected, fxC = !!sy.fxClosed, el0 = +sy.elapsed || 0;
+  var nB = 0, nL = 0, nS = 0, rows = "", i, p, total = list.length;
+  var grpOf = function (q) {
+    return (pg.DRV || []).indexOf(q) >= 0 ? "DRV" : ((pg.MTL || []).indexOf(q) >= 0 ? "MTL" : "ALL");
+  };
+  for (i = 0; i < total; i++) {
+    p = list[i];
+    var pe = +pend[p] || 0, fl = +fil[p] || 0, closed = fxC && /^frx/i.test(p);
+    var bfOk = pe === 0 && (fl > 0 || closed);
+    var last = lt[p], age = last ? Math.max(0, base - last + drift) : null;
+    var lim = /^1HZ/i.test(p) ? 10 : 90;
+    var liveOk = false, liveTxt = "";
+    if (closed) { liveOk = true; liveTxt = "MARKET CLOSED"; }
+    else if (!ws) { liveTxt = "WS DOWN"; }
+    else if (age === null) { liveTxt = "NO TICK"; }
+    else if (age <= lim) { liveOk = true; liveTxt = "LIVE " + Math.round(age) + "s"; }
+    else { liveTxt = "STALE " + Math.round(age) + "s"; }
+    var ok = bfOk && liveOk;
+    if (bfOk) nB++;
+    if (liveOk) nL++;
+    if (ok) nS++;
+    var bTxt = pe > 0 ? ("BF PEND " + pe) : (bfOk ? "BF OK" : "BF EMPTY");
+    var cov = el0 > 0 ? Math.min(100, Math.round(fl / el0 * 100)) : 0;
+    rows += '<div class="lpSyncRow ' + (ok ? "up" : "dn") + '"><span>' + _esc(getPairDisplayName(p)) + ' · ' + grpOf(p) + '</span><span>' + bTxt + ' · ' + liveTxt + ' · L' + (+ln[p] || 0) + ' B' + (+bn[p] || 0) + ' · ' + cov + '%</span></div>';
+  }
+  var allOk = total > 0 && nS === total && !bf.active;
+  _lpSyncSum = (allOk ? "ALL SYNCED " : "SYNCED ") + nS + "/" + total;
+  var G = "#00FF85", R = "#FF3D5A", Y = "#FFD400";
+  var mode = String(tr.mode || "demo"), balV = tr.bal ? tr.bal[mode] : null;
+  var balT = (balV !== null && balV !== undefined) ? (Number(balV).toFixed(2) + " " + ((tr.cur && tr.cur[mode]) || "USD")) : "--";
+  var boxes =
+    _tpBox("ALL PAIRS", _esc(allOk ? "BACKFILLED + LIVE" : "SYNCING"), allOk ? G : Y) +
+    _tpBox("BACKFILLED", _esc(nB + "/" + total + (bf.active ? (" · " + bf.pct + "%") : " · DONE")), (nB === total && !bf.active) ? G : Y) +
+    _tpBox("LIVE", _esc(nL + "/" + total), nL === total ? G : R) +
+    _tpBox("SYNCED", _esc(nS + "/" + total), nS === total ? G : Y) +
+    _tpBox("DERIV WS", _esc((ws ? "UP" : "DOWN") + " · SUBS " + (+sy.subscribedCount || 0) + "/" + (+sy.totalPairs || total)), ws ? G : R) +
+    _tpBox("FEED", _esc(srvState.feedState || "--"), srvState.feedState === "LIVE" ? G : Y) +
+    _tpBox("BACKFILL RUNS", _esc(String(+sy.backfillSeq || 0)), G) +
+    _tpBox("LIVE TICKS", _esc((+sy.totalLive || 0).toLocaleString()), G) +
+    _tpBox("BF TICKS", _esc((+sy.totalBf || 0).toLocaleString()), G) +
+    _tpBox("UPTIME", _esc(_fmtAge(sy.uptime)), G);
+  var glob = '<div class="lpSyncRow wrap"><span>GLOBAL</span><span>' + _esc(mode.toUpperCase() + " · BAL " + balT + " · TRADER " + (tr.ready ? "ONLINE" : "WAIT") + " · SETTINGS v" + (srvState.settingsVersion || 0)) + '</span></div>';
+  var grps = ["DRV", "MTL", "ALL"].map(function (g) {
+    return '<div class="lpSyncRow wrap"><span>' + g + (g === _viewMode ? " *" : "") + '</span><span>' + _esc(_lpGrpTxt(g)) + '</span></div>';
+  }).join("");
+  return '<div class="lpSyncH" style="color:' + (allOk ? G : Y) + '">' + (allOk ? "ALL PAIRS BACKFILLED AND SYNCED LIVE" : "SYNC STATUS · NOT ALL PAIRS READY") + '</div>' +
+    '<div class="lpSyncG">' + boxes + '</div>' +
+    '<div class="lpSyncH">GLOBAL ACTIVE PARAMETERS</div>' + glob + grps +
+    '<div class="lpSyncH">PAIRS (BACKFILL · LIVE · L=LIVE TICKS B=BACKFILLED · COVERAGE)</div>' + rows;
+}
+
+function _tpSgn(v) { return (v >= 0 ? "+" : "") + Number(v).toFixed(2); }
+function _tpRowH(x, col) {
+  return '<div style="display:flex;justify-content:space-between;gap:6px;padding:1px 2px;font-size:10px;border-bottom:1px solid rgba(255,255,255,.08);color:' + col + ';font-weight:700;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">' + _esc(getPairDisplayName(x.pair)) + ' - ' + _esc(x.dir) + ' ' + Number(x.amt).toFixed(2) + '</span><span>' + (x.pnl === null ? "--" : _tpSgn(x.pnl)) + '</span></div>';
+}
+function _tpChartH(arr, col, mx) {
+  var i, k, bh, h = "", n = arr.length;
+  for (i = n - 1; i >= 0; i--) {
+    k = Math.abs(arr[i].pnl === null ? 0 : arr[i].pnl);
+    bh = mx > 0 ? Math.max(2, Math.round(k / mx * 24)) : 2;
+    h += '<div style="flex:1 1 0;min-width:2px;max-width:8px;height:' + bh + 'px;background:' + col + ';border-radius:1px 1px 0 0"></div>';
+  }
+  return '<div style="display:flex;align-items:flex-end;gap:1px;height:30px;padding:2px 3px;border:1px solid ' + col + ';border-radius:4px;margin-bottom:3px;overflow:hidden">' + (n ? h : '<span style="opacity:.5;align-self:center">--</span>') + '</div>';
+}
+function _tpPanelH(title, arr, col, mx) {
+  var i, tot = 0, rows = "";
+  for (i = 0; i < arr.length; i++) {
+    tot += arr[i].pnl === null ? 0 : arr[i].pnl;
+    rows += _tpRowH(arr[i], col);
+  }
+  return '<div style="flex:1 1 0;min-width:0"><div style="display:flex;justify-content:space-between;color:' + col + ';font-weight:700;padding:2px 2px 4px"><span>' + title + ' (' + arr.length + ')</span><span>' + _tpSgn(tot) + '</span></div>' + _tpChartH(arr, col, mx) + rows + '</div>';
+}
+var _sesAgg = null, _sesSel = 0;
+function _sesLoad() {
+  if (_sesAgg && _sesAgg.day === currentStartTsUtc && _sesAgg.m === _ssMin) return _sesAgg;
+  var o = null;
+  try { var r = localStorage.getItem("wsSesAgg"); if (r) o = JSON.parse(r); } catch (e) { o = null; }
+  if (!o || o.day !== currentStartTsUtc || o.m !== _ssMin || !o.ids || !o.s) o = { day: currentStartTsUtc, m: _ssMin, ids: {}, s: {}, d: {}, di: {} };
+  if (!o.d) o.d = {};
+  if (!o.di) o.di = {};
+  _sesAgg = o;
+  return o;
+}
+function _sesSave() {
+  try { localStorage.setItem("wsSesAgg", JSON.stringify(_sesAgg)); } catch (e) {}
+}
+function _sesOf(t0) {
+  var n = _ssMin > 0 ? Math.max(1, Math.round(1440 / _ssMin)) : 1, s = Math.floor((t0 - currentStartTsUtc) / Math.round(86400 / n)) + 1;
+  return Math.max(1, Math.min(n, s));
+}
+function _tpBox(lbl, val, col) {
+  return '<div style="display:flex;flex-direction:column;gap:2px;padding:5px 8px;border:1px solid ' + col + ';border-radius:6px;color:' + col + ';min-width:0"><span style="font-size:9px;letter-spacing:.1em;opacity:.72;white-space:nowrap">' + lbl + '</span><span style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + val + '</span></div>';
+}
+function _tpSesH(bal, agg) {
+  var n = _ssMin > 0 ? Math.max(1, Math.round(1440 / _ssMin)) : 1, len = Math.round(86400 / n), cur = _sesOf(Math.floor(Date.now() / 1000));
+  var k, e, a, wr, col, rows = "", tw = 0, tl = 0, tn = 0, cn = 0;
+  for (k = n; k >= 1; k--) {
+    e = agg && agg.s ? agg.s[k] : null;
+    if (e) { tw += e.w; tl += e.l; tn += e.n; }
+    if (!e && k !== cur) continue;
+    if (!e) e = { w: 0, l: 0, n: 0 };
+    if (k === cur) cn = e.n;
+    a = (k - 1) * len;
+    wr = (e.w + e.l) > 0 ? Math.round(e.w / (e.w + e.l) * 100) + "%" : "--";
+    col = e.n < 0 ? "#FF3D5A" : "#00FF85";
+    rows += '<div data-ses="' + k + '" style="cursor:pointer;display:flex;justify-content:space-between;gap:8px;padding:4px 4px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;white-space:nowrap;color:' + col + (k === cur ? ';background:rgba(0,255,133,.10)' : '') + (k === _sesSel ? ';box-shadow:inset 0 0 0 1px ' + col + ';background:rgba(255,255,255,.10)' : '') + '"><span>S' + k + ' · ' + _istT(currentStartTsUtc + a).slice(0, 5) + '-' + _istT(currentStartTsUtc + a + len).slice(0, 5) + (k === cur ? ' · NOW' : '') + '</span><span>W' + e.w + ' L' + e.l + ' · WR ' + wr + '</span><span>' + _tpSgn(e.n) + '</span></div>';
+  }
+  return '<div style="margin-bottom:8px"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px">' +
+    _tpBox("BALANCE", _esc(bal), "#00FF85") +
+    _tpBox("SESSION S" + cur + " P/L", _tpSgn(cn), cn < 0 ? "#FF3D5A" : "#00FF85") +
+    _tpBox("DAY P/L", _tpSgn(tn), tn < 0 ? "#FF3D5A" : "#00FF85") +
+    '</div><div style="display:flex;justify-content:space-between;padding:3px 4px;font-size:10px;font-weight:800;letter-spacing:.1em;border-bottom:1px solid #00FF85;color:#00FF85"><span>DAILY SESSION BREAKDOWN</span><span>W' + tw + ' L' + tl + '</span></div>' + rows + '</div>';
+}
+function _tpBoardH(pr, ls, op, bal, agg, vlab) {
+  var i, mx = 0, all = pr.concat(ls), oh = "";
+  for (i = 0; i < all.length; i++) {
+    if (all[i].pnl !== null && Math.abs(all[i].pnl) > mx) mx = Math.abs(all[i].pnl);
+  }
+  for (i = 0; i < op.length; i++) {
+    oh += '<div style="display:flex;justify-content:space-between;padding:3px 2px;color:#FFD84D;font-weight:700"><span>' + _esc(getPairDisplayName(op[i].pair)) + ' - ' + _esc(op[i].dir) + ' ' + Number(op[i].amt).toFixed(2) + '</span><span>' + _esc(op[i].st) + '</span></div>';
+  }
+  return '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start"><div style="flex:0 1 540px;min-width:0"><div style="display:flex;justify-content:space-between;padding:2px 2px 4px;font-size:10px;font-weight:800;letter-spacing:.1em;color:' + (vlab === "LIVE" ? '#00FF85' : '#FFD400') + '"><span>' + _esc(vlab || "LIVE") + '</span><span style="opacity:.7">' + (vlab === "LIVE" ? 'TAP A SESSION' : 'TAP AGAIN FOR LIVE') + '</span></div><div style="display:flex;gap:8px;align-items:flex-start">' + _tpPanelH("PROFIT", pr, "#00FF85", mx) + _tpPanelH("LOSS", ls, "#FF3D5A", mx) + '</div></div><div style="flex:1 1 300px;min-width:0;position:sticky;top:0">' + _tpSesH(bal, agg) + (oh ? '<div style="border-top:1px solid rgba(255,255,255,.15);padding-top:4px">' + oh + '</div>' : "") + '</div></div>';
+}
+
+function _logRender() {
+  var el = document.getElementById("logPanel");
+  if (!el || !el._init) return;
+  el.setAttribute("data-view", _logFilt);
+  var tr = srvState.trader || {}, sc = _curScan(), lk = sc.lock || {}, tg = _curTraderGroup();
+  var mode = tg.canTrade ? ((tg.auto ? "ON" : "OFF") + " · " + String(tr.mode || "demo").toUpperCase()) : "VIEW ONLY";
+  var balVal = tr.bal ? tr.bal[tr.mode || "demo"] : null;
+  var bal = (balVal !== null && balVal !== undefined) ? Number(balVal).toFixed(2) + " " + ((tr.cur && tr.cur[tr.mode]) || "USD") : "--";
+  var wsEl = document.getElementById("lpWs"), scEl = document.getElementById("lpScan"), autoBtn = el.querySelector('[data-lp="auto"]');
+  if (wsEl) {
+    wsEl.textContent = tr.ready ? "SRV ONLINE" : "SRV WAIT";
+    wsEl.className = "lpPill " + (tr.ready ? "up" : "dn");
+  }
+  if (scEl) scEl.textContent = sc.pending ? "SCANNING..." : ("SCAN " + (sc.countdownSec || 0) + "s");
+  if (autoBtn) {
+    autoBtn.style.display = tg.canTrade ? "" : "none";
+    autoBtn.textContent = _viewMode + (tg.auto ? " ON" : " OFF");
+    autoBtn.classList.toggle("on", !!tg.auto);
+  }
+
+  var curP = _curPairs();
+  var rdy = srvState.readyPairs || [];
+  var rdyMap = {};
+  for (var ri2 = 0; ri2 < rdy.length; ri2++) rdyMap[rdy[ri2]] = 1;
+  var grpRdy = 0;
+  for (var ci2 = 0; ci2 < curP.length; ci2++) if (rdyMap[curP[ci2]]) grpRdy++;
+
+  var cycMin = sc.minC || sc.cycle || (_viewMode === "MTL" ? 300 : 60);
+  var cycMax = sc.maxC || cycMin;
+  var cycTxt = cycMin === cycMax ? (cycMin + "s") : (cycMin + "-" + cycMax + "s");
+  var ssMinVal = (sc.ssMin !== undefined && sc.ssMin !== null) ? +sc.ssMin : (_viewMode === "MTL" ? 120 : 60);
+  var ssHrTxt = ssMinVal <= 0 ? "24h" : ((ssMinVal % 60 === 0 ? (ssMinVal / 60) : Math.round((ssMinVal / 60) * 10) / 10) + "h");
+  var ssTxt = ssMinVal <= 0 ? "24h" : (ssHrTxt + " (S" + (sc.ssSel || 1) + ")");
+  var kvs = [
+    ["GROUP", _viewMode + (tg.canTrade ? " TRADE" : " VIEW"), ""],
+    ["MODE", mode, tg.canTrade ? "mode" : ""],
+    ["BALANCE", bal, ""],
+    ["FEED", srvState.feedState || "--", ""],
+    ["PAIRS", grpRdy + "/" + curP.length + " READY", ""],
+    ["CYCLE", cycTxt, "cycle"],
+    ["SCAN INT", (sc.scanInt || (_viewMode === "MTL" ? 60 : 30)) + "s", "scanInt"],
+    ["SESSION", ssTxt, "ssMin"],
+    ["STAKE", tg.canTrade ? (Number(tg.stake || 0.35).toFixed(2) + " USD") : "VIEW ONLY", tg.canTrade ? "stake" : ""]
+  ];
+  document.getElementById("lpSummary").innerHTML = kvs.map(function (kv) {
+    var ek = kv[2];
+    var cls = "lpKv" + (ek ? " ed" : "") + (ek && _lpEditKey === ek ? " editing" : "");
+    return '<div class="' + cls + '"' + (ek ? ' data-edit-key="' + ek + '"' : '') + '><span class="lpK">' + _esc(kv[0]) + '</span><span class="lpV">' + _esc(kv[1]) + '</span></div>';
+  }).join("");
+
+  var setEl = document.getElementById("lpSettings");
+  if (setEl) {
+    var extras = _curSchema().filter(function (f) {
+      return f && f.editable !== false && !_lpSummaryKeys[f.key];
+    });
+    setEl.innerHTML = extras.map(function (f) {
+      var val = _lpSettingVal(f.key);
+      var cls = "lpKv ed" + (_lpEditKey === f.key ? " editing" : "");
+      return '<div class="' + cls + '" data-edit-key="' + _esc(f.key) + '"><span class="lpK">' + _esc(f.label) + '</span><span class="lpV">' + _esc(_lpFmtVal(f, val)) + '</span></div>';
+    }).join("");
+  }
+
+  var lkLim = _viewMode === "ALL" ? 1 : (+sc.lockSlots || 8);
+  var fmtLk = function (side, arr, cls) {
+    var list = (arr || []).filter(Boolean).slice(0, lkLim);
+    var emptyTxt = _viewMode === "ALL" ? "CLICK SIGNAL TO VIEW" : "WAITING FOR SIGNAL";
+    var lbl = _viewMode === "ALL" ? (side + " VIEW") : (side + " LOCK");
+    var info = list.length ? list.map(function (x) {
+      return getPairDisplayName(x.pair) + " C" + x.c + " R" + x.r + " X" + x.s1 + "-X" + x.s2 + " " + x.type + " · " + x.pct + "% (" + x.c1 + "/" + x.c2 + ")";
+    }).join(" | ") : emptyTxt;
+    return '<div class="lpLock ' + cls + '"><span>' + lbl + '</span><span>' + _esc(info) + '</span></div>';
+  };
+  var lkBuys = _viewMode === "ALL" ? (_allView.buy ? [_allView.buy] : []) : (Array.isArray(lk.buys) ? lk.buys.slice(0, lkLim) : [lk.buy]);
+  var lkSells = _viewMode === "ALL" ? (_allView.sell ? [_allView.sell] : []) : (Array.isArray(lk.sells) ? lk.sells.slice(0, lkLim) : [lk.sell]);
+  document.getElementById("lpLocks").innerHTML = fmtLk("BUY", lkBuys, "up") + fmtLk("SELL", lkSells, "dn");
+
+  var L = (srvState.trades || []).slice().reverse(), nowS = Date.now() / 1000, w = 0, l = 0, o = 0, net = 0, pr = [], ls = [], op = [], agg = _sesLoad(), chg = 0;
+  for (var i = 0; i < L.length; i++) {
+    var t = L[i], pd = allPairData[t.pair], ap = pd && pd.prices, cur = null;
+    if (ap && ap.length) {
+      var li = Math.min(Math.floor(nowS) - currentStartTsUtc, ap.length - 1);
+      while (li >= 0 && ap[li] === -1) li--;
+      if (li >= 0) cur = ap[li];
+    }
+    var pnl = t.pnl;
+    if (pnl === null && t.entry && cur !== null) pnl = (t.dir === "BUY" ? cur > t.entry : cur < t.entry) ? (t.payout - t.amt) : -t.amt;
+    if (t.status === "won") { w++; if (pnl !== null) net += pnl; }
+    else if (t.status === "lost") { l++; if (pnl !== null) net += pnl; }
+    else o++;
+    var ex = t.exp || (t.t0 + t.dur), rem = Math.max(0, Math.ceil(ex - nowS));
+    var stTxt = t.status === "open" ? ("OPEN " + ((rem / 60) | 0) + ":" + ("0" + (rem % 60)).slice(-2)) : (t.status === "won" ? "WIN" : "LOSS");
+    var cls = t.status === "won" ? "up" : (t.status === "lost" ? "dn" : (pnl !== null ? (pnl >= 0 ? "up" : "dn") : ""));
+    var pv = pnl !== null ? pnl : (t.status === "won" ? (t.payout - t.amt) : (t.status === "lost" ? -t.amt : null));
+    var item = { pair: t.pair, dir: t.dir, amt: t.amt, pnl: pv, st: stTxt };
+    if ((t.status === "won" || t.status === "lost") && pv !== null && t.id && t.t0 >= currentStartTsUtc) {
+      var sk = _sesOf(t.t0), se = agg.s[sk];
+      if (!agg.ids[t.id]) {
+        agg.ids[t.id] = 1;
+        if (!se) { se = { w: 0, l: 0, n: 0 }; agg.s[sk] = se; }
+        if (t.status === "won") se.w++; else se.l++;
+        se.n += pv;
+        chg = 1;
+      }
+      if (!agg.di[t.id]) {
+        agg.di[t.id] = 1;
+        if (!agg.d[sk]) agg.d[sk] = [];
+        agg.d[sk].push({ p: t.pair, d: t.dir, a: t.amt, n: pv, w: t.status === "won" ? 1 : 0, t: t.t0 });
+        chg = 1;
+      }
+    }
+    if (t.status === "won") pr.push(item);
+    else if (t.status === "lost") ls.push(item);
+    else op.push(item);
+  }
+  if (chg) _sesSave();
+  var wr = (w + l) > 0 ? Math.round((w / (w + l)) * 100) + "%" : "--";
+  document.getElementById("lpTrStat").textContent = "W:" + w + " L:" + l + " O:" + o + " · WR " + wr + " · " + (net >= 0 ? "+" : "") + net.toFixed(2);
+
+  var evs = (srvState.logs || []).filter(function (x) {
+    if (_logFilt === "ERR") return x.c === "ERR" && !/\b(LOST|WON)\b/.test(String(x.m));
+    if (_logFilt === "SYS") return x.c === "SYS";
+    return false;
+  }).map(function (x) {
+    var p = String(x.t || "").split(":"), sod = (+p[0] || 0) * 3600 + (+p[1] || 0) * 60 + (+p[2] || 0);
+    var ago = ((_istSod(nowS) - sod) % 86400 + 86400) % 86400, ec = x.c === "ERR" ? "dn" : (x.c === "TRADE" ? "up" : "");
+    return {
+      ts: nowS - ago,
+      h: '<div class="lpEv ' + ec + '"><span class="lpEvT">' + _esc(x.t) + '</span><span class="lpEvC">' + _esc(x.c) + '</span><span class="lpEvM">' + _esc(x.m) + '</span></div>'
+    };
+  });
+  var cnE = 0, cnS = 0, cnT = pr.length + ls.length + op.length, lg3 = srvState.logs || [], k3, cn3;
+  for (k3 = 0; k3 < lg3.length; k3++) {
+    if (lg3[k3].c === "ERR" && !/\b(LOST|WON)\b/.test(String(lg3[k3].m))) cnE++;
+    else if (lg3[k3].c === "SYS") cnS++;
+  }
+  cn3 = { lpCnAll: cnT + cnE + cnS, lpCnTrade: cnT, lpCnErr: cnE, lpCnSys: cnS };
+  for (k3 in cn3) { var ce3 = document.getElementById(k3); if (ce3) ce3.textContent = cn3[k3]; }
+  var showTr = (_logFilt === "TRADE");
+  evs.sort(function (a, b) { return b.ts - a.ts; });
+  var evH = evs.map(function (x) { return x.h; }).join("");
+  var vp = pr, vl = ls, vlab = "LIVE", dd, dj;
+  if (_sesSel > 0) {
+    vp = []; vl = [];
+    dd = ((agg.d && agg.d[_sesSel]) || []).slice().sort(function (a, b) { return b.t - a.t; });
+    for (dj = 0; dj < dd.length; dj++) (dd[dj].w ? vp : vl).push({ pair: dd[dj].p, dir: dd[dj].d, amt: dd[dj].a, pnl: dd[dj].n, st: dd[dj].w ? "WIN" : "LOSS" });
+    vlab = "SESSION S" + _sesSel;
+  }
+  var trH = showTr ? _tpBoardH(vp, vl, op, bal, agg, vlab) : "";
+  var syH = _lpSyncOn ? _lpSyncH() : "";
+  var syBtn = el.querySelector('[data-lp="sync"]'), secT = document.getElementById("lpSecT");
+  if (syBtn) syBtn.classList.toggle("on", !!_lpSyncOn);
+  if (secT) secT.textContent = _lpSyncOn ? "SYNC & PARAMETERS" : "TRADE SUMMARY";
+  if (_lpSyncOn) document.getElementById("lpTrStat").textContent = _lpSyncSum;
+  document.getElementById("lpEvents").innerHTML = _lpSyncOn ? syH : ((trH + evH) || '<div class="lpEmpty">NO TRADES OR EVENTS MATCH FILTER</div>');
+}
+
+function _logToggle() {
+  var el = _logEnsure();
+  if (el.classList.contains("open")) { el.classList.remove("open"); return; }
+  el.classList.add("open");
+  _logRender();
+}
+document.addEventListener("pointerdown", function (e) {
+  var el = document.getElementById("logPanel");
+  if (!el || !el.classList.contains("open")) return;
+  if (el.contains(e.target) || e.target.id === "logBtn") return;
+  el.classList.remove("open");
+}, true);
+document.addEventListener("keydown", function (e) {
+  var el = document.getElementById("logPanel");
+  if (e.key === "Escape" && el && el.classList.contains("open")) {
+    if (_lpEditKey) { _lpCloseEditor(); _logRender(); }
+    else el.classList.remove("open");
+  }
+});
+
+// ── Dual-pane Canvas Chart (left = BUY lock, right = SELL lock) ──
+(function () {
+  var TC = { follow: true, spp: 3, left: 0, yZ: 1, yOff: 0, W: 0, H: 0, dpr: 1 };
+  var PADL = 6, PADR = 50, PADT = 4, PADB = 24, MONO = "'Roboto Mono',monospace";
+  TC.wrap = document.getElementById("tcWrap"); TC.cv = document.getElementById("tcCanvas"); TC.ctx = TC.cv.getContext("2d");
+  TC.vw = [{ follow: true, spp: 3, left: 0, yZ: 1, yOff: 0 }, { follow: true, spp: 3, left: 0, yZ: 1, yOff: 0 }];
+  function tcVL(pn) { var s = TC.vw[pn]; TC.follow = s.follow; TC.spp = s.spp; TC.left = s.left; TC.yZ = s.yZ; TC.yOff = s.yOff; }
+  function tcVS(pn) { var s = TC.vw[pn]; s.follow = TC.follow; s.spp = TC.spp; s.left = TC.left; s.yZ = TC.yZ; s.yOff = TC.yOff; }
+  function tcPn(cx, cy) {
+    var rc = TC.cv.getBoundingClientRect(), hw = Math.floor(TC.W / 2), x = cx - rc.left, pn = x >= hw ? 1 : 0;
+    return { pn: pn, x: x - (pn ? hw : 0), y: cy - rc.top, W: pn ? TC.W - hw : hw, ox: rc.left + (pn ? hw : 0) };
+  }
+  function tcOffset() { return (currentStartTsUtc % 86400) + 19800; }
+  function tcFmt(idx, sec) {
+    var ds = ((Math.floor(idx) + tcOffset()) % 86400 + 86400) % 86400, h = Math.floor(ds / 3600), m = Math.floor((ds % 3600) / 60), s = ds % 60;
+    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + (sec ? ":" + (s < 10 ? "0" : "") + s : "");
+  }
+  function tcFmtIn(s) { if (s <= 0) return "NOW"; var m = Math.floor(s / 60), r = s % 60; return m > 0 ? m + "m" + (r < 10 ? "0" : "") + r + "s" : r + "s"; }
+  function tcLastReal(pr, from) { for (var i = Math.min(from, pr.length - 1); i >= 0; i--) if (pr[i] !== -1) return i; return -1; }
+  function tcClamp(pw) { var sp = pw * TC.spp, mn = -sp * 0.5, mx = Math.max(mn, 86400 - sp * 0.5); TC.left = Math.max(mn, Math.min(mx, TC.left)); }
+  function tcRes(pr, i, c, p, nc, lr) {
+    var j = i + c; if (j > lr) return "pending";
+    var q = pr[j]; if (q === -1) return "none";
+    return ((nc === 1 && q > p) || (nc === 2 && q < p)) ? "cont" : "rev";
+  }
+  function tcWin(type, res) { return (res === "pending" || res === "none") ? res : (((type === "MOM") === (res === "cont")) ? "win" : "loss"); }
+  function tcProv(type, nc, p, q) {
+    if (q === undefined || q === -1) return "pending";
+    return tcWin(type, ((nc === 1 && q > p) || (nc === 2 && q < p)) ? "cont" : "rev");
+  }
+  function tcPlan(sig, prices, lim, sEnd, lastReal) {
+    var SB = _ssBounds(sig.sess), hist = [], c = sig.c, r = _ssRow(sig.r, c, sig.sess), colCode = sig.col === "G" ? 1 : 2, color = 0, streak = 0, lastI = -1;
+    lim = Math.min(lim, SB.b - 1, prices.length - 1); sEnd = Math.min(sEnd, SB.b);
+    for (var i = r; i <= lim; i += c) {
+      var p = prices[i], q = i >= c ? prices[i - c] : _preRef(sig.pair, i - c), nc, ns;
+      if (q === -1) nc = ns = (p === -1 || i - SB.a < c) ? 0 : 1;
+      else if (p === -1) nc = ns = 0;
+      else if (p > q) { nc = 1; ns = (color === 1 && streak > 0) ? streak + 1 : 1; }
+      else if (p < q) { nc = 2; ns = (color === 2 && streak > 0) ? streak + 1 : 1; }
+      else { nc = color; ns = 0; }
+      color = nc; streak = ns;
+      if (p !== -1 && ns === sig.s1 && nc === colCode) hist.push({ i: i, p: p, res: tcRes(prices, i, c, p, nc, lastReal) });
+      lastI = i;
+    }
+    if (color === colCode && streak === sig.s1 && lastI >= 0) return { kind: "FIRED", idx: lastI, need: 0, hist: hist };
+    if (color === colCode && streak > sig.s1) return { kind: "NONE", idx: -1, need: 0, hist: hist, missed: true };
+    var need = Math.max(1, sig.s1 - (color === colCode ? streak : 0)), idx = (lastI < 0 ? r : lastI + c) + (need - 1) * c;
+    if (idx >= sEnd) return { kind: "NONE", idx: -1, need: 0, hist: hist };
+    return { kind: "FUT", idx: idx, need: need, hist: hist };
+  }
+  function bxRR(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function tkPill(ctx, x, y, up, txt, UP, DN, BG) {
+    var pf = 11, ph = pf + 6, w;
+    ctx.save(); ctx.font = "bold " + pf + "px " + MONO; w = ctx.measureText(txt).width + 12;
+    ctx.fillStyle = BG; bxRR(ctx, Math.round(x - w / 2), Math.round(y - ph / 2), w, ph, ph / 2); ctx.fill(); ctx.strokeStyle = up ? UP : DN; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = up ? UP : DN; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, x, y + 0.5);
+    ctx.restore();
+  }
+  function tkMark(ctx, x, y, win, k, col) {
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.8, k * 0.3); ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.setLineDash([]); ctx.beginPath();
+    if (win) { ctx.moveTo(x - k * 0.9, y); ctx.lineTo(x - k * 0.2, y + k * 0.7); ctx.lineTo(x + k * 0.95, y - k * 0.65); }
+    else { ctx.moveTo(x - k * 0.7, y - k * 0.7); ctx.lineTo(x + k * 0.7, y + k * 0.7); ctx.moveTo(x + k * 0.7, y - k * 0.7); ctx.lineTo(x - k * 0.7, y + k * 0.7); }
+    ctx.stroke(); ctx.restore();
+  }
+  function _tcTkFs(cVal) {
+    var c0 = Math.max(1, Math.round(cVal || CYCLE) || 60), sp = TC.spp || 1, cw0 = c0 / sp, mul = cw0 >= 3 ? 1 : Math.ceil(3 / cw0);
+    return Math.max(10, Math.min(44, Math.round(c0 * mul / sp * 1.5)));
+  }
+
+  function tcPaneTag(ctx, sg, pn, pw) {
+    var tg = _curTraderGroup();
+    var isAll = _viewMode === "ALL";
+    var modeSuffix = tg.canTrade ? " LOCKED" : " VIEW";
+    var t = (pn ? "SELL" : "BUY") + (sg ? " " + getPairDisplayName(sg.pair) + " C" + sg.c + " R" + sg.r + " X" + sg.s1 + " " + sg.type + modeSuffix : (isAll ? " CLICK SIGNAL" : " NO SIGNAL"));
+    ctx.save(); ctx.font = "bold 10px " + MONO; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    var w = ctx.measureText(t).width + 10;
+    ctx.globalAlpha = 0.85; ctx.fillStyle = "#000432"; ctx.fillRect(PADL + 2, PADT + 2, w, 14); ctx.globalAlpha = 1;
+    ctx.fillStyle = pn ? "#FF3D5A" : "#00FF85"; ctx.fillText(t, PADL + 7, PADT + 9.5);
+    var stPrefix = tg.canTrade ? (_viewMode + (tg.auto ? " ON " : " OFF ")) : "ALL VIEW ";
+    var bt = stPrefix + (sg ? getPairDisplayName(sg.pair) + " R" + sg.r + " X" + sg.s1 : (isAll ? "CLICK ROW" : "WAIT"));
+    var bw = ctx.measureText(bt).width + 12, bx = Math.round(pw - PADR - bw - 6);
+    ctx.fillStyle = pn ? "#FF3D5A" : "#00FF85"; bxRR(ctx, bx, PADT + 2, bw, 14, 7); ctx.fill();
+    ctx.fillStyle = "#000432"; ctx.textAlign = "left"; ctx.fillText(bt, bx + 6, PADT + 9.5);
+    ctx.restore();
+  }
+
+  function tcDrawTrades(ctx, pair, xOf, yOf, top, bot, W, pn) {
+    var card = pn ? null : document.getElementById("tradeCard");
+    if (!_curTraderGroup().canTrade) {
+      if (card && card._h !== "") { card._h = ""; card.innerHTML = ""; }
+      return;
+    }
+    var L = srvState.trades || [];
+    var nowS = Date.now() / 1000, ap = allPairData[pair] ? allPairData[pair].prices : null;
+    if (!ap) return;
+    var li = tcLastReal(ap, Math.min(Math.floor(nowS) - currentStartTsUtc, ap.length - 1)), cur = li >= 0 ? ap[li] : null;
+    var rows = [];
+    L.filter(function (z) { return z.pair === pair; }).forEach(function (tr) {
+      var ex = tr.exp || (tr.t0 + tr.dur), up = tr.dir === "BUY", ei = tr.t0 - currentStartTsUtc, en = tr.entry;
+      if (tr.status !== "open" && nowS - ex > 300) return;
+      if (!en && ei >= 0 && ei < ap.length) { var ri = tcLastReal(ap, ei); if (ri >= 0) en = ap[ri]; }
+      var pnl = tr.pnl;
+      if (pnl === null && en && cur !== null) pnl = (up ? cur > en : cur < en) ? (tr.payout - tr.amt) : -tr.amt;
+      var rem = Math.max(0, Math.ceil(ex - nowS));
+      rows.push({ up: up, amt: tr.amt, en: en, pnl: pnl, ei: ei, ex: ex, st: tr.status, ct: tr.status === "open" ? (((rem / 60) | 0) + ":" + ("0" + (rem % 60)).slice(-2)) : (tr.status === "won" ? "WIN" : "LOSS") });
+    });
+    if (card) {
+      var ch = "", _dc = _pxDec(pair);
+      rows.slice(-3).reverse().forEach(function (r) {
+        ch += '<div class="tcRow"><b style="color:' + (r.up ? "#00B85A" : "#DC2640") + '">' + (r.up ? "▲ BUY" : "▼ SELL") + '</b><span>' + Number(r.amt).toFixed(2) + '</span><span>ENT ' + (r.en ? Number(r.en).toFixed(_dc) : "--") + '</span><span>NOW ' + (cur !== null ? cur.toFixed(_dc) : "--") + '</span><b style="color:' + (r.pnl === null ? "var(--ac)" : (r.pnl >= 0 ? "#00B85A" : "#DC2640")) + '">' + (r.pnl === null ? "--" : (r.pnl >= 0 ? "+" : "") + Number(r.pnl).toFixed(2)) + '</b><span>' + r.ct + '</span></div>';
+      });
+      if (card._h !== ch) { card._h = ch; card.innerHTML = ch; }
+    }
+    rows.forEach(function (r) {
+      var xs = xOf(r.ei), xe = xOf(r.ex - currentStartTsUtc);
+      if (xe < PADL || xs > W - PADR) return;
+      if (r.st !== "open" && nowS - r.ex > 6) return;
+      var tbDone = r.st === "won" || r.st === "lost", tbWin = r.st === "won";
+      var tbCol = pn ? "#FF3D5A" : "#00FF85";
+      var tbE = Math.max(0, Math.floor(r.ei)), tbX = Math.floor(r.ex - currentStartTsUtc);
+      var tbK = Math.min(tbX, li >= 0 ? li : tbE, ap.length - 1);
+      var tbEn = r.en;
+      var tbXp = tcLastReal(ap, Math.max(0, tbK)), tbPx = tbXp >= 0 ? ap[tbXp] : null;
+      if (tbDone) tbCol = (r.up === tbWin) ? "#00FF85" : "#FF3D5A";
+      else if (tbEn !== null && tbPx !== null && tbPx !== tbEn) tbCol = tbPx > tbEn ? "#00FF85" : "#FF3D5A";
+      var tbLo = tbEn !== null ? tbEn : Infinity, tbHi = tbEn !== null ? tbEn : -Infinity;
+      for (var tbF = tbE; tbF <= tbK; tbF++) { var tbV = ap[tbF]; if (tbV !== -1 && tbV !== undefined) { if (tbV < tbLo) tbLo = tbV; if (tbV > tbHi) tbHi = tbV; } }
+      if (!(tbHi >= tbLo)) return;
+      var tbX1 = Math.max(PADL, xs), tbX2 = Math.min(W - PADR, xe), tbY1 = Math.max(top, yOf(tbHi) - 2), tbY2 = Math.min(bot, yOf(tbLo) + 2);
+      ctx.save(); ctx.beginPath(); ctx.rect(PADL, top, W - PADL - PADR, bot - top); ctx.clip();
+      ctx.strokeStyle = tbCol; ctx.lineWidth = 1.6;
+      ctx.strokeRect(tbX1, tbY1, Math.max(2, tbX2 - tbX1), Math.max(8, tbY2 - tbY1));
+      if (tbEn !== null) {
+        var tbEy = yOf(tbEn);
+        ctx.beginPath(); ctx.moveTo(tbX1, tbEy); ctx.lineTo(tbX2, tbEy); ctx.stroke();
+        if (xs >= PADL) { ctx.beginPath(); ctx.arc(xs, tbEy, 4, 0, 6.283); ctx.fillStyle = "#000432"; ctx.fill(); ctx.stroke(); }
+      }
+      ctx.font = "bold 10px " + MONO; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      var tbTxt = (r.up ? "BUY " : "SELL ") + Number(r.amt).toFixed(2) + (r.pnl !== null ? " " + (r.pnl >= 0 ? "+" : "") + Number(r.pnl).toFixed(2) : "") + " " + r.ct;
+      var tbLy = r.up ? tbY2 + 14 : tbY1 - 14;
+      if (tbLy > bot - 8) tbLy = tbY1 - 14; else if (tbLy < top + 8) tbLy = tbY2 + 14;
+      ctx.fillStyle = tbCol; ctx.fillText(tbTxt, (tbX1 + tbX2) / 2, tbLy);
+      ctx.restore();
+    });
+  }
+
+  function tcPaneDraw(sg, pair, W, H, ox, dpr, pn) {
+    var ctx = TC.ctx;
+    ctx.setTransform(dpr, 0, 0, dpr, ox * dpr, 0);
+    var BG = "#000432", UPC = "#00FF85", DNC = "#FF3D5A", PO = pn ? DNC : UPC;
+    ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+
+    var ap = allPairData[pair] ? allPairData[pair].prices : null;
+    var nowSec = Math.floor(Date.now() / 1000) - currentStartTsUtc;
+    var apLast = ap ? tcLastReal(ap, Math.min(nowSec, ap.length - 1)) : -1;
+    if (!ap || apLast < 0) {
+      ctx.font = "bold 12px " + MONO; ctx.fillStyle = PO;
+      ctx.fillText(getPairDisplayName(pair) + " — SYNCING TICKS...", 12, 34);
+      return;
+    }
+
+    var plotW = W - PADL - PADR, ptop = PADT, pbot = H - PADB, spp = TC.spp;
+    var tkSB = (sg && sg.sess) ? _ssBounds(sg.sess) : _ssBounds(_ssSel);
+    var tkA = Math.max(0, tkSB.a), tkB = Math.min(86400, tkSB.b);
+    if (TC.follow) TC.left = Math.max(tkA, Math.min(tkB, nowSec)) - plotW * spp * 0.4; else tcClamp(plotW);
+
+    var left = TC.left, right = left + plotW * spp, i0 = Math.max(tkA, Math.floor(left)), st = Math.max(1, Math.floor(spp / 2));
+    var i1 = Math.min(ap.length - 1, tkB - 1, Math.ceil(right)), lo = Infinity, hi = -Infinity;
+    for (var i = i0; i <= i1; i += st) { var pv = ap[i]; if (pv !== -1) { if (pv < lo) lo = pv; if (pv > hi) hi = pv; } }
+    if (!(hi > lo)) { var v0 = ap[apLast]; lo = v0 - 1; hi = v0 + 1; }
+    var pad0 = (hi - lo) * 0.06; lo -= pad0; hi += pad0;
+    if (TC.yZ !== 1 || TC.yOff !== 0) { var a = hi - lo, c = (hi + lo) / 2 + TC.yOff * a, r = a / TC.yZ; lo = c - r / 2; hi = c + r / 2; }
+
+    var xOf = function (ix) { return PADL + (ix - left) / spp; };
+    var yOf = function (v) { return ptop + (1 - (v - lo) / (hi - lo)) * (pbot - ptop); };
+
+    // Grid
+    var rawStep = (hi - lo) * 50 / Math.max(50, pbot - ptop), mag = Math.pow(10, Math.floor(Math.log10(rawStep))), norm = rawStep / mag;
+    var pxStep = (norm <= 1 ? 1 : (norm <= 2 ? 2 : (norm <= 5 ? 5 : 10))) * mag, pxTicks = [];
+    ctx.save(); ctx.strokeStyle = PO; ctx.globalAlpha = 0.15; ctx.lineWidth = 1;
+    for (var gn = Math.ceil(lo / pxStep); gn <= Math.floor(hi / pxStep); gn++) {
+      var gv = gn * pxStep, gy = Math.round(yOf(gv)) + 0.5;
+      pxTicks.push({ v: gv, y: gy });
+      ctx.beginPath(); ctx.moveTo(PADL, gy); ctx.lineTo(W - PADR, gy); ctx.stroke();
+    }
+    var steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400], tstep = 14400;
+    for (var k = 0; k < steps.length; k++) if (steps[k] / spp >= 78) { tstep = steps[k]; break; }
+    var off = tcOffset(), firstT = Math.ceil((left + off) / tstep) * tstep - off;
+    for (var t = firstT; t <= right; t += tstep) {
+      if (t < 0 || t > 86400) continue;
+      var tx = xOf(t); if (tx >= PADL && tx <= W - PADR) { ctx.beginPath(); ctx.moveTo(Math.round(tx) + 0.5, ptop); ctx.lineTo(Math.round(tx) + 0.5, pbot); ctx.stroke(); }
+    }
+    ctx.restore();
+
+    // Smoothed price line
+    var lastX = -99999, tkPts = [], tkSeg = null, tkSm = [];
+    for (var i2 = i0 - (i0 % st); i2 <= i1; i2 += st) {
+      var qs = 0, qn = 0;
+      for (var qk = Math.max(tkA, i2); qk < i2 + st && qk <= i1; qk++) if (ap[qk] !== -1) { qs += ap[qk]; qn++; }
+      if (!qn) continue;
+      var qc = i2 + (st - 1) / 2, q0 = qs / qn;
+      if (apLast >= 0 && qc > apLast) { qc = apLast; q0 = ap[apLast]; }
+      if (!tkSeg || i2 - lastX > 600) { tkSeg = []; tkPts.push(tkSeg); }
+      tkSeg.push({ x: xOf(qc), y: yOf(q0) });
+      lastX = i2;
+    }
+    tkPts.forEach(function (seg) {
+      var n2 = seg.length, sm = seg;
+      if (!n2) return;
+      for (var ps = 0; ps < 2; ps++) {
+        sm = sm.map(function (pt, ix) { return { x: pt.x, y: (ix === 0 || ix === n2 - 1) ? pt.y : sm[ix - 1].y * 0.25 + pt.y * 0.5 + sm[ix + 1].y * 0.25 }; });
+      }
+      tkSm.push(sm);
+      ctx.save(); ctx.strokeStyle = PO; ctx.lineWidth = 1.8; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(sm[0].x, sm[0].y);
+      for (var k2 = 1; k2 < n2 - 1; k2++) ctx.quadraticCurveTo(sm[k2].x, sm[k2].y, (sm[k2].x + sm[k2 + 1].x) / 2, (sm[k2].y + sm[k2 + 1].y) / 2);
+      if (n2 > 1) ctx.lineTo(sm[n2 - 1].x, sm[n2 - 1].y);
+      ctx.stroke(); ctx.restore();
+    });
+    if (apLast >= i0 && apLast <= i1) {
+      ctx.beginPath(); ctx.arc(xOf(apLast), yOf(ap[apLast]), 5.5, 0, 6.283);
+      ctx.fillStyle = BG; ctx.fill(); ctx.strokeStyle = PO; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    // Signal markers + next trigger countdown
+    if (sg) {
+      var lim = Math.min(nowSec - 1, ap.length - 1, 86399);
+      var pl = tcPlan(sg, ap, lim, 86400, apLast);
+      pl.hist.forEach(function (hh) {
+        if (hh.i < i0 || hh.i > i1) return;
+        var win = tcWin(sg.type, hh.res);
+        var pw = (hh.res === "pending" && apLast > hh.i) ? tcProv(sg.type, sg.col === "G" ? 1 : 2, hh.p, ap[apLast]) : "pending";
+        var mx = xOf(hh.i), my = yOf(hh.p), flEj = hh.i + sg.c, flEx = xOf(flEj), flXe = Math.min(flEx, W - PADR);
+        var mUp = sg.type === "REV" ? sg.col === "R" : sg.col === "G";
+        var mBc = win === "win" ? (mUp ? UPC : DNC) : (win === "loss" ? (mUp ? DNC : UPC) : (pw === "win" ? (mUp ? UPC : DNC) : (pw === "loss" ? (mUp ? DNC : UPC) : PO)));
+        var mTop = my, mBot = my;
+        if (hh.res !== "none" && flEx >= PADL) {
+          var blo = hh.p, bhi = hh.p, ke = Math.min(flEj, apLast, ap.length - 1);
+          for (var fk = hh.i; fk <= ke; fk++) { var fv = ap[fk]; if (fv !== -1) { if (fv < blo) blo = fv; if (fv > bhi) bhi = fv; } }
+          var by1 = Math.max(ptop, yOf(bhi) - 2), by2 = Math.min(pbot, yOf(blo) + 2);
+          mTop = by1; mBot = by2;
+          ctx.save(); ctx.strokeStyle = mBc; ctx.lineWidth = 1.8;
+          bxRR(ctx, mx, by1, Math.max(2, flXe - mx), Math.max(8, by2 - by1), 6); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(flXe, my); ctx.stroke(); ctx.restore();
+        }
+        ctx.save(); ctx.beginPath(); ctx.arc(mx, my, 3.5, 0, 6.283); ctx.fillStyle = BG; ctx.fill(); ctx.strokeStyle = mBc; ctx.lineWidth = 1.8; ctx.stroke(); ctx.restore();
+        var mLy = mUp ? mBot + 11.5 : mTop - 11.5;
+        if (mLy > pbot - 8) mLy = mTop - 11.5; else if (mLy < ptop + 8) mLy = mBot + 11.5;
+        tkPill(ctx, mx, mLy, mUp, mUp ? "BUY" : "SELL", UPC, DNC, BG);
+        if (mLy > my) mBot = mLy + 8.5; else mTop = mLy - 8.5;
+        if (win === "win" || win === "loss") {
+          var mR = Math.max(8, Math.round(Math.max(9, Math.min(14, Math.round(_tcTkFs(sg.c) * 0.3))) * 0.9));
+          var mY = mTop - mR - 3; if (mY - mR < ptop) mY = mBot + mR + 2;
+          tkMark(ctx, (mx + flXe) / 2, mY, win === "win", mR, mBc);
+        }
+      });
+      if (pl.kind !== "NONE") {
+        var tx2 = xOf(pl.idx);
+        if (tx2 >= PADL && tx2 <= W - PADR) {
+          var fx0 = xOf(apLast), fy0 = yOf(ap[apLast]);
+          ctx.save(); ctx.strokeStyle = PO; ctx.beginPath(); ctx.moveTo(Math.max(PADL, fx0), fy0); ctx.lineTo(tx2, fy0); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(tx2, ptop); ctx.lineTo(tx2, pbot); ctx.stroke(); ctx.restore();
+          if (pl.kind === "FUT") {
+            var sec = (pl.idx - nowSec) - ((Date.now() % 1000) / 1000);
+            var txt = sec > 0 ? (sec >= 100 ? tcFmtIn(Math.ceil(sec)) : sec.toFixed(1) + "s") : "NOW";
+            ctx.save(); ctx.font = "bold 14px " + MONO; ctx.fillStyle = PO; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, tx2, fy0 + 0.5); ctx.restore();
+          }
+        }
+      }
+    }
+
+    tcDrawTrades(ctx, pair, xOf, yOf, ptop, pbot, W, pn);
+
+    // Axes
+    ctx.fillStyle = BG; ctx.fillRect(W - PADR, 0, PADR, H); ctx.fillRect(0, pbot, W, H - pbot);
+    ctx.save(); ctx.lineWidth = 1; ctx.strokeStyle = PO; ctx.beginPath(); ctx.moveTo(0, pbot - 0.5); ctx.lineTo(W - PADR - 0.5, pbot - 0.5); ctx.lineTo(W - PADR - 0.5, 0); ctx.stroke(); ctx.restore();
+    ctx.font = "10px " + MONO; ctx.fillStyle = PO; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    var lastY = yOf(ap[apLast]);
+    pxTicks.forEach(function (tk) { if (tk.y > ptop + 12 && tk.y < pbot - 12 && Math.abs(tk.y - lastY) > 12) ctx.fillText(tk.v.toFixed(_pxDec(pair)), W - PADR + 6, tk.y); });
+    var ly2 = Math.max(ptop + 9, Math.min(pbot - 9, lastY));
+    ctx.fillStyle = BG; ctx.fillRect(W - PADR + 2, ly2 - 9, PADR - 4, 18); ctx.strokeStyle = PO; ctx.lineWidth = 1; ctx.strokeRect(W - PADR + 2.5, ly2 - 8.5, PADR - 5, 17);
+    ctx.fillStyle = PO; ctx.font = "bold 10px " + MONO; ctx.textAlign = "center"; ctx.fillText(ap[apLast].toFixed(_pxDec(pair)), W - PADR / 2, ly2 + 0.5);
+    ctx.font = "10px " + MONO;
+    for (var tm = firstT; tm <= right; tm += tstep) {
+      if (tm < 0 || tm > 86400) continue;
+      var tx3 = xOf(tm); if (tx3 > PADL + 28 && tx3 < W - PADR - 28) ctx.fillText(tcFmt(tm, tstep < 60), tx3, pbot + 12);
+    }
+  }
+
+  function tcDrawNow() {
+    var W = TC.wrap.clientWidth, H = TC.wrap.clientHeight; if (W < 80 || H < 80) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    if (TC.W !== W || TC.H !== H || TC.dpr !== dpr) {
+      TC.W = W; TC.H = H; TC.dpr = dpr; TC.cv.width = Math.round(W * dpr); TC.cv.height = Math.round(H * dpr);
+      TC.cv.style.width = W + "px"; TC.cv.style.height = H + "px";
+    }
+    var ctx = TC.ctx, hw = Math.floor(W / 2), scNow = _curScan(), lk = scNow.lock || {}, curP = _curPairs();
+    for (var pn = 0; pn < 2; pn++) {
+      var sg = (_viewMode === "ALL")
+        ? (pn ? _allView.sell : _allView.buy)
+        : (pn ? ((Array.isArray(lk.sells) && lk.sells[0]) || lk.sell) : ((Array.isArray(lk.buys) && lk.buys[0]) || lk.buy));
+      var pair = sg ? sg.pair : (curP[pn] || curP[0] || ALL_PAIRS[0]);
+      var ox = pn ? hw : 0, pw = pn ? W - hw : hw;
+      ctx.save();
+      try {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.beginPath(); ctx.rect(ox, 0, pw, H); ctx.clip();
+        tcVL(pn);
+        tcPaneDraw(sg, pair, pw, H, ox, dpr, pn);
+        tcPaneTag(ctx, sg, pn, pw);
+      } finally { ctx.restore(); tcVS(pn); }
+    }
+  }
+
+  function tcDraw() { if (!TC._rq) TC._rq = requestAnimationFrame(function () { TC._rq = 0; tcDrawNow(); }); }
+  window.tcRedraw = tcDraw;
+  window.tcFocusPane = function (pn) {
+    if (TC.vw[pn]) { TC.vw[pn].follow = true; TC.vw[pn].yZ = 1; TC.vw[pn].yOff = 0; }
+    tcDraw();
+  };
+  setInterval(tcDraw, 500);
+  window.addEventListener("resize", tcDraw);
+  window.addEventListener("orientationchange", function () { setTimeout(tcDraw, 120); });
+
+  // Pan / zoom interactions
+  var drag = null, ptrs = {}, pinch = null;
+  function ptrCount() { return Object.keys(ptrs).length; }
+  function pinchBegin() {
+    var k = Object.keys(ptrs), a = ptrs[k[0]], b = ptrs[k[1]];
+    if (!a || !b) return;
+    var pi = tcPn((a.x + b.x) / 2, (a.y + b.y) / 2), vs = TC.vw[pi.pn];
+    var dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y), mx = (a.x + b.x) / 2 - pi.ox;
+    pinch = { pn: pi.pn, ox: pi.ox, W: pi.W, d0: Math.max(10, Math.hypot(dx, dy)), spp: vs.spp, yZ: vs.yZ, anchor: vs.left + (mx - PADL) * vs.spp };
+    drag = null;
+  }
+  function pinchMove() {
+    var k = Object.keys(ptrs), a = ptrs[k[0]], b = ptrs[k[1]];
+    if (!a || !b || !pinch) return;
+    tcVL(pinch.pn);
+    var d = Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), mx = (a.x + b.x) / 2 - pinch.ox;
+    TC.spp = Math.max(0.1, Math.min(600, pinch.spp * pinch.d0 / d));
+    TC.yZ = Math.max(0.2, Math.min(40, pinch.yZ * d / pinch.d0));
+    TC.follow = false; TC.left = pinch.anchor - (mx - PADL) * TC.spp; tcClamp(pinch.W - PADL - PADR);
+    tcVS(pinch.pn); tcDraw();
+  }
+  TC.cv.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    var wpi = tcPn(e.clientX, e.clientY), wdy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY, wf = Math.max(0.6, Math.min(1.6, Math.exp(wdy / 400)));
+    tcVL(wpi.pn);
+    if (wpi.x > wpi.W - PADR) TC.yZ = Math.max(0.2, Math.min(40, TC.yZ / wf));
+    else {
+      var wan = TC.left + (wpi.x - PADL) * TC.spp, wnS = TC.spp * wf, wnY = TC.yZ / wf;
+      if (wnS >= 0.1 && wnS <= 600 && wnY >= 0.2 && wnY <= 40) { TC.spp = wnS; TC.yZ = wnY; }
+      if (!TC.follow) { TC.left = wan - (wpi.x - PADL) * TC.spp; tcClamp(wpi.W - PADL - PADR); }
+    }
+    tcVS(wpi.pn); tcDraw();
+  }, { passive: false });
+  TC.cv.addEventListener("dblclick", function (e) {
+    var pi = tcPn(e.clientX, e.clientY);
+    TC.vw[pi.pn].follow = true; TC.vw[pi.pn].yZ = 1; TC.vw[pi.pn].yOff = 0; tcDraw();
+  });
+  TC.cv.addEventListener("pointerdown", function (e) {
+    var pi = tcPn(e.clientX, e.clientY), vs = TC.vw[pi.pn];
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    try { TC.cv.setPointerCapture(e.pointerId); } catch (er) {}
+    if (ptrCount() >= 2) { if (ptrCount() === 2) pinchBegin(); return; }
+    pinch = null;
+    drag = { pn: pi.pn, W: pi.W, x: e.clientX, y: e.clientY, left: vs.left, yOff: vs.yOff, yZ: vs.yZ, spp: vs.spp, axis: pi.x > pi.W - PADR ? "y" : (pi.y > TC.H - PADB ? "x" : "pan"), moved: false };
+  });
+  TC.cv.addEventListener("pointermove", function (e) {
+    if (ptrs[e.pointerId]) { ptrs[e.pointerId].x = e.clientX; ptrs[e.pointerId].y = e.clientY; }
+    if (pinch && ptrCount() >= 2) { pinchMove(); return; }
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true;
+    if (!drag.moved) return;
+    tcVL(drag.pn);
+    if (drag.axis === "y") TC.yZ = Math.max(0.2, Math.min(40, drag.yZ * Math.exp(-dy / 150)));
+    else if (drag.axis === "x") TC.spp = Math.max(0.1, Math.min(600, drag.spp * Math.exp(dx / 150)));
+    else {
+      TC.follow = false; TC.left = drag.left - dx * TC.spp; tcClamp(drag.W - PADL - PADR);
+      TC.yOff = Math.max(-3, Math.min(3, drag.yOff + dy / Math.max(40, TC.H - PADT - PADB) / (TC.yZ || 1)));
+    }
+    tcVS(drag.pn); tcDraw();
+  });
+  function ptrEnd(e) {
+    delete ptrs[e.pointerId];
+    try { TC.cv.releasePointerCapture(e.pointerId); } catch (er) {}
+    if (ptrCount() >= 2) { pinchBegin(); return; }
+    pinch = null; drag = null;
+  }
+  TC.cv.addEventListener("pointerup", ptrEnd);
+  TC.cv.addEventListener("pointercancel", ptrEnd);
+  if (window.ResizeObserver) new ResizeObserver(tcDraw).observe(TC.wrap);
+})();
+
+// ── Outer BUY/SELL Pill Frames ──
+(function () {
+  var mc = document.getElementById("main-container"), fb = document.createElement("div"), fs = document.createElement("div"), fr = [fb, fs];
+  fb.id = "pillBuy"; fb.className = "pillFrame"; fs.id = "pillSell"; fs.className = "pillFrame";
+  mc.appendChild(fb); mc.appendChild(fs);
+  function pillPlace() {
+    var cv = document.getElementById("canvas-viewport"), cols = document.querySelectorAll(".table-col"), m = mc.getBoundingClientRect();
+    if (!cv || cols.length < 2) return;
+    var a = cv.getBoundingClientRect();
+    for (var i = 0; i < 2; i++) {
+      var c = cols[i].getBoundingClientRect(), l = c.left - m.left, w = c.width, h = c.bottom - a.top;
+      fr[i].style.display = (w > 4 && h > 4) ? "block" : "none";
+      fr[i].style.left = l + "px"; fr[i].style.top = (a.top - m.top) + "px"; fr[i].style.width = w + "px"; fr[i].style.height = h + "px";
+    }
+  }
+  window.addEventListener("resize", pillPlace);
+  window.addEventListener("orientationchange", function () { setTimeout(pillPlace, 150); });
+  if (window.ResizeObserver) new ResizeObserver(pillPlace).observe(mc);
+  setInterval(pillPlace, 700);
+  pillPlace();
+})();
+
+// ── Hide patch-tool controls (set HIDE_DEV_CONTROLS to false to show them again) ──
+var HIDE_DEV_CONTROLS = true;
+(function () {
+  if (!HIDE_DEV_CONTROLS) return;
+  try {
+    if (window.parent === window) return;
+    var pd = window.parent.document;
+    if (!pd || pd.getElementById("hideDevCtl")) return;
+    var st = pd.createElement("style");
+    st.id = "hideDevCtl";
+    st.textContent = ":root{--bar:44px;}#bAuto,#bApply,#bUndo,#bRedo,#bMark,#bRestore,#bRestart,#bErr,#bLog,#status{display:none!important;}";
+    pd.head.appendChild(st);
+    try {
+      if (window.parent.sessionStorage.getItem("dp-auto") === "0") {
+        var ab = pd.getElementById("bAuto");
+        if (ab) ab.click();
+      }
+    } catch (e2) {}
+  } catch (e) {}
+})();
+
+// ── Merge D/LOG pill and dev bar into one pill (set MERGE_BOTTOM_BARS to false to split them again) ──
+var MERGE_BOTTOM_BARS = true;
+(function () {
+  if (!MERGE_BOTTOM_BARS) return;
+  try {
+    if (window.parent === window) return;
+    var pd2 = window.parent.document;
+    if (!pd2) return;
+    var hs = pd2.getElementById("hideDevCtl");
+    if (hs) hs.textContent = "#bAuto,#bApply,#bUndo,#bRedo,#bMark,#bRestore,#bRestart,#bErr,#bLog,#status{display:none!important;}";
+    var ps = pd2.getElementById("mergeBarCtl");
+    if (!ps) { ps = pd2.createElement("style"); ps.id = "mergeBarCtl"; pd2.head.appendChild(ps); }
+    ps.textContent = ":root{--bar:0px!important;}#bar{left:auto!important;right:3px!important;bottom:3px!important;width:clamp(180px,26vw,320px)!important;height:30px!important;padding:0!important;gap:0!important;flex-direction:row!important;background:#000432!important;border:1px solid #00E5FF!important;border-radius:0 10px 10px 0!important;overflow:hidden!important;}#bar .row{flex:1 1 auto!important;gap:0!important;min-width:0!important;align-items:stretch!important;}#ins{height:28px!important;border:0!important;border-radius:0!important;background:#000432!important;font-size:11px!important;padding:0 8px!important;}#bar button{height:28px!important;min-width:30px!important;padding:0 6px!important;border:0!important;border-left:1px solid #00E5FF!important;border-radius:0!important;font-size:12px!important;color:#00E5FF!important;}#toast,#pop{bottom:42px!important;}";
+    var ms = document.createElement("style");
+    ms.id = "mergeBarCtlIn";
+    ms.textContent = "#rangePill{--ac:#00E5FF;--ln:#00E5FF;align-self:flex-start!important;width:calc(100% - clamp(180px,26vw,320px) + 1px)!important;border-color:#00E5FF!important;border-right:0!important;border-radius:10px 0 0 10px!important;}#tradePill>*{height:28px!important;}";
+    document.head.appendChild(ms);
+    var ys = pd2.getElementById("mergeBarCtlYl");
+    if (!ys) { ys = pd2.createElement("style"); ys.id = "mergeBarCtlYl"; pd2.head.appendChild(ys); }
+    ys.textContent = "#ins{color:#00E5FF!important;caret-color:#00E5FF!important;-webkit-text-fill-color:#00E5FF!important;}#ins::placeholder{color:#00E5FF!important;opacity:.6!important;}#bar button,#bar button *{color:#00E5FF!important;}";
+    var yi = function () {
+      try {
+        var bs = Array.prototype.filter.call(pd2.querySelectorAll("#bar button"), function (b) {
+          return window.parent.getComputedStyle(b).display !== "none";
+        });
+        var pb = bs[bs.length - 1];
+        if (pb && bs.length > 1 && pb.textContent !== "\u2B06\uFE0E") pb.textContent = "\u2B06\uFE0E";
+      } catch (e4) {}
+    };
+    yi();
+    setInterval(yi, 700);
+  } catch (e3) {}
+})();
+
+// ── Unified Single-Row Control Bar (equal segments, direct inline edit, hold-to-reorder) ──
+(function () {
+  var _ucSig = "";
+  var _ucErrKey = null;
+  var _ucErrTimer = null;
+  var _ucHold = null;
+  var _ucDrag = null;
+  var _ucSuppressClickUntil = 0;
+  var _ucOrderKey = "wsUnifiedBarOrderV2";
+  var _ucDefaultOrder = [
+    "vmode", "auto", "minC", "maxC", "scanInt", "ssMin", "stake", "bal", "log"
+  ];
+  function _ucVisibleForMode() {
+    if (_viewMode === "ALL") {
+      return { vmode: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, log: 1 };
+    }
+    return { vmode: 1, auto: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, stake: 1, bal: 1, log: 1 };
+  }
+  var _ucBuiltIn = {
+    mode: 1, auto: 1, stake: 1, minC: 1, maxC: 1, scanInt: 1,
+    ssMin: 1, lvl: 1, lockMinPct: 1, lockMinC1: 1, r0Only: 1, topLimit: 1
+  };
+  var _ucSessFallback = [
+    { value: 60, label: "1h" }, { value: 120, label: "2h" }, { value: 180, label: "3h" },
+    { value: 240, label: "4h" }, { value: 360, label: "6h" }, { value: 480, label: "8h" },
+    { value: 720, label: "12h" }, { value: 1440, label: "24h" }
+  ];
+
+  function _ucLoadOrder() {
+    try {
+      var raw = localStorage.getItem(_ucOrderKey);
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length) return arr.map(String);
+      }
+    } catch (e) {}
+    return _ucDefaultOrder.slice();
+  }
+  var _ucOrder = _ucLoadOrder();
+
+  function _ucSaveOrder() {
+    try { localStorage.setItem(_ucOrderKey, JSON.stringify(_ucOrder)); } catch (e) {}
+  }
+
+  function _ucSend(payload) {
+    var fn = window["srv" + "Control"];
+    return typeof fn === "function" ? fn(payload) : Promise.resolve({ ok: false });
+  }
+
+  function _ucField(key) {
+    if (typeof _lpFindField === "function") return _lpFindField(key);
+    var sc = srvState.settingsSchema || [];
+    for (var i = 0; i < sc.length; i++) if (sc[i].key === key) return sc[i];
+    return null;
+  }
+
+  function _ucVal(key) {
+    if (typeof _lpSettingVal === "function") return _lpSettingVal(key);
+    var s = srvState.settings || {}, sc = srvState.scan || {}, tr = srvState.trader || {};
+    if (s[key] !== undefined) return s[key];
+    if (sc[key] !== undefined) return sc[key];
+    if (tr[key] !== undefined) return tr[key];
+    var f = _ucField(key);
+    return f ? f.default : "";
+  }
+
+  function _ucFmt(f, v) {
+    if (typeof _lpFmtVal === "function") return _lpFmtVal(f, v);
+    return String(v == null ? "--" : v);
+  }
+
+  function _ucFlashErr(key) {
+    _ucErrKey = key;
+    clearTimeout(_ucErrTimer);
+    _ucSig = "";
+    _ucRender();
+    _ucErrTimer = setTimeout(function () {
+      if (_ucErrKey === key) {
+        _ucErrKey = null;
+        _ucSig = "";
+        _ucRender();
+      }
+    }, 900);
+  }
+
+  function _ucRawInit(key) {
+    var v = _ucVal(key);
+    var f = _ucField(key);
+    if (f && f.type === "number" && typeof f.decimals === "number" && Number.isFinite(Number(v))) {
+      return Number(v).toFixed(f.decimals);
+    }
+    return String(v == null ? "" : v);
+  }
+
+  function _ucParseVal(key, raw) {
+    var s = String(raw || "").trim();
+    if (!s) return null;
+    if (key === "minC" || key === "maxC") {
+      var cleanC = s.replace(/^[cC]+|[sS]+$/g, "").trim();
+      var rng = /^(\d+)\s*[-:, ]\s*(\d+)$/.exec(cleanC);
+      if (rng) return { minC: +rng[1], maxC: +rng[2] };
+      if (/^\d+$/.test(cleanC)) {
+        var cp = {};
+        cp[key] = +cleanC;
+        return cp;
+      }
+      return null;
+    }
+    var f = _ucField(key);
+    var isNum = !f || f.type === "int" || f.type === "number" || f.valueType === "int";
+    var patch = {};
+    if (isNum) {
+      var clean = s.replace(/^[$xXcC]+/, "").replace(/^1:/, "").replace(/[%sS]+$/, "").trim();
+      if (key === "lvl" && /^all$/i.test(s)) { patch.lvl = 0; return patch; }
+      var n = Number(clean);
+      if (!Number.isFinite(n)) return null;
+      patch[key] = n;
+      return patch;
+    }
+    patch[key] = s;
+    return patch;
+  }
+
+  function _ucRestoreBtn(node, txt, attrName, attrVal) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ucBtn";
+    btn.setAttribute("data-uc-id", node.getAttribute("data-uc-id") || attrVal || "");
+    btn.setAttribute(attrName, attrVal || "");
+    btn.title = node.title || "";
+    btn.textContent = txt;
+    if (node.parentNode) node.parentNode.replaceChild(btn, node);
+    return btn;
+  }
+
+  function _ucCommitInline(inp, cancel) {
+    if (!inp || inp._done) return;
+    inp._done = true;
+    var key = inp.getAttribute("data-uc-key") || "";
+    var initVal = inp.getAttribute("data-uc-init") || "";
+    var origTxt = inp.getAttribute("data-uc-txt") || initVal;
+    var raw = String(inp.value || "").trim();
+
+    if (cancel || !raw || raw === initVal) {
+      _ucRestoreBtn(inp, origTxt, "data-uc-key", key);
+      _ucSig = "";
+      return;
+    }
+
+    var patch = _ucParseVal(key, raw);
+    if (!patch) {
+      _ucRestoreBtn(inp, origTxt, "data-uc-key", key);
+      _ucFlashErr(key);
+      return;
+    }
+
+    _ucRestoreBtn(inp, raw, "data-uc-key", key);
+    _ucSig = "";
+    _ucSend({ action: "set_settings", group: _viewMode, patch: patch }).then(function (res) {
+      if (!res || !res.ok) _ucFlashErr(key);
+      else _ucRender();
+    });
+  }
+
+  function _ucStartInline(btn, key) {
+    if (!btn || !btn.parentNode) return;
+    var f = _ucField(key);
+    var initVal = _ucRawInit(key);
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.className = "ucIn";
+    inp.value = initVal;
+    inp.title = btn.title || "";
+    inp.setAttribute("autocomplete", "off");
+    inp.setAttribute("spellcheck", "false");
+    inp.setAttribute("data-uc-id", btn.getAttribute("data-uc-id") || key);
+    inp.setAttribute("data-uc-key", key);
+    inp.setAttribute("data-uc-init", initVal);
+    inp.setAttribute("data-uc-txt", btn.textContent || initVal);
+    if (!f || f.type === "int" || f.type === "number") {
+      inp.setAttribute("inputmode", "decimal");
+    }
+    inp.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") { ev.preventDefault(); _ucCommitInline(inp, false); }
+      else if (ev.key === "Escape") { ev.preventDefault(); _ucCommitInline(inp, true); }
+    });
+    inp.addEventListener("blur", function () {
+      _ucCommitInline(inp, false);
+    });
+    btn.parentNode.replaceChild(inp, btn);
+    inp.focus();
+    try { inp.select(); } catch (e) {}
+  }
+
+  function _ucStartSelect(btn, key) {
+    if (!btn || !btn.parentNode) return;
+    var f = _ucField(key);
+    var opts = (f && Array.isArray(f.options) && f.options.length) ? f.options : (key === "ssMin" ? _ucSessFallback : []);
+    if (!opts.length) return;
+    var curVal = _ucVal(key);
+    var origTxt = btn.textContent || "";
+    var sel = document.createElement("select");
+    sel.className = "ucSel";
+    sel.title = btn.title || "";
+    sel.setAttribute("data-uc-id", btn.getAttribute("data-uc-id") || key);
+    sel.setAttribute("data-uc-sel", key);
+    sel.setAttribute("data-uc-txt", origTxt);
+    for (var i = 0; i < opts.length; i++) {
+      var o = opts[i];
+      var op = document.createElement("option");
+      op.value = String(o.value);
+      op.textContent = key === "ssMin" ? String(o.label || o.value) : String(o.label || o.value).replace(/^FULL DAY$/i, "DAY").toUpperCase();
+      if (String(o.value) === String(curVal)) op.selected = true;
+      sel.appendChild(op);
+    }
+    var finishSel = function (commit) {
+      if (sel._done) return;
+      sel._done = true;
+      var chosenLbl = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : origTxt;
+      var chosenVal = sel.value;
+      _ucRestoreBtn(sel, commit ? chosenLbl : origTxt, "data-uc-sel", key);
+      _ucSig = "";
+      if (!commit || String(chosenVal) === String(curVal)) return;
+      var patch = {};
+      patch[key] = (!f || f.valueType === "int" || f.type === "int" || f.type === "number") ? Number(chosenVal) : chosenVal;
+      _ucSend({ action: "set_settings", group: _viewMode, patch: patch }).then(function (res) {
+        if (!res || !res.ok) _ucFlashErr(key);
+        else _ucRender();
+      });
+    };
+    sel.addEventListener("change", function () { finishSel(true); });
+    sel.addEventListener("blur", function () { finishSel(false); });
+    sel.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") { ev.preventDefault(); finishSel(false); }
+    });
+    btn.parentNode.replaceChild(sel, btn);
+    sel.focus();
+    try { if (typeof sel.showPicker === "function") sel.showPicker(); } catch (e) {}
+  }
+
+  function _ucHasActiveEdit(container) {
+    if (!container) return false;
+    var ae = document.activeElement;
+    return !!(ae && container.contains(ae) && (ae.tagName === "INPUT" || ae.tagName === "SELECT"));
+  }
+
+  function _ucOrderedIds(itemMap) {
+    var vis = _ucVisibleForMode();
+    var out = [], seen = {};
+    for (var i = 0; i < _ucOrder.length; i++) {
+      var id = _ucOrder[i];
+      if (vis[id] && itemMap[id] && !seen[id]) { seen[id] = 1; out.push(id); }
+    }
+    for (var d = 0; d < _ucDefaultOrder.length; d++) {
+      var did = _ucDefaultOrder[d];
+      if (vis[did] && itemMap[did] && !seen[did]) { seen[did] = 1; out.push(did); }
+    }
+    var keys = Object.keys(itemMap);
+    for (var j = 0; j < keys.length; j++) {
+      if (vis[keys[j]] && !seen[keys[j]]) { seen[keys[j]] = 1; out.push(keys[j]); }
+    }
+    return out;
+  }
+
+  function _ucSyncStat() {
+    var sy = srvState.sync || {};
+    var bf = srvState.backfill || {};
+    var list = (Array.isArray(srvState.allPairs) && srvState.allPairs.length) ? srvState.allPairs : ALL_PAIRS;
+    var total = +sy.totalPairs || list.length || 37;
+    var nS = 0;
+    var ws = !!srvState.wsConnected;
+    if (typeof sy.syncedCount === "number") {
+      nS = sy.syncedCount;
+    } else if (sy.filled) {
+      var fil = sy.filled || {}, pend = sy.bfPending || {}, lt = sy.lastTickTime || {};
+      var drift = (Date.now() - (window._rxAt || Date.now())) / 1000;
+      var base = +sy.nowSec || Math.floor(Date.now() / 1000);
+      var fxC = !!sy.fxClosed;
+      for (var i = 0; i < list.length; i++) {
+        var p = list[i], closed = fxC && /^frx/i.test(p);
+        var bfOk = (+pend[p] || 0) === 0 && ((+fil[p] || 0) > 0 || closed);
+        var last = lt[p], age = last ? Math.max(0, base - last + drift) : null;
+        var lim = /^1HZ/i.test(p) ? 10 : 90;
+        var liveOk = closed || (ws && age !== null && age <= lim);
+        if (bfOk && liveOk) nS++;
+      }
+    }
+    var allOk = typeof sy.allSynced === "boolean" ? sy.allSynced : (total > 0 && nS === total && !bf.active);
+    var cls = !ws ? "lgSyncDown" : (allOk ? "lgSyncOk" : "lgSyncWarn");
+    var txt = "LOG " + nS + "/" + total;
+    var ttl = "Click: Server Console | Live Synced: " + nS + "/" + total + " (" + (allOk ? "ALL LIVE" : (ws ? "SYNCING" : "WS DOWN")) + ") | Hold: Move";
+    return { txt: txt, cls: cls, title: ttl };
+  }
+
+  function _ucApplyLogBtn(btn, info) {
+    if (!btn || !info) return;
+    if (btn.textContent !== info.txt) btn.textContent = info.txt;
+    if (btn.title !== info.title) btn.title = info.title;
+    var wantCls = "ucBtn " + info.cls + (btn.classList.contains("ucDrag") ? " ucDrag" : "");
+    if (btn.className !== wantCls) btn.className = wantCls;
+  }
+
+  function _ucRender() {
+    var pillEl = document.getElementById("tradePill");
+    if (!pillEl) return;
+
+    var sc = _curScan(), tr = srvState.trader || {}, tg = _curTraderGroup();
+    var m = tr.mode === "real" ? "real" : "demo";
+    var balV = tr.bal ? tr.bal[m] : null;
+    var balTxt = (m === "real" ? "R " : "D ") + (balV === null || balV === undefined ? "0.00" : Number(balV).toFixed(2));
+    var scanTxt = sc.pending ? "SCAN..." : ("SCAN " + (sc.countdownSec || 0) + "s");
+    var logInfo = _ucSyncStat();
+
+    if (_ucHold || _ucDrag || _ucHasActiveEdit(pillEl)) {
+      var b0 = document.getElementById("tpBal");
+      if (b0 && b0.textContent !== balTxt) b0.textContent = balTxt;
+      var s0 = document.getElementById("ucScanBtn");
+      if (s0 && s0.textContent !== scanTxt) s0.textContent = scanTxt;
+      _ucApplyLogBtn(document.getElementById("logBtn"), logInfo);
+      return;
+    }
+
+    var minC = Number(_ucVal("minC")) || sc.minC || (_viewMode === "MTL" ? 300 : 60);
+    var maxC = Number(_ucVal("maxC")) || sc.maxC || minC;
+    var scanInt = Number(_ucVal("scanInt")) || sc.scanInt || (_viewMode === "MTL" ? 60 : 30);
+    var ssMin = Number(_ucVal("ssMin"));
+    if (!Number.isFinite(ssMin)) ssMin = (sc.ssMin !== undefined && sc.ssMin !== null) ? +sc.ssMin : (_viewMode === "MTL" ? 120 : 60);
+    var ssTxt = ssMin <= 0 ? "24h" : ((ssMin % 60 === 0 ? (ssMin / 60) : Math.round((ssMin / 60) * 10) / 10) + "h");
+    var lvlVal = Number(_ucVal("lvl"));
+    if (!Number.isFinite(lvlVal)) lvlVal = (sc.lvl !== undefined && sc.lvl !== null) ? +sc.lvl : 1;
+    var lvlTxt = lvlVal <= 0 ? "ALL" : ("X" + lvlVal);
+    var stakeVal = Number(_ucVal("stake"));
+    if (!Number.isFinite(stakeVal)) stakeVal = Number(tg.stake || (_viewMode === "MTL" ? 0.50 : 0.35));
+    var pctVal = Number(_ucVal("lockMinPct"));
+    if (!Number.isFinite(pctVal)) pctVal = (sc.lockMinPct !== undefined && sc.lockMinPct !== null) ? +sc.lockMinPct : 60;
+    var c1Val = Number(_ucVal("lockMinC1"));
+    if (!Number.isFinite(c1Val)) c1Val = (sc.lockMinC1 !== undefined && sc.lockMinC1 !== null) ? +sc.lockMinC1 : 10;
+    var r0On = !!_ucVal("r0Only");
+    var topVal = Number(_ucVal("topLimit")) || sc.topLimit || (_viewMode === "ALL" ? 37 : 16);
+    var autoOn = !!tg.auto;
+
+    var itemMap = {
+      vmode: '<button type="button" class="ucBtn vmBtn vm-' + _esc(_viewMode) + '" data-uc-id="vmode" data-uc-act="vmode" title="Click: Switch DRV / MTL / ALL | Hold: Move">' + _esc(_viewMode) + '</button>',
+      bal: '<button type="button" id="tpBal" class="ucBtn" data-uc-id="bal" data-uc-act="mode" title="Click: Demo/Real | Hold: Move">' + _esc(balTxt) + '</button>',
+      log: '<button type="button" id="logBtn" class="ucBtn ' + logInfo.cls + '" data-uc-id="log" data-uc-act="log" title="' + _esc(logInfo.title) + '">' + _esc(logInfo.txt) + '</button>',
+      minC: '<button type="button" class="ucBtn' + (_ucErrKey === "minC" ? " ucErr" : "") + '" data-uc-id="minC" data-uc-key="minC" title="Click: Edit Min Cycle | Hold: Move">C' + minC + '</button>',
+      maxC: '<button type="button" class="ucBtn' + (_ucErrKey === "maxC" ? " ucErr" : "") + '" data-uc-id="maxC" data-uc-key="maxC" title="Click: Edit Max Cycle | Hold: Move">C' + maxC + '</button>',
+      scanInt: '<button type="button" class="ucBtn' + (_ucErrKey === "scanInt" ? " ucErr" : "") + '" data-uc-id="scanInt" data-uc-key="scanInt" title="Click: Edit Scan Int | Hold: Move">' + scanInt + 's</button>',
+      ssMin: '<button type="button" class="ucBtn' + (_ucErrKey === "ssMin" ? " ucErr" : "") + '" data-uc-id="ssMin" data-uc-sel="ssMin" title="Click: Select Session | Hold: Move">' + _esc(ssTxt) + '</button>',
+      lvl: '<button type="button" class="ucBtn' + (_ucErrKey === "lvl" ? " ucErr" : "") + '" data-uc-id="lvl" data-uc-key="lvl" title="Click: Edit Level (0=ALL) | Hold: Move">' + _esc(lvlTxt) + '</button>',
+      stake: '<button type="button" class="ucBtn' + (_ucErrKey === "stake" ? " ucErr" : "") + '" data-uc-id="stake" data-uc-key="stake" title="Click: Edit Stake | Hold: Move">$' + stakeVal.toFixed(2) + '</button>',
+      lockMinPct: '<button type="button" class="ucBtn' + (_ucErrKey === "lockMinPct" ? " ucErr" : "") + '" data-uc-id="lockMinPct" data-uc-key="lockMinPct" title="Click: Edit Lock Min % | Hold: Move">' + pctVal + '%</button>',
+      lockMinC1: '<button type="button" class="ucBtn' + (_ucErrKey === "lockMinC1" ? " ucErr" : "") + '" data-uc-id="lockMinC1" data-uc-key="lockMinC1" title="Click: Edit Lock Min C1 | Hold: Move">C1:' + c1Val + '</button>',
+      r0Only: '<button type="button" class="ucBtn' + (r0On ? " on" : "") + '" data-uc-id="r0Only" data-uc-bool="r0Only" title="Click: Toggle R0 | Hold: Move">R0</button>',
+      topLimit: '<button type="button" class="ucBtn' + (_ucErrKey === "topLimit" ? " ucErr" : "") + '" data-uc-id="topLimit" data-uc-key="topLimit" title="Click: Edit Top Limit | Hold: Move">T' + topVal + '</button>',
+      rescan: '<button type="button" id="ucScanBtn" class="ucBtn" data-uc-id="rescan" data-uc-act="rescan" title="Click: Rescan Now | Hold: Move">' + _esc(scanTxt) + '</button>',
+      auto: '<button type="button" class="ucBtn' + (autoOn ? " on" : "") + '" data-uc-id="auto" data-uc-act="auto" title="Click: Enable/Disable ' + _esc(_viewMode) + ' Trading | Hold: Move">' + (autoOn ? "ON" : "OFF") + '</button>'
+    };
+
+    var extraSchema = _curSchema().filter(function (f) {
+      return f && f.editable !== false && !_ucBuiltIn[f.key];
+    });
+    for (var ei = 0; ei < extraSchema.length; ei++) {
+      var ef = extraSchema[ei];
+      var ev = _ucVal(ef.key);
+      if (ef.type === "bool") {
+        itemMap[ef.key] = '<button type="button" class="ucBtn' + (ev ? " on" : "") + '" data-uc-id="' + _esc(ef.key) + '" data-uc-bool="' + _esc(ef.key) + '" title="Click: Toggle ' + _esc(ef.label) + ' | Hold: Move">' + _esc(ef.label) + '</button>';
+      } else if (ef.type === "select" && Array.isArray(ef.options) && ef.options.length) {
+        itemMap[ef.key] = '<button type="button" class="ucBtn' + (_ucErrKey === ef.key ? " ucErr" : "") + '" data-uc-id="' + _esc(ef.key) + '" data-uc-sel="' + _esc(ef.key) + '" title="Click: Select ' + _esc(ef.label) + ' | Hold: Move">' + _esc(_ucFmt(ef, ev)) + '</button>';
+      } else {
+        itemMap[ef.key] = '<button type="button" class="ucBtn' + (_ucErrKey === ef.key ? " ucErr" : "") + '" data-uc-id="' + _esc(ef.key) + '" data-uc-key="' + _esc(ef.key) + '" title="Click: Edit ' + _esc(ef.label) + ' | Hold: Move">' + _esc(_ucFmt(ef, ev)) + '</button>';
+      }
+    }
+
+    var ordered = _ucOrderedIds(itemMap);
+    var structSig = _viewMode + "|" + ordered.join(",") + "|" + minC + "|" + maxC + "|" + scanInt + "|" + ssMin + "|" + lvlVal + "|" + stakeVal.toFixed(2) + "|" + pctVal + "|" + c1Val + "|" + (r0On ? 1 : 0) + "|" + topVal + "|" + (autoOn ? 1 : 0) + "|" + (_ucErrKey || "") + "|" + extraSchema.map(function (f) { return f.key + "=" + _ucVal(f.key); }).join(",");
+
+    if (structSig !== _ucSig) {
+      _ucSig = structSig;
+      pillEl.innerHTML = ordered.map(function (id) { return itemMap[id]; }).join("");
+    } else {
+      var b1 = document.getElementById("tpBal");
+      if (b1 && b1.textContent !== balTxt) b1.textContent = balTxt;
+      var s1 = document.getElementById("ucScanBtn");
+      if (s1 && s1.textContent !== scanTxt) s1.textContent = scanTxt;
+      _ucApplyLogBtn(document.getElementById("logBtn"), logInfo);
+    }
+  }
+
+  var pillEl = document.getElementById("tradePill");
+  if (pillEl) {
+    pillEl.addEventListener("contextmenu", function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest("button[data-uc-id]")) {
+        ev.preventDefault();
+      }
+    });
+
+    pillEl.addEventListener("pointerdown", function (ev) {
+      if (ev.button && ev.button !== 0) return;
+      var b = ev.target && ev.target.closest ? ev.target.closest("button[data-uc-id]") : null;
+      if (!b || _ucHasActiveEdit(pillEl)) return;
+      if (_ucHold) clearTimeout(_ucHold.timer);
+      _ucHold = {
+        id: b.getAttribute("data-uc-id"),
+        btn: b,
+        pid: ev.pointerId,
+        x0: ev.clientX,
+        y0: ev.clientY,
+        timer: setTimeout(function () {
+          if (!_ucHold || _ucHold.btn !== b || !b.isConnected) return;
+          _ucDrag = { id: _ucHold.id, btn: b, pid: _ucHold.pid };
+          _ucHold = null;
+          b.classList.add("ucDrag");
+          pillEl.classList.add("ucReordering");
+          try { pillEl.setPointerCapture(_ucDrag.pid); } catch (e) {}
+          try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {}
+        }, 260)
+      };
+    });
+
+    var _ucMoveDrag = function (ev) {
+      if (_ucHold && ev.pointerId === _ucHold.pid) {
+        if (Math.hypot(ev.clientX - _ucHold.x0, ev.clientY - _ucHold.y0) > 10) {
+          clearTimeout(_ucHold.timer);
+          _ucHold = null;
+        }
+        return;
+      }
+      if (!_ucDrag || ev.pointerId !== _ucDrag.pid) return;
+      if (ev.cancelable) ev.preventDefault();
+      var pr = pillEl.getBoundingClientRect();
+      if (ev.clientX < pr.left + 24) pillEl.scrollLeft -= 10;
+      else if (ev.clientX > pr.right - 24) pillEl.scrollLeft += 10;
+
+      var items = Array.prototype.slice.call(pillEl.querySelectorAll("[data-uc-id]"));
+      if (items.length < 2) return;
+      var curIdx = items.indexOf(_ucDrag.btn);
+      if (curIdx < 0) return;
+      var targetIdx = -1;
+      var rFirst = items[0].getBoundingClientRect();
+      var rLast = items[items.length - 1].getBoundingClientRect();
+      if (ev.clientX <= rFirst.left) targetIdx = 0;
+      else if (ev.clientX >= rLast.right) targetIdx = items.length - 1;
+      else {
+        for (var i = 0; i < items.length; i++) {
+          var rc = items[i].getBoundingClientRect();
+          if (ev.clientX >= rc.left && ev.clientX <= rc.right) { targetIdx = i; break; }
+        }
+      }
+      if (targetIdx >= 0 && targetIdx !== curIdx) {
+        if (targetIdx < curIdx) pillEl.insertBefore(_ucDrag.btn, items[targetIdx]);
+        else pillEl.insertBefore(_ucDrag.btn, items[targetIdx].nextSibling);
+        _ucOrder = Array.prototype.slice.call(pillEl.querySelectorAll("[data-uc-id]")).map(function (el) {
+          return el.getAttribute("data-uc-id");
+        });
+        _ucSaveOrder();
+      }
+    };
+
+    var _ucEndDrag = function (ev) {
+      if (_ucHold && ev.pointerId === _ucHold.pid) {
+        clearTimeout(_ucHold.timer);
+        _ucHold = null;
+      }
+      if (!_ucDrag || ev.pointerId !== _ucDrag.pid) return;
+      _ucDrag.btn.classList.remove("ucDrag");
+      pillEl.classList.remove("ucReordering");
+      try { pillEl.releasePointerCapture(_ucDrag.pid); } catch (e) {}
+      _ucDrag = null;
+      _ucSuppressClickUntil = Date.now() + 350;
+      _ucSig = "";
+      _ucRender();
+    };
+
+    document.addEventListener("pointermove", _ucMoveDrag, { passive: false });
+    document.addEventListener("pointerup", _ucEndDrag);
+    document.addEventListener("pointercancel", _ucEndDrag);
+
+    pillEl.addEventListener("click", function (ev) {
+      if (Date.now() < _ucSuppressClickUntil) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        return;
+      }
+      var b = ev.target && ev.target.closest ? ev.target.closest("button[data-uc-id]") : null;
+      if (!b) return;
+      var key = b.getAttribute("data-uc-key");
+      var selKey = b.getAttribute("data-uc-sel");
+      var boolKey = b.getAttribute("data-uc-bool");
+      var act = b.getAttribute("data-uc-act");
+      if (key) { _ucStartInline(b, key); return; }
+      if (selKey) { _ucStartSelect(b, selKey); return; }
+      if (boolKey) {
+        var patch = {};
+        patch[boolKey] = !_ucVal(boolKey);
+        _ucSend({ action: "set_settings", group: _viewMode, patch: patch });
+        return;
+      }
+      if (act === "vmode") {
+        var idx = _viewModes.indexOf(_viewMode);
+        var nextVm = _viewModes[(idx + 1) % _viewModes.length];
+        _setViewMode(nextVm);
+        return;
+      }
+      if (act === "mode") { _ucSend({ action: "toggle_mode" }); return; }
+      if (act === "log") { if (typeof _logToggle === "function") _logToggle(); return; }
+      if (act === "rescan") { _ucSend({ action: "rescan", group: _viewMode }); return; }
+      if (act === "auto") {
+        var tgNow = _curTraderGroup();
+        if (!tgNow.canTrade) return;
+        _ucSend({ action: "set_auto", group: _viewMode, auto: !tgNow.auto });
+      }
+    });
+  }
+
+  window._ucRender = _ucRender;
+  _ucRender();
+})();
+
+// ── Boot ──
+window.onload = async function () {
+  bootLog("Connecting to server: " + TICK_SERVER);
+  var ok = await pollState();
+  bootLog(ok ? ("Connected — Feed: " + srvState.feedState + " | Mode: " + (srvState.trader ? srvState.trader.mode.toUpperCase() : "DEMO")) : "Server waking up (retrying...)");
+  syncActiveChartPairs();
+  setInterval(pollState, 1000);
+  setInterval(syncActiveChartPairs, 1000);
+  setTimeout(function () {
+    var o = document.getElementById("bootOverlay");
+    if (o) o.style.display = "none";
+  }, ok ? 350 : 1800);
+};
+</script>
+</body>
+</html>
