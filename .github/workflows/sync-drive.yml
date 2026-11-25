@@ -15,7 +15,6 @@ jobs:
       - name: Push files to Drive
         env:
           DRIVE_SYNC_URL: ${{ secrets.DRIVE_SYNC_URL }}
-          DRIVE_SYNC_SECRET: ${{ secrets.DRIVE_SYNC_SECRET }}
           COMMIT_SHA: ${{ github.sha }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
@@ -62,7 +61,7 @@ jobs:
               const res = await fetch(process.env.DRIVE_SYNC_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ secret: process.env.DRIVE_SYNC_SECRET, files }),
+                body: JSON.stringify({ files }),
                 redirect: "follow"
               });
               const txt = await res.text();
