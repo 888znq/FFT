@@ -26,15 +26,15 @@ jobs:
             const fs = require("fs");
 
             const TRACKED = [
-              { path: "server.js",         drive: "FFTBOT_server.js.txt",         protected: false },
-              { path: "scanner.js",        drive: "FFTBOT_scanner.js.txt",        protected: false },
-              { path: "trader.js",         drive: "FFTBOT_trader.js.txt",         protected: false },
-              { path: "settings.js",       drive: "FFTBOT_settings.js.txt",       protected: false },
-              { path: "public/index.html", drive: "FFTBOT_index.html.txt",        protected: false },
-              { path: "package.json",      drive: "FFTBOT_package.json.txt",      protected: false },
-              { path: "devpatch.js",       drive: "FFTBOT_devpatch.js.txt",       protected: true  },
-              { path: "supervisor.js",     drive: "FFTBOT_supervisor.js.txt",     protected: true  },
-              { path: "public/dev.html",   drive: "FFTBOT_dev.html.txt",          protected: true  }
+              { path: "server.js",         drive: "FFT_server.js.txt",         protected: false },
+              { path: "scanner.js",        drive: "FFT_scanner.js.txt",        protected: false },
+              { path: "trader.js",         drive: "FFT_trader.js.txt",         protected: false },
+              { path: "settings.js",       drive: "FFT_settings.js.txt",       protected: false },
+              { path: "public/index.html", drive: "FFT_index.html.txt",        protected: false },
+              { path: "package.json",      drive: "FFT_package.json.txt",      protected: false },
+              { path: "devpatch.js",       drive: "FFT_devpatch.js.txt",       protected: true  },
+              { path: "supervisor.js",     drive: "FFT_supervisor.js.txt",     protected: true  },
+              { path: "public/dev.html",   drive: "FFT_dev.html.txt",          protected: true  }
             ];
 
             const files = [];
@@ -59,7 +59,7 @@ jobs:
               );
             }
 
-            files.unshift({ name: "FFTBOT_INDEX.txt", content: manifestLines.join("\n") + "\n" });
+            files.unshift({ name: "FFT_INDEX.txt", content: manifestLines.join("\n") + "\n" });
 
             (async () => {
               const res = await fetch(process.env.DRIVE_SYNC_URL, {
