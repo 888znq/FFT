@@ -1,0 +1,76 @@
+name: Sync Repo to Google Drive (FFTBOT_LIVE)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Push files to Drive
+        env:
+          DRIVE_SYNC_URL: ${{ secrets.DRIVE_SYNC_URL }}
+          DRIVE_SYNC_SECRET: ${{ secrets.DRIVE_SYNC_SECRET }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          node -e '
+            const fs = require("fs");
+
+            const TRACKED = [
+              { path: "server.js",         drive: "FFTBOT_server.js.txt",         protected: false },
+              { path: "scanner.js",        drive: "FFTBOT_scanner.js.txt",        protected: false },
+              { path: "trader.js",         drive: "FFTBOT_trader.js.txt",         protected: false },
+              { path: "settings.js",       drive: "FFTBOT_settings.js.txt",       protected: false },
+              { path: "public/index.html", drive: "FFTBOT_index.html.txt",        protected: false },
+              { path: "package.json",      drive: "FFTBOT_package.json.txt",      protected: false },
+              { path: "devpatch.js",       drive: "FFTBOT_devpatch.js.txt",       protected: true  },
+              { path: "supervisor.js",     drive: "FFTBOT_supervisor.js.txt",     protected: true  },
+              { path: "public/dev.html",   drive: "FFTBOT_dev.html.txt",          protected: true  }
+            ];
+
+            const files = [];
+            const manifestLines = [
+              "FFTBOT LIVE MANIFEST",
+              "====================",
+              "Commit: " + (process.env.COMMIT_SHA || "").slice(0, 12),
+              "Message: " + String(process.env.COMMIT_MSG || "manual sync").split("\n")[0],
+              "Synced (IST): " + new Date(Date.now() + 19800000).toISOString().replace("T", " ").slice(0, 19) + " IST",
+              "",
+              "FILES:"
+            ];
+
+            for (const f of TRACKED) {
+              if (!fs.existsSync(f.path)) continue;
+              const content = fs.readFileSync(f.path, "utf8").replace(/\r\n/g, "\n");
+              const lines = content.split("\n").length;
+              files.push({ name: f.drive, content });
+              manifestLines.push(
+                "- " + f.path + " -> " + f.drive + " (" + lines + " lines, " + content.length + " chars)" +
+                (f.protected ? " [PROTECTED - GIT ONLY]" : "")
+              );
+            }
+
+            files.unshift({ name: "FFTBOT_INDEX.txt", content: manifestLines.join("\n") + "\n" });
+
+            (async () => {
+              const res = await fetch(process.env.DRIVE_SYNC_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ secret: process.env.DRIVE_SYNC_SECRET, files }),
+                redirect: "follow"
+              });
+              const txt = await res.text();
+              console.log("Drive Sync Response:", res.status, txt);
+              const j = JSON.parse(txt);
+              if (!j.ok) process.exit(1);
+            })().catch(err => {
+              console.error(err);
+              process.exit(1);
+            });
+          '
