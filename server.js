@@ -13,7 +13,7 @@ const { createTrader } = require("./trader");
 const PORT = Number(process.env.PORT) || 3000;
 const WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public?app_id=1089";
 const DAY_SECS = 86400, PRE_ROLL_SECS = 900, CHUNK_SECS = 4999, BACKFILL_CONCURRENCY = 3;
-const FX_CLOSE_SEC = 20 * 60, FX_OPEN_SUN_SEC = 86400;
+const FX_CLOSE_SEC = 20 * 3600 + 56 * 60, FX_OPEN_SUN_SEC = 86400;
 
 // Pair groups: DRV (8 Deriv 1s pairs, prioritized first), MTL (XAU/XAG), and ALL (all 37 pairs)
 const DRV_PAIRS = [
@@ -112,16 +112,16 @@ setInterval(() => {
   prevCpu = c; prevAt = n; lagMs = lagMax; lagMax = 0;
 }, 5000).unref();
 
-// ── FX weekly hours: open Mon 05:30 IST (00:00 UTC) to Sat 05:50 IST (00:20 UTC); 1HZ and crypto run 24x7 ──
+// ── FX weekly hours measured on Deriv: last price Fri 20:55 UTC (Sat 02:25 IST), reopens Mon 00:00 UTC (05:30 IST); 1HZ and crypto run 24x7 ──
 function fxClosedAt(sec) {
   const d = new Date(sec * 1000), dow = d.getUTCDay();
   const s = d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
-  return (dow === 6 && s >= FX_CLOSE_SEC) || (dow === 0 && s < FX_OPEN_SUN_SEC);
+  return dow === 6 || (dow === 5 && s >= FX_CLOSE_SEC) || (dow === 0 && s < FX_OPEN_SUN_SEC);
 }
 function fxFetchEnd(pair, endSec) {
   if (!isFxPair(pair) || !fxClosedAt(endSec)) return endSec;
   const dayStart = endSec - (endSec % DAY_SECS);
-  if (new Date(endSec * 1000).getUTCDay() === 6) return Math.min(endSec, dayStart + FX_CLOSE_SEC);
+  if (new Date(endSec * 1000).getUTCDay() === 5) return Math.min(endSec, dayStart + FX_CLOSE_SEC);
   return -1;
 }
 
