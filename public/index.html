@@ -2150,7 +2150,7 @@ var MERGE_BOTTOM_BARS = true;
       lockMinC1: '<button type="button" class="ucBtn' + (_ucErrKey === "lockMinC1" ? " ucErr" : "") + '" data-uc-id="lockMinC1" data-uc-key="lockMinC1" title="Click: Edit Lock Min C1 | Hold: Move">C1:' + c1Val + '</button>',
       r0Only: '<button type="button" class="ucBtn' + (r0On ? " on" : "") + '" data-uc-id="r0Only" data-uc-bool="r0Only" title="Click: Toggle R0 | Hold: Move">R0</button>',
       topLimit: '<button type="button" class="ucBtn' + (_ucErrKey === "topLimit" ? " ucErr" : "") + '" data-uc-id="topLimit" data-uc-key="topLimit" title="Click: Edit Top Limit | Hold: Move">T' + topVal + '</button>',
-      rescan: '<button type="button" id="ucScanBtn" class="ucBtn" data-uc-id="rescan" data-uc-act="rescan" title="Click: Rescan Now | Hold: Move">' + _esc(scanTxt) + '</button>',
+      rescan: '<button type="button" id="ucScanBtn" class="ucBtn" data-uc-id="rescan" data-uc-act="rescan" title="' + _esc("Click: Rescan Now | Last scan " + (+sc.lastDurationMs || 0) + "ms | Hold: Move") + '">' + _esc(scanTxt) + '</button>',
       auto: '<button type="button" class="ucBtn' + (autoOn ? " on" : "") + '" data-uc-id="auto" data-uc-act="auto" title="Click: Enable/Disable ' + _esc(_viewMode) + ' Trading | Hold: Move">' + (autoOn ? "ON" : "OFF") + '</button>'
     };
 
@@ -2180,6 +2180,8 @@ var MERGE_BOTTOM_BARS = true;
       if (b1 && b1.textContent !== balTxt) b1.textContent = balTxt;
       var s1 = document.getElementById("ucScanBtn");
       if (s1 && s1.textContent !== scanTxt) s1.textContent = scanTxt;
+      var s1t = "Click: Rescan Now | Last scan " + (+sc.lastDurationMs || 0) + "ms | Hold: Move";
+      if (s1 && s1.title !== s1t) s1.title = s1t;
       _ucApplyLogBtn(document.getElementById("logBtn"), logInfo);
     }
   }

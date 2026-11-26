@@ -62,8 +62,12 @@ function scanPairSlice(pair, dayArr, preArr, activeDayEpoch, minC, maxC, ssMin, 
   const rowColor = new Int8Array(maxC);
   const rowStreak = new Int16Array(maxC);
   const rowCol = new Int32Array(maxC);
-  const shGMax = new Int16Array(maxC);
-  const shRMax = new Int16Array(maxC);
+  const nG1 = new Int32Array(maxC);
+  const nG2 = new Int32Array(maxC);
+  const nR1 = new Int32Array(maxC);
+  const nR2 = new Int32Array(maxC);
+  const fG1 = new Float64Array(maxC);
+  const fR1 = new Float64Array(maxC);
   const revs = [];
   const moms = [];
 
@@ -71,12 +75,12 @@ function scanPairSlice(pair, dayArr, preArr, activeDayEpoch, minC, maxC, ssMin, 
     rowColor.fill(0, 0, c);
     rowStreak.fill(0, 0, c);
     rowCol.fill(-2, 0, c);
-    shGMax.fill(0, 0, c);
-    shRMax.fill(0, 0, c);
-    const shG = new Array(c).fill(null);
-    const shR = new Array(c).fill(null);
-    const fG = new Array(c).fill(null);
-    const fR = new Array(c).fill(null);
+    nG1.fill(0, 0, c);
+    nG2.fill(0, 0, c);
+    nR1.fill(0, 0, c);
+    nR2.fill(0, 0, c);
+    fG1.fill(0, 0, c);
+    fR1.fill(0, 0, c);
 
     for (let i = 0; i < len; i++) {
       const p = prices[i];
@@ -109,16 +113,19 @@ function scanPairSlice(pair, dayArr, preArr, activeDayEpoch, minC, maxC, ssMin, 
       if (newStreak === 1 && rowStreak[row] > 0 && rowColor[row] !== 0 && rowCol[row] === col - 1) {
         const s = rowStreak[row];
         if (rowColor[row] === 1) {
-          (shG[row] || (shG[row] = {}))[s] = (shG[row][s] || 0) + 1;
-          if (s > shGMax[row]) shGMax[row] = s;
+          nG1[row]++;
+          if (s >= 2) nG2[row]++;
         } else {
-          (shR[row] || (shR[row] = {}))[s] = (shR[row][s] || 0) + 1;
-          if (s > shRMax[row]) shRMax[row] = s;
+          nR1[row]++;
+          if (s >= 2) nR2[row]++;
         }
       }
-      if (newStreak > 0 && newColor !== 0) {
-        const fa = newColor === 1 ? (fG[row] || (fG[row] = {})) : (fR[row] || (fR[row] = {}));
-        if (fa[newStreak] === undefined) fa[newStreak] = baseTs + i;
+      if (newStreak === 1 && newColor !== 0) {
+        if (newColor === 1) {
+          if (fG1[row] === 0) fG1[row] = baseTs + i;
+        } else if (fR1[row] === 0) {
+          fR1[row] = baseTs + i;
+        }
       }
       rowColor[row] = newColor;
       rowStreak[row] = newStreak;
@@ -129,33 +136,25 @@ function scanPairSlice(pair, dayArr, preArr, activeDayEpoch, minC, maxC, ssMin, 
       const liveLen = rowStreak[row];
       if (liveLen < 1 || rowColor[row] === 0) continue;
       if (rowColor[row] === 1) {
-        (shG[row] || (shG[row] = {}))[liveLen] = (shG[row][liveLen] || 0) + 1;
-        if (liveLen > shGMax[row]) shGMax[row] = liveLen;
+        nG1[row]++;
+        if (liveLen >= 2) nG2[row]++;
       } else {
-        (shR[row] || (shR[row] = {}))[liveLen] = (shR[row][liveLen] || 0) + 1;
-        if (liveLen > shRMax[row]) shRMax[row] = liveLen;
+        nR1[row]++;
+        if (liveLen >= 2) nR2[row]++;
       }
     }
 
     for (let r = 0; r < c; r++) {
       for (let ci = 0; ci < 2; ci++) {
-        const raw = ci === 0 ? shG[r] : shR[r];
-        const maxS = ci === 0 ? shGMax[r] : shRMax[r];
-        if (!raw || !maxS) continue;
+        const c1 = ci === 0 ? nG1[r] : nR1[r];
+        if (c1 < 1) continue;
+        const c2 = ci === 0 ? nG2[r] : nR2[r];
         const colColor = ci === 0 ? "G" : "R";
-        const cum = applyCumulative(raw, maxS);
-        const fmap = (ci === 0 ? fG[r] : fR[r]) || {};
-        for (const sStr in cum) {
-          const s = sStr | 0;
-          if (s < 1) continue;
-          const c1 = cum[s];
-          const c2 = cum[s + 1] || 0;
-          const fs = fmap[s] || 0;
-          const pctRev = c1 > 0 ? 100 - Math.round((c2 / c1) * 100) : 0;
-          const pctMom = c1 > 0 ? Math.round((c2 / c1) * 100) : 0;
-          revs.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctRev, col: colColor, type: "REV", sess, fs });
-          moms.push({ pair, c, r, s1: s, s2: s + 1, c1, c2, pct: pctMom, col: colColor, type: "MOM", sess, fs });
-        }
+        const fs = (ci === 0 ? fG1[r] : fR1[r]) || 0;
+        const pctRev = 100 - Math.round((c2 / c1) * 100);
+        const pctMom = Math.round((c2 / c1) * 100);
+        if (pctRev >= MIN_SIG_PCT) revs.push({ pair, c, r, s1: 1, s2: 2, c1, c2, pct: pctRev, col: colColor, type: "REV", sess, fs });
+        if (pctMom >= MIN_SIG_PCT) moms.push({ pair, c, r, s1: 1, s2: 2, c1, c2, pct: pctMom, col: colColor, type: "MOM", sess, fs });
       }
     }
   }
