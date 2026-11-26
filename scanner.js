@@ -367,7 +367,7 @@ function createScanner(ctx) {
   const cfg = {
     minC: sv.minC != null ? sv.minC : 132,
     maxC: sv.maxC != null ? sv.maxC : 132,
-    scanInt: sv.scanInt != null ? sv.scanInt : (Number(process.env.SCAN_INT) || 10),
+    scanInt: sv.scanInt != null ? sv.scanInt : 60,
     ssMin: sv.ssMin != null ? sv.ssMin : 60,
     lvl: LOCKED_LVL,
     r0Only: sv.r0Only != null ? !!sv.r0Only : false,

@@ -258,7 +258,7 @@ var srvState = {
     },
     bal: { demo: null, real: null }, cur: { demo: "USD", real: "USD" }
   },
-  scan: { group: "DRV", cycle: 60, minC: 60, maxC: 60, scanInt: 30, ssMin: 60, ssSel: 1, lvl: 1, lockMinPct: 60, lockMinC1: 10, topLimit: 16, lockSlots: 8, countdownSec: 30, pending: false, buyTop: [], sellTop: [], lock: { buy: null, sell: null, buys: [], sells: [] } },
+  scan: { group: "DRV", cycle: 60, minC: 60, maxC: 60, scanInt: 60, ssMin: 60, ssSel: 1, lvl: 1, lockMinPct: 60, lockMinC1: 10, topLimit: 16, lockSlots: 8, countdownSec: 60, pending: false, buyTop: [], sellTop: [], lock: { buy: null, sell: null, buys: [], sells: [] } },
   scans: {},
   settings: {},
   settingsByGroup: {},
@@ -958,7 +958,7 @@ function _lpGrpTxt(g) {
   var ssT = sm <= 0 ? "24h" : ((sm % 60 === 0 ? (sm / 60) : (Math.round(sm / 6) / 10)) + "h");
   var parts = [
     "CYC " + (mn === mx ? (mn + "s") : (mn + "-" + mx + "s")),
-    "SCAN " + pick("scanInt", 30) + "s",
+    "SCAN " + pick("scanInt", 60) + "s",
     "SESS " + ssT + " (S" + (sc.ssSel || 1) + ")",
     "LVL X" + pick("lvl", 1)
   ];
@@ -1143,7 +1143,7 @@ function _logRender() {
     ["FEED", srvState.feedState || "--", ""],
     ["PAIRS", grpRdy + "/" + curP.length + " READY", ""],
     ["CYCLE", cycTxt, "cycle"],
-    ["SCAN INT", (sc.scanInt || (_viewMode === "MTL" ? 60 : 30)) + "s", "scanInt"],
+    ["SCAN INT", (sc.scanInt || 60) + "s", "scanInt"],
     ["SESSION", ssTxt, "ssMin"],
     ["STAKE", tg.canTrade ? (Number(tg.stake || 0.35).toFixed(2) + " USD") : "VIEW ONLY", tg.canTrade ? "stake" : ""]
   ];
@@ -2077,7 +2077,7 @@ var MERGE_BOTTOM_BARS = true;
 
     var minC = Number(_ucVal("minC")) || sc.minC || (_viewMode === "MTL" ? 300 : 60);
     var maxC = Number(_ucVal("maxC")) || sc.maxC || minC;
-    var scanInt = Number(_ucVal("scanInt")) || sc.scanInt || (_viewMode === "MTL" ? 60 : 30);
+    var scanInt = Number(_ucVal("scanInt")) || sc.scanInt || 60;
     var ssMin = Number(_ucVal("ssMin"));
     if (!Number.isFinite(ssMin)) ssMin = (sc.ssMin !== undefined && sc.ssMin !== null) ? +sc.ssMin : (_viewMode === "MTL" ? 120 : 60);
     var ssTxt = ssMin <= 0 ? "24h" : ((ssMin % 60 === 0 ? (ssMin / 60) : Math.round((ssMin / 60) * 10) / 10) + "h");
