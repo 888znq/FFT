@@ -8,6 +8,9 @@ const FB_URL = "https://system-data-bf026-default-rtdb.asia-southeast1.firebased
 const DV_APP = (process.env.DERIV_APP_ID || "33VdMoKptaW40mOpanwBg").trim();
 const DV_TOK = (process.env.DERIV_API_TOKEN || "pat_4b2171c2b96c25dd073fe246d5111b37325fb67a07b50aa887c384b7c181175f").trim();
 
+// Master switch: set to true to re-enable DRV/MTL auto-trading (placing orders).
+const AUTO_TRADE_ENABLED = false;
+
 function pairDisp(p) {
   const v = /^1HZ(\d+)V$/.exec(String(p));
   if (v) return "V" + v[1] + "/USD";
@@ -377,6 +380,7 @@ function createTrader(ctx) {
     }
     settleFallback();
 
+    if (!AUTO_TRADE_ENABLED) return;
     if (!dv.ready) return;
     if (!ctx.isWsConnected()) return;
 
@@ -531,6 +535,7 @@ function createTrader(ctx) {
     }
     if (action === "set_auto") {
       if (group === "ALL") return { ok: false, error: "Trading disabled in ALL mode" };
+      if (!AUTO_TRADE_ENABLED) return { ok: false, error: "Auto trading is disabled on the server" };
       const out = ctx.settings ? await ctx.settings.apply({ auto: !!body.auto }, { source: "control", group }) : { ok: true };
       if (!ctx.settings && group === "DRV") dv.auto = !!body.auto;
       const gCfg = getGroupCfg(group);
@@ -575,11 +580,12 @@ function createTrader(ctx) {
     return {
       ready: dv.ready,
       mode: dv.mode,
-      auto: !!drvCfg.auto,
+      autoEnabled: AUTO_TRADE_ENABLED,
+      auto: AUTO_TRADE_ENABLED && !!drvCfg.auto,
       stake: Number(drvCfg.stake || dv.stake || 0.35),
       groups: {
-        DRV: { canTrade: true, auto: !!drvCfg.auto, stake: Number(drvCfg.stake || 0.35) },
-        MTL: { canTrade: true, auto: !!mtlCfg.auto, stake: Number(mtlCfg.stake || 0.50) },
+        DRV: { canTrade: true, auto: AUTO_TRADE_ENABLED && !!drvCfg.auto, stake: Number(drvCfg.stake || 0.35) },
+        MTL: { canTrade: true, auto: AUTO_TRADE_ENABLED && !!mtlCfg.auto, stake: Number(mtlCfg.stake || 0.50) },
         ALL: { canTrade: false, auto: false, stake: 0 }
       },
       bal: dv.bal,
