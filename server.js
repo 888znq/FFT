@@ -152,7 +152,7 @@ function pairClosedAt(pair, sec) {
 
 // ── backfill from ticks_history ──
 let backfillState = { active: false, pct: 100, doneChunks: 0, totalChunks: 0, currentPair: null, reason: null };
-let queuedReason = null, backfillSeq = 0, gapRetryCount = 0;
+let queuedReason = null, queuedForce = null, queuedOnly = null, backfillSeq = 0, gapRetryCount = 0;
 const preBackfillDay = {};
 
 function fetchChunk(pair, t0, t1) {
@@ -212,12 +212,23 @@ function findPairGaps(pair, dayEpoch, endSec, forceFromSec) {
   return gaps;
 }
 
-async function runBackfill(reason, forceFromSec) {
-  if (backfillState.active) { queuedReason = reason; return; }
+async function runBackfill(reason, forceFromSec, onlyPairs) {
+  if (backfillState.active) {
+    if (queuedReason) {
+      queuedOnly = (queuedOnly && onlyPairs) ? queuedOnly.concat(onlyPairs) : null;
+      queuedForce = (queuedForce != null && forceFromSec != null) ? Math.min(queuedForce, forceFromSec) : (queuedForce != null ? queuedForce : (forceFromSec != null ? forceFromSec : null));
+    } else {
+      queuedOnly = onlyPairs || null;
+      queuedForce = forceFromSec != null ? forceFromSec : null;
+    }
+    queuedReason = reason;
+    return;
+  }
   checkRollover();
   if (reason !== "gap-retry") gapRetryCount = 0;
   const targetDay = activeDayEpoch, endSec = nowSec(), queue = [];
   for (const pair of ALL_PAIRS) {
+    if (onlyPairs && onlyPairs.indexOf(pair) < 0) continue;
     const pairEnd = fxFetchEnd(pair, endSec);
     if (pairEnd < 0) continue;
     for (const [a, b] of findPairGaps(pair, targetDay, pairEnd, forceFromSec)) {
@@ -280,7 +291,9 @@ async function runBackfill(reason, forceFromSec) {
   scanners.MTL.runScan("backfill-done");
   scanners.ALL.runScan("backfill-done");
   if (queuedReason) {
-    const next = queuedReason; queuedReason = null; runBackfill(next, null);
+    const next = queuedReason, nextForce = queuedForce, nextOnly = queuedOnly;
+    queuedReason = null; queuedForce = null; queuedOnly = null;
+    runBackfill(next, nextForce, nextOnly);
   } else if (failedChunks > 0 && gapRetryCount < 2 && !shuttingDown) {
     gapRetryCount++;
     log("BACKFILL_RETRY", `scheduling gap-retry #${gapRetryCount} in 15s for ${failedChunks} missed chunks`);
@@ -338,6 +351,7 @@ function connectLiveWs(isReconnect) {
       fxWasClosed = fxClosed;
       if (fxClosed) for (const p of ALL_PAIRS) if (isFxPair(p)) subscribed.delete(p);
       if (fxJustOpened || (ticks % 10 === 0 && subscribed.size < ALL_PAIRS.length)) subscribeAll(ws);
+      if (fxJustOpened) runBackfill("fx-open", activeDayEpoch, ALL_PAIRS.filter(isFxPair));
     }, 30000);
     if (isReconnect) runBackfill("reconnect-recovery", missedFrom || (nowSec() - 300));
   });

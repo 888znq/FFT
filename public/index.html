@@ -400,6 +400,7 @@ function updateBalBtn() {
   if (window._ucRender) window._ucRender();
 }
 
+var _bfSeqSeen = -1;
 async function pollState() {
   try {
     var r = await fetch(TICK_SERVER + "/state", { cache: "no-store" });
@@ -421,6 +422,10 @@ async function pollState() {
       });
     }
     _dropClosedSigs(j);
+    if (j.sync && typeof j.sync.backfillSeq === "number" && j.sync.backfillSeq !== _bfSeqSeen) {
+      if (_bfSeqSeen !== -1) ALL_PAIRS.forEach(function (p) { _srvFp[p] = 0; });
+      _bfSeqSeen = j.sync.backfillSeq;
+    }
     srvState = j;
     window._rxAt = Date.now();
     _syncViewParams();
