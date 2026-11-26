@@ -420,6 +420,7 @@ async function pollState() {
         }
       });
     }
+    _dropClosedSigs(j);
     srvState = j;
     window._rxAt = Date.now();
     _syncViewParams();
@@ -431,6 +432,31 @@ async function pollState() {
     return true;
   } catch (e) {
     return false;
+  }
+}
+
+function _dropClosedSigs(j) {
+  var cp = (j && j.sync && j.sync.closedPairs) || null;
+  if (!cp) return;
+  var keep = function (x) { return !(x && cp[x.pair]); };
+  var clean = function (a) { return Array.isArray(a) ? a.filter(keep) : a; };
+  var cleanScan = function (s) {
+    if (!s || typeof s !== "object") return;
+    s.buyTop = clean(s.buyTop);
+    s.sellTop = clean(s.sellTop);
+    var lk = s.lock;
+    if (!lk || typeof lk !== "object") return;
+    lk.buys = clean(lk.buys);
+    lk.sells = clean(lk.sells);
+    lk.topLocks = clean(lk.topLocks);
+    lk.pairLocks = clean(lk.pairLocks);
+    if (!keep(lk.buy)) lk.buy = (Array.isArray(lk.buys) && lk.buys.length) ? lk.buys[0] : null;
+    if (!keep(lk.sell)) lk.sell = (Array.isArray(lk.sells) && lk.sells.length) ? lk.sells[0] : null;
+    if (!keep(lk.globalBest)) lk.globalBest = (Array.isArray(lk.topLocks) && lk.topLocks.length) ? lk.topLocks[0] : null;
+  };
+  cleanScan(j.scan);
+  if (j.scans && typeof j.scans === "object") {
+    Object.keys(j.scans).forEach(function (g) { cleanScan(j.scans[g]); });
   }
 }
 
@@ -617,6 +643,9 @@ function renderTables() {
   var buyRows = bestPerPair.filter(isBuySig).slice(0, topLimit);
   var sellRows = bestPerPair.filter(function (x) { return !isBuySig(x); }).slice(0, topLimit);
   if (_viewMode === "ALL") {
+    var closedMap = (srvState.sync && srvState.sync.closedPairs) || {};
+    if (_allView.buy && closedMap[_allView.buy.pair]) _allView.buy = null;
+    if (_allView.sell && closedMap[_allView.sell.pair]) _allView.sell = null;
     if (!_allView.buy && buyRows.length) { _allView.buy = buyRows[0]; syncPair(buyRows[0].pair); }
     if (!_allView.sell && sellRows.length) { _allView.sell = sellRows[0]; syncPair(sellRows[0].pair); }
     if (_allView.buy) {

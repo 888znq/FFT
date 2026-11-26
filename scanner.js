@@ -519,6 +519,7 @@ function createScanner(ctx) {
 
       for (const pair of ctx.pairs) {
         if (ctx.bfPending[pair] > 0) continue;
+        if (typeof ctx.isPairClosed === "function" && ctx.isPairClosed(pair)) continue;
         const dayArr = ctx.dayTicks[pair];
         const preArr = ctx.preTicks[pair];
         if (!dayArr || ctx.filled[pair] === 0) continue;

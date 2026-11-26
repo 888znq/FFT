@@ -391,6 +391,7 @@ const scannerMtl = createScanner({
   bfPending,
   nowSec,
   getDayEpoch: () => activeDayEpoch,
+  isPairClosed: pair => pairClosedAt(pair, nowSec()),
   settings: settings.forGroup("MTL"),
   log
 });
@@ -405,6 +406,7 @@ const scannerAll = createScanner({
   bfPending,
   nowSec,
   getDayEpoch: () => activeDayEpoch,
+  isPairClosed: pair => pairClosedAt(pair, nowSec()),
   settings: settings.forGroup("ALL"),
   log
 });
