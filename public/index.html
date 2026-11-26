@@ -233,8 +233,9 @@ var ALL_PAIRS = DRV_PAIRS.concat(MTL_PAIRS, [
   "frxUSDCAD", "frxUSDCHF", "frxUSDJPY", "frxUSDMXN",
   "frxXPTUSD"
 ]);
-var _viewModes = ["DRV", "MTL", "ALL"];
-var _viewMode = "DRV";
+var _viewModes = ["ALL"];
+var _viewMode = "ALL";
+if (document.body) document.body.classList.add("vm-all");
 var _allView = { buy: null, sell: null };
 var PRE_ROLL_SECS = 900;
 var currentStartTsUtc = Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 86400);
@@ -1767,7 +1768,7 @@ var MERGE_BOTTOM_BARS = true;
   ];
   function _ucVisibleForMode() {
     if (_viewMode === "ALL") {
-      return { vmode: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, log: 1 };
+      return { minC: 1, maxC: 1, scanInt: 1, ssMin: 1, log: 1 };
     }
     return { vmode: 1, auto: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, stake: 1, bal: 1, log: 1 };
   }
