@@ -987,7 +987,7 @@ function _lpSyncH() {
   };
   for (i = 0; i < total; i++) {
     p = list[i];
-    var pe = +pend[p] || 0, fl = +fil[p] || 0, closed = fxC && /^frx/i.test(p);
+    var pe = +pend[p] || 0, fl = +fil[p] || 0, closed = sy.closedPairs ? !!sy.closedPairs[p] : (fxC && /^frx/i.test(p));
     var bfOk = pe === 0 && (fl > 0 || closed);
     var last = lt[p], age = last ? Math.max(0, base - last + drift) : null;
     var lim = /^1HZ/i.test(p) ? 10 : 90;

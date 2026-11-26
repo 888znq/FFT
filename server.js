@@ -125,6 +125,31 @@ function fxFetchEnd(pair, endSec) {
   return -1;
 }
 
+// ── Metals (XAU/XAG/XPT) extra closures: daily 1h break at 17:00 New York time (follows US daylight saving), plus holiday/early closes detected when all metals go silent while other FX keeps ticking ──
+const METAL_RE = /^frx(XAU|XAG|XPT)/i;
+let NY_HOUR_FMT = null;
+try { NY_HOUR_FMT = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hourCycle: "h23" }); } catch (e) { NY_HOUR_FMT = null; }
+function metalBreakAt(sec) {
+  if (!NY_HOUR_FMT) return false;
+  return Number(NY_HOUR_FMT.format(new Date(sec * 1000))) === 17;
+}
+function metalsSilent(sec) {
+  let fxLive = false;
+  for (const p of ALL_PAIRS) {
+    if (!isFxPair(p)) continue;
+    const t = lastTickTime[p];
+    if (METAL_RE.test(p)) { if (t != null && sec - t <= 300) return false; }
+    else if (t != null && sec - t <= 90) fxLive = true;
+  }
+  return fxLive;
+}
+function pairClosedAt(pair, sec) {
+  if (!isFxPair(pair)) return false;
+  if (fxClosedAt(sec)) return true;
+  if (!METAL_RE.test(pair)) return false;
+  return metalBreakAt(sec) || metalsSilent(sec);
+}
+
 // ── backfill from ticks_history ──
 let backfillState = { active: false, pct: 100, doneChunks: 0, totalChunks: 0, currentPair: null, reason: null };
 let queuedReason = null, backfillSeq = 0, gapRetryCount = 0;
@@ -576,9 +601,11 @@ const server = http.createServer(async (req, res) => {
     var syncNow = nowSec();
     var syncFxClosed = fxClosedAt(syncNow);
     var syncedCount = 0;
+    var closedPairs = {};
     for (var si = 0; si < ALL_PAIRS.length; si++) {
       var sp = ALL_PAIRS[si];
-      var spClosed = syncFxClosed && /^frx/i.test(sp);
+      var spClosed = pairClosedAt(sp, syncNow);
+      if (spClosed) closedPairs[sp] = 1;
       var spBfOk = (bfPending[sp] || 0) === 0 && ((filled[sp] || 0) > 0 || spClosed);
       var spLast = lastTickTime[sp];
       var spLim = /^1HZ/i.test(sp) ? 10 : 90;
@@ -617,6 +644,7 @@ const server = http.createServer(async (req, res) => {
         backfillSeq,
         elapsed: Math.min(DAY_SECS, syncNow - activeDayEpoch + 1),
         fxClosed: syncFxClosed,
+        closedPairs: closedPairs,
         totalLive,
         totalBf,
         lastTickTime,
