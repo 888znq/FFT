@@ -1798,13 +1798,13 @@ var MERGE_BOTTOM_BARS = true;
   var _ucSuppressClickUntil = 0;
   var _ucOrderKey = "wsUnifiedBarOrderV2";
   var _ucDefaultOrder = [
-    "vmode", "auto", "minC", "maxC", "scanInt", "ssMin", "stake", "bal", "log"
+    "vmode", "auto", "minC", "maxC", "scanInt", "ssMin", "r0Only", "stake", "bal", "log"
   ];
   function _ucVisibleForMode() {
     if (_viewMode === "ALL") {
-      return { minC: 1, maxC: 1, scanInt: 1, ssMin: 1, log: 1 };
+      return { minC: 1, maxC: 1, scanInt: 1, ssMin: 1, r0Only: 1, log: 1 };
     }
-    return { vmode: 1, auto: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, stake: 1, bal: 1, log: 1 };
+    return { vmode: 1, auto: 1, minC: 1, maxC: 1, scanInt: 1, ssMin: 1, r0Only: 1, stake: 1, bal: 1, log: 1 };
   }
   var _ucBuiltIn = {
     mode: 1, auto: 1, stake: 1, minC: 1, maxC: 1, scanInt: 1,
@@ -1821,7 +1821,14 @@ var MERGE_BOTTOM_BARS = true;
       var raw = localStorage.getItem(_ucOrderKey);
       if (raw) {
         var arr = JSON.parse(raw);
-        if (Array.isArray(arr) && arr.length) return arr.map(String);
+        if (Array.isArray(arr) && arr.length) {
+          arr = arr.map(String);
+          if (arr.indexOf("r0Only") < 0) {
+            var ssIx = arr.indexOf("ssMin");
+            arr.splice(ssIx >= 0 ? ssIx + 1 : arr.length, 0, "r0Only");
+          }
+          return arr;
+        }
       }
     } catch (e) {}
     return _ucDefaultOrder.slice();
@@ -2125,7 +2132,7 @@ var MERGE_BOTTOM_BARS = true;
     if (!Number.isFinite(pctVal)) pctVal = (sc.lockMinPct !== undefined && sc.lockMinPct !== null) ? +sc.lockMinPct : 60;
     var c1Val = Number(_ucVal("lockMinC1"));
     if (!Number.isFinite(c1Val)) c1Val = (sc.lockMinC1 !== undefined && sc.lockMinC1 !== null) ? +sc.lockMinC1 : 10;
-    var r0On = !!_ucVal("r0Only");
+    var r0On = (sc.r0Only !== undefined && sc.r0Only !== null) ? !!sc.r0Only : !!_ucVal("r0Only");
     var topVal = Number(_ucVal("topLimit")) || sc.topLimit || (_viewMode === "ALL" ? 37 : 16);
     var autoOn = !!tg.auto;
 
@@ -2282,7 +2289,9 @@ var MERGE_BOTTOM_BARS = true;
       if (selKey) { _ucStartSelect(b, selKey); return; }
       if (boolKey) {
         var patch = {};
-        patch[boolKey] = !_ucVal(boolKey);
+        var scBool = _curScan();
+        var curBool = (boolKey === "r0Only" && scBool.r0Only !== undefined && scBool.r0Only !== null) ? !!scBool.r0Only : !!_ucVal(boolKey);
+        patch[boolKey] = !curBool;
         _ucSend({ action: "set_settings", group: _viewMode, patch: patch });
         return;
       }

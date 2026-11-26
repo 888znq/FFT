@@ -53,7 +53,7 @@ const ALL_SCHEMA = [
   { key: "lvl", label: "LEVEL", scope: "scanner", type: "int", min: 1, max: 1, step: 1, prefix: "X", default: 1, persist: false, editable: false, group: "extra" },
   { key: "lockMinPct", label: "LOCK MIN %", scope: "scanner", type: "int", min: 0, max: 100, step: 1, unit: "%", default: 60, persist: false, editable: false, group: "extra" },
   { key: "lockMinC1", label: "LOCK MIN C1", scope: "scanner", type: "int", min: 1, max: 500, step: 1, default: 10, persist: false, editable: false, group: "extra" },
-  { key: "r0Only", label: "R0 ONLY", scope: "scanner", type: "bool", default: false, persist: false, editable: false, group: "extra" },
+  { key: "r0Only", label: "R0 ONLY", scope: "scanner", type: "bool", default: false, persist: true, editable: true, group: "extra" },
   { key: "topLimit", label: "TOP LIMIT", scope: "scanner", type: "int", min: 1, max: 50, step: 1, default: 37, persist: false, editable: false, group: "extra" }
 ];
 
@@ -385,7 +385,8 @@ function createSettings(ctx) {
         minC: profiles.DRV.minC,
         maxC: profiles.DRV.maxC,
         scanInt: profiles.DRV.scanInt,
-        ssMin: profiles.DRV.ssMin
+        ssMin: profiles.DRV.ssMin,
+        r0Only: (j.profiles && j.profiles.ALL && typeof j.profiles.ALL.r0Only === "boolean") ? j.profiles.ALL.r0Only : profiles.ALL.r0Only
       }, { group: "ALL", persist: false, source: "firebase-inherit", noRescan: true, noMirror: true });
       if (ver < SCHEMA_VER) save();
       return loadedAny;
