@@ -124,6 +124,8 @@ function createSettings(ctx) {
   const listeners = [];
   let version = 1;
   let loaded = false;
+  let storeReady = false;
+  let retryTimer = null;
 
   for (let gi = 0; gi < GROUP_KEYS.length; gi++) {
     const gk = GROUP_KEYS[gi];
@@ -247,7 +249,18 @@ function createSettings(ctx) {
     return { ok: true, group: g, next, changed };
   }
 
-  function save() {
+  function scheduleLoadRetry() {
+    if (retryTimer || storeReady) return;
+    retryTimer = setTimeout(() => { retryTimer = null; load(); }, 15000);
+    if (retryTimer.unref) retryTimer.unref();
+  }
+
+  function save(attempt) {
+    if (!storeReady) {
+      log("SETTINGS", "save skipped: stored settings not loaded yet, retrying load in 15s");
+      scheduleLoadRetry();
+      return Promise.resolve(false);
+    }
     const cfg = {};
     for (let i = 0; i < SETTINGS_SCHEMA.length; i++) {
       const f = SETTINGS_SCHEMA[i];
@@ -273,13 +286,32 @@ function createSettings(ctx) {
       mode: profiles.DRV.mode,
       auto: profiles.DRV.auto,
       amt: Number(profiles.DRV.stake || 0.35).toFixed(2),
+      cycle: { minC: profiles.DRV.minC, maxC: profiles.DRV.maxC, scanInt: profiles.DRV.scanInt, ssMin: profiles.DRV.ssMin },
       updatedAt: Date.now()
+    };
+    const retrySave = () => {
+      if ((attempt || 0) < 3) {
+        const rt = setTimeout(() => { save((attempt || 0) + 1); }, 5000);
+        if (rt.unref) rt.unref();
+      }
     };
     return fetch(fbUrl, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6000)
+    }).then(r => {
+      if (!r.ok) {
+        log("SETTINGS", "save failed: HTTP " + r.status);
+        retrySave();
+        return false;
+      }
+      return true;
+    }).catch(e => {
+      log("SETTINGS", "save failed: " + (e && e.message ? e.message : String(e)));
+      retrySave();
+      return false;
+    });
   }
 
   async function apply(patch, opts) {
@@ -325,10 +357,10 @@ function createSettings(ctx) {
     version++;
     const map = GROUP_MAPS[g];
     const shouldPersist = opts.persist !== false && changedKeys.some(k => (map[k] && map[k].persist) || k === "mode");
-    if (shouldPersist) save();
+    const saved = shouldPersist ? await save() : true;
     const summary = changedKeys.map(k => k + "=" + profiles[g][k]).join(", ");
     log("SETTINGS", "[" + g + "] " + (opts.source || "update") + ": " + summary);
-    return { ok: true, group: g, changed: v.changed, settings: getGroupValues(g), settingsByGroup: getAllGroupValues(), version };
+    return { ok: true, group: g, changed: v.changed, saved: saved, settings: getGroupValues(g), settingsByGroup: getAllGroupValues(), version };
   }
 
   async function reset(opts) {
@@ -346,9 +378,10 @@ function createSettings(ctx) {
   async function load() {
     loaded = true;
     try {
-      const r = await fetch(fbUrl, { signal: AbortSignal.timeout(3500) });
-      if (!r.ok) return false;
+      const r = await fetch(fbUrl, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) { scheduleLoadRetry(); return false; }
       const j = await r.json();
+      storeReady = true;
       if (!j || typeof j !== "object") return false;
       let loadedAny = false;
       const ver = Number(j.schemaVer) || 1;
@@ -372,6 +405,16 @@ function createSettings(ctx) {
         await apply({ mode: j.mode }, { group: "DRV", persist: false, source: "firebase", noRescan: true });
         loadedAny = true;
       }
+      if (j.cycle && typeof j.cycle === "object") {
+        const cyc = {};
+        ["minC", "maxC", "scanInt", "ssMin"].forEach(k => {
+          if (j.cycle[k] !== null && j.cycle[k] !== undefined && Number.isFinite(Number(j.cycle[k]))) cyc[k] = j.cycle[k];
+        });
+        if (Object.keys(cyc).length) {
+          await apply(cyc, { group: "DRV", persist: false, source: "firebase-cycle", noRescan: true, noMirror: true });
+          loadedAny = true;
+        }
+      }
       if (j.profiles && j.profiles.MTL && typeof j.profiles.MTL === "object") {
         const mtlIn = Object.assign({}, j.profiles.MTL);
         if (mtlIn.minC != null && Number(mtlIn.minC) < 300) mtlIn.minC = 300;
@@ -391,6 +434,7 @@ function createSettings(ctx) {
       if (ver < SCHEMA_VER) save();
       return loadedAny;
     } catch {}
+    if (!storeReady) scheduleLoadRetry();
     return false;
   }
 

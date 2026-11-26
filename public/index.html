@@ -890,7 +890,7 @@ async function _lpApplyEditor() {
   if (msgEl) { msgEl.className = "lpEdMsg"; msgEl.textContent = "SAVING..."; }
   var res = await srvControl({ action: "set_settings", group: _viewMode, patch: patch });
   if (res && res.ok) {
-    if (msgEl) { msgEl.className = "lpEdMsg ok"; msgEl.textContent = "SYNCED TO SERVER"; }
+    if (msgEl) { msgEl.className = res.saved === false ? "lpEdMsg err" : "lpEdMsg ok"; msgEl.textContent = res.saved === false ? "APPLIED - NOT SAVED" : "SYNCED TO SERVER"; }
     setTimeout(function () { _lpCloseEditor(); _logRender(); }, 450);
   } else if (msgEl) {
     msgEl.className = "lpEdMsg err";
@@ -1954,7 +1954,7 @@ var MERGE_BOTTOM_BARS = true;
     _ucRestoreBtn(inp, raw, "data-uc-key", key);
     _ucSig = "";
     _ucSend({ action: "set_settings", group: _viewMode, patch: patch }).then(function (res) {
-      if (!res || !res.ok) _ucFlashErr(key);
+      if (!res || !res.ok || res.saved === false) _ucFlashErr(key);
       else _ucRender();
     });
   }
@@ -2021,7 +2021,7 @@ var MERGE_BOTTOM_BARS = true;
       var patch = {};
       patch[key] = (!f || f.valueType === "int" || f.type === "int" || f.type === "number") ? Number(chosenVal) : chosenVal;
       _ucSend({ action: "set_settings", group: _viewMode, patch: patch }).then(function (res) {
-        if (!res || !res.ok) _ucFlashErr(key);
+        if (!res || !res.ok || res.saved === false) _ucFlashErr(key);
         else _ucRender();
       });
     };
