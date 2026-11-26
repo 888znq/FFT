@@ -1,7 +1,7 @@
 "use strict";
 
 const FB_URL = process.env.SETTINGS_FB_URL || "https://system-data-bf026-default-rtdb.asia-southeast1.firebasedatabase.app/wallspectrum_1s_settings.json";
-const SCHEMA_VER = 4;
+const SCHEMA_VER = 5;
 const GROUP_KEYS = ["DRV", "MTL", "ALL"];
 
 const SESSION_OPTIONS = [
@@ -19,9 +19,9 @@ const SETTINGS_SCHEMA = [
   { key: "mode", label: "ACCOUNT", scope: "trader", type: "select", options: [{ value: "demo", label: "DEMO" }, { value: "real", label: "REAL" }], default: (process.env.TRADE_MODE === "real") ? "real" : "demo", persist: true, editable: true, group: "summary" },
   { key: "auto", label: "AUTO TRADE", scope: "trader", type: "bool", default: process.env.AUTO_TRADE !== "false", persist: true, editable: true, group: "summary" },
   { key: "stake", label: "STAKE", scope: "trader", type: "number", min: 0.35, max: 10000, step: 0.05, decimals: 2, unit: "USD", default: Number(process.env.TRADE_STAKE) || 0.35, persist: true, editable: true, group: "summary" },
-  { key: "minC", label: "CYCLE MIN", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 60, persist: true, editable: true, group: "summary" },
-  { key: "maxC", label: "CYCLE MAX", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 60, persist: true, editable: true, group: "summary" },
-  { key: "scanInt", label: "SCAN INT", scope: "scanner", type: "int", min: 5, max: 600, step: 1, unit: "s", default: 60, persist: true, editable: true, group: "summary" },
+  { key: "minC", label: "CYCLE MIN", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 30, persist: true, editable: true, group: "summary" },
+  { key: "maxC", label: "CYCLE MAX", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 30, persist: true, editable: true, group: "summary" },
+  { key: "scanInt", label: "SCAN INT", scope: "scanner", type: "int", min: 5, max: 600, step: 1, unit: "s", default: 30, persist: true, editable: true, group: "summary" },
   { key: "ssMin", label: "SESSION", scope: "scanner", type: "select", valueType: "int", options: SESSION_OPTIONS, min: 0, max: 1440, default: 60, persist: true, editable: true, group: "summary" },
   { key: "lvl", label: "LEVEL", scope: "scanner", type: "int", min: 1, max: 1, step: 1, prefix: "X", default: 1, persist: false, editable: false, group: "extra" },
   { key: "lockMinPct", label: "LOCK MIN %", scope: "scanner", type: "int", min: 0, max: 100, step: 1, unit: "%", default: 60, persist: true, editable: true, group: "extra" },
@@ -46,9 +46,9 @@ const MTL_SCHEMA = [
 ];
 
 const ALL_SCHEMA = [
-  { key: "minC", label: "CYCLE MIN", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 60, persist: true, editable: true, group: "summary" },
-  { key: "maxC", label: "CYCLE MAX", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 60, persist: true, editable: true, group: "summary" },
-  { key: "scanInt", label: "SCAN INT", scope: "scanner", type: "int", min: 5, max: 600, step: 1, unit: "s", default: 60, persist: true, editable: true, group: "summary" },
+  { key: "minC", label: "CYCLE MIN", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 30, persist: true, editable: true, group: "summary" },
+  { key: "maxC", label: "CYCLE MAX", scope: "scanner", type: "int", min: 15, max: 900, step: 1, unit: "s", default: 30, persist: true, editable: true, group: "summary" },
+  { key: "scanInt", label: "SCAN INT", scope: "scanner", type: "int", min: 5, max: 600, step: 1, unit: "s", default: 30, persist: true, editable: true, group: "summary" },
   { key: "ssMin", label: "SESSION", scope: "scanner", type: "select", valueType: "int", options: SESSION_OPTIONS, min: 0, max: 1440, default: 60, persist: true, editable: true, group: "summary" },
   { key: "lvl", label: "LEVEL", scope: "scanner", type: "int", min: 1, max: 1, step: 1, prefix: "X", default: 1, persist: false, editable: false, group: "extra" },
   { key: "lockMinPct", label: "LOCK MIN %", scope: "scanner", type: "int", min: 0, max: 100, step: 1, unit: "%", default: 60, persist: false, editable: false, group: "extra" },
@@ -359,6 +359,11 @@ function createSettings(ctx) {
           delete cfgIn.topLimit;
         }
         if (ver < 4) {
+          delete cfgIn.scanInt;
+        }
+        if (ver < 5) {
+          delete cfgIn.minC;
+          delete cfgIn.maxC;
           delete cfgIn.scanInt;
         }
         await apply(cfgIn, { group: "DRV", persist: false, source: "firebase", noRescan: true, noMirror: true });

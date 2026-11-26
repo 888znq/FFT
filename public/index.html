@@ -258,7 +258,7 @@ var srvState = {
     },
     bal: { demo: null, real: null }, cur: { demo: "USD", real: "USD" }
   },
-  scan: { group: "DRV", cycle: 60, minC: 60, maxC: 60, scanInt: 60, ssMin: 60, ssSel: 1, lvl: 1, lockMinPct: 60, lockMinC1: 10, topLimit: 16, lockSlots: 8, countdownSec: 60, pending: false, buyTop: [], sellTop: [], lock: { buy: null, sell: null, buys: [], sells: [] } },
+  scan: { group: "DRV", cycle: 30, minC: 30, maxC: 30, scanInt: 30, ssMin: 60, ssSel: 1, lvl: 1, lockMinPct: 60, lockMinC1: 10, topLimit: 16, lockSlots: 8, countdownSec: 30, pending: false, buyTop: [], sellTop: [], lock: { buy: null, sell: null, buys: [], sells: [] } },
   scans: {},
   settings: {},
   settingsByGroup: {},
@@ -300,7 +300,7 @@ function _curTraderGroup() {
 }
 function _syncViewParams() {
   var sc = _curScan();
-  CYCLE = sc.minC || sc.cycle || (_viewMode === "MTL" ? 300 : 60);
+  CYCLE = sc.minC || sc.cycle || (_viewMode === "MTL" ? 300 : 30);
   _ssMin = (sc.ssMin !== undefined && sc.ssMin !== null) ? +sc.ssMin : (_viewMode === "MTL" ? 120 : 60);
   _ssSel = (sc.ssSel !== undefined && sc.ssSel !== null) ? +sc.ssSel : 1;
 }
